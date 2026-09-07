@@ -1,0 +1,25 @@
+@layer base {
+  .romantic {
+    --background: 350 20% 98%;
+    --foreground: 350 20% 20%;
+
+    --card: 350 20% 95%;
+    --card-foreground: 350 20% 20%;
+    --popover: 350 20% 95%;
+    --popover-foreground: 350 20% 20%;
+    --primary: 350 65% 55%;
+    --primary-foreground: 350 20% 98%;
+    --secondary: 350 40% 96%;
+    --secondary-foreground: 350 65% 55%;
+    --muted: 350 20% 96%;
+    --muted-foreground: 350 15% 45%;
+    --accent: 350 20% 96%;
+    --accent-foreground: 350 65% 55%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+    --radius: 0.5rem;
+  }
+}

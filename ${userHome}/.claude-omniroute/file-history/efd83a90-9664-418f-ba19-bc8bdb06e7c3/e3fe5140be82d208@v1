@@ -1,0 +1,17 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "CueDatabase": "Host=localhost;Port=5432;Database=cues_db;Username=admin;Password=postgres123!"
+  },
+  "Stripe": {
+    "SecretKey": "",
+    "ConnectedAccountId": "",
+    "WebhookSecret": ""
+  },
+  "AllowedHosts": "*"
+}

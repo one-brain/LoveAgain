@@ -1,0 +1,53 @@
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration
+    .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+builder.Services.AddControllers();
+builder.Services.AddOcelot();
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/health")
+    {
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        await context.Response.WriteAsJsonAsync(new { status = "Healthy" });
+        return;
+    }
+
+    if (context.Request.Path == "/health/ready")
+    {
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        await context.Response.WriteAsJsonAsync(new { status = "Ready" });
+        return;
+    }
+
+    if (context.Request.Path == "/ready")
+    {
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        await context.Response.WriteAsJsonAsync(new { status = "Ready" });
+        return;
+    }
+
+    if (context.Request.Path == "/")
+    {
+        context.Response.StatusCode = StatusCodes.Status200OK;
+        await context.Response.WriteAsync("APIGateway is running");
+        return;
+    }
+
+    await next();
+});
+
+app.UseAuthorization();
+app.MapControllers();
+
+await app.UseOcelot();
+app.Run();

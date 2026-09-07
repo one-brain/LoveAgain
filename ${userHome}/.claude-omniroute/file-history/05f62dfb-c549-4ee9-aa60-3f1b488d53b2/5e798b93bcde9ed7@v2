@@ -1,0 +1,33 @@
+using ChatService;
+using Cue.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddDbContext<CueDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
+        .UseSnakeCaseNamingConvention());
+builder.Services.AddSignalR();
+
+var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<CueDbContext>();
+    await DatabaseInitializer.InitializeAsync(dbContext);
+}
+
+// Configure the HTTP request pipeline.
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
+app.MapGet("/ready", () => Results.Ok(new { status = "Ready" }));
+app.MapGet("/health/ready", () => Results.Ok(new { status = "Ready" }));
+app.MapHub<ChatHub>("/hubs/chat");
+
+app.MapGet("/", () => "ChatService is running");
+
+app.Run();

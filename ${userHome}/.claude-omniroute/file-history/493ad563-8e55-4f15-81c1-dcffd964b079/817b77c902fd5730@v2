@@ -1,0 +1,17 @@
+{{- if .Values.sealedSecrets.enabled }}
+apiVersion: bitnami.com/v1alpha1
+kind: SealedSecret
+metadata:
+  name: auth-service-secrets
+  namespace: {{ .Release.Namespace }}
+spec:
+  encryptedData:
+    JWT_SIGNING_KEY: AgBpBQfu955LKUCYj30V5+...==
+    DB_CONNECTION_STRING: AgC2al6zx4gPMLZtTSaE...==
+    REDIS_CONNECTION_STRING: AgB4oeahYhqbPu6KJMzL...==
+  template:
+    metadata:
+      name: auth-service-secrets
+      namespace: {{ .Release.Namespace }}
+    type: Opaque
+{{- end }}

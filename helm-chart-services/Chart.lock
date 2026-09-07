@@ -1,0 +1,6 @@
+dependencies:
+- name: cue-infrastructure
+  repository: file://../helm-chart-infrastructure
+  version: 0.1.0
+digest: sha256:84dbbc5826efcbd691a701fb61d2cfb0444fb1b8306d61afa499ca5fb7daeda1
+generated: "2026-09-06T12:27:36.2749623+05:30"

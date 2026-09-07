@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "services.fullname" . }}-backend-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "services.labels" . | nindent 4 }}
+data:
+  ASPNETCORE_ENVIRONMENT: '{{ .Values.backend.env.ASPNETCORE_ENVIRONMENT | default "Production" | quote }}'
+  # Use FQDN for cross-namespace service discovery
+  RABBITMQ__Host: '{{ .Values.backend.env.RABBITMQ__Host | default "cue-infra-cue-infrastructure-rabbitmq.cue.svc.cluster.local" | quote }}'
+  REDIS__ConnectionString: '{{ .Values.backend.env.REDIS__ConnectionString | default "cue-infra-cue-infrastructure-redis.cue.svc.cluster.local:6379" | quote }}'
+  OTEL_EXPORTER_OTLP_ENDPOINT: '{{ .Values.backend.env.OTEL_EXPORTER_OTLP_ENDPOINT | default "http://jaeger-service:4317" | quote }}'

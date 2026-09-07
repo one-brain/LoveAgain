@@ -1,0 +1,1616 @@
+level=DEBUG msg="preparing upgrade" name=cue
+level=DEBUG msg="getting last revision" name=cue
+level=DEBUG msg="getting release history" name=cue
+level=DEBUG msg="number of dependencies in the chart" chart=cue dependencies=0
+level=DEBUG msg="determined release apply method" server_side_apply=true previous_release_apply_method=ssa
+level=DEBUG msg="performing update" name=cue
+level=DEBUG msg="creating upgraded release" name=cue
+level=DEBUG msg="creating release" key=sh.helm.release.v1.cue.v3
+level=DEBUG msg="getting release history" name=cue
+level=DEBUG msg="using server-side apply for resource creation" forceConflicts=false dryRun=false fieldValidationDirective=Strict
+level=DEBUG msg="using server-side apply for resource update" forceConflicts=false dryRun=false fieldValidationDirective=Strict upgradeClientSideFieldManager=false
+level=DEBUG msg="checking resources for changes" resources=36
+level=DEBUG msg="Patched resource" namespace="" name=cue-platform gvk="/v1, Kind=Namespace"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-backend-secret gvk="/v1, Kind=Secret"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-backend-config gvk="/v1, Kind=ConfigMap"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-postgres-pvc gvk="/v1, Kind=PersistentVolumeClaim"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=auth-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=user-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=profile-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=discovery-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=booking-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=payment-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=chat-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=notification-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=review-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=support-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=analytics-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=api-gateway gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-frontend-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-pg-admin gvk="/v1, Kind=Service"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-postgres-service gvk="/v1, Kind=Service"
+level=DEBUG msg="Created resource via patch" namespace=cue-platform name=cue-cue-redis-service gvk="/v1, Kind=Service"
+level=DEBUG msg="created a new resource" namespace=cue-platform name=cue-cue-redis-service kind=Service
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-auth-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-user-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-profile-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-discovery-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-booking-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-payment-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-chat-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-notification-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-review-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-support-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-analytics-service gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-api-gateway gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-frontend gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-pg-admin gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Patched resource" namespace=cue-platform name=cue-cue-postgres gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="Created resource via patch" namespace=cue-platform name=cue-cue-redis gvk="apps/v1, Kind=Deployment"
+level=DEBUG msg="created a new resource" namespace=cue-platform name=cue-cue-redis kind=Deployment
+level=DEBUG msg="updating release" key=sh.helm.release.v1.cue.v2
+level=DEBUG msg="updating status for upgraded release" name=cue
+level=DEBUG msg="updating release" key=sh.helm.release.v1.cue.v3
+Release "cue" has been upgraded. Happy Helming!
+NAME: cue
+LAST DEPLOYED: Fri Sep  4 18:40:57 2026
+NAMESPACE: cue-platform
+STATUS: deployed
+REVISION: 3
+DESCRIPTION: Upgrade complete
+TEST SUITE: None
+USER-SUPPLIED VALUES:
+backend:
+  imageTag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+frontend:
+  imageTag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+global:
+  imagePullPolicy: IfNotPresent
+  imageRegistry: ""
+jaeger:
+  imageTag: "1.47"
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+postgres:
+  imageTag: 15-3.4
+  persistence:
+    accessMode: ReadWriteOnce
+    enabled: true
+    size: 5Gi
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+rabbitmq:
+  imageTag: 3-management
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+redis:
+  imageTag: 7-alpine
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+secret:
+  AUTH_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+  BOOKING_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cues;Username=adm;Password=localsecret
+  EMAIL_API_KEY: local
+  EMAIL_FROM_ADDRESS: cue@localhost.local
+  JAEGER_AGENT_HOST: jaeger-agent-split-jeager:6831
+  JWT_ACCESS_TOKEN_MINUTES: "15"
+  JWT_REFRESH_TOKEN_DAYS: "7"
+  JWT_SIGNING_KEY: supersecretjwtskieforlocalhev
+  PAYMENT_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cues;Username=adm;Password=localsecret
+  POSTGRES_DB: cue_db
+  POSTGRES_PASSWORD: localsecret
+  POSTGRES_USER: admin
+  RABBITMQ_CONNECTION_STRING: amqp://admin:localsecret@rabbitmq:5672
+  RABBITMQ_PASSWORD: localsecret
+  RABBITMQ_USER: admin
+  REDIS_CONNECTION_STRING: redis://redis:6379
+  REDIS_PASSWORD: localsecret
+  STRIPE_SECRET_KEY: sk_test_421ffVAem5k5Ea8
+  USER_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cue;Username=admin;Password=localsecret
+
+COMPUTED VALUES:
+affinity: {}
+backend:
+  env: {}
+  imageTag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+backendServices:
+- name: auth-service
+  port: 8080
+- name: user-service
+  port: 8080
+- name: profile-service
+  port: 8080
+- name: discovery-service
+  port: 8080
+- name: booking-service
+  port: 8080
+- name: payment-service
+  port: 8080
+- name: chat-service
+  port: 8080
+- name: notification-service
+  port: 8080
+- name: review-service
+  port: 8080
+- name: support-service
+  port: 8080
+- name: analytics-service
+  port: 8080
+- name: api-gateway
+  port: 8080
+frontend:
+  imageTag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+global:
+  imagePullPolicy: IfNotPresent
+  imageRegistry: ""
+image:
+  pullPolicy: IfNotPresent
+  registry: docker.io
+  repository: cue
+  tag: latest
+ingress:
+  annotations: {}
+  className: ""
+  enabled: true
+  hosts:
+  - host: chart-example.local
+    paths:
+    - path: /
+      pathType: ImplementationSpecific
+    - path: /api
+      pathType: ImplementationSpecific
+  tls: []
+jaeger:
+  imageTag: "1.47"
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi
+nodeSelector: {}
+postgres:
+  imageTag: 15-3.4
+  persistence:
+    accessMode: ReadWriteOnce
+    enabled: true
+    size: 5Gi
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+rabbitmq:
+  imageTag: 3-management
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 250m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+redis:
+  imageTag: 7-alpine
+  replicaCount: 1
+  resources:
+    limits:
+      cpu: 100m
+      memory: 128Mi
+    requests:
+      cpu: 50m
+      memory: 64Mi
+replicaCount: 1
+resources: {}
+sealedSecrets:
+  enabled: false
+secret:
+  AUTH_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+  BOOKING_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cues;Username=adm;Password=localsecret
+  ConnectionStrings__CueDatabase: Host=loveagain-cue-postgres-service;Port=5432;Database=cue_db;Username=postgres;Password=secret
+  EMAIL_API_KEY: local
+  EMAIL_FROM_ADDRESS: cue@localhost.local
+  JAEGER_AGENT_HOST: jaeger-agent-split-jeager:6831
+  JWT_ACCESS_TOKEN_MINUTES: "15"
+  JWT_REFRESH_TOKEN_DAYS: "7"
+  JWT_SIGNING_KEY: supersecretjwtskieforlocalhev
+  PAYMENT_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cues;Username=adm;Password=localsecret
+  POSTGRES_DB: cue_db
+  POSTGRES_PASSWORD: localsecret
+  POSTGRES_USER: admin
+  RABBITMQ_CONNECTION_STRING: amqp://admin:localsecret@rabbitmq:5672
+  RABBITMQ_PASSWORD: localsecret
+  RABBITMQ_USER: admin
+  REDIS_CONNECTION_STRING: redis://redis:6379
+  REDIS_PASSWORD: localsecret
+  STRIPE_SECRET_KEY: sk_test_421ffVAem5k5Ea8
+  USER_DB_CONNECTION: Host=cue-cue-postgres-service;Port=5432;Database=cue;Username=admin;Password=localsecret
+service:
+  port: 80
+  type: ClusterIP
+tolerations: []
+
+HOOKS:
+MANIFEST:
+---
+# Source: cue/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cue-platform
+  labels:
+    name: cue-platform
+---
+# Source: cue/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cue-cue-backend-secret
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  AUTH_DB_CONNECTION: "SG9zdD1jdWUtY3VlLXBvc3RncmVzLXNlcnZpY2U7UG9ydD01NDMyO0RhdGFiYXNlPWN1ZV9kYjtVc2VybmFtZT1hZG1pbjtQYXNzd29yZD1sb2NhbHNlY3JldA=="
+  BOOKING_DB_CONNECTION: "SG9zdD1jdWUtY3VlLXBvc3RncmVzLXNlcnZpY2U7UG9ydD01NDMyO0RhdGFiYXNlPWN1ZXM7VXNlcm5hbWU9YWRtO1Bhc3N3b3JkPWxvY2Fsc2VjcmV0"
+  ConnectionStrings__CueDatabase: "SG9zdD1sb3ZlYWdhaW4tY3VlLXBvc3RncmVzLXNlcnZpY2U7UG9ydD01NDMyO0RhdGFiYXNlPWN1ZV9kYjtVc2VybmFtZT1wb3N0Z3JlcztQYXNzd29yZD1zZWNyZXQ="
+  EMAIL_API_KEY: "bG9jYWw="
+  EMAIL_FROM_ADDRESS: "Y3VlQGxvY2FsaG9zdC5sb2NhbA=="
+  JAEGER_AGENT_HOST: "amFlZ2VyLWFnZW50LXNwbGl0LWplYWdlcjo2ODMx"
+  JWT_ACCESS_TOKEN_MINUTES: "MTU="
+  JWT_REFRESH_TOKEN_DAYS: "Nw=="
+  JWT_SIGNING_KEY: "c3VwZXJzZWNyZXRqd3Rza2llZm9ybG9jYWxoZXY="
+  PAYMENT_DB_CONNECTION: "SG9zdD1jdWUtY3VlLXBvc3RncmVzLXNlcnZpY2U7UG9ydD01NDMyO0RhdGFiYXNlPWN1ZXM7VXNlcm5hbWU9YWRtO1Bhc3N3b3JkPWxvY2Fsc2VjcmV0"
+  POSTGRES_DB: "Y3VlX2Ri"
+  POSTGRES_PASSWORD: "bG9jYWxzZWNyZXQ="
+  POSTGRES_USER: "YWRtaW4="
+  RABBITMQ_CONNECTION_STRING: "YW1xcDovL2FkbWluOmxvY2Fsc2VjcmV0QHJhYmJpdG1xOjU2NzI="
+  RABBITMQ_PASSWORD: "bG9jYWxzZWNyZXQ="
+  RABBITMQ_USER: "YWRtaW4="
+  REDIS_CONNECTION_STRING: "cmVkaXM6Ly9yZWRpczo2Mzc5"
+  REDIS_PASSWORD: "bG9jYWxzZWNyZXQ="
+  STRIPE_SECRET_KEY: "c2tfdGVzdF80MjFmZlZBZW01azVFYTg="
+  USER_DB_CONNECTION: "SG9zdD1jdWUtY3VlLXBvc3RncmVzLXNlcnZpY2U7UG9ydD01NDMyO0RhdGFiYXNlPWN1ZTtVc2VybmFtZT1hZG1pbjtQYXNzd29yZD1sb2NhbHNlY3JldA=="
+---
+# Source: cue/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cue-cue-backend-config
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+data:
+  ASPNETCORE_ENVIRONMENT: '"Production"'
+  RABBITMQ__Host: '"rabbitmq-service".cue-platform.svc.cluster.local'
+  REDIS__ConnectionString: '"redis-service".cue-platform.svc.cluster.local:6379'
+  OTEL_EXPORTER_OTLP_ENDPOINT: '"http://jaeger-service".cue-platform.svc.cluster.local:4317'
+---
+# Source: cue/templates/postgres-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cue-cue-postgres-pvc
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: profile-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: review-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: support-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+---
+# Source: cue/templates/frontend.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cue-cue-frontend-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: frontend
+spec:
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/name: frontend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
+---
+# Source: cue/templates/pg-admin-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cue-cue-pg-admin
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pg-admin
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/name: pg-admin
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30001
+---
+# Source: cue/templates/postgres-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cue-cue-postgres-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: cue
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+# Source: cue/templates/redis-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cue-cue-redis-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+spec:
+  type: ClusterIP
+  ports:
+    - port: 6379
+      targetPort: 6379
+      protocol: TCP
+      name: redis
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/name: redis
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-auth-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: auth-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: "auth-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-user-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: user-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: "user-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-profile-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: profile-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: profile-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: profile-service
+    spec:
+      containers:
+        - name: profile-service
+          image: "profile-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-discovery-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: discovery-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: discovery-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: discovery-service
+    spec:
+      containers:
+        - name: discovery-service
+          image: "discovery-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-booking-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: booking-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: booking-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: booking-service
+    spec:
+      containers:
+        - name: booking-service
+          image: "booking-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-payment-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: payment-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: "payment-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-chat-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: chat-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: chat-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: chat-service
+    spec:
+      containers:
+        - name: chat-service
+          image: "chat-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-notification-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: notification-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: "notification-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-review-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: review-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: review-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: review-service
+    spec:
+      containers:
+        - name: review-service
+          image: "review-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-support-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: support-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: support-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: support-service
+    spec:
+      containers:
+        - name: support-service
+          image: "support-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-analytics-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: analytics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: analytics-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: "analytics-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-api-gateway
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: api-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: "api-gateway:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: cue-cue-backend-config
+            - secretRef:
+                name: cue-cue-backend-secret
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/frontend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-cue-frontend
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: "frontend:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/pg-admin-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-cue-pg-admin
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pg-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: pg-admin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: pg-admin
+    spec:
+      containers:
+        - name: pg-admin
+          image: dpage/pgadmin4:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "admin@admin.com"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: "admin"
+            - name: PGADMIN_CONFIG_SERVER_MODE
+              value: "False"
+
+---
+# Source: cue/templates/postgres-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-cue-postgres
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/instance: cue
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: cue-0.1.0
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/version: 1.0.0
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      containers:
+        - name: postgres
+          image: postgis/postgis:15-3.4
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: cue-cue-backend-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: cue-cue-backend-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: cue-cue-backend-secret
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: cue-cue-postgres-pvc
+---
+# Source: cue/templates/redis-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cue-cue-redis
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: cue
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: cue
+      app.kubernetes.io/name: redis
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: cue
+        app.kubernetes.io/name: redis
+    spec:
+      containers:
+        - name: redis
+          image: "redis:7-alpine"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: redis
+              containerPort: 6379
+              protocol: TCP
+          livenessProbe:
+            tcpSocket:
+              port: 6379
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            exec:
+              command:
+                - redis-cli
+                - ping
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+

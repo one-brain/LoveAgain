@@ -1,0 +1,12 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "CueDatabase": "Host=loveagain-cue-postgres-service;Port=5432;Database=cues_db;Username=postgres;Password=secret"
+  },
+  "AllowedHosts": "*"
+}

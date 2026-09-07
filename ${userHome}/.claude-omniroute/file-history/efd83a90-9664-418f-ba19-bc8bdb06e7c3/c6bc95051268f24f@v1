@@ -1,0 +1,27 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "ConnectionStrings": {
+    "CueDatabase": "Host=localhost;Port=5432;Database=cues_db;Username=admin;Password=postgres123!"
+  },
+  "Jwt": {
+    "Issuer": "cue-auth",
+    "Audience": "cue-platform",
+    "SigningKey": "development-only-change-this-signing-key-32-bytes",
+    "AccessTokenMinutes": 15,
+    "RefreshTokenDays": 7
+  },
+  "RabbitMq": {
+    "Host": "localhost",
+    "Port": 5672,
+    "Username": "admin",
+    "Password": "rabbitmq123!",
+    "Exchange": "cue.events",
+    "DeadLetterExchange": "cue.events.dead-letter"
+  },
+  "AllowedHosts": "*"
+}

@@ -1,0 +1,17 @@
+{
+  "firstStartTime": "2026-08-27T12:35:34.316Z",
+  "firstStartVersion": "2.1.247",
+  "machineID": "9de11619d9c79c19ee13bc8b4d4607c9c6b007a4932b054a918a8bdaa2b842df",
+  "opusProMigrationComplete": true,
+  "sonnet1m45MigrationComplete": true,
+  "seenNotifications": {},
+  "hasResetAutoModeOptInForDefaultOffer": true,
+  "migrationVersion": 14,
+  "userID": "39028e264c921d7eda655984768f55ef0079bb4a2cf73085cc58c5e63571cdc6",
+  "skillUsage": {
+    "dataviz": {
+      "usageCount": 2,
+      "lastUsedAt": 1788447031008
+    }
+  }
+}

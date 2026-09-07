@@ -1,0 +1,87 @@
+name: Cue CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  backend:
+    name: Backend build and test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+      - name: Restore and build
+        run: dotnet build backend/Cue.sln --configuration Release
+      - name: Test
+        run: dotnet test backend/Cue.sln --configuration Release --no-build --collect:"XPlat Code Coverage"
+
+  frontend:
+    name: Web build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+
+  mobile:
+    name: Mobile analysis
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.29.0
+          channel: stable
+          cache: true
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze
+        run: flutter analyze
+
+  containers:
+    name: Validate container builds
+    needs: backend
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [AuthService, BookingService, PaymentService, ChatService]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build service image
+        run: >-
+          docker build
+          --file infra/docker/Dockerfile.template
+          --build-arg SERVICE_PROJECT_PATH=backend/Services/${{ matrix.service }}/${{ matrix.service }}.csproj
+          --build-arg SERVICE_DLL=${{ matrix.service }}
+          --tag cue/${{ matrix.service }}:${{ github.sha }}
+          .

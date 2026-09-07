@@ -1,0 +1,75 @@
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
+import { Link } from 'react-router-dom';
+
+const Profile: React.FC = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
+
+  if (!user) {
+    return <div className="min-h-flex items-center justify-center">Loading...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <header className="bg-white shadow-sm">
+        <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold text-gray-900">
+            Profile
+          </h1>
+        </div>
+      </header>
+
+      <main className="py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-md overflow-hidden">
+            <div className="p-6 space-y-6">
+              <div className="flex items-center space-x-4">
+                <div className="h-12 w-12 bg-linear-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold">{user.firstName.charAt(0)}{user.lastName.charAt(0)}</span>
+                </div>
+                <div>
+                  <h2 className="text-xl font-medium text-gray-900">
+                    {user.firstName} {user.lastName}
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {user.roles?.[0]} • Member since {new Date().toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium text-gray-900">Account Information</h3>
+                <dl className="grid gap-2 sm:grid-cols-2 text-sm">
+                  <dt className="text-gray-500">Email</dt>
+                  <dd className="text-gray-900">{user.email}</dd>
+                  <dt className="text-gray-500">Role</dt>
+                  <dd className="text-gray-900 capitalize">{user.roles?.[0]}</dd>
+                </dl>
+              </div>
+
+              <div className="border-t pt-4">
+                <h3 className="text-lg font-medium text-gray-900">Settings</h3>
+                <div className="mt-4 space-y-4">
+                  <Link to="#" className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-gray-900 bg-gray-50 hover:bg-gray-100">
+                    <span>Notifications</span>
+                    <span className="text-gray-500">Manage</span>
+                  </Link>
+                  <Link to="#" className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-gray-900 bg-gray-50 hover:bg-gray-100">
+                    <span>Privacy & Security</span>
+                    <span className="text-gray-500">Manage</span>
+                  </Link>
+                  <Link to="#" className="flex items-center justify-between px-3 py-2 rounded-md text-sm font-medium text-gray-900 bg-gray-50 hover:bg-gray-100">
+                    <span>Billing</span>
+                    <span className="text-gray-500">Manage</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default Profile;

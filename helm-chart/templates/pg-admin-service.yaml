@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "cue.fullname" . }}-pg-admin
+  labels:
+    {{- include "cue.labels" . | nindent 4 }}
+    app.kubernetes.io/name: pg-admin
+spec:
+  type: NodePort
+  selector:
+    {{- include "cue.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/name: pg-admin
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30001

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cue.fullname" . }}-pg-admin
+  labels:
+    {{- include "cue.labels" . | nindent 4 }}
+    app.kubernetes.io/name: pg-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "cue.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/name: pg-admin
+  template:
+    metadata:
+      labels:
+        {{- include "cue.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/name: pg-admin
+    spec:
+      containers:
+        - name: pg-admin
+          image: dpage/pgadmin4:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "admin@admin.com"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: "admin"
+            - name: PGADMIN_CONFIG_SERVER_MODE
+              value: "False"

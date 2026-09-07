@@ -1,0 +1,132 @@
+# Local deployment values for cue-platform Helm chart
+# For deployment on a local k3s/minikube cluster
+
+# Image registry and pull policy
+image:
+  registry: docker.io/library
+  pullPolicy: Never  # Use local docker images, don't pull from registry
+  tag: "latest"
+
+# Global image settings
+global:
+  imageRegistry: 172.17.0.1:5000
+  imagePullPolicy: IfNotPresent
+
+# Backend services configuration
+backend:
+  replicaCount: 1
+  imageTag: latest
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+# Frontend configuration
+frontend:
+  imageTag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+# PostgreSQL configuration
+postgres:
+  imageTag: "15-3.4"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+# RabbitMQ configuration
+rabbitmq:
+  imageTag: "3-management"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+
+# Redis configuration
+redis:
+  imageTag: "7-alpine"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 128Mi
+      cpu: 100m
+    requests:
+      memory: 64Mi
+      cpu: 50m
+
+# Jaeger configuration (distributed tracing)
+jaeger:
+  imageTag: "1.47"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 250m
+    requests:
+      memory: 256Mi
+      cpu: 100m
+
+# Secrets configuration - Plain text values (will be base64 encoded by Helm chart)
+secret:
+  # PostgreSQL credentials
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: localsecret
+  POSTGRES_DB: cue_db
+
+  # RabbitMQ credentials
+  RABBITMQ_USER: admin
+  RABBITMQ_PASSWORD: localsecret
+
+  # Redis password
+  REDIS_PASSWORD: localsecret
+
+  # Stripe API key for payments (use test key for local)
+  STRIPE_SECRET_KEY: sk_test_421ffVAem5k5Ea8  # placeholder
+
+  # JWT signing key for authentication tokens
+  JWT_SIGNING_KEY: supersecretjwtskieforlocalhev
+
+  # Auth Service specific secrets
+  JWT_ACCESS_TOKEN_MINUTES: "15"           # Access token expiry in minutes
+  JWT_REFRESH_TOKEN_DAYS: "7"             # Refresh token expiry in days
+
+  # Database connection strings (will be generated from postgres service)
+  AUTH_DB_CONNECTION: Host=loveagain-cue-postgres-service;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+  USER_DB_CONNECTION: Host=loveagain-cue-postgres-service;Port=5432;Database=cue;Username=admin;Password=localsecret
+  BOOKING_DB_CONNECTION: Host=loveagain-cue-postgres-service;Port=5432;Database=cues;Username=adm;Password=localsecret
+  PAYMENT_DB_CONNECTION: Host=loveagain-cue-postgres-service;Port=5432;Database=cues;Username=adm;Password=localsecret
+
+  # Email service credentials
+  EMAIL_API_KEY: local  # placeholder
+  EMAIL_FROM_ADDRESS: cue@localhost.local
+
+  # Redis connection strings
+  REDIS_CONNECTION_STRING: redis://redis:6379
+
+  # RabbitMQ connection
+  RABBITMQ_CONNECTION_STRING: amqp://admin:localsecret@rabbitmq:5672
+
+  # Jaeger tracing endpoint
+  JAEGER_AGENT_HOST: jaeger-agent-split-jeager:6831

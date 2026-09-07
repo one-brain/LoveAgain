@@ -1,0 +1,44 @@
+using Ocelot.DependencyInjection;
+using Ocelot.Middleware;
+
+var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration
+    .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+builder.Services.AddControllers();
+builder.Services.AddHealthChecks()
+    // Self-check so /ready reports Healthy for the gateway itself
+    .AddCheck("self", () => Microsoft.Extensions.Diagnostics.HealthChecks.HealthCheckResult.Healthy())
+    .AddUrlGroup(new Uri("http://auth-service:8080/health"), "auth-service")
+    .AddUrlGroup(new Uri("http://user-service:8080/health"), "user-service")
+    .AddUrlGroup(new Uri("http://profile-service:8080/health"), "profile-service")
+    .AddUrlGroup(new Uri("http://discovery-service:8080/health"), "discovery-service")
+    .AddUrlGroup(new Uri("http://booking-service:8080/health"), "booking-service")
+    .AddUrlGroup(new Uri("http://payment-service:8080/health"), "payment-service")
+    .AddUrlGroup(new Uri("http://chat-service:8080/health"), "chat-service")
+    .AddUrlGroup(new Uri("http://notification-service:8080/health"), "notification-service")
+    .AddUrlGroup(new Uri("http://review-service:8080/health"), "review-service")
+    .AddUrlGroup(new Uri("http://support-service:8080/health"), "support-service")
+    .AddUrlGroup(new Uri("http://analytics-service:8080/health"), "analytics-service");
+builder.Services.AddOcelot();
+
+var app = builder.Build();
+
+app.UseHttpsRedirection();
+app.UseRouting();
+app.UseAuthorization();
+
+// Map health-check endpoints (these will be proxied to self via ocelot.json)
+app.MapHealthChecks("/ready");
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/health/ready");
+
+// Root route
+app.MapGet("/", () => "APIGateway is running");
+app.MapControllers();
+
+// Hand over unhandled routes to Ocelot Gateway pipeline
+await app.UseOcelot();
+app.Run();

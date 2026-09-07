@@ -1,0 +1,20 @@
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("CueDatabase")!);
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+app.UseHttpsRedirection();
+app.UseAuthorization();
+app.MapControllers();
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/ready");
+app.MapHealthChecks("/health/ready");
+
+app.MapGet("/", () => "UserService is running");
+
+app.Run();

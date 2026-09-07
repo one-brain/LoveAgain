@@ -1,0 +1,53 @@
+{{- range .Values.backendServices }}
+{{- $serviceName := .name }}
+{{- $servicePort := .port }}
+{{- $replicaCount := $.Values.replicaCount | default ($.Values.backend.replicaCount) }}
+{{- $imageTag := .imageTag | default ($.Values.backend.imageTag) }}
+{{- $resources := .resources | default ($.Values.backend.resources) }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "%s-%s" $.Release.Name $serviceName | trunc 63 | trimSuffix "-" }}
+  labels:
+    {{- include "services.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ $serviceName }}
+    app.kubernetes.io/component: backend
+spec:
+  replicas: {{ $replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "services.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/name: {{ $serviceName }}
+  template:
+    metadata:
+      labels:
+        {{- include "services.selectorLabels" $ | nindent 8 }}
+        app.kubernetes.io/name: {{ $serviceName }}
+    spec:
+      containers:
+        - name: {{ $serviceName }}
+          image: "{{ $.Values.global.imageRegistry }}{{ if $.Values.global.imageRegistry }}/{{ end }}{{ $serviceName }}:{{ $imageTag }}"
+          imagePullPolicy: {{ $.Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: {{ $servicePort }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "services.fullname" $ }}-backend-config
+            - secretRef:
+                name: {{ include "services.fullname" $ }}-backend-secret
+          resources:
+            {{- toYaml $resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: {{ $servicePort }}
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: {{ $servicePort }}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+{{- end }}

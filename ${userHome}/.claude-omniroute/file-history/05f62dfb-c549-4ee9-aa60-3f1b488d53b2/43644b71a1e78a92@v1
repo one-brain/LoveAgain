@@ -1,0 +1,64 @@
+using System.Text;
+using Cue.Application;
+using Cue.Application.Abstractions;
+using Cue.Infrastructure.Data;
+using Cue.Infrastructure.Messaging;
+using Cue.Infrastructure.Storage;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddControllers();
+builder.Services.AddCueApplication();
+builder.Services.AddDbContext<CueDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
+        .UseSnakeCaseNamingConvention());
+builder.Services.Configure<RabbitMqOptions>(builder.Configuration.GetSection("RabbitMq"));
+builder.Services.AddSingleton<IEventPublisher, RabbitMqEventPublisher>();
+builder.Services.AddScoped<IProviderProfileRepository, ProviderProfileRepository>();
+builder.Services.AddS3BlobStorage(builder.Configuration);
+
+// JWT Authentication
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "cue-auth";
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "cue-platform";
+var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? string.Empty;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtIssuer,
+            ValidateAudience = true,
+            ValidAudience = jwtAudience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    });
+builder.Services.AddAuthorization();
+
+var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<CueDbContext>();
+    await DatabaseInitializer.InitializeAsync(dbContext);
+}
+
+// Configure the HTTP request pipeline.
+app.UseHttpsRedirection();
+app.UseAuthentication();
+app.UseAuthorization();
+app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
+app.MapGet("/health/ready", () => Results.Ok(new { status = "Ready" }));
+
+app.MapGet("/", () => "ProfileService is running");
+
+app.Run();

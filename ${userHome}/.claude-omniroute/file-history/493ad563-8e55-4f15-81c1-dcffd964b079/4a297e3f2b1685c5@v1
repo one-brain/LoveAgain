@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "cue.fullname" . }}-backend-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "cue.labels" . | nindent 4 }}
+data:
+  ASPNETCORE_ENVIRONMENT: "{{ .Values.backend.env.ASPNETCORE_ENVIRONMENT | default \"Production\" }}"
+  RABBITMQ__Host: "{{ .Values.backend.env.RABBITMQ__Host | default \"rabbitmq-service\" }}.{{ .Release.Namespace }}.svc.cluster.local"
+  REDIS__ConnectionString: "{{ .Values.backend.env.REDIS__ConnectionString | default \"redis-service\" }}.{{ .Release.Namespace }}.svc.cluster.local:6379"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "{{ .Values.backend.env.OTEL_EXPORTER_OTLP_ENDPOINT | default \"http://jaeger-service\" }}.{{ .Release.Namespace }}.svc.cluster.local:4317"

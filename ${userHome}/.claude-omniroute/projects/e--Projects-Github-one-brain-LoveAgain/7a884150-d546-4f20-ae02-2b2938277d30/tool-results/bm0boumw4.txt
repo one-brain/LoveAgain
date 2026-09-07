@@ -1,0 +1,1240 @@
+---
+# Source: cue/templates/namespace.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cue-platform
+  labels:
+    name: cue-platform
+---
+# Source: cue/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: loveagain-cue-backend-secret
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  AUTH_DB_CONNECTION: "U0c5emREMXNiM1psWVdkaGFXNHRZM1ZsTFhCdmMzUm5jbVZ6TFhObGNuWnBZMlU3VUc5eWREMDFORE15TzBSaGRHRmlZWE5sUFhCdmMzUm5jbVZ6TzFWelpYSnVZVzFsUFhCdmMzUm5jbVZ6TzFCaGMzTjNiM0prUFhObFkzSmxkQT09"
+  BOOKING_DB_CONNECTION: "U0c5emREMXNiM1psWVdkaGFXNHRZM1ZsTFhCdmMzUm5jbVZ6TFhObGNuWnBZMlU3VUc5eWREMDFORE15TzBSaGRHRmlZWE5sUFdOMVpWOWtZanRWYzJWeWJtRnRaVDFoWkcxcGJqdFFZWE56ZDI5eVpEMXpaV055WlhRPQ=="
+  ConnectionStrings__CueDatabase: "U0c5emREMXNiM1psWVdkaGFXNHRZM1ZsTFhCdmMzUm5jbVZ6TFhObGNuWnBZMlU3VUc5eWREMDFORE15TzBSaGRHRmlZWE5sUFdOMVpWOWtZanRWYzJWeWJtRnRaVDFoWkcxcGJqdFFZWE56ZDI5eVpEMXpaV055WlhRPQ=="
+  EMAIL_API_KEY: "YzJWamNtVjA="
+  EMAIL_FROM_ADDRESS: "WTNWbGMwQnRZV2xzWTI5dGNHRnVlUzVqYjIwPQ=="
+  JWT_ACCESS_TOKEN_MINUTES: "MTU="
+  JWT_REFRESH_TOKEN_DAYS: "Nw=="
+  JWT_SIGNING_KEY: "YzJWamNtVjA="
+  PAYMENT_DB_CONNECTION: "U0c5emREMXNiM1psWVdkaGFXNHRZM1ZsTFhCdmMzUm5jbVZ6TFhObGNuWnBZMlU3VUc5eWREMDFORE15TzBSaGRHRmlZWE5sUFdOMVpWOWtZanRWYzJWeWJtRnRaVDFoWkcxcGJqdFFZWE56ZDI5eVpEMXpaV055WlhRPQ=="
+  POSTGRES_DB: "WTNWbGMxOWtZZz09"
+  POSTGRES_PASSWORD: "YzJWamNtVjA="
+  POSTGRES_USER: "Y0c5emRHZHlaWE09"
+  RABBITMQ_PASSWORD: "YzJWamNtVjA="
+  RABBITMQ_USER: "WVdSdGFXND0="
+  REDIS_CONNECTION_STRING: "Y21Wa2FYTTZMeTl5WldScGN6bzJNemM1"
+  REDIS_PASSWORD: "YzJWamNtVjA="
+  STRIPE_SECRET_KEY: "YzJWamNtVjA="
+  USER_DB_CONNECTION: "U0c5emREMXNiM1psWVdkaGFXNHRZM1ZsTFhCdmMzUm5jbVZ6TFhObGNuWnBZMlU3VUc5eWREMDFORE15TzBSaGRHRmlZWE5sUFhCdmMzUm5jbVZ6TzFWelpYSnVZVzFsUFhCdmMzUm5jbVZ6TzFCaGMzTjNiM0prUFhObFkzSmxkQT09"
+---
+# Source: cue/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loveagain-cue-backend-config
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+data:
+  ASPNETCORE_ENVIRONMENT: '"Production"'
+  RABBITMQ__Host: '"rabbitmq-service".cue-platform.svc.cluster.local'
+  REDIS__ConnectionString: '"redis-service".cue-platform.svc.cluster.local:6379'
+  OTEL_EXPORTER_OTLP_ENDPOINT: '"http://jaeger-service".cue-platform.svc.cluster.local:4317'
+---
+# Source: cue/templates/postgres-pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: loveagain-cue-postgres-pvc
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: profile-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: discovery-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: booking-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: chat-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: notification-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: review-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: support-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: analytics-service
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/backend-services.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  namespace: cue-platform
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8080
+      targetPort: 8080
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+---
+# Source: cue/templates/frontend.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: loveagain-cue-frontend-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: frontend
+spec:
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/name: frontend
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: ClusterIP
+---
+# Source: cue/templates/pg-admin-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: loveagain-cue-pg-admin
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pg-admin
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/name: pg-admin
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30001
+---
+# Source: cue/templates/postgres-deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: loveagain-cue-postgres-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  selector:
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: loveagain
+  ports:
+    - protocol: TCP
+      port: 5432
+      targetPort: 5432
+  type: ClusterIP
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-auth-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: auth-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: "auth-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-user-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: user-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: "user-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-profile-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: profile-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: profile-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: profile-service
+    spec:
+      containers:
+        - name: profile-service
+          image: "profile-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-discovery-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: discovery-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: discovery-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: discovery-service
+    spec:
+      containers:
+        - name: discovery-service
+          image: "discovery-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-booking-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: booking-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: booking-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: booking-service
+    spec:
+      containers:
+        - name: booking-service
+          image: "booking-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-payment-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: payment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: payment-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: "payment-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-chat-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: chat-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: chat-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: chat-service
+    spec:
+      containers:
+        - name: chat-service
+          image: "chat-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-notification-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: notification-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: "notification-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-review-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: review-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: review-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: review-service
+    spec:
+      containers:
+        - name: review-service
+          image: "review-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-support-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: support-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: support-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: support-service
+    spec:
+      containers:
+        - name: support-service
+          image: "support-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-analytics-service
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: analytics-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: analytics-service
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: analytics-service
+    spec:
+      containers:
+        - name: analytics-service
+          image: "analytics-service:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/backend-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-api-gateway
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: api-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: api-gateway
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: api-gateway
+    spec:
+      containers:
+        - name: api-gateway
+          image: "api-gateway:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: loveagain-cue-backend-config
+            - secretRef:
+                name: loveagain-cue-backend-secret
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/frontend.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-cue-frontend
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: frontend
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: "frontend:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+---
+# Source: cue/templates/pg-admin-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-cue-pg-admin
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: cue
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: pg-admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cue
+      app.kubernetes.io/instance: loveagain
+      app.kubernetes.io/name: pg-admin
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cue
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/name: pg-admin
+    spec:
+      containers:
+        - name: pg-admin
+          image: dpage/pgadmin4:latest
+          ports:
+            - containerPort: 80
+          env:
+            - name: PGADMIN_DEFAULT_EMAIL
+              value: "admin@admin.com"
+            - name: PGADMIN_DEFAULT_PASSWORD
+              value: "admin"
+            - name: PGADMIN_CONFIG_SERVER_MODE
+              value: "False"
+
+---
+# Source: cue/templates/postgres-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loveagain-cue-postgres
+  labels:
+    helm.sh/chart: cue-0.1.0
+    app.kubernetes.io/name: postgres
+    app.kubernetes.io/instance: loveagain
+    app.kubernetes.io/version: 1.0.0
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+      app.kubernetes.io/instance: loveagain
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: cue-0.1.0
+        app.kubernetes.io/name: postgres
+        app.kubernetes.io/instance: loveagain
+        app.kubernetes.io/version: 1.0.0
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:15.19
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: loveagain-cue-backend-secret
+                  key: POSTGRES_USER
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: loveagain-cue-backend-secret
+                  key: POSTGRES_PASSWORD
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: loveagain-cue-backend-secret
+                  key: POSTGRES_DB
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: loveagain-cue-postgres-pvc

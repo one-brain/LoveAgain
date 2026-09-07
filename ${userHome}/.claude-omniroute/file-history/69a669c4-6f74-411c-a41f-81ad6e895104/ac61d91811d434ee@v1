@@ -1,0 +1,78 @@
+import { useSelector } from 'react-redux';
+import { RootState } from '../store';
+import { Link } from 'react-router-dom';
+
+const Header: React.FC = () => {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+
+  return (
+    <header className="bg-white/80 backdrop-blur-sm border-b border-border/50 sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex-shrink-0">
+            <Link to="/" className="flex items-center space-x-3">
+              <span className="h-8 w-8 flex items-center justify-center bg-primary/10 text-primary rounded-lg">
+                C
+              </span>
+              <span className="text-xl font-bold text-foreground">
+                Cue
+              </span>
+            </Link>
+          </div>
+          <div className="hidden md:flex md:items-center md:space-x-6">
+            <Link to="/" className="text-gray-500 hover:text-gray-900 transition-colors">
+              Home
+            </Link>
+            <Link to="/discovery" className="text-gray-500 hover:text-gray-900 transition-colors">
+              Discover
+            </Link>
+            {!isAuthenticated ? (
+              <>
+                <Link to="/login" className="text-gray-500 hover:text-gray-900 transition-colors">
+                  Login
+                </Link>
+                <Link to="/register" className="ml-4 text-gray-500 hover:text-gray-900 transition-colors">
+                  Register
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link to="/profile" className="text-gray-500 hover:text-gray-900 transition-colors">
+                  Profile
+                </Link>
+                <Link to="/provider" className="ml-4 text-gray-500 hover:text-gray-900 transition-colors">
+                  Provider Hub
+                </Link>
+                <button
+                  onClick={() => {
+                    // In a real app, we would dispatch a logout action
+                    // For now, we'll just remove the token and redirect
+                    localStorage.removeItem('token');
+                    window.location.reload();
+                  }}
+                  className="ml-4 text-gray-500 hover:text-gray-900 transition-colors"
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
+          <div className="flex items-center md:hidden">
+            {/* Mobile menu button */}
+            <button
+              className="p-2 rounded-md text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+              aria-label="Open main menu"
+            >
+              {/* Hamburger icon */}
+              <svg className="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+  );
+};
+
+export default Header;

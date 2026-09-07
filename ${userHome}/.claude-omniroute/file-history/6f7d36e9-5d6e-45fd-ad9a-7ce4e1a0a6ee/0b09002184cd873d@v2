@@ -1,0 +1,90 @@
+# Local deployment values for cue-infrastructure Helm chart
+# For deployment on a local k3s/minikube cluster
+
+# Global image settings
+global:
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+
+# PostgreSQL configuration
+postgres:
+  imageTag: 15-3.4
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+# RabbitMQ configuration
+rabbitmq:
+  imageTag: "3-management"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+  # Additional configuration
+  vhost: "/"
+  management:
+    enabled: true
+    plugin: rabbitmq_management
+  # Persistence (optional - enable if needed)
+  persistence:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+# Redis configuration
+redis:
+  imageTag: "7-alpine"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 128Mi
+      cpu: 100m
+    requests:
+      memory: 64Mi
+      cpu: 50m
+
+# PgAdmin configuration
+pgAdmin:
+  imageTag: "latest"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 128Mi
+      cpu: 100m
+    requests:
+      memory: 64Mi
+      cpu: 50m
+  defaultEmail: "admin@admin.com"
+  defaultPassword: "admin"
+
+# Secrets configuration - Plain text values (will be base64 encoded by Helm chart)
+secret:
+  # PostgreSQL credentials
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: localsecret
+  POSTGRES_DB: cue_db
+
+  # RabbitMQ credentials
+  RABBITMQ_USER: admin
+  RABBITMQ_PASSWORD: localsecret
+
+  # Redis password
+  REDIS_PASSWORD: localsecret
+
+# Service configuration for local development
+service:
+  type: ClusterIP
