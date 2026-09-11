@@ -1,3 +1,0 @@
-{{- range .Values.backendServices }}
-{{- include "cue._backend-service.tpl" (dict "name" .name "port" .port "root" .) }}
-{{- end }}
