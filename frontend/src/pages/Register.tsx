@@ -8,7 +8,7 @@ const Register: React.FC = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    roles: [] as string[]
+    roles: ['Seeker', 'Provider'] as string[]
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
@@ -47,37 +47,33 @@ const Register: React.FC = () => {
     e.preventDefault();
     setErrors({});
 
-    // Basic validation
+    const validationErrors: Record<string, string> = {};
     if (!formData.email) {
-      setErrors(prev => ({ ...prev, email: 'Email is required' }));
+      validationErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setErrors(prev => ({ ...prev, email: 'Email is invalid' }));
+      validationErrors.email = 'Email is invalid';
     }
-
     if (!formData.password) {
-      setErrors(prev => ({ ...prev, password: 'Password is required' }));
+      validationErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
-      setErrors(prev => ({ ...prev, password: 'Password must be at least 6 characters' }));
+      validationErrors.password = 'Password must be at least 6 characters';
     }
-
     if (formData.password !== formData.confirmPassword) {
-      setErrors(prev => ({ ...prev, confirmPassword: 'Passwords do not match' }));
+      validationErrors.confirmPassword = 'Passwords do not match';
     }
-
     if (!formData.firstName) {
-      setErrors(prev => ({ ...prev, firstName: 'First name is required' }));
+      validationErrors.firstName = 'First name is required';
     }
-
     if (!formData.lastName) {
-      setErrors(prev => ({ ...prev, lastName: 'Last name is required' }));
+      validationErrors.lastName = 'Last name is required';
     }
-
-    // Validate roles
     if (formData.roles.length === 0) {
-      setErrors(prev => ({ ...prev, roles: 'Please select at least one role' }));
+      validationErrors.roles = 'Please select at least one role';
     }
-
-    if (Object.keys(errors).length > 0) return;
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
 
     setLoading(true);
 
@@ -197,40 +193,6 @@ const Register: React.FC = () => {
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
             )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              I am a
-            </label>
-            <div className="flex items-start space-x-4">
-              <div>
-                <input
-                  id="roleSeeker"
-                  type="checkbox"
-                  value="Seeker"
-                  checked={formData.roles.includes('Seeker')}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                />
-                <label htmlFor="roleSeeker" className="ml-2 text-sm font-medium text-gray-700">
-                  Seeker (looking for companionship)
-                </label>
-              </div>
-              <div>
-                <input
-                  id="roleProvider"
-                  type="checkbox"
-                  value="Provider"
-                  checked={formData.roles.includes('Provider')}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
-                />
-                <label htmlFor="roleProvider" className="ml-2 text-sm font-medium text-gray-700">
-                  Provider (offering services)
-                </label>
-              </div>
-            </div>
           </div>
 
           <div>

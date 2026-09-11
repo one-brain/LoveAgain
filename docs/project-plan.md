@@ -169,7 +169,7 @@ As a visitor, I want to create an account so that I can use the platform.
 - AC: Password hashed with PBKDF2-SHA256, 120k iterations  
 - AC: Returns `{accessToken, refreshToken, expiresIn}`  
 - AC: Duplicate email returns 409  
-- AC: Role must be `Seeker` or `Provider`  
+- AC: Role defaults to `[Seeker, Provider]`; explicit `Roles` array overrides default  
 - Services: AuthService  
 - Files: `backend/Services/AuthService/Controllers/AuthController.cs`, `AuthModels.cs`
 

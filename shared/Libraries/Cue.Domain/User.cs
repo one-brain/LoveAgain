@@ -27,7 +27,7 @@ public sealed class User
 
         if (roles == null || !roles.Any())
         {
-            throw new ArgumentException("At least one role is required.", nameof(roles));
+            roles = new[] { UserRole.Seeker, UserRole.Provider };
         }
 
         Id = Guid.NewGuid();

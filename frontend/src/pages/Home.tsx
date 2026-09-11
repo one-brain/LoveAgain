@@ -12,18 +12,12 @@ const Home: React.FC = () => {
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
             A trusted platform connecting seekers with verified providers for social companionship.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex justify-center">
             <Link
               to="/register"
-              className="flex-1 bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors transform hover:scale-105"
+              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors transform hover:scale-105"
             >
-              Get Started as Seeker
-            </Link>
-            <Link
-              to="/register"
-              className="flex-1 bg-gray-200 text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-300 transition-colors transform hover:scale-105 border"
-            >
-              Become a Provider
+              Get Started
             </Link>
           </div>
         </div>

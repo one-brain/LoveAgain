@@ -35,19 +35,18 @@ public sealed class AuthController(
             return Conflict(new { error = "An account with this email already exists." });
         }
 
-        if (request.Roles == null || request.Roles.Length == 0)
+        var roles = new List<UserRole> { UserRole.Seeker, UserRole.Provider };
+        if (request.Roles != null && request.Roles.Length > 0)
         {
-            return BadRequest(new { error = "At least one role must be specified." });
-        }
-
-        var roles = new List<UserRole>();
-        foreach (var roleStr in request.Roles)
-        {
-            if (!Enum.TryParse<UserRole>(roleStr, true, out var role))
+            roles.Clear();
+            foreach (var roleStr in request.Roles)
             {
-                return BadRequest(new { error = $"Invalid role: {roleStr}. Role must be Seeker, Provider, or Admin." });
+                if (!Enum.TryParse<UserRole>(roleStr, true, out var role))
+                {
+                    return BadRequest(new { error = $"Invalid role: {roleStr}. Role must be Seeker, Provider, or Admin." });
+                }
+                roles.Add(role);
             }
-            roles.Add(role);
         }
 
         var user = new User(request.Email, request.FirstName, request.LastName, roles);

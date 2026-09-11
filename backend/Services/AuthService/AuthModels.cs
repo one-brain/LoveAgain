@@ -24,7 +24,7 @@ public sealed class AppOptions
     public string FrontendBaseUrl { get; init; } = "http://localhost:5173";
 }
 
-public sealed record RegisterRequest(string Email, string Password, string FirstName, string LastName, string[] Roles);
+public sealed record RegisterRequest(string Email, string Password, string FirstName, string LastName, string[]? Roles = null);
 public sealed record LoginRequest(string Email, string Password);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
