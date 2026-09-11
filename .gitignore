@@ -4,6 +4,8 @@
 # Visual Studio cache/options directory
 .vs/
 **/.claude-omniroute
+.claude/settings.local.json
+.claude/skills/
 
 # Visual Studio Code
 .vscode/
