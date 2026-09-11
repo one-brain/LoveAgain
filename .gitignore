@@ -3,16 +3,15 @@
 
 # Visual Studio cache/options directory
 .vs/
+**/.claude-omniroute
 
 # Visual Studio Code
 .vscode/
-*.code-workspace
+# Note: We do not ignore .vscode/extensions.json (see frontend/.gitignore for details)
 
 # Rider
 .idea/
 *.sln.iml
-*.swp
-*.swo
 
 # User-specific files
 *.rsuser
@@ -22,78 +21,99 @@
 *.sln.docstates
 
 # Build results
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-[Ww][Ii][Nn]32/
-[Aa][Rr][Mm]/
-[Aa][Rr][Mm]64/
-bld/
-[Bb]in/
-[Oo]bj/
-[Ll]og/
-[Ll]ogs/
+**/[Dd]ebug/
+**/[Dd]ebugPublic/
+**/[Rr]elease/
+**/[Rr]eleases/
+**/x64/
+**/x86/
+**/[Ww][Ii][Nn]32/
+**/[Aa][Rr][Mm]/
+**/[Aa][Rr][Mm]64/
+**/bld/
+**/[Bb]in/
+**/[Oo]bj/
+**/[Ll]og/
+**/[Ll]ogs/
 
 # NuGet
-*.nupkg
-*.snupkg
-.nuget/packages/
-.nuget/NuGet.Config
-.nuget/NuGet.exe
+**/*.nupkg
+**/*.snupkg
+**/.nuget/packages/
+**/.nuget/NuGet.Config
+**/.nuget/NuGet.exe
 
 # Local History
-.localhistory/
+**/.localhistory/
 
 # Entity Framework files
 *.edmx.sql
 *.edmx.designer.cs
 
 # Node.js
-node_modules/
-npm-debug.log
-package-lock.json
-yarn.lock
+**/node_modules/
+**/npm-debug.log
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+**/lerna-debug.log*
+**/package-lock.json
+**/yarn.lock
+**/pnpm-lock.yaml
 
 # Flutter
-build/
-android/.gradle
-android/local.properties
-android/app/debug
-android/app/profile
-android/app/release
+**/build/
+**/android/.gradle
+**/android/local.properties
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
 
 # Environment variables
-.env
-.env.local
-.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
 
 # OS files
-.DS_Store
-Thumbs.db
-*.swp
-*.swo
+**/.DS_Store
+**/Thumbs.db
+**/*.swp
+**/*.swo
 
 # Docker
-*.log
 .dockerignore
+**/*.log
 
 # Kubernetes
-*.yaml.bak
-*.yml.bak
+**/*.yaml.bak
+**/*.yml.bak
 
 # Temporary files
-*.tmp
-*.temp
-*.swp
-*~
+**/*.tmp
+**/*.temp
+**/*~
 
 # Test coverage
-coverage/
-htmlcov/
+**/coverage/
+**/htmlcov/
 
 # IDE
-*.code-workspace
-.claude/settings.local.json
+**.code-workspace
+
+# Miscellaneous
+**/.oxlintrc.json
+**/*.pid
+**/*.csproj.user
+**/*.vstest
+**/*.testsettings
+**.coverage
+**/*.cache
+**/ehthumbs.db
+**/Desktop.ini
+**/$tf
+**/$tf.lock
+**/*.raml
+**/*.tgz
+**/.dart_tool/
+**/dist/
+**/dist-ssr/
