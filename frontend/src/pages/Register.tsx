@@ -78,12 +78,21 @@ const Register: React.FC = () => {
     setLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // In a real app, you would send this data to your backend
-      console.log('Registering user:', formData);
-
+      const res = await fetch('http://localhost:8080/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          roles: ['Seeker', 'Provider'] // default roles
+        })
+      });
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
       // For demo, just redirect to login
       navigate('/login', { replace: true });
     } catch (err) {
@@ -120,6 +129,7 @@ const Register: React.FC = () => {
                 className="block w-full rounded-md border-0 px-3.5 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 value={formData.firstName}
                 onChange={handleChange}
+                name="firstName"
               />
               {errors.firstName && (
                 <p className="mt-1 text-sm text-red-600">{errors.firstName}</p>
@@ -137,6 +147,7 @@ const Register: React.FC = () => {
                 className="block w-full rounded-md border-0 px-3.5 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
                 value={formData.lastName}
                 onChange={handleChange}
+                name="lastName"
               />
               {errors.lastName && (
                 <p className="mt-1 text-sm text-red-600">{errors.lastName}</p>
@@ -155,6 +166,7 @@ const Register: React.FC = () => {
               className="block w-full rounded-md border-0 px-3.5 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
               value={formData.email}
               onChange={handleChange}
+              name="email"
             />
             {errors.email && (
               <p className="mt-1 text-sm text-red-600">{errors.email}</p>
@@ -172,6 +184,7 @@ const Register: React.FC = () => {
               className="block w-full rounded-md border-0 px-3.5 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
               value={formData.password}
               onChange={handleChange}
+              name="password"
             />
             {errors.password && (
               <p className="mt-1 text-sm text-red-600">{errors.password}</p>
@@ -189,6 +202,7 @@ const Register: React.FC = () => {
               className="block w-full rounded-md border-0 px-3.5 py-2.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:text-sm sm:leading-6"
               value={formData.confirmPassword}
               onChange={handleChange}
+              name="confirmPassword"
             />
             {errors.confirmPassword && (
               <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>
