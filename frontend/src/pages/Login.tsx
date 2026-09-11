@@ -3,6 +3,8 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginSuccess } from '../store/slices/authSlice';
 
+import { useLoginMutation } from '../store/authApi';
+
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -10,6 +12,7 @@ const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [login, { isLoading }] = useLoginMutation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -17,27 +20,8 @@ const Login: React.FC = () => {
     setLoading(true);
 
     try {
-      // Simulate API call
-      // In a real app, you would make an actual API request here
-      // For now, we'll simulate a successful login after a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Mock user data
-      const mockUser = {
-        id: '1',
-        email,
-        firstName: 'John',
-        lastName: 'Doe',
-        roles: ['Seeker'] as ('Seeker' | 'Provider' | 'Admin')[]
-      };
-
-      // Mock token
-      const mockToken = 'mock-jwt-token';
-
-      // Dispatch login success action
-      dispatch(loginSuccess({ token: mockToken, user: mockUser }));
-
-      // Redirect to home or discovery page
+      const result = await login({ email, password }).unwrap();
+      dispatch(loginSuccess({ token: result.accessToken, user: { id: result.userId || '1', email, firstName: 'User', lastName: '', roles: ['Seeker', 'Provider'] } }));
       navigate('/discovery', { replace: true });
     } catch (err) {
       setError('Invalid email or password');

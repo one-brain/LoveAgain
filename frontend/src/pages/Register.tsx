@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useRegisterMutation } from '../store/authApi';
 
 const Register: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -13,6 +14,7 @@ const Register: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const [register, { isLoading }] = useRegisterMutation();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const input = e.target as HTMLInputElement;
@@ -75,30 +77,21 @@ const Register: React.FC = () => {
       return;
     }
 
-    setLoading(true);
+    setLoading(isLoading);
 
     try {
-      const res = await fetch('http://localhost:8080/api/v1/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          roles: ['Seeker', 'Provider'] // default roles
-        })
-      });
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || 'Registration failed');
-      }
-      // For demo, just redirect to login
+      await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        roles: ['Seeker', 'Provider'] // default roles per backend
+      }).unwrap();
       navigate('/login', { replace: true });
     } catch (err) {
       setErrors({ submit: 'Registration failed. Please try again.' });
     } finally {
-      setLoading(false);
+      // isLoading from mutation handles loading state automatically
     }
   };
 
@@ -212,10 +205,10 @@ const Register: React.FC = () => {
           <div>
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              {loading ? 'Creating account...' : 'Create account'}
+              {isLoading ? 'Creating account...' : 'Create account'}
             </button>
           </div>
         </form>
