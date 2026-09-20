@@ -50,6 +50,8 @@ public sealed class ProviderProfile
     public bool IsActive { get; private set; }
     public decimal AverageResponseTime { get; private set; }
     public decimal AverageRating { get; private set; }
+    public double? Latitude { get; private set; }
+    public double? Longitude { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
@@ -80,4 +82,21 @@ public sealed class ProviderProfile
 
     public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
     public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
+
+    public void SetLocation(double latitude, double longitude)
+    {
+        if (latitude < -90 || latitude > 90)
+        {
+            throw new ArgumentOutOfRangeException(nameof(latitude), "Latitude must be between -90 and 90.");
+        }
+
+        if (longitude < -180 || longitude > 180)
+        {
+            throw new ArgumentOutOfRangeException(nameof(longitude), "Longitude must be between -180 and 180.");
+        }
+
+        Latitude = latitude;
+        Longitude = longitude;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

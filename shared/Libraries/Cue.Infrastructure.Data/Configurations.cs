@@ -36,6 +36,11 @@ internal sealed class ProviderProfileConfiguration : IEntityTypeConfiguration<Pr
         builder.Property(profile => profile.Specialties).HasConversion(
             specialties => specialties.ToArray(),
             values => values);
+
+        // Location properties - stored as separate columns for simplicity
+        // PostGIS geography column can be computed from these via DB migration
+        builder.Property(profile => profile.Latitude).HasColumnName("latitude");
+        builder.Property(profile => profile.Longitude).HasColumnName("longitude");
     }
 }
 

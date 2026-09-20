@@ -2,6 +2,7 @@ using Cue.Infrastructure.Data;
 using DiscoveryService.Controllers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Xunit;
 
 namespace DiscoveryService.Tests;
 
@@ -12,7 +13,10 @@ public class DiscoveryControllerTests
         var options = new DbContextOptionsBuilder<CueDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
-        return new CueDbContext(options);
+
+        var context = new CueDbContext(options);
+        context.Database.EnsureCreated();
+        return context;
     }
 
     [Fact]
@@ -23,7 +27,7 @@ public class DiscoveryControllerTests
         var controller = new DiscoveryController(dbContext);
 
         // Act
-        var result = await controller.ListProviders(pageSize: 10);
+        var result = await controller.ListProviders(null, null, null, null, null, 1, 10);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);

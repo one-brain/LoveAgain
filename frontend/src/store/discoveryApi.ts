@@ -15,8 +15,20 @@ export const discoveryApi = createApi({
         averageRating: number;
         isVerified: boolean;
         trustScore: number;
+        distanceKm: number | null;
       }>,
-      { q?: string; specialty?: string; minRate?: number; maxRate?: number; sortBy?: string; page?: number; pageSize?: number }
+      {
+        q?: string;
+        specialty?: string;
+        minRate?: number;
+        maxRate?: number;
+        sortBy?: string;
+        latitude?: number;
+        longitude?: number;
+        radiusKm?: number;
+        page?: number;
+        pageSize?: number;
+      }
     >({
       query: (params) => {
         const searchParams = new URLSearchParams();
@@ -25,6 +37,9 @@ export const discoveryApi = createApi({
         if (params.minRate != null) searchParams.set('minRate', String(params.minRate));
         if (params.maxRate != null) searchParams.set('maxRate', String(params.maxRate));
         if (params.sortBy) searchParams.set('sortBy', params.sortBy);
+        if (params.latitude != null) searchParams.set('latitude', String(params.latitude));
+        if (params.longitude != null) searchParams.set('longitude', String(params.longitude));
+        if (params.radiusKm != null) searchParams.set('radiusKm', String(params.radiusKm));
         if (params.page) searchParams.set('page', String(params.page));
         if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
         return { url: `/discovery/providers?${searchParams.toString()}` };

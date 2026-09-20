@@ -14,7 +14,8 @@ public sealed record ProviderCardResponse(
     IReadOnlyCollection<string> Specialties,
     decimal AverageRating,
     bool IsVerified,
-    int TrustScore);
+    int TrustScore,
+    double? DistanceKm);
 
 public sealed record ProviderDetailResponse(
     Guid ProviderId,
@@ -50,6 +51,9 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
         [FromQuery] decimal? minRate,
         [FromQuery] decimal? maxRate,
         [FromQuery] string? sortBy,
+        [FromQuery] double? latitude,
+        [FromQuery] double? longitude,
+        [FromQuery] double? radiusKm,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 12,
         CancellationToken cancellationToken = default)
@@ -81,38 +85,74 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
             query = query.Where(join => join.profile.HourlyRate <= maxRate.Value);
         }
 
-        // Sort options: rating (default), price, newest. Distance sort waits on
-        // geo data (see F-04-03 notes in the project plan).
-        query = sortBy?.Trim().ToLowerInvariant() switch
+        // Location-based filtering using Haversine formula
+        bool hasLocation = latitude.HasValue && longitude.HasValue;
+        double userLat = latitude ?? 0;
+        double userLon = longitude ?? 0;
+        double maxRadius = radiusKm ?? 50; // Default 50km radius
+
+        if (hasLocation)
         {
-            "price" => query.OrderBy(join => join.profile.HourlyRate).ThenByDescending(join => join.profile.AverageRating),
-            "newest" => query.OrderByDescending(join => join.profile.CreatedAt),
-            _ => query.OrderByDescending(join => join.profile.AverageRating).ThenByDescending(join => join.profile.UpdatedAt),
+            // Filter providers who have location set and are within max radius
+            query = query.Where(join =>
+                join.profile.Latitude != null &&
+                join.profile.Longitude != null);
+        }
+
+        // Project to include distance calculation
+        var projectQuery = query.Select(join => new
+        {
+            join.profile,
+            join.user,
+            // Haversine distance formula (approximation in km)
+            Distance = hasLocation && join.profile.Latitude != null && join.profile.Longitude != null
+                ? Math.Acos(
+                    Math.Sin(userLat * Math.PI / 180) * Math.Sin(join.profile.Latitude.Value * Math.PI / 180) +
+                    Math.Cos(userLat * Math.PI / 180) * Math.Cos(join.profile.Latitude.Value * Math.PI / 180) *
+                    Math.Cos((userLon - join.profile.Longitude.Value) * Math.PI / 180)
+                ) * 6371 // Earth radius in km
+                : (double?)null
+        });
+
+        // Filter by radius if location provided
+        if (hasLocation)
+        {
+            projectQuery = projectQuery.Where(p => p.Distance != null && p.Distance <= maxRadius);
+        }
+
+        // Sort options: rating (default), price, newest, distance
+        projectQuery = sortBy?.Trim().ToLowerInvariant() switch
+        {
+            "price" => projectQuery.OrderBy(p => p.profile.HourlyRate).ThenByDescending(p => p.profile.AverageRating),
+            "newest" => projectQuery.OrderByDescending(p => p.profile.CreatedAt),
+            "distance" when hasLocation => projectQuery.OrderBy(p => p.Distance).ThenByDescending(p => p.profile.AverageRating),
+            _ => projectQuery.OrderByDescending(p => p.profile.AverageRating).ThenByDescending(p => p.profile.UpdatedAt),
         };
 
         if (!string.IsNullOrWhiteSpace(q))
         {
-            // ILIKE-style case-insensitive match over name, bio and specialties —
-            // sufficient for MVP search volumes; full-text index can come later.
+            // ILIKE-style case-insensitive match over name, bio and specialties
             var term = q.Trim().ToLowerInvariant();
-            query = query.Where(join =>
-                (join.user.FirstName + " " + join.user.LastName).ToLower().Contains(term) ||
-                join.profile.Bio.ToLower().Contains(term) ||
-                join.profile.Specialties.Any(s => s.ToLower().Contains(term)));
+            projectQuery = projectQuery.Where(p =>
+                (p.user.FirstName + " " + p.user.LastName).ToLower().Contains(term) ||
+                p.profile.Bio.ToLower().Contains(term) ||
+                p.profile.Specialties.Any(s => s.ToLower().Contains(term)));
         }
 
-        var cards = await query
-            .Skip((page - 1) * pageSize)            .Take(pageSize)
-            .Select(join => new ProviderCardResponse(
-                join.profile.UserId,
-                join.user.FirstName + " " + join.user.LastName,
-                join.user.PhotoUrl,
-                join.profile.HourlyRate,
-                join.profile.Bio,
-                join.profile.Specialties,
-                join.profile.AverageRating,
-                join.user.IsVerified,
-                join.user.TrustScore))
+        var cards = await projectQuery
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new ProviderCardResponse(
+                p.profile.UserId,
+                p.user.FirstName + " " + p.user.LastName,
+                p.user.PhotoUrl,
+                p.profile.HourlyRate,
+                p.profile.Bio,
+                p.profile.Specialties,
+                p.profile.AverageRating,
+                p.user.IsVerified,
+                p.user.TrustScore,
+                p.Distance != null ? Math.Round(p.Distance.Value, 1) : null))
             .ToListAsync(cancellationToken);
 
         return Ok(cards);

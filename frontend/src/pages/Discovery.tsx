@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useListProvidersQuery } from '../store/discoveryApi';
 
@@ -17,6 +17,7 @@ const SPECIALTIES = [
 
 const SORT_OPTIONS = [
   { value: 'rating', label: 'Top rated' },
+  { value: 'distance', label: 'Nearest' },
   { value: 'price', label: 'Price: low to high' },
   { value: 'newest', label: 'Newest' },
 ];
@@ -31,6 +32,24 @@ const Discovery: React.FC = () => {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(12);
   const [showPriceFilter, setShowPriceFilter] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  // Get user's location on mount
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setUserLocation({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+          });
+        },
+        (error) => {
+          console.warn('Location access denied:', error.message);
+        }
+      );
+    }
+  }, []);
 
   const { data: providers, isLoading, isError, error } = useListProvidersQuery({
     q: q || undefined,
@@ -38,6 +57,9 @@ const Discovery: React.FC = () => {
     minRate: minRate ? Number(minRate) : undefined,
     maxRate: maxRate ? Number(maxRate) : undefined,
     sortBy,
+    latitude: userLocation?.latitude,
+    longitude: userLocation?.longitude,
+    radiusKm: 50,
     page,
     pageSize,
   });
@@ -296,6 +318,16 @@ const Discovery: React.FC = () => {
                           {provider.averageRating.toFixed(1)}
                         </span>
                       </div>
+                      {provider.distanceKm != null && (
+                        <>
+                          <span style={{ color: '#E7E3E0' }}>•</span>
+                          <span className="text-sm" style={{ color: '#746B66' }}>
+                            {provider.distanceKm < 1
+                              ? `${Math.round(provider.distanceKm * 1000)}m`
+                              : `${provider.distanceKm}km`}
+                          </span>
+                        </>
+                      )}
                     </div>
 
                     {provider.specialties.length > 0 && (
