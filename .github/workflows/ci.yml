@@ -73,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [AuthService, BookingService, PaymentService, ChatService]
+        service: [AuthService, BookingService, PaymentService, ChatService, DiscoveryService]
     steps:
       - name: Checkout
         uses: actions/checkout@v4

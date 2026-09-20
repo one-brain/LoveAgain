@@ -2,153 +2,219 @@ import { Link } from 'react-router-dom';
 
 const Home: React.FC = () => {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-b from-blue-50 to-white">
+    <div style={{ backgroundColor: '#FAFAF9' }}>
       {/* Hero Section */}
-      <section className="relative z-10 py-20 bg-gradient-to-t from-white to-transparent">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-blue-600 mb-6">
-            Discover Meaningful Connections
+      <section className="py-20" style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E7E3E0' }}>
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <h1
+            className="text-5xl font-semibold mb-4"
+            style={{ color: '#1A1614', lineHeight: '1.2' }}
+          >
+            Find companions for the experiences you love
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            A trusted platform connecting seekers with verified providers for social companionship.
+          <p
+            className="text-xl mb-8 max-w-2xl mx-auto"
+            style={{ color: '#746B66', lineHeight: '1.6' }}
+          >
+            Connect with verified people for activities, skill-sharing, and adventures. From tennis matches to cooking classes to museum visits.
           </p>
-          <div className="flex justify-center">
-            <Link
-              to="/register"
-              className="bg-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors transform hover:scale-105"
-            >
-              Get Started
-            </Link>
-          </div>
+          <Link
+            to="/register"
+            className="inline-block px-8 py-4 rounded-lg font-medium text-lg transition-colors"
+            style={{ backgroundColor: '#E8773D', color: '#FFFFFF' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C65D28'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#E8773D'}
+          >
+            Get started
+          </Link>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-16 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-blue-600 mb-12">
-            Why Choose Cue?
+      <section className="py-20">
+        <div className="max-w-6xl mx-auto px-6">
+          <h2
+            className="text-3xl font-semibold text-center mb-16"
+            style={{ color: '#1A1614' }}
+          >
+            How Cue works
           </h2>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-4">
             {/* Feature 1 */}
-            <div className="text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-12 w-12 flex items-center justify-center mb-4 bg-blue-100 rounded-lg">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m2 0a2 2 0 100-4 2 2 0 000 4zm-6 0a2 2 0 1000-4 2 2 0 000 4zm6 8a2 2 0 1000-4 2 2 0 000 4zm-6 0a2 2 0 1000-4 2 2 0 000 4z" />
+            <div>
+              <div
+                className="w-12 h-12 flex items-center justify-center rounded-lg mb-4"
+                style={{ backgroundColor: '#FEF3EE' }}
+              >
+                <svg className="h-6 w-6" style={{ color: '#E8773D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-blue-600 mb-3">Verified Providers</h3>
-              <p className="text-gray-600">
-                All providers undergo identity verification and background checks for your safety.
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#1A1614' }}>
+                Verified profiles
+              </h3>
+              <p style={{ color: '#746B66', lineHeight: '1.6' }}>
+                All providers undergo identity verification and background checks for safety.
               </p>
             </div>
 
             {/* Feature 2 */}
-            <div className="text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-12 w-12 flex items-center justify-center mb-4 bg-blue-100 rounded-lg">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zm0 10c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zm0-6c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2z" />
+            <div>
+              <div
+                className="w-12 h-12 flex items-center justify-center rounded-lg mb-4"
+                style={{ backgroundColor: '#FEF3EE' }}
+              >
+                <svg className="h-6 w-6" style={{ color: '#E8773D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-blue-600 mb-3">Secure Payments</h3>
-              <p className="text-gray-600">
-                Built-in Stripe integration ensures safe, escrow-based transactions for peace of mind.
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#1A1614' }}>
+                Secure payments
+              </h3>
+              <p style={{ color: '#746B66', lineHeight: '1.6' }}>
+                Built-in Stripe integration ensures safe, escrow-based transactions.
               </p>
             </div>
 
             {/* Feature 3 */}
-            <div className="text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-12 w-12 flex items-center justify-center mb-4 bg-blue-100 rounded-lg">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h3m4 0h3m-7 0h3M3 10a6 6 0 0112 0c0-2.761-3.582-5-8-5s-8 2.239-8 5zm0 10a8 8 0 101016 0H3z" />
+            <div>
+              <div
+                className="w-12 h-12 flex items-center justify-center rounded-lg mb-4"
+                style={{ backgroundColor: '#FEF3EE' }}
+              >
+                <svg className="h-6 w-6" style={{ color: '#E8773D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-blue-600 mb-3">Real-time Chat</h3>
-              <p className="text-gray-600">
-                Connect instantly with built-in messaging, including read receipts and typing indicators.
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#1A1614' }}>
+                Real-time chat
+              </h3>
+              <p style={{ color: '#746B66', lineHeight: '1.6' }}>
+                Connect instantly with built-in messaging and notifications.
               </p>
             </div>
 
             {/* Feature 4 */}
-            <div className="text-center p-6 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-12 w-12 flex items-center justify-center mb-4 bg-blue-100 rounded-lg">
-                <svg className="h-6 w-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zm0 10c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2zm0-6c-1.657 0-3 .895-3 2s1.343 2 3 2 3-.895 3-2-1.343-2-3-2z" />
+            <div>
+              <div
+                className="w-12 h-12 flex items-center justify-center rounded-lg mb-4"
+                style={{ backgroundColor: '#FEF3EE' }}
+              >
+                <svg className="h-6 w-6" style={{ color: '#E8773D' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-blue-600 mb-3">Trust & Safety</h3>
-              <p className="text-gray-600">
-                Comprehensive trust scoring, dispute resolution, and content moderation protect our community.
+              <h3 className="text-lg font-semibold mb-2" style={{ color: '#1A1614' }}>
+                Trust scoring
+              </h3>
+              <p style={{ color: '#746B66', lineHeight: '1.6' }}>
+                Reputation system with reviews and dispute resolution protects the community.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works Section */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-blue-600 mb-12">
-            How It Works
+      {/* How It Works */}
+      <section className="py-20" style={{ backgroundColor: '#FFFFFF', borderTop: '1px solid #E7E3E0' }}>
+        <div className="max-w-6xl mx-auto px-6">
+          <h2
+            className="text-3xl font-semibold text-center mb-16"
+            style={{ color: '#1A1614' }}
+          >
+            Three steps to your next experience
           </h2>
-          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-12 lg:grid-cols-3">
             {/* Step 1 */}
-            <div className="flex flex-col items-center py-8 px-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-14 w-14 flex items-center justify-center mb-4 bg-blue-100 rounded-full">
-                <span className="text-blue-600 text-xl font-bold">1</span>
+            <div>
+              <div className="mb-4">
+                <span
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-full font-semibold text-lg"
+                  style={{ backgroundColor: '#FEF3EE', color: '#E8773D' }}
+                >
+                  1
+                </span>
               </div>
-              <h3 className="text-lg font-semibold text-blue-600 mb-3 mt-2">Create Account</h3>
-              <p className="text-gray-600 text-center">
-                Sign up as either a seeker looking for companionship or a provider offering services.
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#1A1614' }}>
+                Create your account
+              </h3>
+              <p style={{ color: '#746B66', lineHeight: '1.6' }}>
+                Sign up in minutes. Choose whether you want to find companions, offer services, or both.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="flex flex-col items-center py-8 px-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-14 w-14 flex items-center justify-center mb-4 bg-blue-100 rounded-full">
-                <span className="text-blue-600 text-xl font-bold">2</span>
+            <div>
+              <div className="mb-4">
+                <span
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-full font-semibold text-lg"
+                  style={{ backgroundColor: '#FEF3EE', color: '#E8773D' }}
+                >
+                  2
+                </span>
               </div>
-              <h3 className="text-lg font-semibold text-blue-600 mb-3 mt-2">Browse & Connect</h3>
-              <p className="text-gray-600 text-center">
-                Search providers by specialty, location, rate, and availability. View detailed profiles and reviews.
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#1A1614' }}>
+                Browse and connect
+              </h3>
+              <p style={{ color: '#746B66', lineHeight: '1.6' }}>
+                Search by specialty, location, and availability. View profiles, ratings, and reviews.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="flex flex-col items-center py-8 px-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
-              <div className="h-14 w-14 flex items-center justify-center mb-4 bg-blue-100 rounded-full">
-                <span className="text-blue-600 text-xl font-bold">3</span>
+            <div>
+              <div className="mb-4">
+                <span
+                  className="inline-flex items-center justify-center w-10 h-10 rounded-full font-semibold text-lg"
+                  style={{ backgroundColor: '#FEF3EE', color: '#E8773D' }}
+                >
+                  3
+                </span>
               </div>
-              <h3 className="text-lg font-semibold text-blue-600 mb-3 mt-2">Book & Enjoy</h3>
-              <p className="text-gray-600 text-center">
-                Securely book sessions, chat in real-time, and leave reviews to help build community trust.
+              <h3 className="text-xl font-semibold mb-3" style={{ color: '#1A1614' }}>
+                Book and enjoy
+              </h3>
+              <p style={{ color: '#746B66', lineHeight: '1.6' }}>
+                Securely book time, chat in real-time, and share your experience through reviews.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Call to Action Section */}
-      <section className="py-20 bg-blue-600">
-        <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-white mb-6">
-            Ready to Find Your Perfect Match?
+      {/* CTA Section */}
+      <section className="py-20" style={{ backgroundColor: '#E8773D' }}>
+        <div className="max-w-4xl mx-auto text-center px-6">
+          <h2
+            className="text-4xl font-semibold mb-4"
+            style={{ color: '#FFFFFF', lineHeight: '1.3' }}
+          >
+            Ready to get started?
           </h2>
-          <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto">
-            Join thousands of satisfied users who have found meaningful connections through our trusted platform.
+          <p
+            className="text-lg mb-8 max-w-2xl mx-auto"
+            style={{ color: 'rgba(255, 255, 255, 0.9)', lineHeight: '1.6' }}
+          >
+            Join thousands finding companions for activities, skill-sharing, and new adventures.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               to="/register"
-              className="flex-1 bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-blue-200 transition-colors transform hover:scale-105"
+              className="px-8 py-3 rounded-lg font-medium transition-colors"
+              style={{ backgroundColor: '#FFFFFF', color: '#E8773D' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FAFAF9'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
             >
-              Join Now - It's Free
+              Create account
             </Link>
             <Link
               to="/discovery"
-              className="flex-1 bg-white/20 text-white px-6 py-3 rounded-lg font-medium hover:bg-white/30 transition-colors transform hover:scale-105 border border-white/20"
+              className="px-8 py-3 rounded-lg font-medium transition-colors"
+              style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', color: '#FFFFFF', border: '1px solid rgba(255, 255, 255, 0.3)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.25)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.15)'}
             >
-              Browse Providers
+              Browse providers
             </Link>
           </div>
         </div>

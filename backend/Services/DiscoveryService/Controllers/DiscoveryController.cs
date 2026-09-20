@@ -16,22 +16,6 @@ public sealed record ProviderCardResponse(
     bool IsVerified,
     int TrustScore);
 
-public sealed record ProviderSlotResponse(Guid SlotId, DateTime StartTime, DateTime EndTime, bool IsBooked);
-
-public sealed record ProviderDetailResponse(
-    Guid ProviderId,
-    string DisplayName,
-    string? PhotoUrl,
-    decimal HourlyRate,
-    string Bio,
-    IReadOnlyCollection<string> Specialties,
-    decimal MaxRadiusKm,
-    string? IntroVideoUrl,
-    decimal AverageRating,
-    bool IsVerified,
-    int TrustScore,
-    IReadOnlyList<ProviderSlotResponse> UpcomingSlots);
-
 [ApiController]
 [Route("api/v1/discovery")]
 public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
@@ -114,47 +98,4 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
         return Ok(cards);
     }
 
-    [HttpGet("providers/{userId:guid}")]
-    [ProducesResponseType(typeof(ProviderDetailResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<ProviderDetailResponse>> GetProvider(
-        Guid userId,
-        CancellationToken cancellationToken)
-    {
-        var join = await dbContext.ProviderProfiles
-            .AsNoTracking()
-            .Where(profile => profile.UserId == userId && profile.IsActive)
-            .Join(dbContext.Users.AsNoTracking(),
-                profile => profile.UserId,
-                user => user.Id,
-                (profile, user) => new { profile, user })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (join == null)
-        {
-            return NotFound(new { error = "Provider not found." });
-        }
-
-        var slots = await dbContext.AvailabilitySlots
-            .AsNoTracking()
-            .Where(slot => slot.ProviderId == userId && !slot.IsBooked && slot.StartTime > DateTime.UtcNow)
-            .OrderBy(slot => slot.StartTime)
-            .Take(20)
-            .Select(slot => new ProviderSlotResponse(slot.Id, slot.StartTime, slot.EndTime, slot.IsBooked))
-            .ToListAsync(cancellationToken);
-
-        return Ok(new ProviderDetailResponse(
-            join.profile.UserId,
-            join.user.FirstName + " " + join.user.LastName,
-            join.user.PhotoUrl,
-            join.profile.HourlyRate,
-            join.profile.Bio,
-            join.profile.Specialties,
-            join.profile.MaxRadiusKm,
-            join.profile.IntroVideoUrl,
-            join.profile.AverageRating,
-            join.user.IsVerified,
-            join.user.TrustScore,
-            slots));
-    }
 }

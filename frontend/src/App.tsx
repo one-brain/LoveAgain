@@ -6,6 +6,7 @@ import Register from './pages/Register';
 import Discovery from './pages/Discovery';
 import ProfilePage from './pages/Profile';
 import ProviderDashboard from './pages/ProviderDashboard';
+import ProviderDetail from './pages/ProviderDetail';
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
           <Route path="discovery" element={<Discovery />} />
+          <Route path="provider/:userId" element={<ProviderDetail />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="provider" element={<ProviderDashboard />} />
         </Route>

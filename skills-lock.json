@@ -25,6 +25,12 @@
       "skillPath": "kubernetes/SKILL.md",
       "computedHash": "a6bb9e80f26e842ac8052abd6c677dd6ee8e25dc37e9cea825f42adfdb15aaae"
     },
+    "mcp-builder": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/mcp-builder/SKILL.md",
+      "computedHash": "6498a736a8dc5c645047c8a875b8ea7417e2ad97146f005200e50d20a9337ada"
+    },
     "ui-ux-pro-max": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",
