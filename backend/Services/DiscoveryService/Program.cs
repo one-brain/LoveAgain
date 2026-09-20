@@ -2,12 +2,16 @@ using Cue.Domain;
 using Cue.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "DiscoveryService", Version = "v1" });
+});
 builder.Services.AddDbContext<CueDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
         .UseSnakeCaseNamingConvention());
@@ -27,7 +31,11 @@ using (var scope = app.Services.CreateScope())
 
 app.UseHttpsRedirection();
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(c =>
+{
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "DiscoveryService API v1");
+    c.RoutePrefix = "swagger";
+});
 app.MapControllers();
 app.MapHealthChecks("/health");
 app.MapHealthChecks("/ready");

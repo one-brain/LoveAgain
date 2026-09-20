@@ -16,6 +16,26 @@ public sealed record ProviderCardResponse(
     bool IsVerified,
     int TrustScore);
 
+public sealed record ProviderDetailResponse(
+    Guid ProviderId,
+    string DisplayName,
+    string? PhotoUrl,
+    decimal HourlyRate,
+    string Bio,
+    IReadOnlyCollection<string> Specialties,
+    decimal MaxRadiusKm,
+    string? IntroVideoUrl,
+    decimal AverageRating,
+    bool IsVerified,
+    int TrustScore,
+    IReadOnlyCollection<AvailabilitySlotResponse> UpcomingSlots);
+
+public sealed record AvailabilitySlotResponse(
+    Guid SlotId,
+    DateTime StartTime,
+    DateTime EndTime,
+    bool IsBooked);
+
 [ApiController]
 [Route("api/v1/discovery")]
 public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
@@ -96,6 +116,65 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
             .ToListAsync(cancellationToken);
 
         return Ok(cards);
+    }
+
+    [HttpGet("providers/{userId:guid}")]
+    [ProducesResponseType(typeof(ProviderDetailResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProviderDetailResponse>> GetProvider(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var result = await dbContext.ProviderProfiles
+            .AsNoTracking()
+            .Where(profile => profile.UserId == userId && profile.IsActive)
+            .Join(dbContext.Users.AsNoTracking(),
+                profile => profile.UserId,
+                user => user.Id,
+                (profile, user) => new { profile, user })
+            .Where(join => join.user.DeletedAt == null)
+            .Select(join => new
+            {
+                Provider = new ProviderDetailResponse(
+                    join.profile.UserId,
+                    join.user.FirstName + " " + join.user.LastName,
+                    join.user.PhotoUrl,
+                    join.profile.HourlyRate,
+                    join.profile.Bio,
+                    join.profile.Specialties,
+                    join.profile.MaxRadiusKm,
+                    join.profile.IntroVideoUrl,
+                    join.profile.AverageRating,
+                    join.user.IsVerified,
+                    join.user.TrustScore,
+                    new List<AvailabilitySlotResponse>()),
+                UserId = join.profile.UserId
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (result == null)
+        {
+            return NotFound(new { error = "Provider not found or not available." });
+        }
+
+        // Fetch upcoming available slots (not booked, in the future)
+        var upcomingSlots = await dbContext.AvailabilitySlots
+            .AsNoTracking()
+            .Where(slot => slot.ProviderId == result.UserId &&
+                           slot.StartTime > DateTime.UtcNow &&
+                           !slot.IsBooked)
+            .OrderBy(slot => slot.StartTime)
+            .Take(20) // Limit to next 20 available slots
+            .Select(slot => new AvailabilitySlotResponse(
+                slot.Id,
+                slot.StartTime,
+                slot.EndTime,
+                slot.IsBooked))
+            .ToListAsync(cancellationToken);
+
+        var response = result.Provider with { UpcomingSlots = upcomingSlots };
+
+        return Ok(response);
     }
 
 }
