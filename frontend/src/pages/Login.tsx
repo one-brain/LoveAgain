@@ -28,6 +28,8 @@ const Login: React.FC = () => {
           roles: ['Seeker', 'Provider']
         }
       }));
+      localStorage.setItem('userId', result.userId);
+      localStorage.setItem('accessToken', result.accessToken);
       navigate('/discovery', { replace: true });
     } catch (err) {
       setError('Email or password is incorrect');

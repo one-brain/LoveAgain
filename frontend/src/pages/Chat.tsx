@@ -20,7 +20,7 @@ const Chat: React.FC = () => {
   const booking = bookings?.find(b => b.orderId === orderId);
   const canChat = booking && (booking.status !== 'Cancelled' && booking.status !== 'Disputed' && booking.status !== 'PendingPayment');
 
-  const { data: historyMessages, isLoading: isMessagesLoading, isError: isMessagesError } = useGetOrderMessagesQuery(
+  const { data: historyMessages } = useGetOrderMessagesQuery(
     { orderId: orderId || '' },
     { skip: !orderId || !canChat }
   );
@@ -59,7 +59,8 @@ const Chat: React.FC = () => {
     hubConnection.on('ReceiveMessage', (message: ChatMessageDto) => {
       setMessages(prev => [...prev, message]);
       // Mark as read if it's from the other person
-      if (message.senderId !== currentUserId) {
+      const loggedInUserId = localStorage.getItem('userId');
+      if (message.senderId !== loggedInUserId) {
         markAsRead(orderId);
       }
     });
@@ -108,15 +109,7 @@ const Chat: React.FC = () => {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAFAF9' }}>
-        <div className="text-lg" style={{ color: '#746B66' }}>Loading chat...</div>
-      </div>
-    );
-  }
-
-  if (isError || !booking) {
+  if (!booking) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAFAF9' }}>
         <div className="rounded-xl p-8 text-center max-w-md" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E7E3E0' }}>

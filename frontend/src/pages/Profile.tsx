@@ -1,9 +1,55 @@
-import { useSelector } from 'react-redux';
-import type { RootState } from '../store';
+import React, { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { useGetMyProfileQuery } from '../store/bookingApi';
+import { useAddServiceSpecialtyMutation, useRemoveServiceSpecialtyMutation } from '../store/bookingApi';
+import { ServiceManagement } from '../components/ServiceManagement';
+import { setSpecialties } from '../store/slices/profileSlice';
 
 const Profile: React.FC = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const { user } = useSelector((state: any) => state.auth);
+  const { specialties } = useSelector((state: any) => state.profile || { specialties: [] });
+
+  // Fetch provider profile
+  const { data: profileData, isLoading: profileLoading } = useGetMyProfileQuery();
+
+  // Service management mutations
+  const [addService] = useAddServiceSpecialtyMutation();
+  const [removeService] = useRemoveServiceSpecialtyMutation();
+
+  // Initialize specialties from profile data
+  useEffect(() => {
+    if (profileData?.profile?.specialties) {
+      dispatch(setSpecialties(profileData.profile.specialties));
+    }
+  }, [profileData, dispatch]);
+
+  const handleAddService = async (specialty: string) => {
+    try {
+      const result = await addService({ specialty }).unwrap();
+      dispatch(setSpecialties(result.specialties));
+    } catch {
+      // Error already handled by RTK Query
+    }
+  };
+
+  const handleRemoveService = async (specialty: string) => {
+    try {
+      const result = await removeService({ specialty }).unwrap();
+      dispatch(setSpecialties(result.specialties));
+    } catch {
+      // Error already handled by RTK Query
+    }
+  };
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAFAF9' }}>
+        <div style={{ color: '#746B66' }}>Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
@@ -12,6 +58,9 @@ const Profile: React.FC = () => {
       </div>
     );
   }
+
+  const profile = profileData?.profile;
+  const isProvider = profile !== undefined;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FAFAF9' }}>
@@ -31,9 +80,9 @@ const Profile: React.FC = () => {
               <div className="flex items-center gap-4 mb-8 pb-8" style={{ borderBottom: '1px solid #E7E3E0' }}>
                 <div
                   className="w-16 h-16 rounded-full flex items-center justify-center font-semibold text-xl"
-                  style={{ backgroundColor: '#E8773D', color: '#FFFFFF' }}
+                  style={{ backgroundColor: '#C65D28', color: '#FFFFFF' }}
                 >
-                  {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                  {user.firstName?.charAt(0)}{user.lastName?.charAt(0)}
                 </div>
                 <div>
                   <h2 className="text-2xl font-semibold" style={{ color: '#1A1614' }}>
@@ -45,63 +94,77 @@ const Profile: React.FC = () => {
                 </div>
               </div>
 
-              {/* Account Info */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold mb-4" style={{ color: '#1A1614' }}>Account information</h3>
-                <dl className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <dt className="text-sm font-medium mb-1" style={{ color: '#746B66' }}>Email</dt>
-                    <dd style={{ color: '#1A1614' }}>{user.email}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium mb-1" style={{ color: '#746B66' }}>Role</dt>
-                    <dd className="capitalize" style={{ color: '#1A1614' }}>{user.roles?.[0] || 'Member'}</dd>
-                  </div>
-                </dl>
-              </div>
+              {/* Provider Profile Section */}
+              {isProvider && profile && (
+                <section className="mb-8">
+                  <h2 className="text-xl font-semibold mb-4" style={{ color: '#1A1614' }}>Your Services</h2>
+                  <ServiceManagement
+                    specialties={specialties}
+                    onAddService={handleAddService}
+                    onRemoveService={handleRemoveService}
+                  />
+                </section>
+              )}
 
-              {/* Settings Links */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4" style={{ color: '#1A1614' }}>Settings</h3>
-                <div className="space-y-2">
-                  <Link
-                    to="#"
-                    className="flex items-center justify-between px-4 py-3 rounded-lg transition-colors"
-                    style={{ backgroundColor: '#FAFAF9', color: '#1A1614' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F5F3F1'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FAFAF9'}
-                  >
-                    <span className="font-medium">Notifications</span>
-                    <svg className="h-5 w-5" style={{ color: '#746B66' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
+              {/* Profile Details Grid */}
+              {profile && (
+                <section>
+                  <h2 className="text-xl font-semibold mb-4" style={{ color: '#1A1614' }}>Profile Details</h2>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1" style={{ color: '#746B66' }}>Hourly Rate</p>
+                      <p className="text-lg font-semibold" style={{ color: '#1A1614' }}>${profile.hourlyRate}/hr</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1" style={{ color: '#746B66' }}>Availability Radius</p>
+                      <p className="text-lg font-semibold" style={{ color: '#1A1614' }}>{profile.maxRadiusKm} km</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1" style={{ color: '#746B66' }}>Average Rating</p>
+                      <p className="text-lg font-semibold" style={{ color: '#1A1614' }}>{profile.averageRating} ★</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-1" style={{ color: '#746B66' }}>Profile Status</p>
+                      <span className="px-2 py-1 rounded-full text-xs font-medium"
+                            style={{ backgroundColor: profile.isActive ? '#F0F9F1' : '#FEF3EE', color: profile.isActive ? '#378742' : '#C65D28' }}>
+                        {profile.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {profile.bio && (
+                    <div className="pt-4 mt-6" style={{ borderTop: '1px solid #E7E3E0' }}>
+                      <p className="text-xs text-muted-foreground mb-2" style={{ color: '#746B66' }}>Bio</p>
+                      <p className="text-sm" style={{ color: '#1A1614' }}>{profile.bio}</p>
+                    </div>
+                  )}
+                </section>
+              )}
+
+              {/* Not a provider */}
+              {!isProvider && (
+                <section className="py-8 text-center">
+                  <p className="text-sm mb-4" style={{ color: '#746B66' }}>You do not have a provider profile yet.</p>
+                  <Link to="/provider" className="inline-block rounded-lg px-4 py-2 text-sm font-medium" style={{ backgroundColor: '#C65D28', color: '#FFFFFF' }}>
+                    Switch to Provider Dashboard
                   </Link>
-                  <Link
-                    to="#"
-                    className="flex items-center justify-between px-4 py-3 rounded-lg transition-colors"
-                    style={{ backgroundColor: '#FAFAF9', color: '#1A1614' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F5F3F1'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FAFAF9'}
-                  >
-                    <span className="font-medium">Privacy & security</span>
-                    <svg className="h-5 w-5" style={{ color: '#746B66' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
+                </section>
+              )}
+
+              {/* Quick Links */}
+              <section className="pt-8 mt-8" style={{ borderTop: '1px solid #E7E3E0' }}>
+                <h2 className="text-xl font-semibold mb-4" style={{ color: '#1A1614' }}>Quick Actions</h2>
+                <div className="flex flex-wrap gap-3">
+                  <Link to="/bookings" className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50" style={{ borderColor: '#E7E3E0' }}>
+                    My Bookings
                   </Link>
-                  <Link
-                    to="#"
-                    className="flex items-center justify-between px-4 py-3 rounded-lg transition-colors"
-                    style={{ backgroundColor: '#FAFAF9', color: '#1A1614' }}
-                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F5F3F1'}
-                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FAFAF9'}
-                  >
-                    <span className="font-medium">Billing</span>
-                    <svg className="h-5 w-5" style={{ color: '#746B66' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
+                  {isProvider && (
+                    <Link to="/provider" className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium hover:bg-gray-50" style={{ borderColor: '#E7E3E0' }}>
+                      Provider Dashboard
+                    </Link>
+                  )}
                 </div>
-              </div>
+              </section>
             </div>
           </div>
         </div>
