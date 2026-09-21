@@ -10,6 +10,16 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 builder.Services.AddControllers();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 builder.Services.AddHealthChecks()
     .AddCheck("self", () => HealthCheckResult.Healthy(), tags: new[] { "live", "ready" })
@@ -30,6 +40,7 @@ builder.Services.AddOcelot();
 var app = builder.Build();
 
 app.UseRouting();
+app.UseCors();
 app.UseAuthorization();
 
 app.UseSwaggerUI(c =>

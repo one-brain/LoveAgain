@@ -12,6 +12,16 @@ builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "DiscoveryService", Version = "v1" });
 });
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 builder.Services.AddDbContext<CueDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
         .UseSnakeCaseNamingConvention());
@@ -30,6 +40,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseHttpsRedirection();
+app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
