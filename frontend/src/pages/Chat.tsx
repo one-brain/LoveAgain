@@ -18,10 +18,11 @@ const Chat: React.FC = () => {
 
   const { data: bookings } = useGetMyBookingsQuery();
   const booking = bookings?.find(b => b.orderId === orderId);
+  const canChat = booking && (booking.status !== 'Cancelled' && booking.status !== 'Disputed' && booking.status !== 'PendingPayment');
 
-  const { data: historyMessages, isLoading, isError } = useGetOrderMessagesQuery(
+  const { data: historyMessages, isLoading: isMessagesLoading, isError: isMessagesError } = useGetOrderMessagesQuery(
     { orderId: orderId || '' },
-    { skip: !orderId }
+    { skip: !orderId || !canChat }
   );
 
   const [markAsRead] = useMarkMessagesAsReadMutation();
@@ -33,6 +34,10 @@ const Chat: React.FC = () => {
     const token = localStorage.getItem('accessToken');
     if (!token) {
       navigate('/login');
+      return;
+    }
+
+    if (!canChat) {
       return;
     }
 

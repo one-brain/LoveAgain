@@ -53,6 +53,7 @@ builder.Services.AddDbContext<CueDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
         .UseSnakeCaseNamingConvention());
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<ChatRepository>();
 builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 builder.Services.AddSignalR();
 builder.Services.AddCors(options =>

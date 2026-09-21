@@ -9,4 +9,5 @@ public interface IChatRepository
     Task MarkMessagesAsReadAsync(Guid orderId, Guid userId, CancellationToken cancellationToken);
     Task AddAsync(ChatMessage message, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
+    Task<bool> HasPaidAsync(Guid orderId, CancellationToken cancellationToken);
 }

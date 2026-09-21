@@ -97,6 +97,7 @@ const Bookings: React.FC = () => {
               {bookings.map((booking) => {
                 const colors = STATUS_COLORS[booking.status];
                 const canCancel = booking.status === 'PendingPayment' || booking.status === 'Confirmed';
+                const canChat = booking.status !== 'Cancelled' && booking.status !== 'Disputed' && booking.status !== 'PendingPayment';
                 const startTime = new Date(booking.startTime);
                 const endTime = new Date(booking.endTime);
 

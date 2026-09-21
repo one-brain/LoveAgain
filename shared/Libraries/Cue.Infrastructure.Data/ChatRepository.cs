@@ -1,6 +1,8 @@
 using Cue.Application.Abstractions;
 using Cue.Domain;
+using Cue.Infrastructure.Messaging;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
 
 namespace Cue.Infrastructure.Data;
 
@@ -35,4 +37,12 @@ public sealed class ChatRepository(CueDbContext dbContext) : IChatRepository
     }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
+
+    // NEW: Check if order has a captured payment
+    public async Task<bool> HasPaidAsync(Guid orderId, CancellationToken cancellationToken)
+    {
+        return await dbContext.PaymentTransactions
+            .Where(pt => pt.OrderId == orderId && pt.Status == TransactionStatus.Captured)
+            .AnyAsync(cancellationToken);
+    }
 }

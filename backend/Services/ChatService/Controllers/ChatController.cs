@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Cue.Application.Chat;
+using Cue.Infrastructure.Data;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -9,7 +10,7 @@ namespace ChatService.Controllers;
 [ApiController]
 [Route("api/v1/chat")]
 [Authorize]
-public sealed class ChatController(ISender sender) : ControllerBase
+public sealed class ChatController(ISender sender, ChatRepository chatRepository) : ControllerBase
 {
     [HttpGet("orders/{orderId:guid}/messages")]
     [ProducesResponseType(typeof(IReadOnlyList<ChatMessageDto>), StatusCodes.Status200OK)]
@@ -22,6 +23,11 @@ public sealed class ChatController(ISender sender) : ControllerBase
         if (!TryGetUserId(out var userId))
         {
             return Unauthorized();
+        }
+
+        if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
+        {
+            return Forbid("Chat is only available for paid bookings.");
         }
 
         try
@@ -48,6 +54,11 @@ public sealed class ChatController(ISender sender) : ControllerBase
             return Unauthorized();
         }
 
+        if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
+        {
+            return Forbid("Chat is only available for paid bookings.");
+        }
+
         var count = await sender.Send(new GetUnreadCountQuery(userId, orderId), cancellationToken);
         return Ok(count);
     }
@@ -61,8 +72,30 @@ public sealed class ChatController(ISender sender) : ControllerBase
             return Unauthorized();
         }
 
+        if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
+        {
+            return Forbid("Chat is only available for paid bookings.");
+        }
+
         await sender.Send(new MarkMessagesAsReadCommand(orderId, userId), cancellationToken);
         return NoContent();
+    }
+
+    [HttpGet("orders/{orderId:guid}/is-paid")]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    public async Task<ActionResult<bool>> IsPaid(Guid orderId, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
+        {
+            return Forbid("Chat is only available for paid bookings.");
+        }
+
+        return Ok(true);
     }
 
     private bool TryGetUserId(out Guid userId)
