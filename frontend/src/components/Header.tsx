@@ -68,6 +68,9 @@ const Header: React.FC = () => {
               </>
             ) : (
               <>
+                <Link to="/bookings" className="text-gray-500 hover:text-gray-900 transition-colors">
+                  Bookings
+                </Link>
                 <Link to="/profile" className="text-gray-500 hover:text-gray-900 transition-colors">
                   Profile
                 </Link>

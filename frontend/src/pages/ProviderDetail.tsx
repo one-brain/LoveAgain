@@ -1,16 +1,21 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useGetProviderQuery } from '../store/discoveryApi';
+import { useCreateBookingMutation } from '../store/bookingApi';
 
 const ProviderDetail: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [meetingAddress, setMeetingAddress] = useState('');
+  const [showBookingForm, setShowBookingForm] = useState(false);
 
   const { data: provider, isLoading, isError } = useGetProviderQuery(
     userId || '',
     { skip: !userId }
   );
+
+  const [createBooking, { isLoading: isBooking }] = useCreateBookingMutation();
 
   if (isLoading) {
     return (
@@ -44,6 +49,33 @@ const ProviderDetail: React.FC = () => {
   }
 
   const availableSlots = provider.upcomingSlots.filter((s) => !s.isBooked);
+  const selectedSlotData = availableSlots.find((s) => s.slotId === selectedSlot);
+
+  const handleBooking = async () => {
+    if (!selectedSlotData || !userId) return;
+
+    try {
+      const startTime = new Date(selectedSlotData.startTime);
+      const endTime = new Date(selectedSlotData.endTime);
+      const durationHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+
+      await createBooking({
+        providerId: userId,
+        startTime: selectedSlotData.startTime,
+        endTime: selectedSlotData.endTime,
+        hourlyRate: provider.hourlyRate,
+        durationHours,
+        meetingAddress: meetingAddress.trim() || undefined,
+      }).unwrap();
+
+      // Success - navigate to bookings page
+      alert('Booking created successfully! Please complete payment.');
+      navigate('/bookings');
+    } catch (error) {
+      console.error('Booking failed:', error);
+      alert('Failed to create booking. Please try again.');
+    }
+  };
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#FAFAF9' }}>
@@ -213,19 +245,88 @@ const ProviderDetail: React.FC = () => {
                 )}
               </div>
 
+              {/* Booking Form */}
+              {showBookingForm && selectedSlot && selectedSlotData && (
+                <div className="mb-8 p-6 rounded-xl" style={{ backgroundColor: '#FEF3EE', border: '1px solid #E8773D' }}>
+                  <h3 className="text-lg font-semibold mb-4" style={{ color: '#1A1614' }}>Booking details</h3>
+
+                  <div className="mb-4">
+                    <div className="text-sm font-medium mb-2" style={{ color: '#746B66' }}>Selected time</div>
+                    <div className="font-medium" style={{ color: '#1A1614' }}>
+                      {new Date(selectedSlotData.startTime).toLocaleString('en-US', {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })} - {new Date(selectedSlotData.endTime).toLocaleTimeString('en-US', {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <div className="text-sm font-medium mb-2" style={{ color: '#746B66' }}>Duration & Cost</div>
+                    <div className="font-medium" style={{ color: '#1A1614' }}>
+                      {((new Date(selectedSlotData.endTime).getTime() - new Date(selectedSlotData.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)} hours × ${provider.hourlyRate}/hr = ${(((new Date(selectedSlotData.endTime).getTime() - new Date(selectedSlotData.startTime).getTime()) / (1000 * 60 * 60)) * provider.hourlyRate).toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="mb-6">
+                    <label htmlFor="meetingAddress" className="text-sm font-medium mb-2 block" style={{ color: '#746B66' }}>
+                      Meeting location (optional)
+                    </label>
+                    <input
+                      id="meetingAddress"
+                      type="text"
+                      value={meetingAddress}
+                      onChange={(e) => setMeetingAddress(e.target.value)}
+                      placeholder="e.g., Central Park, Coffee shop on Main St"
+                      className="w-full px-4 py-2.5 rounded-lg border focus:outline-none"
+                      style={{ borderColor: '#E7E3E0', color: '#1A1614' }}
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleBooking}
+                      disabled={isBooking}
+                      className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      style={{ backgroundColor: '#E8773D', color: '#FFFFFF' }}
+                      onMouseEnter={(e) => !isBooking && (e.currentTarget.style.backgroundColor = '#C65D28')}
+                      onMouseLeave={(e) => !isBooking && (e.currentTarget.style.backgroundColor = '#E8773D')}
+                    >
+                      {isBooking ? 'Creating...' : 'Confirm booking'}
+                    </button>
+                    <button
+                      onClick={() => setShowBookingForm(false)}
+                      disabled={isBooking}
+                      className="px-6 py-3 rounded-lg font-medium transition-colors"
+                      style={{ backgroundColor: '#FFFFFF', color: '#746B66', border: '1px solid #E7E3E0' }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Book Button */}
-              <button
-                disabled={!selectedSlot}
-                className="w-full sm:w-auto px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                style={{
-                  backgroundColor: selectedSlot ? '#E8773D' : '#E7E3E0',
-                  color: '#FFFFFF',
-                }}
-                onMouseEnter={(e) => selectedSlot && (e.currentTarget.style.backgroundColor = '#C65D28')}
-                onMouseLeave={(e) => selectedSlot && (e.currentTarget.style.backgroundColor = '#E8773D')}
-              >
-                {selectedSlot ? 'Book this time' : 'Select a time to book'}
-              </button>
+              {!showBookingForm && (
+                <button
+                  disabled={!selectedSlot}
+                  onClick={() => setShowBookingForm(true)}
+                  className="w-full sm:w-auto px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  style={{
+                    backgroundColor: selectedSlot ? '#E8773D' : '#E7E3E0',
+                    color: '#FFFFFF',
+                  }}
+                  onMouseEnter={(e) => selectedSlot && (e.currentTarget.style.backgroundColor = '#C65D28')}
+                  onMouseLeave={(e) => selectedSlot && (e.currentTarget.style.backgroundColor = '#E8773D')}
+                >
+                  {selectedSlot ? 'Book this time' : 'Select a time to book'}
+                </button>
+              )}
             </div>
           </div>
         </div>
