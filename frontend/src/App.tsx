@@ -8,6 +8,7 @@ import ProfilePage from './pages/Profile';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ProviderDetail from './pages/ProviderDetail';
 import Bookings from './pages/Bookings';
+import Chat from './pages/Chat';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="provider" element={<ProviderDashboard />} />
           <Route path="bookings" element={<Bookings />} />
+          <Route path="chat/:orderId" element={<Chat />} />
         </Route>
       </Routes>
     </BrowserRouter>

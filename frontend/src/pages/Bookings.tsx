@@ -148,16 +148,33 @@ const Bookings: React.FC = () => {
                         <div className="text-2xl font-semibold mb-1" style={{ color: '#1A1614' }}>
                           ${booking.totalAmount.toFixed(2)}
                         </div>
-                        {canCancel && (
+                        <div className="flex gap-2 justify-end">
                           <button
-                            onClick={() => handleCancel(booking.orderId)}
-                            disabled={cancellingId === booking.orderId}
-                            className="text-sm font-medium hover:underline disabled:opacity-40"
-                            style={{ color: '#C62828' }}
+                            onClick={() => navigate(`/chat/${booking.orderId}`)}
+                            className="text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+                            style={{ backgroundColor: '#FEF3EE', color: '#E8773D', border: '1px solid #E8773D' }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#E8773D';
+                              e.currentTarget.style.color = '#FFFFFF';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#FEF3EE';
+                              e.currentTarget.style.color = '#E8773D';
+                            }}
                           >
-                            {cancellingId === booking.orderId ? 'Cancelling...' : 'Cancel booking'}
+                            💬 Chat
                           </button>
-                        )}
+                          {canCancel && (
+                            <button
+                              onClick={() => handleCancel(booking.orderId)}
+                              disabled={cancellingId === booking.orderId}
+                              className="text-sm font-medium hover:underline disabled:opacity-40"
+                              style={{ color: '#C62828' }}
+                            >
+                              {cancellingId === booking.orderId ? 'Cancelling...' : 'Cancel'}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
 
