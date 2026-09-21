@@ -34,4 +34,14 @@ public sealed class ProviderProfileRepository(CueDbContext dbContext) : IProvide
     }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
+
+    public Task AddSpecialtyAsync(Guid providerId, string specialty, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task RemoveSpecialtyAsync(Guid providerId, string specialty, CancellationToken cancellationToken)
+    {
+        throw new NotImplementedException();
+    }
 }

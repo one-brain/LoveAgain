@@ -37,6 +37,74 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         return Ok(ToResponse(profile));
     }
 
+    [HttpPost("services")]
+    [ProducesResponseType(typeof(ProviderProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProviderProfileResponse>> AddService(
+        [FromBody] string specialty,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized(new { error = "Invalid user token." });
+        }
+
+        var command = new AddProviderSpecialtyCommand(userId, specialty);
+        try
+        {
+            await sender.Send(command, cancellationToken);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { error = "No provider profile yet. Create one first." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+
+        var profile = await dbContext.ProviderProfiles
+            .AsNoTracking()
+            .SingleAsync(p => p.UserId == userId, cancellationToken);
+        return Ok(ToResponse(profile));
+    }
+
+    [HttpDelete("services/{specialty}")]
+    [ProducesResponseType(typeof(ProviderProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProviderProfileResponse>> RemoveService(
+        string specialty,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized(new { error = "Invalid user token." });
+        }
+
+        var command = new RemoveProviderSpecialtyCommand(userId, specialty);
+        try
+        {
+            await sender.Send(command, cancellationToken);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { error = "No provider profile yet. Create one first." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+
+        var profile = await dbContext.ProviderProfiles
+            .AsNoTracking()
+            .SingleAsync(p => p.UserId == userId, cancellationToken);
+        return Ok(ToResponse(profile));
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(ProviderProfileResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

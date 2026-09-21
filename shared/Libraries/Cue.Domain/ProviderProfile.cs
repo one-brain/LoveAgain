@@ -83,6 +83,51 @@ public sealed class ProviderProfile
     public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
     public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
 
+    /// <summary>
+    /// Adds a single specialty, preserving the existing ones. Duplicate
+    /// detection is case-insensitive so "Yoga" and "yoga" collapse to one entry.
+    /// </summary>
+    public void AddSpecialty(string specialty)
+    {
+        if (string.IsNullOrWhiteSpace(specialty))
+        {
+            throw new ArgumentException("A specialty is required.", nameof(specialty));
+        }
+
+        var trimmed = specialty.Trim();
+        if (Specialties.Any(s => s.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"Specialty '{trimmed}' is already offered.");
+        }
+
+        Specialties = Specialties.Append(trimmed).ToArray();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Removes a single specialty. Case-insensitive match so the provider can
+    /// delete using any casing of the stored name.
+    /// </summary>
+    public void RemoveSpecialty(string specialty)
+    {
+        if (string.IsNullOrWhiteSpace(specialty))
+        {
+            throw new ArgumentException("A specialty is required.", nameof(specialty));
+        }
+
+        var trimmed = specialty.Trim();
+        var existing = Specialties.FirstOrDefault(s => s.Equals(trimmed, StringComparison.OrdinalIgnoreCase));
+        if (existing == null)
+        {
+            throw new InvalidOperationException($"Specialty '{trimmed}' is not offered.");
+        }
+
+        Specialties = Specialties
+            .Where(s => !s.Equals(trimmed, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetLocation(double latitude, double longitude)
     {
         if (latitude < -90 || latitude > 90)

@@ -55,6 +55,36 @@ public sealed class BookingsController(ISender sender) : ControllerBase
         return Ok(bookings);
     }
 
+    [HttpGet("provider/incoming")]
+    [ProducesResponseType(typeof(IReadOnlyList<BookingSummary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<BookingSummary>>> GetProviderIncoming(
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var bookings = await sender.Send(new GetProviderIncomingBookingsQuery(userId), cancellationToken);
+        return Ok(bookings);
+    }
+
+    [HttpGet("seeker/outgoing")]
+    [ProducesResponseType(typeof(IReadOnlyList<BookingSummary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<IReadOnlyList<BookingSummary>>> GetSeekerOutgoing(
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        var bookings = await sender.Send(new GetSeekerOutgoingBookingsQuery(userId), cancellationToken);
+        return Ok(bookings);
+    }
+
     [HttpPatch("{orderId:guid}/confirm")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Confirm(Guid orderId, CancellationToken cancellationToken)

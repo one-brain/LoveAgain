@@ -46,4 +46,17 @@ public sealed class BookingRepository(CueDbContext dbContext) : IBookingReposito
     }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
+
+    // Provider incoming / seeker outgoing history queries
+    public async Task<IReadOnlyList<ServiceOrder>> GetProviderIncomingAsync(Guid providerId, CancellationToken cancellationToken) =>
+        await dbContext.ServiceOrders
+            .Where(order => order.ProviderId == providerId)
+            .OrderByDescending(order => order.StartTime)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<ServiceOrder>> GetSeekerOutgoingAsync(Guid seekerId, CancellationToken cancellationToken) =>
+        await dbContext.ServiceOrders
+            .Where(order => order.SeekerId == seekerId)
+            .OrderByDescending(order => order.StartTime)
+            .ToListAsync(cancellationToken);
 }

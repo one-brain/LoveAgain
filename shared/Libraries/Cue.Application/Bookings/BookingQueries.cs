@@ -27,6 +27,31 @@ public sealed class GetUserBookingsQueryHandler(IBookingRepository repository) :
     }
 }
 
+// Provider incoming / seeker outgoing queries — separated for history views
+public sealed record GetProviderIncomingBookingsQuery(Guid ProviderId) : IRequest<IReadOnlyList<BookingSummary>>;
+
+public sealed class GetProviderIncomingBookingsQueryHandler(IBookingRepository repository)
+    : IRequestHandler<GetProviderIncomingBookingsQuery, IReadOnlyList<BookingSummary>>
+{
+    public async Task<IReadOnlyList<BookingSummary>> Handle(GetProviderIncomingBookingsQuery query, CancellationToken cancellationToken)
+    {
+        var orders = await repository.GetProviderIncomingAsync(query.ProviderId, cancellationToken);
+        return orders.Select(order => new BookingSummary(order.Id, order.ProviderId, order.SeekerId, order.StartTime, order.EndTime, order.Status, order.TotalAmount)).ToArray();
+    }
+}
+
+public sealed record GetSeekerOutgoingBookingsQuery(Guid SeekerId) : IRequest<IReadOnlyList<BookingSummary>>;
+
+public sealed class GetSeekerOutgoingBookingsQueryHandler(IBookingRepository repository)
+    : IRequestHandler<GetSeekerOutgoingBookingsQuery, IReadOnlyList<BookingSummary>>
+{
+    public async Task<IReadOnlyList<BookingSummary>> Handle(GetSeekerOutgoingBookingsQuery query, CancellationToken cancellationToken)
+    {
+        var orders = await repository.GetSeekerOutgoingAsync(query.SeekerId, cancellationToken);
+        return orders.Select(order => new BookingSummary(order.Id, order.ProviderId, order.SeekerId, order.StartTime, order.EndTime, order.Status, order.TotalAmount)).ToArray();
+    }
+}
+
 public sealed record ProviderSummary(Guid UserId, decimal HourlyRate, string Bio, IReadOnlyCollection<string> Specialties, decimal AverageRating, bool IsActive);
 
 public sealed record GetAvailableProvidersQuery(string? Specialty, decimal? MaxHourlyRate) : IRequest<IReadOnlyList<ProviderSummary>>;

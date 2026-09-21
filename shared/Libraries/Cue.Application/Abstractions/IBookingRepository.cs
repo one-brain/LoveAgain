@@ -11,4 +11,8 @@ public interface IBookingRepository
     Task<IReadOnlyList<ProviderProfile>> GetAvailableProvidersAsync(string? specialty, decimal? maxHourlyRate, CancellationToken cancellationToken);
     Task AddAsync(ServiceOrder order, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
+
+    // Provider incoming / seeker outgoing history queries
+    Task<IReadOnlyList<ServiceOrder>> GetProviderIncomingAsync(Guid providerId, CancellationToken cancellationToken);
+    Task<IReadOnlyList<ServiceOrder>> GetSeekerOutgoingAsync(Guid seekerId, CancellationToken cancellationToken);
 }
