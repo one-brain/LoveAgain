@@ -130,10 +130,10 @@ const Profile: React.FC = () => {
   const providerProfile = profileData?.profile;
   const seekerProfile = seekerData?.profile;
   const isProvider = providerProfile !== undefined;
-  const rawName = seekerProfile
+
+  const displayName = seekerProfile
     ? `${seekerProfile.firstName || ''} ${seekerProfile.lastName || ''}`.trim()
-    : `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
-  const displayName = rawName || user?.email?.split('@')[0] || 'User';
+    : `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email?.split('@')[0] || 'User';
   const initials = displayName
     ? displayName
         .split(' ')
