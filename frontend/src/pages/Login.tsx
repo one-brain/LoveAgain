@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginSuccess } from '../store/slices/authSlice';
 import { useLoginMutation } from '../store/authApi';
+import { useGetSeekerProfileQuery } from '../store/api';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -11,6 +12,7 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [login, { isLoading }] = useLoginMutation();
+  const { refetch: refetchSeeker } = useGetSeekerProfileQuery();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,18 +20,37 @@ const Login: React.FC = () => {
 
     try {
       const result = await login({ email, password }).unwrap();
-      dispatch(loginSuccess({
-        token: result.accessToken,
-        user: {
-          id: result.userId || '1',
-          email,
-          firstName: 'User',
-          lastName: '',
-          roles: ['Seeker', 'Provider']
-        }
-      }));
       localStorage.setItem('userId', result.userId);
       localStorage.setItem('accessToken', result.accessToken);
+
+      // Fetch the real user profile to get the actual name
+      try {
+        const seekerData = await refetchSeeker().unwrap();
+        const profile = seekerData.profile;
+        dispatch(loginSuccess({
+          token: result.accessToken,
+          user: {
+            id: result.userId,
+            email: profile.email || email,
+            firstName: profile.firstName || '',
+            lastName: profile.lastName || '',
+            roles: ['Seeker', 'Provider']
+          }
+        }));
+      } catch {
+        // Fallback: store minimal user info if profile fetch fails
+        dispatch(loginSuccess({
+          token: result.accessToken,
+          user: {
+            id: result.userId,
+            email,
+            firstName: '',
+            lastName: '',
+            roles: ['Seeker', 'Provider']
+          }
+        }));
+      }
+
       navigate('/discovery', { replace: true });
     } catch (err) {
       setError('Email or password is incorrect');

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useAddServiceSpecialtyMutation, useRemoveServiceSpecialtyMutation } from '../store/bookingApi';
 
 interface ServiceManagementProps {
   specialties: string[];
@@ -12,8 +11,6 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
   onAddService,
   onRemoveService,
 }) => {
-  const [addService, { isLoading: isAdding }] = useAddServiceSpecialtyMutation();
-  const [removeService, { isLoading: isRemoving }] = useRemoveServiceSpecialtyMutation();
   const [newSpecialty, setNewSpecialty] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -22,21 +19,24 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
     const trimmed = newSpecialty.trim();
     if (!trimmed) return;
 
+    if (specialties.includes(trimmed)) {
+      setError('This service already exists');
+      return;
+    }
+
+    setError(null);
     try {
-      await addService({ specialty: trimmed }).unwrap();
+      await onAddService?.(trimmed);
       setNewSpecialty('');
-      setError(null);
-      onAddService?.(trimmed);
     } catch {
       setError('Failed to add service');
     }
   };
 
   const handleRemove = async (specialty: string) => {
+    setError(null);
     try {
-      await removeService({ specialty }).unwrap();
-      setError(null);
-      onRemoveService?.(specialty);
+      await onRemoveService?.(specialty);
     } catch {
       setError('Failed to remove service');
     }
@@ -51,13 +51,12 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
           specialties.map((specialty) => (
             <div
               key={specialty}
-              className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1.5 text-sm font-medium text-primary"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-accent/10 text-accent border border-accent/20 transition-all duration-200"
             >
               {specialty}
               <button
                 onClick={() => handleRemove(specialty)}
-                disabled={isRemoving}
-                className="text-primary/60 hover:text-primary disabled:opacity-50"
+                className="text-accent/60 hover:text-accent transition-colors"
                 aria-label={`Remove ${specialty}`}
               >
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -75,15 +74,15 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
           value={newSpecialty}
           onChange={(e) => setNewSpecialty(e.target.value)}
           placeholder="Add a service (e.g. Yoga, Massage, Cooking)"
-          className="flex-1 rounded-lg border border-border bg-background px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-          disabled={isAdding}
+          className="flex-1 rounded-lg border border-border bg-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent transition-all"
+          disabled={specialties.length >= 20}
         />
         <button
           type="submit"
-          disabled={isAdding || !newSpecialty.trim()}
-          className="rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          disabled={specialties.length >= 20 || !newSpecialty.trim()}
+          className="rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent/90 disabled:opacity-50 transition-colors"
         >
-          {isAdding ? 'Adding...' : 'Add'}
+          Add
         </button>
       </form>
 
