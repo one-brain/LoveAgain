@@ -132,7 +132,7 @@ const Profile: React.FC = () => {
   const isProvider = providerProfile !== undefined;
 
   const displayName = seekerProfile
-    ? `${seekerProfile.firstName || ''} ${seekerProfile.lastName || ''}`.trim()
+    ? seekerProfile.firstName + ' ' + seekerProfile.lastName
     : `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email?.split('@')[0] || 'User';
   const initials = displayName
     ? displayName
