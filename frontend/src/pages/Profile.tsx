@@ -1,25 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
   useGetSeekerProfileQuery,
   useUpdateSeekerProfileMutation,
 } from '../store/api';
-import { useAddServiceSpecialtyMutation, useRemoveServiceSpecialtyMutation } from '../store/bookingApi';
-import { ServiceManagement } from '../components/ServiceManagement';
-import { setSpecialties } from '../store/slices/profileSlice';
 
 const Profile: React.FC = () => {
-  const dispatch = useDispatch();
   const { user } = useSelector((state: any) => state.auth);
 
   // Fetch seeker profile from /me
   const { data: seekerData, isLoading: seekerLoading, isError: seekerError } = useGetSeekerProfileQuery();
   const [updateSeeker] = useUpdateSeekerProfileMutation();
-
-  // Service management mutations
-  const [addService] = useAddServiceSpecialtyMutation();
-  const [removeService] = useRemoveServiceSpecialtyMutation();
 
   // Local state for editable seeker profile
   const [firstName, setFirstName] = useState('');
@@ -41,13 +33,6 @@ const Profile: React.FC = () => {
     }
   }, [seekerData]);
 
-  // Initialize specialties from seeker profile
-  useEffect(() => {
-    if (seekerData?.profile?.specialties) {
-      dispatch(setSpecialties(seekerData.profile.specialties));
-    }
-  }, [seekerData, dispatch]);
-
   // Reset success message after delay
   useEffect(() => {
     if (updateSuccess) {
@@ -55,25 +40,6 @@ const Profile: React.FC = () => {
       return () => clearTimeout(timer);
     }
   }, [updateSuccess]);
-
-  const handleAddService = async (specialty: string) => {
-    try {
-      await addService({ specialty }).unwrap();
-      // Re-fetch profile
-      await dispatch({ type: 'profileApi/util/invalidateTags', payload: ['Profile'] });
-    } catch {
-      // Error already handled by RTK Query
-    }
-  };
-
-  const handleRemoveService = async (specialty: string) => {
-    try {
-      await removeService({ specialty }).unwrap();
-      await dispatch({ type: 'profileApi/util/invalidateTags', payload: ['Profile'] });
-    } catch {
-      // Error handled
-    }
-  };
 
   const handleUpdateSeeker = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +61,7 @@ const Profile: React.FC = () => {
     }
   };
 
-  const isLoading = profileLoading || seekerLoading;
+  const isLoading = seekerLoading;
 
   if (isLoading) {
     return (
@@ -108,7 +74,7 @@ const Profile: React.FC = () => {
     );
   }
 
-  if (!user || (profileError && seekerError)) {
+  if (!user || seekerError) {
     return (
       <div className="page-container flex items-center justify-center">
         <div className="empty-state">
@@ -124,13 +90,10 @@ const Profile: React.FC = () => {
     );
   }
 
-  const providerProfile = profileData?.profile;
   const seekerProfile = seekerData?.profile;
-  const isProvider = providerProfile !== undefined;
-
   const displayName = seekerProfile
     ? seekerProfile.firstName + ' ' + seekerProfile.lastName
-    : `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || user?.email?.split('@')[0] || 'User';
+    : `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
   const initials = displayName
     ? displayName
         .split(' ')
@@ -234,64 +197,21 @@ const Profile: React.FC = () => {
           <section>
             <h2 className="text-xl font-semibold mb-4 text-primary">Provider Profile</h2>
 
-            {!isProvider ? (
-              <div className="form-section text-center">
-                <div className="empty-state-icon mx-auto mb-4">
-                  <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6M12 6l-3 3M12 6l3 3" />
-                  </svg>
-                </div>
-                <p className="empty-state-title">You do not have a provider profile yet.</p>
-                <p className="empty-state-text mb-6">Become a provider and offer your services to the community.</p>
-                <Link
-                  to="/provider"
-                  className="btn-primary inline-flex justify-center"
-                >
-                  Switch to Provider Dashboard
-                </Link>
+            <div className="form-section text-center">
+              <div className="empty-state-icon mx-auto mb-4">
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6M12 6l-3 3M12 6l3 3" />
+                </svg>
               </div>
-            ) : (
-              <div className="form-section">
-                <div className="grid gap-6 sm:grid-cols-2">
-                  <div>
-                    <label className="label-field">Hourly Rate</label>
-                    <p className="text-lg font-semibold text-primary">${providerProfile.hourlyRate}/hr</p>
-                  </div>
-                  <div>
-                    <label className="label-field">Availability Radius</label>
-                    <p className="text-lg font-semibold text-primary">{providerProfile.maxRadiusKm} km</p>
-                  </div>
-                  <div>
-                    <label className="label-field">Average Rating</label>
-                    <p className="text-lg font-semibold text-primary">
-                      {providerProfile.averageRating.toFixed(1)} ★
-                    </p>
-                  </div>
-                  <div>
-                    <label className="label-field">Profile Status</label>
-                    <span className={providerProfile.isActive ? 'status-active' : 'status-inactive'}>
-                      {providerProfile.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                </div>
-
-                {providerProfile.bio && (
-                  <div className="mt-4 pt-4">
-                    <label className="label-field">Bio</label>
-                    <p className="text-sm text-muted-foreground">{providerProfile.bio}</p>
-                  </div>
-                )}
-
-                <div className="mt-4 pt-4">
-                  <label className="label-field">Your Services</label>
-                  <ServiceManagement
-                    specialties={specialties}
-                    onAddService={handleAddService}
-                    onRemoveService={handleRemoveService}
-                  />
-                </div>
-              </div>
-            )}
+              <p className="empty-state-title">You do not have a provider profile yet.</p>
+              <p className="empty-state-text mb-6">Become a provider and offer your services to the community.</p>
+              <Link
+                to="/provider"
+                className="btn-primary inline-flex justify-center"
+              >
+                Switch to Provider Dashboard
+              </Link>
+            </div>
           </section>
         </div>
 
@@ -302,11 +222,9 @@ const Profile: React.FC = () => {
             <Link to="/bookings" className="btn-outline">
               My Bookings
             </Link>
-            {isProvider && (
-              <Link to="/provider" className="btn-outline">
-                Provider Dashboard
-              </Link>
-            )}
+            <Link to="/provider" className="btn-outline">
+              Provider Dashboard
+            </Link>
           </div>
         </section>
       </main>

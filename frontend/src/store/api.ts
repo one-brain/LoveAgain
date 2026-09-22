@@ -72,6 +72,15 @@ export const profileApi = createApi({
     getSeekerProfile: builder.query<SeekerProfileResponse, void>({
       query: () => `/profiles/me`,
       providesTags: ['Profile'],
+      transformResponse: (response: any) => {
+        return {
+          ...response,
+          profile: {
+            ...response.profile,
+            specialties: response.profile?.specialties || [],
+          },
+        };
+      },
     }),
     updateSeekerProfile: builder.mutation<SeekerProfileResponse, UpdateSeekerProfileRequest>({
       query: (body) => ({
