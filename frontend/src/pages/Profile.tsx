@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
-  useGetMyProfileQuery,
   useGetSeekerProfileQuery,
   useUpdateSeekerProfileMutation,
 } from '../store/api';
@@ -13,10 +12,8 @@ import { setSpecialties } from '../store/slices/profileSlice';
 const Profile: React.FC = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state: any) => state.auth);
-  const { specialties } = useSelector((state: any) => state.profile || { specialties: [] });
 
-  // Fetch both seeker (user) and provider profiles
-  const { data: profileData, isLoading: profileLoading, isError: profileError } = useGetMyProfileQuery();
+  // Fetch seeker profile from /me
   const { data: seekerData, isLoading: seekerLoading, isError: seekerError } = useGetSeekerProfileQuery();
   const [updateSeeker] = useUpdateSeekerProfileMutation();
 
@@ -44,12 +41,12 @@ const Profile: React.FC = () => {
     }
   }, [seekerData]);
 
-  // Initialize specialties from provider profile
+  // Initialize specialties from seeker profile
   useEffect(() => {
-    if (profileData?.profile?.specialties) {
-      dispatch(setSpecialties(profileData.profile.specialties));
+    if (seekerData?.profile?.specialties) {
+      dispatch(setSpecialties(seekerData.profile.specialties));
     }
-  }, [profileData, dispatch]);
+  }, [seekerData, dispatch]);
 
   // Reset success message after delay
   useEffect(() => {
