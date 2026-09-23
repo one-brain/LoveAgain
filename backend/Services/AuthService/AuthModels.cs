@@ -58,7 +58,12 @@ public sealed class JwtTokenService(JwtOptions options)
     {
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(options.SigningKey));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-        var claims = new List<Claim> { new(JwtRegisteredClaimNames.Sub, user.Id.ToString()), new(JwtRegisteredClaimNames.Email, user.Email) };
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
+            new(JwtRegisteredClaimNames.Email, user.Email),
+        };
         claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role.ToString())));
         var expires = DateTime.UtcNow.AddMinutes(options.AccessTokenMinutes);
         var token = new JwtSecurityToken(options.Issuer, options.Audience, claims, expires: expires, signingCredentials: credentials);

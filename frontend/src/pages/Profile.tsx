@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import {
-  useGetSeekerProfileQuery,
-  useUpdateSeekerProfileMutation,
-} from '../store/api';
+import { useGetSeekerProfileQuery, useUpdateSeekerProfileMutation } from '../store/api';
 
 const Profile: React.FC = () => {
   const { user } = useSelector((state: any) => state.auth);
