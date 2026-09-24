@@ -14,14 +14,6 @@ interface AuthState {
   } | null;
 }
 
-interface AuthUser {
-  id: string;
-  email: string;
-  firstName: string;
-  lastName: string;
-  roles: ('Seeker' | 'Provider' | 'Admin')[];
-}
-
 const initialState: AuthState = {
   accessToken: localStorage.getItem('accessToken') || null,
   refreshToken: localStorage.getItem('refreshToken') || null,
