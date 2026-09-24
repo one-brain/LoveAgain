@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
 import { Link } from 'react-router-dom';
 import { useGetSeekerProfileQuery, useUpdateSeekerProfileMutation } from '../store/api';
 
 const Profile: React.FC = () => {
-  const { user } = useSelector((state: any) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   // Fetch seeker profile from /me
-  const { data: seekerData, isLoading: seekerLoading, isError: seekerError } = useGetSeekerProfileQuery();
+  const { data: seekerData, isLoading: seekerLoading, isError: seekerError } = useGetSeekerProfileQuery(undefined, { skip: !user });
   const [updateSeeker] = useUpdateSeekerProfileMutation();
 
   // Local state for editable seeker profile
@@ -58,173 +59,138 @@ const Profile: React.FC = () => {
     }
   };
 
-  const isLoading = seekerLoading;
-
-  if (isLoading) {
+  if (seekerLoading) {
     return (
-      <div className="page-container flex items-center justify-center">
-        <div className="animate-pulse-subtle text-center">
-          <div className="w-12 h-12 border-4 border-accent border-t-transparent rounded-full mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading profile...</p>
+      <div className="min-h-screen flex items-center justify-center bg-background/50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading profile...</p>
         </div>
       </div>
     );
   }
 
-  if (!user || seekerError) {
+  if (seekerError) {
     return (
-      <div className="page-container flex items-center justify-center">
-        <div className="empty-state">
-          <div className="empty-state-icon">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7v8.5m0 0H8m8 0V11a4 4 0 00-4-4h-.5a3.5 3.5 0 100 7m1 .5v2.5a2.5 2.5 0 105 0V12a2.5 2.5 0 00-2.5-2.5H10a2.5 2.5 0 000 5h5.5z" />
-            </svg>
-          </div>
-          <h3 className="empty-state-title">Unable to load profile</h3>
-          <p className="empty-state-text">There was a problem loading your profile. Please refresh the page or try again later.</p>
+      <div className="min-h-screen flex items-center justify-center bg-background/50">
+        <div className="text-center p-6 bg-destructive/10 rounded-lg border border-destructive/20">
+          <h2 className="text-xl font-semibold text-destructive">Error loading profile</h2>
+          <p className="text-muted-foreground mt-2">Please try again later.</p>
         </div>
       </div>
     );
   }
-
-  const seekerProfile = seekerData?.profile;
-  const displayName = seekerProfile
-    ? seekerProfile.firstName + ' ' + seekerProfile.lastName
-    : `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
-  const initials = displayName
-    ? displayName
-        .split(' ')
-        .map((n: string) => n[0])
-        .join('')
-        .toUpperCase()
-        .slice(0, 2)
-    : (user?.email || '?').charAt(0).toUpperCase();
 
   return (
-    <div className="page-container">
-      <header className="page-header">
-        <div className="page-title">
-          <h1 className="text-3xl font-semibold text-primary">Profile</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your seeker and provider profiles</p>
-        </div>
-      </header>
-
-      <main className="page-content">
-        {/* User Info Header */}
-        <div className="flex items-center gap-6 mb-10 pb-6 border-b border-border">
-          <div className="avatar-lg">{initials}</div>
-          <div>
-            <h2 className="text-2xl font-semibold text-primary">{displayName || 'User'}</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              {user?.roles?.[0] || 'Member'} • Joined{' '}
-              {new Date(user?.createdAt || new Date()).toLocaleDateString('en-US', {
-                month: 'short',
-                year: 'numeric',
-              })}
-            </p>
+    <div className="min-h-screen bg-background/50 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-card rounded-xl shadow-lg border border-border/50 p-6">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-foreground">My Profile</h1>
+            <p className="text-muted-foreground mt-1">View and update your personal information</p>
           </div>
-        </div>
 
-        {/* Two-column layout */}
-        <div className="grid-2">
-          {/* Seeker Profile Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-primary">Seeker Profile</h2>
-            <form onSubmit={handleUpdateSeeker} className="space-y-6">
-              <div className="form-section">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <label className="label-field">First Name</label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      placeholder="First name"
-                    />
-                  </div>
-                  <div>
-                    <label className="label-field">Last Name</label>
-                    <input
-                      type="text"
-                      className="input-field"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Last name"
-                    />
-                  </div>
-                </div>
+          {updateSuccess && (
+            <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-green-800">Profile updated successfully!</p>
+            </div>
+          )}
 
-                <div>
-                  <label className="label-field">Phone</label>
-                  <input
-                    type="tel"
-                    className="input-field"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Phone number"
-                  />
-                </div>
+          {updateError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-800">{updateError}</p>
+            </div>
+          )}
 
-                <div>
-                  <label className="label-field">Date of Birth</label>
-                  <input
-                    type="date"
-                    className="input-field"
-                    value={dateOfBirth}
-                    onChange={(e) => setDateOfBirth(e.target.value)}
-                  />
-                </div>
+          <form onSubmit={handleUpdateSeeker} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-foreground mb-2">
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  required
+                />
               </div>
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-foreground mb-2">
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  required
+                />
+              </div>
+            </div>
 
-              {updateError && <p className="error-message">{updateError}</p>}
-              {updateSuccess && <p className="success-message">Profile updated successfully!</p>}
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-foreground mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={user?.email || ''}
+                disabled
+                className="w-full px-3 py-2 border border-input rounded-lg bg-muted/50 text-muted-foreground cursor-not-allowed"
+              />
+              <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
+            </div>
 
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-foreground mb-2">
+                Phone Number
+              </label>
+              <input
+                type="tel"
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+                placeholder="(555) 123-4567"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-foreground mb-2">
+                Date of Birth
+              </label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20"
+              />
+            </div>
+
+            <div className="flex gap-4 pt-4">
               <button
                 type="submit"
                 disabled={isUpdating}
-                className="btn-primary w-full"
+                className="px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                {isUpdating ? 'Saving...' : 'Save Changes'}
+                {isUpdating ? 'Updating...' : 'Update Profile'}
               </button>
-            </form>
-          </section>
-
-          {/* Provider Profile Section */}
-          <section>
-            <h2 className="text-xl font-semibold mb-4 text-primary">Provider Profile</h2>
-
-            <div className="form-section text-center">
-              <div className="empty-state-icon mx-auto mb-4">
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6M12 6l-3 3M12 6l3 3" />
-                </svg>
-              </div>
-              <p className="empty-state-title">You do not have a provider profile yet.</p>
-              <p className="empty-state-text mb-6">Become a provider and offer your services to the community.</p>
               <Link
-                to="/provider"
-                className="btn-primary inline-flex justify-center"
+                to="/"
+                className="px-6 py-2 border border-input rounded-lg text-foreground hover:bg-muted/50 transition-colors"
               >
-                Switch to Provider Dashboard
+                Cancel
               </Link>
             </div>
-          </section>
+          </form>
         </div>
-
-        {/* Quick Actions */}
-        <section className="mt-10 pt-8 border-t border-border">
-          <h2 className="text-xl font-semibold mb-4 text-primary">Quick Actions</h2>
-          <div className="flex flex-wrap gap-3">
-            <Link to="/bookings" className="btn-outline">
-              My Bookings
-            </Link>
-            <Link to="/provider" className="btn-outline">
-              Provider Dashboard
-            </Link>
-          </div>
-        </section>
-      </main>
+      </div>
     </div>
   );
 };

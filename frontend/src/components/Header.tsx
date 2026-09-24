@@ -1,10 +1,13 @@
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../store';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { logout } from '../store/slices/authSlice';
 import { useEffect, useState } from 'react';
 
 const Header: React.FC = () => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [theme, setTheme] = useState<'light' | 'dark' | 'romantic'>(() => {
     const saved = localStorage.getItem('theme');
     if (saved === 'light' || saved === 'dark' || saved === 'romantic') {
@@ -41,9 +44,9 @@ const Header: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex-shrink-0">
-            <Link to="/" className="flex items-center space-x-3">
+            <Link to={isAuthenticated ? "/discovery" : "/"} className="flex items-center space-x-3">
               <span className="h-8 w-8 flex items-center justify-center bg-primary/10 text-primary rounded-lg">
-                C
+                {user?.firstName?.charAt(0).toUpperCase() || 'C'}
               </span>
               <span className="text-xl font-bold text-foreground">
                 Cue
@@ -51,12 +54,20 @@ const Header: React.FC = () => {
             </Link>
           </div>
           <div className="hidden md:flex md:items-center md:space-x-6">
-            <Link to="/" className="text-primary font-semibold hover:text-accent transition-colors">
-              Home
-            </Link>
-            <Link to="/discovery" className="text-gray-500 hover:text-gray-900 transition-colors">
-              Discover
-            </Link>
+            {isAuthenticated ? (
+              <Link to="/discovery" className="text-gray-500 hover:text-gray-900 transition-colors">
+                Discover
+              </Link>
+            ) : (
+              <>
+                <Link to="/" className="text-primary font-semibold hover:text-accent transition-colors">
+                  Home
+                </Link>
+                <Link to="/discovery" className="text-gray-500 hover:text-gray-900 transition-colors">
+                  Discover
+                </Link>
+              </>
+            )}
             {!isAuthenticated ? (
               <>
                 <Link to="/login" className="text-gray-500 hover:text-gray-900 transition-colors">
@@ -79,10 +90,8 @@ const Header: React.FC = () => {
                 </Link>
                 <button
                   onClick={() => {
-                    // In a real app, we would dispatch a logout action
-                    // For now, we'll just remove the token and redirect
-                    localStorage.removeItem('token');
-                    window.location.reload();
+                    dispatch(logout());
+                    navigate('/', { replace: true });
                   }}
                   className="ml-4 text-gray-500 hover:text-gray-900 transition-colors"
                 >

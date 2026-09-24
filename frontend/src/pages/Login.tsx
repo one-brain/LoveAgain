@@ -12,7 +12,7 @@ const Login: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [login, { isLoading }] = useLoginMutation();
-  const { refetch: refetchSeeker } = useGetSeekerProfileQuery();
+  const { refetch: refetchSeeker } = useGetSeekerProfileQuery(undefined, { skip: true });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,15 +20,14 @@ const Login: React.FC = () => {
 
     try {
       const result = await login({ email, password }).unwrap();
-      localStorage.setItem('userId', result.userId);
-      localStorage.setItem('accessToken', result.accessToken);
 
       // Fetch the real user profile to get the actual name
       try {
         const seekerData = await refetchSeeker().unwrap();
         const profile = seekerData.profile;
         dispatch(loginSuccess({
-          token: result.accessToken,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
           user: {
             id: result.userId,
             email: profile.email || email,
@@ -40,7 +39,8 @@ const Login: React.FC = () => {
       } catch {
         // Fallback: store minimal user info if profile fetch fails
         dispatch(loginSuccess({
-          token: result.accessToken,
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
           user: {
             id: result.userId,
             email,
@@ -52,7 +52,7 @@ const Login: React.FC = () => {
       }
 
       navigate('/discovery', { replace: true });
-    } catch (err) {
+    } catch {
       setError('Email or password is incorrect');
     }
   };

@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker run *)",
+      "Bash(docker tag *)",
+      "Bash(docker push *)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:5173/\")",
+      "Bash(python3 -c \"import sys,json,base64; d=json.load\\(sys.stdin\\); [print\\(f'{k}: {base64.b64decode\\(v\\).decode\\(\\) if len\\(v\\)>4 else v}'\\) for k,v in d.items\\(\\)]\")",
+      "Bash(npx vite *)",
+      "Bash(./build-docker-images.ps1 -Tag latest)",
+      "Read(//c/Users/NAVEEN/AppData/Local/Temp/claude/e--Projects-Github-one-brain/LoveAgain/51180188-39a2-434a-8d3f-124bc534dbc9/tasks/**)",
+      "Skill(playwright)",
+      "Skill(playwright:*)"
+    ]
+  }
+}
