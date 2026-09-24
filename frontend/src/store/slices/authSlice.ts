@@ -61,13 +61,4 @@ const authSlice = createSlice({
 });
 
 export const { loginSuccess, logout, setUser, updateTokens } = authSlice.actions;
-export default authSlice.reducer;refreshToken) {
-        state.refreshToken = action.payload.refreshToken;
-        localStorage.setItem('refreshToken', action.payload.refreshToken);
-      }
-    },
-  },
-});
-
-export const { loginSuccess, logout, setUser, updateTokens } = authSlice.actions;
 export default authSlice.reducer;
