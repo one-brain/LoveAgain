@@ -5,10 +5,11 @@ import { Link } from 'react-router-dom';
 import { useGetSeekerProfileQuery, useUpdateSeekerProfileMutation } from '../store/api';
 
 const Profile: React.FC = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user, accessToken } = useSelector((state: RootState) => state.auth);
 
-  // Fetch seeker profile from /me
-  const { data: seekerData, isLoading: seekerLoading, isError: seekerError } = useGetSeekerProfileQuery(undefined, { skip: !user });
+  // Fetch seeker profile from /me — skip only when we have no token
+  const shouldSkip = !accessToken;
+  const { data: seekerData, isLoading: seekerLoading, isError: seekerError } = useGetSeekerProfileQuery(undefined, { skip: shouldSkip });
   const [updateSeeker] = useUpdateSeekerProfileMutation();
 
   // Local state for editable seeker profile

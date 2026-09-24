@@ -14,11 +14,27 @@ interface AuthState {
   } | null;
 }
 
+interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  roles: ('Seeker' | 'Provider' | 'Admin')[];
+}
+
 const initialState: AuthState = {
   accessToken: localStorage.getItem('accessToken') || null,
   refreshToken: localStorage.getItem('refreshToken') || null,
   isAuthenticated: !!localStorage.getItem('accessToken'),
-  user: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')!) : null,
+  user: (() => {
+    const userString = localStorage.getItem('user');
+    if (!userString) return null;
+    try {
+      return JSON.parse(userString);
+    } catch {
+      return null;
+    }
+  })(),
 };
 
 const authSlice = createSlice({
