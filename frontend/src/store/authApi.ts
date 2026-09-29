@@ -34,7 +34,7 @@ export const authApi = createApi({
         return {
           accessToken,
           userId: parseJwtId(accessToken),
-          refreshToken: parseRefreshTokenCookie(meta?.response?.headers.get('set-cookie')),
+          refreshToken: parseRefreshTokenCookie(meta?.response?.headers.get('set-cookie') ?? null),
           expiresIn: response.expiresIn,
           tokenType: response.tokenType,
         };
@@ -47,7 +47,7 @@ export const authApi = createApi({
         return {
           accessToken,
           userId: parseJwtId(accessToken),
-          refreshToken: parseRefreshTokenCookie(meta?.response?.headers.get('set-cookie')),
+          refreshToken: parseRefreshTokenCookie(meta?.response?.headers.get('set-cookie') ?? null),
           expiresIn: response.expiresIn,
           tokenType: response.tokenType,
         };

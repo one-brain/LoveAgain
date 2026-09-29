@@ -68,6 +68,15 @@ export const profileApi = createApi({
     getMyProfile: builder.query<ProviderProfileResponse, void>({
       query: () => `/profiles/provider`,
       providesTags: ['Profile'],
+      transformResponse: (response: any) => {
+        // Backend returns the provider profile directly (ProviderProfileResponse),
+        // but consumers expect it wrapped under `profile` for consistency with
+        // the seeker profile shape.
+        if (response && !response.profile) {
+          return { profile: response };
+        }
+        return response;
+      },
     }),
     getSeekerProfile: builder.query<SeekerProfileResponse, void>({
       query: () => `/profiles/me`,

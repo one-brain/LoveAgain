@@ -13,5 +13,9 @@
       "Skill(playwright)",
       "Skill(playwright:*)"
     ]
+  },
+  "enabledPlugins": {
+    "superpowers@superpowers-marketplace": true,
+    "superpowers-chrome@superpowers-marketplace": true
   }
 }

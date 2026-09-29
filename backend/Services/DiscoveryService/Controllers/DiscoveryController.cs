@@ -61,6 +61,9 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, MaxPageSize);
 
+        // Apply database schema migration to ensure latitude/longitude columns exist
+        await EnsureProviderProfileLocationColumnsAsync(dbContext, cancellationToken);
+
         var query = dbContext.ProviderProfiles
             .AsNoTracking()
             .Where(profile => profile.IsActive)
@@ -156,6 +159,49 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
             .ToListAsync(cancellationToken);
 
         return Ok(cards);
+    }
+
+    /// <summary>
+    /// Ensures that the ProviderProfiles table has the required Latitude and Longitude columns
+    /// for location-based filtering. This dynamically applies schema changes if needed.
+    /// </summary>
+    private static async Task EnsureProviderProfileLocationColumnsAsync(
+        CueDbContext dbContext, CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Check if the required columns exist in the database
+            var hasLatitude = await dbContext.Database.ExecuteScalarAsync<bool>(
+                $"SELECT EXISTS (SELECT 1 FROM information_schema.columns " +
+                $"WHERE table_schema = 'profiles' AND table_name = 'provider_profiles' " +
+                $"AND column_name = 'latitude')", cancellationToken);
+
+            var hasLongitude = await dbContext.Database.ExecuteScalarAsync<bool>(
+                $"SELECT EXISTS (SELECT 1 FROM information_schema.columns " +
+                $"WHERE table_schema = 'profiles' AND table_name = 'provider_profiles' " +
+                $"AND column_name = 'longitude')", cancellationToken);
+
+            // If columns are missing, create them
+            if (!hasLatitude)
+            {
+                await dbContext.Database.ExecuteSqlRawAsync(
+                    "ALTER TABLE profiles.provider_profiles ADD COLUMN latitude DOUBLE PRECISION",
+                    cancellationToken);
+            }
+
+            if (!hasLongitude)
+            {
+                await dbContext.Database.ExecuteSqlRawAsync(
+                    "ALTER TABLE profiles.provider_profiles ADD COLUMN longitude DOUBLE PRECISION",
+                    cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the error but don't fail the request - the service should continue
+            // The columns may already exist, or there could be a permissions issue
+            Console.WriteLine($"Warning: Failed to ensure provider profile location columns: {ex.Message}");
+        }
     }
 
     [HttpGet("providers/{userId:guid}")]

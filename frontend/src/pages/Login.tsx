@@ -30,9 +30,9 @@ const Login: React.FC = () => {
           refreshToken: result.refreshToken,
           user: {
             id: result.userId,
-            email: profile.email || email,
-            firstName: profile.firstName || '',
-            lastName: profile.lastName || '',
+            email: profile.email ?? email,
+            firstName: profile.firstName ?? '',
+            lastName: profile.lastName ?? '',
             roles: ['Seeker', 'Provider']
           }
         }));

@@ -11,8 +11,9 @@ public static class DatabaseInitializer
         await TryCreateExtensionAsync(dbContext, "postgis", cancellationToken);
         await TryCreateExtensionAsync(dbContext, "pgcrypto", cancellationToken);
         await dbContext.Database.EnsureCreatedAsync(cancellationToken);
-        // EnsureCreatedAsync does not alter an existing database; new tables added
-        // to the model must be created explicitly until EF migrations land (F-14-07).
+        // Use EF Core migrations instead of EnsureCreatedAsync for schema management
+        await dbContext.ApplyMigrationsAsync(cancellationToken);
+        // EnsureNewTablesAsync handles DDL changes that EF Core might miss
         await EnsureNewTablesAsync(dbContext, cancellationToken);
     }
 
@@ -73,7 +74,9 @@ public static class DatabaseInitializer
             "CREATE UNIQUE INDEX IF NOT EXISTS ix_email_verification_tokens_token_hash ON auth.email_verification_tokens (token_hash);",
             "CREATE INDEX IF NOT EXISTS ix_email_verification_tokens_user_id ON auth.email_verification_tokens (user_id);",
             "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS deleted_at timestamp with time zone NULL;",
-            "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS photo_url text NULL;"
+            "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS photo_url text NULL;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS latitude double precision NULL;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS longitude double precision NULL;"
         };
 
         foreach (var statement in statements)
