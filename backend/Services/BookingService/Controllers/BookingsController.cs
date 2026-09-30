@@ -55,10 +55,12 @@ public sealed class BookingsController(ISender sender) : ControllerBase
         return Ok(bookings);
     }
 
-    [HttpGet("provider/incoming")]
+    [HttpGet("provider/incoming/{providerId}")]
     [ProducesResponseType(typeof(IReadOnlyList<BookingSummary>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<BookingSummary>>> GetProviderIncoming(
+        string providerId,
         CancellationToken cancellationToken)
     {
         if (!TryGetUserId(out var userId))
@@ -66,14 +68,21 @@ public sealed class BookingsController(ISender sender) : ControllerBase
             return Unauthorized();
         }
 
-        var bookings = await sender.Send(new GetProviderIncomingBookingsQuery(userId), cancellationToken);
+        if (!Guid.TryParse(providerId, out var providerGuid))
+        {
+            return BadRequest(new { error = "Invalid provider ID." });
+        }
+
+        var bookings = await sender.Send(new GetProviderIncomingBookingsQuery(userId, providerGuid), cancellationToken);
         return Ok(bookings);
     }
 
-    [HttpGet("seeker/outgoing")]
+    [HttpGet("seeker/outgoing/{seekerId}")]
     [ProducesResponseType(typeof(IReadOnlyList<BookingSummary>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<ActionResult<IReadOnlyList<BookingSummary>>> GetSeekerOutgoing(
+        string seekerId,
         CancellationToken cancellationToken)
     {
         if (!TryGetUserId(out var userId))
@@ -81,7 +90,12 @@ public sealed class BookingsController(ISender sender) : ControllerBase
             return Unauthorized();
         }
 
-        var bookings = await sender.Send(new GetSeekerOutgoingBookingsQuery(userId), cancellationToken);
+        if (!Guid.TryParse(seekerId, out var seekerGuid))
+        {
+            return BadRequest(new { error = "Invalid seeker ID." });
+        }
+
+        var bookings = await sender.Send(new GetSeekerOutgoingBookingsQuery(userId, seekerGuid), cancellationToken);
         return Ok(bookings);
     }
 

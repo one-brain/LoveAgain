@@ -25,9 +25,6 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
             return Unauthorized(new { error = "Invalid user token." });
         }
 
-        // Ensure schema is up to date (latitude/longitude columns) before querying
-        await EnsureProviderProfileLocationColumnsAsync(dbContext, cancellationToken);
-
         var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
             .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
@@ -321,43 +318,4 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         new(profile.Id, profile.UserId, profile.HourlyRate, profile.Bio, profile.Specialties,
             profile.MaxRadiusKm, profile.IntroVideoUrl, profile.IsActive, profile.AverageRating,
             profile.CreatedAt, profile.UpdatedAt);
-
-    /// <summary>
-    /// Ensures the ProviderProfiles table has the required Latitude and Longitude columns
-    /// for location-based features. Dynamically applies schema changes if missing.
-    /// </summary>
-    private static async Task EnsureProviderProfileLocationColumnsAsync(
-        CueDbContext context, CancellationToken cancellationToken)
-    {
-        try
-        {
-            var hasLatitude = await context.Database.ExecuteScalarAsync<bool>(
-                $"SELECT EXISTS (SELECT 1 FROM information_schema.columns " +
-                $"WHERE table_schema = 'profiles' AND table_name = 'provider_profiles' " +
-                $"AND column_name = 'latitude')", cancellationToken);
-
-            var hasLongitude = await context.Database.ExecuteScalarAsync<bool>(
-                $"SELECT EXISTS (SELECT 1 FROM information_schema.columns " +
-                $"WHERE table_schema = 'profiles' AND table_name = 'provider_profiles' " +
-                $"AND column_name = 'longitude')", cancellationToken);
-
-            if (!hasLatitude)
-            {
-                await context.Database.ExecuteSqlRawAsync(
-                    "ALTER TABLE profiles.provider_profiles ADD COLUMN latitude DOUBLE PRECISION",
-                    cancellationToken);
-            }
-
-            if (!hasLongitude)
-            {
-                await context.Database.ExecuteSqlRawAsync(
-                    "ALTER TABLE profiles.provider_profiles ADD COLUMN longitude DOUBLE PRECISION",
-                    cancellationToken);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Warning: Failed to ensure provider profile location columns: {ex.Message}");
-        }
-    }
 }

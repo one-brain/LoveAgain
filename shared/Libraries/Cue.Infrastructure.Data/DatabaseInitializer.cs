@@ -10,11 +10,8 @@ public static class DatabaseInitializer
         await TryCreateSchemaAsync(dbContext, "auth", cancellationToken);
         await TryCreateExtensionAsync(dbContext, "postgis", cancellationToken);
         await TryCreateExtensionAsync(dbContext, "pgcrypto", cancellationToken);
-        await dbContext.Database.EnsureCreatedAsync(cancellationToken);
-        // Use EF Core migrations instead of EnsureCreatedAsync for schema management
-        await dbContext.ApplyMigrationsAsync(cancellationToken);
-        // EnsureNewTablesAsync handles DDL changes that EF Core might miss
-        await EnsureNewTablesAsync(dbContext, cancellationToken);
+        // Apply any pending EF Core migrations to bring the database up to date
+        await dbContext.Database.MigrateAsync(cancellationToken);
     }
 
     private static async Task TryCreateSchemaAsync(CueDbContext dbContext, string schemaName, CancellationToken cancellationToken)
