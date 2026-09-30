@@ -9,10 +9,9 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
-var jwtIssuer = jwtOptions.Issuer;
-var jwtAudience = jwtOptions.Audience;
-var jwtSigningKey = jwtOptions.SigningKey;
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "cue-auth";
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "cue-platform";
+var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") ?? string.Empty;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -66,13 +65,3 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
-
-// JwtOptions class must be at the end
-sealed class JwtOptions
-{
-    public string Issuer { get; init; } = "cue-auth";
-    public string Audience { get; init; } = "cue-platform";
-    public string SigningKey { get; init; } = string.Empty;
-    public int AccessTokenMinutes { get; init; } = 15;
-    public int RefreshTokenDays { get; init; } = 7;
-}
