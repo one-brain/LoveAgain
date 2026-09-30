@@ -9,9 +9,10 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "cue-auth";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "cue-platform";
-var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? string.Empty;
+var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+var jwtIssuer = jwtOptions.Issuer;
+var jwtAudience = jwtOptions.Audience;
+var jwtSigningKey = jwtOptions.SigningKey;
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -48,49 +49,30 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-builder.Services.AddCueApplication();
-builder.Services.AddDbContext<CueDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
-        .UseSnakeCaseNamingConvention());
-builder.Services.AddScoped<IChatRepository, ChatRepository>();
-builder.Services.AddScoped<ChatRepository>();
-builder.Services.AddScoped<IBookingRepository, BookingRepository>();
-builder.Services.AddSignalR();
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
-
-builder.Services.AddHealthChecks()
-    .AddNpgSql(builder.Configuration.GetConnectionString("CueDatabase")!);
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope())
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<CueDbContext>();
-    await DatabaseInitializer.InitializeAsync(dbContext);
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
-// Configure the HTTP request pipeline.
 app.UseHttpsRedirection();
-app.UseCors();
-app.UseAuthentication();
-app.UseAuthorization();
-app.UseSwagger();
-app.UseSwaggerUI();
-app.MapControllers();
-app.MapHealthChecks("/health");
-app.MapHealthChecks("/ready");
-app.MapHealthChecks("/health/ready");
-app.MapHub<ChatHub>("/hubs/chat");
 
-app.MapGet("/", () => "ChatService is running");
+app.UseAuthorization();
+
+app.MapControllers();
 
 app.Run();
+
+// JwtOptions class must be at the end
+sealed class JwtOptions
+{
+    public string Issuer { get; init; } = "cue-auth";
+    public string Audience { get; init; } = "cue-platform";
+    public string SigningKey { get; init; } = string.Empty;
+    public int AccessTokenMinutes { get; init; } = 15;
+    public int RefreshTokenDays { get; init; } = 7;
+}
