@@ -8,6 +8,8 @@ import type { RootState } from '../store';
 import {
   CheckCircleIcon,
   ArrowLeftIcon,
+  MinusIcon,
+  PlusIcon,
 } from '@heroicons/react/24/outline';
 
 interface FormFieldError {
@@ -84,6 +86,15 @@ export const ProviderProfile: React.FC = () => {
   const handleSpecialtiesChange = (newSpecs: string[]) => {
     setFormData((prev) => ({ ...prev, specialties: newSpecs }));
     setErrors((prev) => prev.filter((err) => err.field !== 'specialties'));
+    setSaveSuccess(false);
+  };
+
+  const handleRateStep = (delta: number) => {
+    const current = parseFloat(formData.hourlyRate);
+    const base = isNaN(current) ? 50 : current;
+    const nextVal = Math.max(1, base + delta);
+    setFormData((prev) => ({ ...prev, hourlyRate: nextVal.toString() }));
+    setErrors((prev) => prev.filter((err) => err.field !== 'hourlyRate'));
     setSaveSuccess(false);
   };
 
@@ -173,13 +184,26 @@ export const ProviderProfile: React.FC = () => {
 
           <div className="space-y-5">
             <div>
-              <label htmlFor="hourlyRate" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+              <label htmlFor="hourlyRate" className="block text-xs font-semibold text-muted-foreground mb-2">
                 Hourly Escrow Rate ($ USD) *
               </label>
-              <div className="relative max-w-xs">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-semibold">
+
+              {/* Stepper numerical input */}
+              <div className="relative flex items-center max-w-xs rounded-2xl border border-border/80 bg-background shadow-xs focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25 transition-all">
+                <button
+                  type="button"
+                  onClick={() => handleRateStep(-5)}
+                  className="px-3.5 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-l-2xl transition-colors cursor-pointer select-none active:scale-95 border-r border-border/40"
+                  aria-label="Decrease rate by $5"
+                  title="Decrease rate by $5"
+                >
+                  <MinusIcon className="w-4 h-4" />
+                </button>
+
+                <div className="flex items-center pl-3 text-muted-foreground font-semibold text-base select-none">
                   $
-                </span>
+                </div>
+
                 <input
                   id="hourlyRate"
                   name="hourlyRate"
@@ -188,12 +212,34 @@ export const ProviderProfile: React.FC = () => {
                   step="1"
                   value={formData.hourlyRate}
                   onChange={handleInputChange}
-                  className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                  className="w-full py-2.5 px-2 bg-transparent text-foreground font-bold text-lg focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none text-left"
+                  placeholder="50"
                 />
+
+                <div className="pr-3 text-xs font-medium text-muted-foreground select-none flex-shrink-0">
+                  / hour
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleRateStep(5)}
+                  className="px-3.5 py-3 text-muted-foreground hover:text-foreground hover:bg-muted/70 rounded-r-2xl transition-colors cursor-pointer select-none active:scale-95 border-l border-border/40"
+                  aria-label="Increase rate by $5"
+                  title="Increase rate by $5"
+                >
+                  <PlusIcon className="w-4 h-4" />
+                </button>
               </div>
-              <span className="text-[11px] text-muted-foreground mt-1 block">
-                Companions typically charge $35 - $80 / hour based on specialties and experience.
-              </span>
+
+              {errors.some((err) => err.field === 'hourlyRate') ? (
+                <span className="text-xs text-destructive mt-1.5 block font-medium">
+                  {errors.find((err) => err.field === 'hourlyRate')?.message}
+                </span>
+              ) : (
+                <span className="text-[11px] text-muted-foreground mt-1.5 block">
+                  Companions typically charge $35 – $80 / hour based on specialties and experience. Funds are secured in escrow.
+                </span>
+              )}
             </div>
 
             <div>
@@ -245,7 +291,7 @@ export const ProviderProfile: React.FC = () => {
             <label htmlFor="maxRadiusKm" className="block text-xs font-semibold text-muted-foreground mb-1.5">
               Maximum Travel Distance (km)
             </label>
-            <div className="relative max-w-xs">
+            <div className="relative max-w-xs flex items-center rounded-xl border border-border bg-card shadow-xs focus-within:ring-2 focus-within:ring-accent focus-within:border-accent transition-all duration-200">
               <input
                 id="maxRadiusKm"
                 name="maxRadiusKm"
@@ -253,15 +299,22 @@ export const ProviderProfile: React.FC = () => {
                 min="1"
                 value={formData.maxRadiusKm}
                 onChange={handleInputChange}
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                className="w-full px-4 py-2.5 bg-transparent text-foreground text-sm focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                placeholder="25"
               />
-              <span className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground text-xs">
+              <span className="pr-4 text-muted-foreground text-xs font-medium select-none">
                 km
               </span>
             </div>
-            <span className="text-[11px] text-muted-foreground mt-1 block">
-              Radius within which you appear in local seeker searches.
-            </span>
+            {errors.some((err) => err.field === 'maxRadiusKm') ? (
+              <span className="text-xs text-destructive mt-1.5 block font-medium">
+                {errors.find((err) => err.field === 'maxRadiusKm')?.message}
+              </span>
+            ) : (
+              <span className="text-[11px] text-muted-foreground mt-1.5 block">
+                Radius within which your profile appears in local companion searches.
+              </span>
+            )}
           </div>
         </div>
 

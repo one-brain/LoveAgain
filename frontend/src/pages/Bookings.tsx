@@ -8,6 +8,7 @@ import {
   useCancelBookingMutation,
 } from '../store/bookingApi';
 import { BookingCard, type BookingSummary } from '../components/BookingCard';
+import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
   CalendarDaysIcon,
@@ -42,6 +43,42 @@ const DEMO_BOOKINGS: BookingSummary[] = [
   },
 ];
 
+const SORT_BOOKING_OPTIONS: DropdownOption[] = [
+  { value: 'date-asc', label: 'Soonest First', icon: '📅' },
+  { value: 'date-desc', label: 'Latest First', icon: '🗓️' },
+  { value: 'price-desc', label: 'Highest Amount', icon: '💰' },
+];
+
+const STATUS_FILTER_OPTIONS: DropdownOption[] = [
+  { value: 'all', label: 'All Statuses', icon: '📋' },
+  { value: 'Confirmed', label: 'Confirmed', icon: '🟢', description: 'Active & ready' },
+  { value: 'PendingPayment', label: 'Pending Escrow', icon: '⏳', description: 'Awaiting payment' },
+  { value: 'InProgress', label: 'In Progress', icon: '⚡', description: 'Active right now' },
+  { value: 'Completed', label: 'Completed', icon: '✓', description: 'Finished sessions' },
+  { value: 'Cancelled', label: 'Cancelled', icon: '✕', description: 'Terminated sessions' },
+];
+
+function sortAndFilterBookings(
+  list: BookingSummary[],
+  allowedStatuses: string[],
+  statusFilter: string,
+  sortOrder: string,
+  defaultDirection: 'asc' | 'desc'
+): BookingSummary[] {
+  let filtered = list.filter((b) => allowedStatuses.includes(b.status));
+  if (statusFilter !== 'all') {
+    filtered = filtered.filter((b) => b.status === statusFilter);
+  }
+  return [...filtered].sort((a, b) => {
+    if (sortOrder === 'price-desc') return (b.totalAmount || 0) - (a.totalAmount || 0);
+    const timeA = new Date(a.startTime).getTime();
+    const timeB = new Date(b.startTime).getTime();
+    const isDesc =
+      sortOrder === 'date-desc' || (sortOrder !== 'date-asc' && defaultDirection === 'desc');
+    return isDesc ? timeB - timeA : timeA - timeB;
+  });
+}
+
 const Bookings: React.FC = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state: any) => state.auth);
@@ -66,6 +103,8 @@ const Bookings: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history' | 'calendar'>('upcoming');
   const [calendarView] = useState<'day' | 'week' | 'month'>('week');
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [bookingSort, setBookingSort] = useState('date-asc');
 
   // Initialize specialties
   useEffect(() => {
@@ -90,14 +129,30 @@ const Bookings: React.FC = () => {
 
   const isLoading = isProvider ? isLoadingProvider : isLoadingSeeker;
 
-  // Segregate by status
-  const upcomingBookings = useMemo(() => {
-    return bookings.filter((b) => ['PendingPayment', 'Confirmed', 'InProgress'].includes(b.status));
-  }, [bookings]);
+  // Segregate, filter and sort bookings
+  const upcomingBookings = useMemo(
+    () =>
+      sortAndFilterBookings(
+        bookings,
+        ['PendingPayment', 'Confirmed', 'InProgress'],
+        statusFilter,
+        bookingSort,
+        'asc'
+      ),
+    [bookings, statusFilter, bookingSort]
+  );
 
-  const pastBookings = useMemo(() => {
-    return bookings.filter((b) => ['Completed', 'Cancelled', 'Disputed'].includes(b.status));
-  }, [bookings]);
+  const pastBookings = useMemo(
+    () =>
+      sortAndFilterBookings(
+        bookings,
+        ['Completed', 'Cancelled', 'Disputed'],
+        statusFilter,
+        bookingSort,
+        'desc'
+      ),
+    [bookings, statusFilter, bookingSort]
+  );
 
   const handleCancel = async (orderId: string) => {
     if (window.confirm('Are you sure you want to cancel this booking? Escrow funds will be refunded according to cancellation policy.')) {
@@ -184,47 +239,74 @@ const Bookings: React.FC = () => {
         </Link>
       </div>
 
-      {/* Tabs Switcher */}
-      <div className="flex items-center gap-2 border-b border-border pb-4">
-        <button
-          onClick={() => setActiveTab('upcoming')}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-            activeTab === 'upcoming'
-              ? 'bg-accent text-accent-foreground shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          }`}
-        >
-          <span>Upcoming & Active</span>
-          <span className="px-1.5 py-0.5 rounded-full text-xs bg-card/30 font-bold">
-            {upcomingBookings.length}
-          </span>
-        </button>
+      {/* Tabs and Controls Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
+        {/* Tabs Switcher */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setActiveTab('upcoming')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'upcoming'
+                ? 'bg-accent text-accent-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <span>Upcoming & Active</span>
+            <span className="px-1.5 py-0.5 rounded-full text-xs bg-card/30 font-bold">
+              {upcomingBookings.length}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-            activeTab === 'history'
-              ? 'bg-accent text-accent-foreground shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          }`}
-        >
-          <span>History & Completed</span>
-          <span className="px-1.5 py-0.5 rounded-full text-xs bg-card/30 font-bold">
-            {pastBookings.length}
-          </span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('history')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'history'
+                ? 'bg-accent text-accent-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <span>History & Completed</span>
+            <span className="px-1.5 py-0.5 rounded-full text-xs bg-card/30 font-bold">
+              {pastBookings.length}
+            </span>
+          </button>
 
-        <button
-          onClick={() => setActiveTab('calendar')}
-          className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 ${
-            activeTab === 'calendar'
-              ? 'bg-accent text-accent-foreground shadow-xs'
-              : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-          }`}
-        >
-          <CalendarDaysIcon className="w-4 h-4" />
-          <span>Schedule View</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('calendar')}
+            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'calendar'
+                ? 'bg-accent text-accent-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <CalendarDaysIcon className="w-4 h-4" />
+            <span>Schedule View</span>
+          </button>
+        </div>
+
+        {/* Dropdowns Filter & Sort */}
+        {activeTab !== 'calendar' && (
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
+            <SelectDropdown
+              value={statusFilter}
+              onChange={(val) => setStatusFilter(val)}
+              options={STATUS_FILTER_OPTIONS}
+              size="sm"
+              className="w-full sm:w-44"
+            />
+            <SelectDropdown
+              value={bookingSort}
+              onChange={(val) => setBookingSort(val)}
+              options={SORT_BOOKING_OPTIONS}
+              size="sm"
+              className="w-full sm:w-44"
+              align="right"
+            />
+          </div>
+        )}
       </div>
 
       {/* Content Area */}

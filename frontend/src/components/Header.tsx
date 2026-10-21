@@ -15,6 +15,7 @@ import {
   ArrowRightOnRectangleIcon,
   BriefcaseIcon,
 } from '@heroicons/react/24/outline';
+import { ChevronDownIcon, CheckIcon } from '@heroicons/react/20/solid';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -24,7 +25,9 @@ const Header: React.FC = () => {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const themeDropdownRef = useRef<HTMLDivElement>(null);
 
   const [theme, setTheme] = useState<'light' | 'dark' | 'romantic'>(() => {
     const saved = localStorage.getItem('theme');
@@ -44,21 +47,25 @@ const Header: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Close dropdown on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setUserDropdownOpen(false);
+      }
+      if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
+        setThemeDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Close mobile menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
+    setThemeDropdownOpen(false);
   }, [location.pathname]);
 
   const cycleTheme = () => {
@@ -137,88 +144,210 @@ const Header: React.FC = () => {
 
           {/* Right Action Area */}
           <div className="hidden md:flex items-center gap-3">
-            {/* Theme Switcher Button */}
-            <button
-              onClick={cycleTheme}
-              className="p-2.5 rounded-xl border border-border/80 bg-card hover:bg-muted/80 text-foreground/80 hover:text-foreground transition-all duration-200 flex items-center gap-2 text-xs font-medium shadow-xs"
-              title={`Switch Theme (Current: ${theme})`}
-              aria-label="Switch Theme"
-            >
-              {theme === 'light' && (
-                <>
-                  <SunIcon className="w-4 h-4 text-amber-500" />
-                  <span className="text-foreground font-semibold text-xs">Warm</span>
-                </>
+            {/* Theme Dropdown Menu */}
+            <div className="relative" ref={themeDropdownRef}>
+              <button
+                type="button"
+                onClick={() => setThemeDropdownOpen((prev) => !prev)}
+                className={`p-2 pl-3 pr-2.5 rounded-xl border transition-all duration-200 flex items-center gap-2 text-xs font-semibold shadow-xs select-none ${
+                  themeDropdownOpen
+                    ? 'border-accent bg-card text-foreground ring-2 ring-accent/25'
+                    : 'border-border/80 bg-card hover:bg-muted/80 text-foreground/80 hover:text-foreground'
+                }`}
+                title="Switch Theme"
+                aria-haspopup="listbox"
+                aria-expanded={themeDropdownOpen}
+              >
+                {theme === 'light' && (
+                  <>
+                    <SunIcon className="w-4 h-4 text-amber-500" />
+                    <span className="text-foreground">Warm</span>
+                  </>
+                )}
+                {theme === 'dark' && (
+                  <>
+                    <MoonIcon className="w-4 h-4 text-sky-400" />
+                    <span className="text-foreground">Midnight</span>
+                  </>
+                )}
+                {theme === 'romantic' && (
+                  <>
+                    <HeartIcon className="w-4 h-4 text-rose-500" />
+                    <span className="text-foreground">Velvet</span>
+                  </>
+                )}
+                <ChevronDownIcon
+                  className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${
+                    themeDropdownOpen ? 'rotate-180 text-accent' : ''
+                  }`}
+                />
+              </button>
+
+              {themeDropdownOpen && (
+                <div
+                  role="listbox"
+                  aria-label="Select Theme Palette"
+                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-popover/95 text-popover-foreground border border-border/90 shadow-2xl backdrop-blur-md p-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-150"
+                >
+                  <div className="px-3 py-1.5 text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Select Theme Palette
+                  </div>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={theme === 'light'}
+                    onClick={() => {
+                      setTheme('light');
+                      setThemeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                      theme === 'light'
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-foreground/90 hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-4 h-4 rounded-full bg-amber-500 border border-amber-300 shadow-xs flex-shrink-0" />
+                      <div className="text-left">
+                        <div className="leading-tight">Warm Daylight</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Vanilla & Amber</div>
+                      </div>
+                    </div>
+                    {theme === 'light' && <CheckIcon className="w-4 h-4 text-accent" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={theme === 'dark'}
+                    onClick={() => {
+                      setTheme('dark');
+                      setThemeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                      theme === 'dark'
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-foreground/90 hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-4 h-4 rounded-full bg-sky-500 border border-sky-300 shadow-xs flex-shrink-0" />
+                      <div className="text-left">
+                        <div className="leading-tight">Midnight Luxe</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Obsidian & Slate</div>
+                      </div>
+                    </div>
+                    {theme === 'dark' && <CheckIcon className="w-4 h-4 text-accent" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={theme === 'romantic'}
+                    onClick={() => {
+                      setTheme('romantic');
+                      setThemeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                      theme === 'romantic'
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-foreground/90 hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-4 h-4 rounded-full bg-rose-500 border border-rose-300 shadow-xs flex-shrink-0" />
+                      <div className="text-left">
+                        <div className="leading-tight">Velvet Night</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Bordeaux Noir & Rose</div>
+                      </div>
+                    </div>
+                    {theme === 'romantic' && <CheckIcon className="w-4 h-4 text-accent" />}
+                  </button>
+                </div>
               )}
-              {theme === 'dark' && (
-                <>
-                  <MoonIcon className="w-4 h-4 text-sky-400" />
-                  <span className="text-foreground font-semibold text-xs">Midnight</span>
-                </>
-              )}
-              {theme === 'romantic' && (
-                <>
-                  <HeartIcon className="w-4 h-4 text-rose-500" />
-                  <span className="text-foreground font-semibold text-xs">Velvet</span>
-                </>
-              )}
-            </button>
+            </div>
 
             {isAuthenticated ? (
-              /* User Menu Dropdown */
+              /* Enhanced User Menu Dropdown */
               <div className="relative" ref={dropdownRef}>
                 <button
+                  type="button"
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2.5 p-1.5 pl-3 pr-2 rounded-xl border border-border/80 bg-card hover:bg-muted/80 transition-all text-sm font-medium shadow-xs"
+                  className={`flex items-center gap-2.5 p-1.5 pl-3 pr-2.5 rounded-xl border transition-all text-sm font-medium shadow-xs select-none ${
+                    userDropdownOpen
+                      ? 'border-accent bg-card text-foreground ring-2 ring-accent/25'
+                      : 'border-border/80 bg-card hover:bg-muted/80 text-foreground'
+                  }`}
+                  aria-haspopup="menu"
+                  aria-expanded={userDropdownOpen}
                 >
-                  <span className="max-w-[130px] truncate text-foreground font-medium">
+                  <span className="max-w-[130px] truncate text-foreground font-semibold text-xs sm:text-sm">
                     {user?.firstName ? `${user.firstName}` : 'My Account'}
                   </span>
-                  <div className="w-8 h-8 rounded-lg bg-accent/20 text-accent font-semibold flex items-center justify-center text-sm border border-accent/30">
-                    {user?.firstName?.charAt(0).toUpperCase() || 'U'}
+                  <div className="relative">
+                    <div className="w-8 h-8 rounded-lg bg-accent/20 text-accent font-bold flex items-center justify-center text-sm border border-accent/30">
+                      {user?.firstName?.charAt(0).toUpperCase() || 'U'}
+                    </div>
+                    <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full ring-2 ring-card">
+                      <span className="sr-only">Online status: Active</span>
+                    </span>
                   </div>
+                  <ChevronDownIcon
+                    className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${
+                      userDropdownOpen ? 'rotate-180 text-accent' : ''
+                    }`}
+                  />
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-card border border-border shadow-xl py-2 z-50 animate-in fade-in-50 zoom-in-95 duration-150">
-                    <div className="px-4 py-2.5 border-b border-border/60">
-                      <p className="text-sm font-semibold text-foreground">
-                        {user?.firstName} {user?.lastName}
-                      </p>
-                      <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-popover/95 text-popover-foreground border border-border/90 shadow-2xl backdrop-blur-md p-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
+                    <div className="p-3 bg-muted/50 rounded-xl mb-1.5 border border-border/40">
+                      <div className="flex items-center justify-between">
+                        <p className="text-xs font-bold text-foreground">
+                          {user?.firstName} {user?.lastName}
+                        </p>
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-success/20 text-success uppercase tracking-wider">
+                          Verified
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
                     </div>
 
-                    <div className="py-1">
+                    <div className="space-y-0.5">
                       <Link
                         to="/profile"
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-muted/70 transition-colors"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
                       >
                         <UserCircleIcon className="w-4 h-4 text-muted-foreground" />
-                        Seeker Profile
+                        <span>Seeker Profile</span>
                       </Link>
                       <Link
                         to="/provider-profile"
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-muted/70 transition-colors"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
                       >
                         <BriefcaseIcon className="w-4 h-4 text-muted-foreground" />
-                        Provider Profile
+                        <span>Provider Profile</span>
                       </Link>
                       <Link
                         to="/bookings"
-                        className="flex items-center gap-2.5 px-4 py-2 text-sm text-foreground hover:bg-muted/70 transition-colors"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
                       >
                         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                        My Bookings
+                        <span>My Bookings</span>
                       </Link>
                     </div>
 
-                    <div className="border-t border-border/60 pt-1 mt-1">
+                    <div className="border-t border-border/60 pt-1 mt-1.5">
                       <button
+                        type="button"
                         onClick={handleLogout}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-destructive hover:bg-destructive/10 transition-colors"
+                        className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-destructive hover:bg-destructive/10 transition-colors font-medium"
                       >
                         <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                        Log Out
+                        <span>Log Out</span>
                       </button>
                     </div>
                   </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useListProvidersQuery } from '../store/discoveryApi';
+import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import {
   MagnifyingGlassIcon,
   StarIcon,
@@ -30,11 +31,18 @@ const SPECIALTY_OPTIONS: SpecialtyOption[] = [
   { label: 'Dance', icon: '💃' },
 ];
 
-const SORT_OPTIONS = [
-  { value: 'rating', label: 'Top Rated' },
-  { value: 'distance', label: 'Nearest First' },
-  { value: 'price', label: 'Price: Low to High' },
-  { value: 'newest', label: 'Newest Companions' },
+const SORT_OPTIONS: DropdownOption[] = [
+  { value: 'rating', label: 'Top Rated', icon: '⭐', description: 'Highest review average' },
+  { value: 'distance', label: 'Nearest First', icon: '📍', description: 'Closest to your coordinates' },
+  { value: 'price', label: 'Price: Low to High', icon: '🏷️', description: 'Budget friendly rates' },
+  { value: 'newest', label: 'Newest Companions', icon: '✨', description: 'Recently active members' },
+];
+
+const RADIUS_OPTIONS: DropdownOption[] = [
+  { value: '10', label: 'Within 10 km', description: 'Immediate local area' },
+  { value: '25', label: 'Within 25 km', description: 'Metro city radius' },
+  { value: '50', label: 'Within 50 km', description: 'Greater metropolitan area' },
+  { value: '100', label: 'Within 100 km', description: 'Extended regional area' },
 ];
 
 // Curated realistic companion profiles for demo / offline fallback
@@ -126,6 +134,7 @@ const Discovery: React.FC = () => {
   const [minRate, setMinRate] = useState('');
   const [maxRate, setMaxRate] = useState('');
   const [sortBy, setSortBy] = useState('rating');
+  const [radiusKm, setRadiusKm] = useState('50');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -164,7 +173,7 @@ const Discovery: React.FC = () => {
     sortBy,
     latitude: userLocation?.latitude,
     longitude: userLocation?.longitude,
-    radiusKm: 50,
+    radiusKm: Number(radiusKm) || 50,
   });
 
   // Decide on active providers list (API data if available, fallback to sample data if offline/empty)
@@ -298,17 +307,13 @@ const Discovery: React.FC = () => {
               )}
             </button>
 
-            <select
+            <SelectDropdown
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-4 py-3 rounded-xl border border-border bg-background text-foreground text-sm font-medium focus:outline-none focus:ring-2 focus:ring-accent shadow-xs"
-            >
-              {SORT_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSortBy(val)}
+              options={SORT_OPTIONS}
+              triggerClassName="py-3"
+              className="w-full sm:w-56"
+            />
           </div>
 
           {/* Specialty Horizontal Chips */}
@@ -360,6 +365,19 @@ const Discovery: React.FC = () => {
                         className="w-24 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
                       />
                     </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-muted-foreground mb-1">
+                      Distance Radius
+                    </label>
+                    <SelectDropdown
+                      value={radiusKm}
+                      onChange={(val) => setRadiusKm(val)}
+                      options={RADIUS_OPTIONS}
+                      size="sm"
+                      className="w-48"
+                    />
                   </div>
 
                   <div className="flex items-center gap-2 pt-4">
