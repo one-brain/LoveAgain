@@ -159,7 +159,7 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         }
 
         var command = new UpdateProfileCommand(
-            userId, request.HourlyRate, request.Bio ?? string.Empty, request.Specialties, request.MaxRadiusKm);
+            userId, request.HourlyRate, request.Bio ?? string.Empty, request.Specialties, request.MaxRadiusKm, request.IntroVideoUrl);
 
         try
         {
@@ -240,6 +240,39 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         }
     }
 
+    // --- Delete provider profile ---
+    [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> DeleteMyProviderProfile(CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized(new { error = "Invalid user token." });
+        }
+
+        try
+        {
+            await sender.Send(new DeleteProviderProfileCommand(userId), cancellationToken);
+            return NoContent();
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { error = "No provider profile yet. Create one first." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Conflict(new { error = ex.Message });
+        }
+        catch (FluentValidation.ValidationException ex)
+        {
+            return BadRequest(new { error = string.Join(" ", ex.Errors.Select(e => e.ErrorMessage)) });
+        }
+    }
+
     [HttpPost("availability")]
     [ProducesResponseType(typeof(AvailabilitySlotSummary), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -317,5 +350,5 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
     private static ProviderProfileResponse ToResponse(ProviderProfile profile) =>
         new(profile.Id, profile.UserId, profile.HourlyRate, profile.Bio, profile.Specialties,
             profile.MaxRadiusKm, profile.IntroVideoUrl, profile.IsActive, profile.AverageRating,
-            profile.CreatedAt, profile.UpdatedAt);
+            profile.CreatedAt, profile.UpdatedAt, profile.DeletedAt, profile.IsDeleted);
 }

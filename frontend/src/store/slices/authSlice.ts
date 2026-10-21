@@ -33,7 +33,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginSuccess: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string; user: AuthState['user'] }>) => {
+    loginSuccess: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string | null; user: AuthState['user'] }>) => {
       state.accessToken = action.payload.accessToken;
       if (action.payload.refreshToken) {
         state.refreshToken = action.payload.refreshToken;
@@ -57,7 +57,7 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<AuthState['user']>) => {
       state.user = action.payload;
     },
-    updateTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string }>) => {
+    updateTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string | null }>) => {
       state.accessToken = action.payload.accessToken;
       localStorage.setItem('accessToken', action.payload.accessToken);
       if (action.payload.refreshToken) {

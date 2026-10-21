@@ -31,6 +31,15 @@ export interface SeekerProfile {
   updatedAt: string;
 }
 
+export interface UpdateProviderProfileRequest {
+  userId?: string;
+  HourlyRate: number;
+  Bio: string;
+  Specialties: string[];
+  MaxRadiusKm: number;
+  IntroVideoUrl?: string;
+}
+
 export interface SeekerProfileResponse {
   profile: SeekerProfile;
 }
@@ -103,6 +112,30 @@ export const profileApi = createApi({
       query: (providerId) => `/profiles/provider/slots/${providerId}`,
       providesTags: ['Availability'],
     }),
+    // Provider profile management endpoints
+    updateProviderProfile: builder.mutation<ProviderProfileResponse, UpdateProviderProfileRequest>({
+      query: (profileData) => ({
+        url: `/profiles/provider`,
+        method: 'PUT',
+        body: profileData,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
+    deleteProviderProfile: builder.mutation<void, void>({
+      query: () => ({
+        url: `/profiles/provider`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Profile'],
+    }),
+    activateProfile: builder.mutation<void, { active: boolean }>({
+      query: (body) => ({
+        url: `/profiles/provider/status`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
   }),
 });
 
@@ -111,4 +144,7 @@ export const {
   useGetSeekerProfileQuery,
   useUpdateSeekerProfileMutation,
   useGetSlotsQuery,
+  useUpdateProviderProfileMutation,
+  useDeleteProviderProfileMutation,
+  useActivateProfileMutation,
 } = profileApi;

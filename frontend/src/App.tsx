@@ -6,6 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Discovery from './pages/Discovery';
 import ProfilePage from './pages/Profile';
+import { ProviderProfile } from './pages/ProviderProfile';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ProviderDetail from './pages/ProviderDetail';
 import Bookings from './pages/Bookings';
@@ -30,12 +31,20 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={<UnauthenticatedRoute><Login /></UnauthenticatedRoute>} />
           <Route path="register" element={<UnauthenticatedRoute><Register /></UnauthenticatedRoute>} />
-          <Route path="discovery" element={<ProtectedRoute><Discovery /></ProtectedRoute>} />
-          <Route path="provider/:userId" element={<ProtectedRoute><ProviderDetail /></ProtectedRoute>} />
+
+          {/* Discovery & Provider Detail are accessible publicly so visitors can explore companions */}
+          <Route path="discovery" element={<Discovery />} />
+          <Route path="provider/:userId" element={<ProviderDetail />} />
+
+          {/* Protected routes requiring authentication */}
           <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+          <Route path="provider-profile/:userId?" element={<ProtectedRoute><ProviderProfile /></ProtectedRoute>} />
           <Route path="provider" element={<ProtectedRoute><ProviderDashboard /></ProtectedRoute>} />
           <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
           <Route path="chat/:orderId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
+
+          {/* Catch-all fallback redirect */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

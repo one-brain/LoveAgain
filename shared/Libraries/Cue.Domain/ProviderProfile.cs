@@ -6,7 +6,7 @@ public sealed class ProviderProfile
     {
     }
 
-    public ProviderProfile(Guid userId, decimal hourlyRate, string bio, IEnumerable<string> specialties)
+    public ProviderProfile(Guid userId, decimal hourlyRate, string bio, IEnumerable<string> specialties, decimal maxRadiusKm = 50, string? introVideoUrl = null)
     {
         if (userId == Guid.Empty)
         {
@@ -34,7 +34,8 @@ public sealed class ProviderProfile
         HourlyRate = hourlyRate;
         Bio = bio?.Trim() ?? string.Empty;
         Specialties = normalizedSpecialties;
-        MaxRadiusKm = 50;
+        MaxRadiusKm = maxRadiusKm > 0 ? maxRadiusKm : 50;
+        IntroVideoUrl = introVideoUrl;
         IsActive = false;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
@@ -53,40 +54,26 @@ public sealed class ProviderProfile
     public double? Latitude { get; private set; }
     public double? Longitude { get; private set; }
     public DateTime CreatedAt { get; private set; }
-    public DateTime UpdatedAt { get; private set; }
-
-    public void Update(decimal hourlyRate, string bio, IEnumerable<string> specialties, decimal maxRadiusKm)
-    {
-        if (hourlyRate <= 0 || maxRadiusKm <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(hourlyRate), "Rate and radius must be positive.");
-        }
-
-        var normalizedSpecialties = specialties
-            .Where(specialty => !string.IsNullOrWhiteSpace(specialty))
-            .Select(specialty => specialty.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
-
-        if (normalizedSpecialties.Length == 0)
-        {
-            throw new ArgumentException("At least one specialty is required.", nameof(specialties));
-        }
-
-        HourlyRate = hourlyRate;
-        Bio = bio?.Trim() ?? string.Empty;
-        Specialties = normalizedSpecialties;
-        MaxRadiusKm = maxRadiusKm;
-        UpdatedAt = DateTime.UtcNow;
-    }
+    public DateTime? UpdatedAt { get; private set; }
+    public DateTime? DeletedAt { get; private set; }
+    public bool IsDeleted { get; private set; }
 
     public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
     public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
+    public void Delete()
+    {
+        if (IsDeleted) throw new InvalidOperationException("Provider profile is already deleted.");
+        IsActive = false;
+        IsDeleted = true;
+        DeletedAt = DateTime.UtcNow;
+        UpdatedAt = DeletedAt.Value;
+    }
 
     /// <summary>
     /// Adds a single specialty, preserving the existing ones. Duplicate
     /// detection is case-insensitive so "Yoga" and "yoga" collapse to one entry.
     /// </summary>
+    /// <param name="specialty">The specialty name to add</param>
     public void AddSpecialty(string specialty)
     {
         if (string.IsNullOrWhiteSpace(specialty))
@@ -108,6 +95,7 @@ public sealed class ProviderProfile
     /// Removes a single specialty. Case-insensitive match so the provider can
     /// delete using any casing of the stored name.
     /// </summary>
+    /// <param name="specialty">The specialty name to remove</param>
     public void RemoveSpecialty(string specialty)
     {
         if (string.IsNullOrWhiteSpace(specialty))
@@ -142,6 +130,45 @@ public sealed class ProviderProfile
 
         Latitude = latitude;
         Longitude = longitude;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    /// <summary>
+    /// Updates the profile details (hourly rate, bio, specialties, max radius, intro video).
+    /// </summary>
+    /// <param name="hourlyRate">New hourly rate (must be positive)</param>
+    /// <param name="bio">New bio (up to 4000 characters)</param>
+    /// <param name="specialties">New specialties (at least one required)</param>
+    /// <param name="maxRadiusKm">New max radius in km (must be positive)</param>
+    /// <param name="introVideoUrl">Optional intro video URL</param>
+    public void Update(decimal hourlyRate, string bio, IEnumerable<string> specialties, decimal maxRadiusKm, string? introVideoUrl = null)
+    {
+        if (hourlyRate <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(hourlyRate), "Hourly rate must be positive.");
+        }
+
+        if (maxRadiusKm <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(maxRadiusKm), "Max radius must be positive.");
+        }
+
+        var normalizedSpecialties = specialties
+            .Where(specialty => !string.IsNullOrWhiteSpace(specialty))
+            .Select(specialty => specialty.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (normalizedSpecialties.Length == 0)
+        {
+            throw new ArgumentException("At least one specialty is required.", nameof(specialties));
+        }
+
+        HourlyRate = hourlyRate;
+        Bio = bio?.Trim() ?? string.Empty;
+        Specialties = normalizedSpecialties;
+        MaxRadiusKm = maxRadiusKm;
+        IntroVideoUrl = introVideoUrl;
         UpdatedAt = DateTime.UtcNow;
     }
 }

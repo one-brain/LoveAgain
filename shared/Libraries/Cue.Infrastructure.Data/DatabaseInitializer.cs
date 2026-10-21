@@ -12,6 +12,7 @@ public static class DatabaseInitializer
         await TryCreateExtensionAsync(dbContext, "pgcrypto", cancellationToken);
         // Apply any pending EF Core migrations to bring the database up to date
         await dbContext.Database.MigrateAsync(cancellationToken);
+        await EnsureNewTablesAsync(dbContext, cancellationToken);
     }
 
     private static async Task TryCreateSchemaAsync(CueDbContext dbContext, string schemaName, CancellationToken cancellationToken)
@@ -73,7 +74,8 @@ public static class DatabaseInitializer
             "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS deleted_at timestamp with time zone NULL;",
             "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS photo_url text NULL;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS latitude double precision NULL;",
-            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS longitude double precision NULL;"
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS longitude double precision NULL;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS deleted_at timestamp with time zone NULL;"
         };
 
         foreach (var statement in statements)

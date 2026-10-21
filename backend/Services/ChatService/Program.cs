@@ -9,9 +9,33 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? "cue-auth";
-var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? "cue-platform";
-var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") ?? string.Empty;
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? builder.Configuration["Jwt:Issuer"] ?? "cue-auth";
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? builder.Configuration["Jwt:Audience"] ?? "cue-platform";
+var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") 
+    ?? builder.Configuration["Jwt:SigningKey"] 
+    ?? (builder.Environment.IsDevelopment() ? "super-secret-development-jwt-signing-key-minimum-32-chars-long" : throw new InvalidOperationException("JWT_SIGNING_KEY is not configured."));
+
+builder.Services.AddCueApplication();
+
+builder.Services.AddDbContext<CueDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
+        .UseSnakeCaseNamingConvention());
+
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
+builder.Services.AddScoped<ChatRepository>();
+
+builder.Services.AddSignalR();
+
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://localhost:8080")
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -58,10 +82,12 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseCors();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

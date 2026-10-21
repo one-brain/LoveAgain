@@ -177,7 +177,8 @@ namespace Cue.Infrastructure.Data.Migrations
                     latitude = table.Column<double>(type: "double precision", nullable: true),
                     longitude = table.Column<double>(type: "double precision", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    DeletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {

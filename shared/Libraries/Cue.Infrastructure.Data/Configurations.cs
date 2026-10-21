@@ -41,6 +41,8 @@ internal sealed class ProviderProfileConfiguration : IEntityTypeConfiguration<Pr
         // PostGIS geography column can be computed from these via DB migration
         builder.Property(profile => profile.Latitude).HasColumnName("latitude");
         builder.Property(profile => profile.Longitude).HasColumnName("longitude");
+
+        builder.Property(profile => profile.DeletedAt).HasColumnName("deleted_at");
     }
 }
 

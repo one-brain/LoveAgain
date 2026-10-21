@@ -284,6 +284,9 @@ namespace Cue.Infrastructure.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<decimal>("HourlyRate")
                         .HasPrecision(10, 2)
                         .HasColumnType("numeric(10,2)");

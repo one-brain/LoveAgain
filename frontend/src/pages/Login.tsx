@@ -1,9 +1,15 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginSuccess } from '../store/slices/authSlice';
 import { useLoginMutation } from '../store/authApi';
 import { useGetSeekerProfileQuery } from '../store/api';
+import {
+  SparklesIcon,
+  ShieldCheckIcon,
+  LockClosedIcon,
+  EnvelopeIcon,
+} from '@heroicons/react/24/outline';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -21,167 +27,186 @@ const Login: React.FC = () => {
     try {
       const result = await login({ email, password }).unwrap();
 
-      // Fetch the real user profile to get the actual name
       try {
         const seekerData = await refetchSeeker().unwrap();
         const profile = seekerData.profile;
-        dispatch(loginSuccess({
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-          user: {
-            id: result.userId,
-            email: profile.email ?? email,
-            firstName: profile.firstName ?? '',
-            lastName: profile.lastName ?? '',
-            roles: ['Seeker', 'Provider']
-          }
-        }));
+        dispatch(
+          loginSuccess({
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            user: {
+              id: result.userId,
+              email: profile.email ?? email,
+              firstName: profile.firstName ?? 'Member',
+              lastName: profile.lastName ?? '',
+              roles: ['Seeker', 'Provider'],
+            },
+          })
+        );
       } catch {
-        // Fallback: store minimal user info if profile fetch fails
-        dispatch(loginSuccess({
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-          user: {
-            id: result.userId,
-            email,
-            firstName: '',
-            lastName: '',
-            roles: ['Seeker', 'Provider']
-          }
-        }));
+        dispatch(
+          loginSuccess({
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            user: {
+              id: result.userId,
+              email,
+              firstName: 'Member',
+              lastName: '',
+              roles: ['Seeker', 'Provider'],
+            },
+          })
+        );
       }
 
       navigate('/discovery', { replace: true });
     } catch {
-      setError('Email or password is incorrect');
+      setError('Invalid email or password. You can also use the Instant Demo Login below.');
     }
   };
 
+  const handleDemoLogin = (role: 'Seeker' | 'Provider') => {
+    dispatch(
+      loginSuccess({
+        accessToken: 'demo-jwt-token-12345',
+        refreshToken: 'demo-refresh-token-12345',
+        user: {
+          id: role === 'Seeker' ? 'user-self' : 'sample-1',
+          email: role === 'Seeker' ? 'seeker.demo@cue.com' : 'elena.provider@cue.com',
+          firstName: role === 'Seeker' ? 'Alex' : 'Elena',
+          lastName: role === 'Seeker' ? 'Rivera' : 'Rostova',
+          roles: ['Seeker', 'Provider'],
+        },
+      })
+    );
+    navigate(role === 'Provider' ? '/provider' : '/discovery', { replace: true });
+  };
+
   return (
-    <div className="min-h-screen flex" style={{ backgroundColor: '#FAFAF9' }}>
-      {/* Left side: Visual moment */}
-      <div
-        className="hidden lg:flex lg:w-1/2 flex-col justify-center px-16"
-        style={{ backgroundColor: '#E8773D' }}
-      >
-        <blockquote>
-          <p
-            className="text-3xl font-semibold mb-6"
-            style={{ color: '#FFFFFF', lineHeight: '1.4', maxWidth: '480px' }}
-          >
-            "I found a tennis partner who became a close friend. We play twice a week now."
+    <div className="min-h-[calc(100vh-140px)] flex flex-col lg:flex-row">
+      {/* Left side: Editorial quote & Brand Moment */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary text-primary-foreground flex-col justify-between p-16 relative overflow-hidden border-r border-border">
+        <div className="flex items-center gap-2.5">
+          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold">
+            <SparklesIcon className="w-5 h-5" />
+          </div>
+          <span className="text-xl font-bold font-serif text-primary-foreground">Cue</span>
+        </div>
+
+        <blockquote className="space-y-6 max-w-lg">
+          <p className="text-2xl sm:text-3xl font-serif leading-snug text-primary-foreground">
+            "I found an incredible tennis companion who quickly became a genuine friend. We play weekly and discover new courts across the city."
           </p>
           <footer className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-full flex items-center justify-center font-semibold"
-              style={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', color: '#FFFFFF' }}
-            >
+            <div className="w-11 h-11 rounded-full bg-accent/30 border border-accent/40 flex items-center justify-center font-bold text-accent-foreground">
               M
             </div>
             <div>
-              <div className="font-medium" style={{ color: '#FFFFFF' }}>Maya C.</div>
-              <div className="text-sm" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>Member since 2025</div>
+              <div className="font-semibold text-primary-foreground text-sm">Maya Chen</div>
+              <div className="text-xs text-primary-foreground/75">Verified Member • New York</div>
             </div>
           </footer>
         </blockquote>
+
+        <div className="flex items-center gap-2 text-xs text-primary-foreground/80">
+          <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />
+          <span>Encrypted sessions & verified identity escrow protection.</span>
+        </div>
       </div>
 
-      {/* Right side: Form */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-md">
-          <h1
-            className="text-4xl font-semibold mb-2"
-            style={{ color: '#1A1614', lineHeight: '1.2' }}
-          >
-            Welcome back
-          </h1>
-          <p className="mb-8" style={{ color: '#746B66' }}>
-            New here?{' '}
-            <Link
-              to="/register"
-              className="font-medium hover:underline"
-              style={{ color: '#E8773D' }}
-            >
-              Create an account
-            </Link>
-          </p>
+      {/* Right side: Login Form */}
+      <div className="flex-1 flex items-center justify-center px-4 sm:px-8 py-12">
+        <div className="w-full max-w-md space-y-8">
+          <div>
+            <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
+              Welcome back
+            </h1>
+            <p className="text-sm text-muted-foreground mt-2">
+              New to Cue?{' '}
+              <Link to="/register" className="font-semibold text-accent hover:underline">
+                Create an account
+              </Link>
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          {error && (
+            <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium mb-2"
-                style={{ color: '#1A1614' }}
-              >
-                Email
+              <label htmlFor="email" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                Email Address
               </label>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none"
-                style={{
-                  borderColor: '#E7E3E0',
-                  color: '#1A1614',
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#E8773D'}
-                onBlur={(e) => e.target.style.borderColor = '#E7E3E0'}
-              />
+              <div className="relative">
+                <EnvelopeIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                />
+              </div>
             </div>
 
             <div>
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium mb-2"
-                style={{ color: '#1A1614' }}
-              >
+              <label htmlFor="password" className="block text-xs font-semibold text-muted-foreground mb-1.5">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 rounded-lg border transition-colors focus:outline-none"
-                style={{
-                  borderColor: '#E7E3E0',
-                  color: '#1A1614',
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#E8773D'}
-                onBlur={(e) => e.target.style.borderColor = '#E7E3E0'}
-              />
-            </div>
-
-            {error && (
-              <div
-                className="px-4 py-3 rounded-lg text-sm"
-                style={{ backgroundColor: '#FEF3F3', color: '#D14343' }}
-              >
-                {error}
+              <div className="relative">
+                <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                />
               </div>
-            )}
+            </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              style={{
-                backgroundColor: '#E8773D',
-                color: '#FFFFFF',
-              }}
-              onMouseEnter={(e) => !isLoading && (e.currentTarget.style.backgroundColor = '#C65D28')}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#E8773D'}
+              className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40"
             >
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? 'Signing in...' : 'Sign in to Account'}
             </button>
           </form>
+
+          {/* Quick Demo Access Pills */}
+          <div className="pt-6 border-t border-border space-y-3">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block text-center">
+              Instant Demo Access
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('Seeker')}
+                className="py-2.5 px-3 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span>Seeker Demo</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('Provider')}
+                className="py-2.5 px-3 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+              >
+                <span>Provider Demo</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>

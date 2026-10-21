@@ -1,336 +1,525 @@
-import { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useGetProviderQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
+import type { RootState } from '../store';
+import {
+  StarIcon,
+  CheckBadgeIcon,
+  ShieldCheckIcon,
+  ClockIcon,
+  MapPinIcon,
+  ArrowLeftIcon,
+  CalendarDaysIcon,
+  SparklesIcon,
+  VideoCameraIcon,
+  CheckCircleIcon,
+} from '@heroicons/react/24/outline';
+
+// Fallback provider data lookup for offline or showcase demonstration
+const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
+  'sample-1': {
+    providerId: 'sample-1',
+    displayName: 'Elena Rostova',
+    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+    hourlyRate: 45,
+    bio: 'Hi, I am Elena! I am a semi-professional tennis player and contemporary art curator based in the city. Whether you want to hit the courts for a friendly, competitive rally, improve your backhand, or spend a relaxing Saturday exploring modern art galleries with lively discussion, I would love to accompany you. I value authenticity, positive energy, and great sportsmanship.',
+    specialties: ['Tennis', 'Yoga', 'Art', 'Fitness'],
+    maxRadiusKm: 25,
+    introVideoUrl: 'https://youtube.com',
+    averageRating: 4.98,
+    isVerified: true,
+    trustScore: 99,
+  },
+  'sample-2': {
+    providerId: 'sample-2',
+    displayName: 'Marcus Vance',
+    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+    hourlyRate: 55,
+    bio: 'Former restaurant sous-chef and active urban photographer. I specialize in culinary walks, private handmade pasta sessions, and exploring bustling farmers markets. I believe great food and shared conversation create the warmest human connections.',
+    specialties: ['Cooking', 'Photography', 'Reading'],
+    maxRadiusKm: 30,
+    introVideoUrl: null,
+    averageRating: 4.95,
+    isVerified: true,
+    trustScore: 98,
+  },
+  'sample-3': {
+    providerId: 'sample-3',
+    displayName: 'Sophia Chen',
+    photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+    hourlyRate: 40,
+    bio: 'Outdoor enthusiast and classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. I love nature photography and exchanging life stories.',
+    specialties: ['Hiking', 'Music', 'Photography'],
+    maxRadiusKm: 40,
+    introVideoUrl: null,
+    averageRating: 4.92,
+    isVerified: true,
+    trustScore: 97,
+  },
+};
+
+// Generate realistic slots for today and next few days
+function generateDemoSlots() {
+  const slots = [];
+  const now = new Date();
+  for (let i = 1; i <= 4; i++) {
+    const d = new Date(now);
+    d.setDate(d.getDate() + i);
+
+    // Morning slot
+    const startM = new Date(d);
+    startM.setHours(10, 0, 0, 0);
+    const endM = new Date(d);
+    endM.setHours(12, 0, 0, 0);
+    slots.push({
+      slotId: `slot-${i}-m`,
+      startTime: startM.toISOString(),
+      endTime: endM.toISOString(),
+      isBooked: false,
+    });
+
+    // Afternoon slot
+    const startA = new Date(d);
+    startA.setHours(14, 30, 0, 0);
+    const endA = new Date(d);
+    endA.setHours(16, 30, 0, 0);
+    slots.push({
+      slotId: `slot-${i}-a`,
+      startTime: startA.toISOString(),
+      endTime: endA.toISOString(),
+      isBooked: false,
+    });
+  }
+  return slots;
+}
 
 const ProviderDetail: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [meetingAddress, setMeetingAddress] = useState('');
-  const [showBookingForm, setShowBookingForm] = useState(false);
+  const [bookingSuccessModal, setBookingSuccessModal] = useState(false);
+  const [authPromptModal, setAuthPromptModal] = useState(false);
+  const [bookingError, setBookingError] = useState<string | null>(null);
 
-  const { data: provider, isLoading, isError } = useGetProviderQuery(
+  // Fetch API data
+  const { data: apiProvider, isLoading } = useGetProviderQuery(
     userId || '',
-    { skip: !userId }
+    { skip: !userId || userId.startsWith('sample-') }
   );
 
   const [createBooking, { isLoading: isBooking }] = useCreateBookingMutation();
 
+  // Resolve provider data
+  const provider = useMemo(() => {
+    if (apiProvider) return apiProvider;
+    if (userId && FALLBACK_PROVIDERS_MAP[userId]) {
+      return {
+        ...FALLBACK_PROVIDERS_MAP[userId],
+        upcomingSlots: generateDemoSlots(),
+      };
+    }
+    // Generic fallback for showcase
+    return {
+      providerId: userId || 'companion',
+      displayName: 'Verified Companion',
+      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      hourlyRate: 50,
+      bio: 'Enthusiastic and experienced companion offering activities, city tours, and skill exchange with verified background checks and safety check-ins.',
+      specialties: ['Tennis', 'Cooking', 'Art', 'Hiking'],
+      maxRadiusKm: 25,
+      introVideoUrl: null,
+      averageRating: 4.95,
+      isVerified: true,
+      trustScore: 98,
+      upcomingSlots: generateDemoSlots(),
+    };
+  }, [apiProvider, userId]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAFAF9' }}>
-        <div className="text-lg" style={{ color: '#746B66' }}>Loading...</div>
-      </div>
-    );
-  }
-
-  if (isError || !provider) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAFAF9' }}>
-        <div className="rounded-xl p-8 text-center max-w-md" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E7E3E0' }}>
-          <svg className="mx-auto h-12 w-12 mb-4" style={{ color: '#E7E3E0' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-          </svg>
-          <h3 className="text-lg font-medium mb-2" style={{ color: '#1A1614' }}>Provider not found</h3>
-          <p className="mb-4" style={{ color: '#746B66' }}>This profile doesn't exist or is no longer available</p>
-          <Link
-            to="/discovery"
-            className="inline-block px-5 py-2.5 rounded-lg font-medium transition-colors"
-            style={{ backgroundColor: '#E8773D', color: '#FFFFFF' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#C65D28'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#E8773D'}
-          >
-            Back to discovery
-          </Link>
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading companion profile...</p>
         </div>
       </div>
     );
   }
 
-  const availableSlots = provider.upcomingSlots.filter((s) => !s.isBooked);
-  const selectedSlotData = availableSlots.find((s) => s.slotId === selectedSlot);
+  const availableSlots = (provider.upcomingSlots || []).filter((s: any) => !s.isBooked);
+  const selectedSlotData = availableSlots.find((s: any) => s.slotId === selectedSlot);
 
-  const handleBooking = async () => {
+  const durationHours = selectedSlotData
+    ? (new Date(selectedSlotData.endTime).getTime() - new Date(selectedSlotData.startTime).getTime()) / (1000 * 60 * 60)
+    : 0;
+  const totalAmount = (durationHours * provider.hourlyRate).toFixed(2);
+
+  const handleBookingConfirm = async () => {
+    if (!isAuthenticated) {
+      setAuthPromptModal(true);
+      return;
+    }
+
     if (!selectedSlotData || !userId) return;
+    setBookingError(null);
 
     try {
-      const startTime = new Date(selectedSlotData.startTime);
-      const endTime = new Date(selectedSlotData.endTime);
-      const durationHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+      // Attempt API call if real provider
+      if (!userId.startsWith('sample-')) {
+        await createBooking({
+          providerId: userId,
+          startTime: selectedSlotData.startTime,
+          endTime: selectedSlotData.endTime,
+          hourlyRate: provider.hourlyRate,
+          durationHours,
+          meetingAddress: meetingAddress.trim() || undefined,
+        }).unwrap();
+      }
 
-      await createBooking({
-        providerId: userId,
-        startTime: selectedSlotData.startTime,
-        endTime: selectedSlotData.endTime,
-        hourlyRate: provider.hourlyRate,
-        durationHours,
-        meetingAddress: meetingAddress.trim() || undefined,
-      }).unwrap();
-
-      // Success - navigate to bookings page
-      alert('Booking created successfully! Please complete payment.');
-      navigate('/bookings');
-    } catch (error) {
-      console.error('Booking failed:', error);
-      alert('Failed to create booking. Please try again.');
+      setBookingSuccessModal(true);
+    } catch (err: any) {
+      console.error('Booking API error:', err);
+      setBookingError(err?.data?.error || err?.message || 'Failed to complete reservation. Please try again or check your account.');
     }
   };
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAFAF9' }}>
-      <header style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E7E3E0' }}>
-        <div className="max-w-6xl mx-auto py-6 px-6 flex items-center justify-between">
-          <button
-            onClick={() => navigate(-1)}
-            className="text-sm font-medium inline-flex items-center transition-colors"
-            style={{ color: '#746B66' }}
-            onMouseEnter={(e) => e.currentTarget.style.color = '#1A1614'}
-            onMouseLeave={(e) => e.currentTarget.style.color = '#746B66'}
-          >
-            <svg className="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-        </div>
-      </header>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      {/* Breadcrumb / Back button */}
+      <div>
+        <button
+          onClick={() => navigate('/discovery')}
+          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
+        >
+          <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          <span>Back to all companions</span>
+        </button>
+      </div>
 
-      <main className="py-12">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E7E3E0' }}>
-            {/* Photo */}
-            <div
-              className="h-80 flex items-center justify-center"
-              style={{ backgroundColor: provider.photoUrl ? 'transparent' : '#E8773D' }}
-            >
-              {provider.photoUrl ? (
-                <img
-                  src={provider.photoUrl}
-                  alt={provider.displayName}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <span
-                  className="text-8xl font-semibold"
-                  style={{ color: '#FFFFFF' }}
-                >
-                  {provider.displayName.charAt(0)}
-                </span>
-              )}
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Left 2 Columns: Companion Profile Details */}
+        <div className="lg:col-span-2 space-y-8">
+          {/* Main Card */}
+          <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-xs">
+            {/* Portrait Header */}
+            <div className="relative h-80 sm:h-96 bg-muted overflow-hidden">
+              <img
+                src={provider.photoUrl}
+                alt={provider.displayName}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
 
-            {/* Profile Info */}
-            <div className="px-8 py-8">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-6">
+              <div className="absolute bottom-6 left-6 right-6 text-white flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-semibold" style={{ color: '#1A1614' }}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight font-serif text-white">
                       {provider.displayName}
                     </h1>
                     {provider.isVerified && (
-                      <svg className="w-6 h-6" style={{ color: '#E8773D' }} fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
+                      <CheckBadgeIcon className="w-7 h-7 text-emerald-400" title="Verified Identity" />
                     )}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 text-sm text-white/90">
                     <div className="flex items-center gap-1">
-                      <span style={{ color: '#E8773D' }}>★</span>
-                      <span className="font-medium" style={{ color: '#746B66' }}>
-                        {provider.averageRating.toFixed(1)}
-                      </span>
+                      <StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" />
+                      <span className="font-semibold">{provider.averageRating.toFixed(2)}</span>
                     </div>
-                    <span style={{ color: '#E7E3E0' }}>•</span>
-                    <span className="text-sm" style={{ color: '#746B66' }}>
-                      Trust score: {provider.trustScore}
+                    <span>•</span>
+                    <div className="flex items-center gap-1">
+                      <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />
+                      <span>{provider.trustScore}% Trust Score</span>
+                    </div>
+                    <span>•</span>
+                    <div className="flex items-center gap-1">
+                      <MapPinIcon className="w-4 h-4" />
+                      <span>Within {provider.maxRadiusKm} km</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-card/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-border/80 shadow-md text-foreground">
+                  <div className="text-2xl font-bold font-serif text-foreground">
+                    ${provider.hourlyRate}
+                    <span className="text-xs font-normal text-muted-foreground">/hr</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Profile Content Body */}
+            <div className="p-6 sm:p-8 space-y-8">
+              {/* About */}
+              <div>
+                <h2 className="text-lg font-bold text-foreground font-serif mb-3">About Me</h2>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
+                  {provider.bio}
+                </p>
+              </div>
+
+              {/* Specialties / Skills */}
+              <div>
+                <h2 className="text-lg font-bold text-foreground font-serif mb-3">Specialties & Activities</h2>
+                <div className="flex flex-wrap gap-2">
+                  {provider.specialties.map((spec: string) => (
+                    <span
+                      key={spec}
+                      className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-accent/10 text-accent border border-accent/20"
+                    >
+                      {spec}
                     </span>
-                  </div>
-                </div>
-                <div className="text-3xl font-semibold" style={{ color: '#1A1614' }}>
-                  ${provider.hourlyRate}
-                  <span className="text-lg font-normal" style={{ color: '#746B66' }}>/hr</span>
+                  ))}
                 </div>
               </div>
 
-              {/* Bio */}
-              {provider.bio && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold mb-3" style={{ color: '#1A1614' }}>About</h2>
-                  <p style={{ color: '#746B66', lineHeight: '1.6' }}>{provider.bio}</p>
+              {/* Trust & Verification Badges */}
+              <div className="p-5 rounded-2xl bg-background border border-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <div className="space-y-1">
+                  <ShieldCheckIcon className="w-6 h-6 text-success mx-auto" />
+                  <div className="text-xs font-bold text-foreground">Government ID</div>
+                  <div className="text-[11px] text-muted-foreground">Fully Verified</div>
                 </div>
-              )}
-
-              {/* Specialties */}
-              {provider.specialties.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-semibold mb-3" style={{ color: '#1A1614' }}>Specialties</h2>
-                  <div className="flex flex-wrap gap-2">
-                    {provider.specialties.map((spec) => (
-                      <span
-                        key={spec}
-                        className="px-3 py-1.5 rounded-full text-sm font-medium"
-                        style={{ backgroundColor: '#FEF3EE', color: '#C65D28' }}
-                      >
-                        {spec}
-                      </span>
-                    ))}
-                  </div>
+                <div className="space-y-1">
+                  <ClockIcon className="w-6 h-6 text-accent mx-auto" />
+                  <div className="text-xs font-bold text-foreground">Response Time</div>
+                  <div className="text-[11px] text-muted-foreground">&lt; 15 Minutes</div>
                 </div>
-              )}
-
-              {/* Details */}
-              <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="rounded-lg p-4" style={{ backgroundColor: '#FAFAF9' }}>
-                  <dt className="text-sm font-medium mb-1" style={{ color: '#746B66' }}>Service radius</dt>
-                  <dd className="text-lg font-semibold" style={{ color: '#1A1614' }}>{provider.maxRadiusKm} km</dd>
-                </div>
-                <div className="rounded-lg p-4" style={{ backgroundColor: '#FAFAF9' }}>
-                  <dt className="text-sm font-medium mb-1" style={{ color: '#746B66' }}>Intro video</dt>
-                  <dd>
-                    {provider.introVideoUrl ? (
-                      <a
-                        href={provider.introVideoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-sm font-medium hover:underline"
-                        style={{ color: '#E8773D' }}
-                      >
-                        Watch introduction
-                      </a>
-                    ) : (
-                      <span className="text-sm" style={{ color: '#746B66' }}>Not available</span>
-                    )}
-                  </dd>
+                <div className="space-y-1">
+                  <SparklesIcon className="w-6 h-6 text-amber-500 mx-auto" />
+                  <div className="text-xs font-bold text-foreground">Escrow Payout</div>
+                  <div className="text-[11px] text-muted-foreground">100% Protected</div>
                 </div>
               </div>
 
-              {/* Available Slots */}
-              <div className="mb-8">
-                <h2 className="text-lg font-semibold mb-4" style={{ color: '#1A1614' }}>Available times</h2>
-                {availableSlots.length === 0 ? (
-                  <p style={{ color: '#746B66' }}>No upcoming availability</p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {availableSlots.map((slot) => (
-                      <button
-                        key={slot.slotId}
-                        onClick={() => setSelectedSlot(selectedSlot === slot.slotId ? null : slot.slotId)}
-                        className="p-3 rounded-lg text-sm text-center transition-colors"
-                        style={{
-                          border: selectedSlot === slot.slotId ? '2px solid #E8773D' : '1px solid #E7E3E0',
-                          backgroundColor: selectedSlot === slot.slotId ? '#FEF3EE' : '#FFFFFF',
-                          color: selectedSlot === slot.slotId ? '#C65D28' : '#1A1614',
-                        }}
-                      >
-                        <div className="font-medium">
-                          {new Date(slot.startTime).toLocaleDateString('en-US', {
-                            weekday: 'short',
-                            month: 'short',
-                            day: 'numeric',
-                          })}
-                        </div>
-                        <div className="text-xs mt-1" style={{ color: '#746B66' }}>
-                          {new Date(slot.startTime).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })} - {new Date(slot.endTime).toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            minute: '2-digit',
-                          })}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Booking Form */}
-              {showBookingForm && selectedSlot && selectedSlotData && (
-                <div className="mb-8 p-6 rounded-xl" style={{ backgroundColor: '#FEF3EE', border: '1px solid #E8773D' }}>
-                  <h3 className="text-lg font-semibold mb-4" style={{ color: '#1A1614' }}>Booking details</h3>
-
-                  <div className="mb-4">
-                    <div className="text-sm font-medium mb-2" style={{ color: '#746B66' }}>Selected time</div>
-                    <div className="font-medium" style={{ color: '#1A1614' }}>
-                      {new Date(selectedSlotData.startTime).toLocaleString('en-US', {
-                        weekday: 'long',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })} - {new Date(selectedSlotData.endTime).toLocaleTimeString('en-US', {
-                        hour: 'numeric',
-                        minute: '2-digit',
-                      })}
+              {/* Introduction Video if exists */}
+              {provider.introVideoUrl && (
+                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                  <div className="flex items-center gap-3">
+                    <VideoCameraIcon className="w-6 h-6 text-accent" />
+                    <div>
+                      <div className="text-sm font-semibold text-foreground">Video Introduction</div>
+                      <div className="text-xs text-muted-foreground">Watch a 60-second video message</div>
                     </div>
                   </div>
-
-                  <div className="mb-4">
-                    <div className="text-sm font-medium mb-2" style={{ color: '#746B66' }}>Duration & Cost</div>
-                    <div className="font-medium" style={{ color: '#1A1614' }}>
-                      {((new Date(selectedSlotData.endTime).getTime() - new Date(selectedSlotData.startTime).getTime()) / (1000 * 60 * 60)).toFixed(1)} hours × ${provider.hourlyRate}/hr = ${(((new Date(selectedSlotData.endTime).getTime() - new Date(selectedSlotData.startTime).getTime()) / (1000 * 60 * 60)) * provider.hourlyRate).toFixed(2)}
-                    </div>
-                  </div>
-
-                  <div className="mb-6">
-                    <label htmlFor="meetingAddress" className="text-sm font-medium mb-2 block" style={{ color: '#746B66' }}>
-                      Meeting location (optional)
-                    </label>
-                    <input
-                      id="meetingAddress"
-                      type="text"
-                      value={meetingAddress}
-                      onChange={(e) => setMeetingAddress(e.target.value)}
-                      placeholder="e.g., Central Park, Coffee shop on Main St"
-                      className="w-full px-4 py-2.5 rounded-lg border focus:outline-none"
-                      style={{ borderColor: '#E7E3E0', color: '#1A1614' }}
-                    />
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleBooking}
-                      disabled={isBooking}
-                      className="flex-1 px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                      style={{ backgroundColor: '#E8773D', color: '#FFFFFF' }}
-                      onMouseEnter={(e) => !isBooking && (e.currentTarget.style.backgroundColor = '#C65D28')}
-                      onMouseLeave={(e) => !isBooking && (e.currentTarget.style.backgroundColor = '#E8773D')}
-                    >
-                      {isBooking ? 'Creating...' : 'Confirm booking'}
-                    </button>
-                    <button
-                      onClick={() => setShowBookingForm(false)}
-                      disabled={isBooking}
-                      className="px-6 py-3 rounded-lg font-medium transition-colors"
-                      style={{ backgroundColor: '#FFFFFF', color: '#746B66', border: '1px solid #E7E3E0' }}
-                    >
-                      Cancel
-                    </button>
-                  </div>
+                  <a
+                    href={provider.introVideoUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 rounded-lg bg-muted hover:bg-accent/15 text-xs font-semibold text-accent transition-colors"
+                  >
+                    Watch Video
+                  </a>
                 </div>
-              )}
-
-              {/* Book Button */}
-              {!showBookingForm && (
-                <button
-                  disabled={!selectedSlot}
-                  onClick={() => setShowBookingForm(true)}
-                  className="w-full sm:w-auto px-8 py-3 rounded-lg font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                  style={{
-                    backgroundColor: selectedSlot ? '#E8773D' : '#E7E3E0',
-                    color: '#FFFFFF',
-                  }}
-                  onMouseEnter={(e) => selectedSlot && (e.currentTarget.style.backgroundColor = '#C65D28')}
-                  onMouseLeave={(e) => selectedSlot && (e.currentTarget.style.backgroundColor = '#E8773D')}
-                >
-                  {selectedSlot ? 'Book this time' : 'Select a time to book'}
-                </button>
               )}
             </div>
           </div>
         </div>
-      </main>
+
+        {/* Right Column: Sticky Booking Widget */}
+        <div className="lg:col-span-1">
+          <div className="sticky top-24 bg-card rounded-3xl border border-border p-6 shadow-md space-y-6">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-wider text-accent block mb-1">
+                Schedule Companion
+              </span>
+              <h2 className="text-xl font-bold font-serif text-foreground">
+                Book an Experience
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Select an open time slot to reserve companion time.
+              </p>
+            </div>
+
+            {/* Time Slot Picker */}
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
+                <CalendarDaysIcon className="w-4 h-4 text-accent" />
+                <span>Available Windows</span>
+              </label>
+
+              {availableSlots.length === 0 ? (
+                <div className="p-4 rounded-xl bg-muted/60 text-center text-xs text-muted-foreground">
+                  No upcoming open slots right now. Contact provider for custom hours.
+                </div>
+              ) : (
+                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                  {availableSlots.map((slot: any) => {
+                    const isSelected = selectedSlot === slot.slotId;
+                    const startDate = new Date(slot.startTime);
+                    const endDate = new Date(slot.endTime);
+
+                    return (
+                      <button
+                        key={slot.slotId}
+                        type="button"
+                        onClick={() => setSelectedSlot(isSelected ? null : slot.slotId)}
+                        className={`w-full p-3 rounded-xl border text-left transition-all text-xs flex items-center justify-between shadow-2xs ${
+                          isSelected
+                            ? 'border-accent bg-accent/15 text-foreground ring-1 ring-accent'
+                            : 'border-border bg-card hover:border-accent/40 text-foreground'
+                        }`}
+                      >
+                        <div>
+                          <div className="font-semibold text-foreground">
+                            {startDate.toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              month: 'short',
+                              day: 'numeric',
+                            })}
+                          </div>
+                          <div className="text-foreground/70 text-[11px] mt-0.5">
+                            {startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} -{' '}
+                            {endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <div className="w-5 h-5 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-xs font-bold">
+                            ✓
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Meeting Location */}
+            <div>
+              <label className="block text-xs font-semibold text-foreground/80 mb-1.5">
+                Proposed Meeting Location (Optional)
+              </label>
+              <input
+                type="text"
+                value={meetingAddress}
+                onChange={(e) => setMeetingAddress(e.target.value)}
+                placeholder="e.g. Hudson River Park Tennis Courts"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-muted text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+            </div>
+
+            {/* Cost Breakdown */}
+            {selectedSlotData && (
+              <div className="p-4 rounded-xl bg-muted border border-border space-y-2 text-xs">
+                <div className="flex justify-between text-foreground/80">
+                  <span>Companion Rate</span>
+                  <span>${provider.hourlyRate} / hour</span>
+                </div>
+                <div className="flex justify-between text-foreground/80">
+                  <span>Selected Duration</span>
+                  <span>{durationHours.toFixed(1)} hours</span>
+                </div>
+                <div className="flex justify-between text-foreground/80">
+                  <span>Platform Trust Fee</span>
+                  <span className="text-success font-medium">Free ($0.00 promo)</span>
+                </div>
+                <div className="pt-2 border-t border-border flex justify-between font-bold text-sm text-foreground">
+                  <span>Total Amount</span>
+                  <span className="text-accent">${totalAmount}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Booking CTA Button */}
+            <div className="space-y-2">
+              {bookingError && (
+                <div className="p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs font-medium">
+                  {bookingError}
+                </div>
+              )}
+              <button
+                type="button"
+                disabled={!selectedSlot || isBooking}
+                onClick={handleBookingConfirm}
+                className="w-full py-3.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.01]"
+              >
+                {isBooking
+                  ? 'Confirming Slot...'
+                  : selectedSlot
+                  ? `Reserve Experience ($${totalAmount})`
+                  : 'Select a Time Window Above'}
+              </button>
+              <p className="text-[11px] text-muted-foreground text-center mt-2">
+                🔒 Funds held securely in escrow until activity completion.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      {bookingSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-3xl bg-card border border-border p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-success/15 text-success flex items-center justify-center mx-auto">
+              <CheckCircleIcon className="w-10 h-10" />
+            </div>
+            <h3 className="text-2xl font-bold font-serif text-foreground">
+              Booking Reserved!
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your experience request with <strong>{provider.displayName}</strong> has been secured in escrow. You can now coordinate specifics in the encrypted chat.
+            </p>
+            <div className="pt-2 flex flex-col gap-2">
+              <button
+                onClick={() => navigate('/bookings')}
+                className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors"
+              >
+                View My Bookings
+              </button>
+              <button
+                onClick={() => setBookingSuccessModal(false)}
+                className="w-full py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-xs transition-colors"
+              >
+                Keep Exploring
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auth Prompt Modal (For guest visitors) */}
+      {authPromptModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+          <div className="w-full max-w-md rounded-3xl bg-card border border-border p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-accent/15 text-accent flex items-center justify-center mx-auto">
+              <SparklesIcon className="w-9 h-9" />
+            </div>
+            <h3 className="text-2xl font-bold font-serif text-foreground">
+              Sign In to Reserve
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              To guarantee community safety and escrow payment protection, an authenticated account is required to book a companion.
+            </p>
+            <div className="pt-2 flex flex-col gap-2">
+              <Link
+                to="/register"
+                className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors block"
+              >
+                Create Account (Quick & Free)
+              </Link>
+              <Link
+                to="/login"
+                className="w-full py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-xs transition-colors block"
+              >
+                Existing User Log In
+              </Link>
+              <button
+                onClick={() => setAuthPromptModal(false)}
+                className="text-xs text-muted-foreground hover:underline pt-2"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

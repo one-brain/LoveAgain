@@ -372,7 +372,26 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/chats/{everything}",
+      "DownstreamPathTemplate": "/api/v1/chat/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chat-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/chat/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/api/v1/chat/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -391,7 +410,7 @@
       ]
     },
     {
-      "DownstreamPathTemplate": "/api/v1/chats/{everything}",
+      "DownstreamPathTemplate": "/api/v1/chat/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [
         {
@@ -407,6 +426,36 @@
         "PATCH",
         "DELETE",
         "OPTIONS"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/chat",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chat-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/chat",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
+      ]
+    },
+    {
+      "DownstreamPathTemplate": "/hubs/chat/{everything}",
+      "DownstreamScheme": "ws",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "chat-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/hubs/chat/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST"
       ]
     },
     {

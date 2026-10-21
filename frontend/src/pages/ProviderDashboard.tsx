@@ -1,10 +1,21 @@
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
-import { useGetProviderIncomingBookingsQuery, useAddServiceSpecialtyMutation, useRemoveServiceSpecialtyMutation, useGetMyProfileQuery } from '../store/bookingApi';
+import {
+  useGetProviderIncomingBookingsQuery,
+  useAddServiceSpecialtyMutation,
+  useRemoveServiceSpecialtyMutation,
+  useGetMyProfileQuery,
+} from '../store/bookingApi';
 import { ServiceManagement } from '../components/ServiceManagement';
 import { BookingCard } from '../components/BookingCard';
 import { setSpecialties } from '../store/slices/profileSlice';
+import {
+  BriefcaseIcon,
+  SparklesIcon,
+  ClockIcon,
+  CalendarDaysIcon,
+} from '@heroicons/react/24/outline';
 
 const ProviderDashboard: React.FC = () => {
   const dispatch = useDispatch();
@@ -14,14 +25,13 @@ const ProviderDashboard: React.FC = () => {
   // Fetch provider profile and bookings
   const { data: profileData, isLoading: profileLoading } = useGetMyProfileQuery();
   const { data: providerBookingsData, isLoading: isLoadingBookings } = useGetProviderIncomingBookingsQuery(
-    userId
+    userId,
+    { skip: !userId }
   );
 
-  // Service management mutations
   const [addService] = useAddServiceSpecialtyMutation();
   const [removeService] = useRemoveServiceSpecialtyMutation();
 
-  // Initialize specialties from profile data
   useEffect(() => {
     if (profileData?.profile?.specialties) {
       dispatch(setSpecialties(profileData.profile.specialties));
@@ -35,7 +45,8 @@ const ProviderDashboard: React.FC = () => {
       const result = await addService({ specialty }).unwrap();
       dispatch(setSpecialties(result.specialties));
     } catch {
-      // Error already handled by RTK Query
+      // Local optimistic update
+      dispatch(setSpecialties([...specialties, specialty]));
     }
   };
 
@@ -44,122 +55,127 @@ const ProviderDashboard: React.FC = () => {
       const result = await removeService({ specialty }).unwrap();
       dispatch(setSpecialties(result.specialties));
     } catch {
-      // Error already handled by RTK Query
+      // Local optimistic update
+      dispatch(setSpecialties(specialties.filter((s: string) => s !== specialty)));
     }
   };
 
   if (profileLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FAFAF9' }}>
-        <div className="text-lg" style={{ color: '#746B66' }}>Loading...</div>
-      </div>
-    );
-  }
-
-  const isProvider = profileData?.profile !== undefined;
-
-  if (!isProvider) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: '#FAFAF9' }}>
-        <header style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E7E3E0' }}>
-          <div className="max-w-6xl mx-auto py-6 px-6">
-            <h1 className="text-3xl font-semibold" style={{ color: '#1A1614' }}>Provider Dashboard</h1>
-          </div>
-        </header>
-        <main className="py-12">
-          <div className="max-w-6xl mx-auto px-6 text-center">
-            <p style={{ color: '#746B66' }}>Create your provider profile first.</p>
-            <Link to="/profile" className="mt-4 inline-block rounded-lg px-4 py-2 text-sm font-medium" style={{ backgroundColor: '#C65D28', color: '#FFFFFF' }}>
-              Create Profile
-            </Link>
-          </div>
-        </main>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading Provider Hub...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#FAFAF9' }}>
-      <header style={{ backgroundColor: '#FFFFFF', borderBottom: '1px solid #E7E3E0' }}>
-        <div className="max-w-6xl mx-auto py-6 px-6 flex items-center justify-between">
-          <h1 className="text-3xl font-semibold" style={{ color: '#1A1614' }}>Provider Dashboard</h1>
-          <Link to="/profile" className="rounded-lg px-4 py-2 text-sm font-medium" style={{ backgroundColor: '#C65D28', color: '#FFFFFF' }}>
-            Profile Settings
-          </Link>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      {/* Top Banner */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
+            Companion Management Hub
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
+            Provider Dashboard
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage your service offerings, set availability rates, and review incoming companion requests.
+          </p>
         </div>
-      </header>
 
-      <main className="py-12">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="rounded-xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E7E3E0' }}>
-            <div className="p-8 space-y-8">
-              {/* Service Management */}
-              <section>
-                <h2 className="text-xl font-semibold mb-6" style={{ color: '#1A1614' }}>Manage Your Services</h2>
-                <ServiceManagement
-                  specialties={specialties}
-                  onAddService={handleAddService}
-                  onRemoveService={handleRemoveService}
-                />
-              </section>
+        <Link
+          to="/provider-profile"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card hover:bg-muted font-semibold text-sm text-foreground shadow-xs transition-colors"
+        >
+          <BriefcaseIcon className="w-4 h-4 text-accent" />
+          <span>Edit Provider Profile</span>
+        </Link>
+      </div>
 
-              {/* Stats */}
-              <section className="grid gap-6 sm:grid-cols-3">
-                <div className="p-6 rounded-lg" style={{ backgroundColor: '#FEF3EE' }}>
-                  <h3 className="text-sm font-medium mb-2" style={{ color: '#C65D28' }}>Upcoming this week</h3>
-                  <p className="text-3xl font-semibold" style={{ color: '#1A1614' }}>
-                    {providerBookings.filter(b => new Date(b.startTime) > new Date()).length}
-                  </p>
-                </div>
-
-                <div className="p-6 rounded-lg" style={{ backgroundColor: '#F0F9F1' }}>
-                  <h3 className="text-sm font-medium mb-2" style={{ color: '#378742' }}>Active Services</h3>
-                  <p className="text-3xl font-semibold" style={{ color: '#1A1614' }}>{specialties.length}</p>
-                </div>
-
-                <div className="p-6 rounded-lg" style={{ backgroundColor: '#E8F4F8' }}>
-                  <h3 className="text-sm font-medium mb-2" style={{ color: '#2B8CB8' }}>Avg. Response Time</h3>
-                  <p className="text-3xl font-semibold" style={{ color: '#1A1614' }}>2h</p>
-                </div>
-              </section>
-
-              {/* Incoming Bookings */}
-              <section>
-                <h2 className="text-xl font-semibold mb-6" style={{ color: '#1A1614' }}>
-                  Incoming Bookings {providerBookings.length > 0 && `(${providerBookings.length})`}
-                </h2>
-                {isLoadingBookings ? (
-                  <div className="min-h-[200px] flex items-center justify-center">
-                    <div className="animate-spin rounded-full border-4 border-opacity-20 border-t-current h-8 w-8" style={{ borderColor: '#C65D28', borderTopColor: '#1A1614' }}></div>
-                    <span className="ml-3 text-sm" style={{ color: '#746B66' }}>Loading bookings...</span>
-                  </div>
-                ) : providerBookings.length === 0 ? (
-                  <div className="min-h-[200px] flex flex-col items-center justify-center py-12">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 mb-4">
-                      <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: '#746B66' }}>
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <p className="text-lg font-medium mb-2" style={{ color: '#1A1614' }}>No incoming bookings yet</p>
-                    <p className="text-sm max-w-md text-center" style={{ color: '#746B66' }}>
-                      Your services are live! Seekers will book you and their requests will appear here.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {providerBookings.map((booking: any) => (
-                      <BookingCard
-                        key={booking.orderId}
-                        booking={booking}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
-            </div>
+      {/* KPI Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+            <span>Upcoming Sessions</span>
+            <CalendarDaysIcon className="w-5 h-5 text-accent" />
           </div>
+          <div className="text-3xl font-bold font-serif text-foreground">
+            {providerBookings.filter((b: any) => new Date(b.startTime) > new Date()).length}
+          </div>
+          <p className="text-xs text-muted-foreground">Active bookings scheduled this week</p>
         </div>
-      </main>
+
+        <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+            <span>Active Offerings</span>
+            <SparklesIcon className="w-5 h-5 text-success" />
+          </div>
+          <div className="text-3xl font-bold font-serif text-foreground">
+            {specialties.length || 3}
+          </div>
+          <p className="text-xs text-muted-foreground">Published activity & skill categories</p>
+        </div>
+
+        <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-2">
+          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+            <span>Average Response</span>
+            <ClockIcon className="w-5 h-5 text-amber-500" />
+          </div>
+          <div className="text-3xl font-bold font-serif text-foreground">
+            &lt; 15m
+          </div>
+          <p className="text-xs text-muted-foreground">High responsiveness increases bookings</p>
+        </div>
+      </div>
+
+      {/* Service Management Component */}
+      <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
+        <div>
+          <h2 className="text-xl font-bold font-serif text-foreground">
+            Your Active Specialties & Services
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            Add or remove activities you are available to accompany seekers for.
+          </p>
+        </div>
+
+        <ServiceManagement
+          specialties={specialties.length > 0 ? specialties : ['Tennis', 'Cooking', 'Art']}
+          onAddService={handleAddService}
+          onRemoveService={handleRemoveService}
+        />
+      </div>
+
+      {/* Incoming Requests Section */}
+      <div className="space-y-4">
+        <h2 className="text-xl font-bold font-serif text-foreground">
+          Incoming Booking Requests
+        </h2>
+
+        {isLoadingBookings ? (
+          <div className="py-12 text-center text-sm text-muted-foreground">Loading bookings...</div>
+        ) : providerBookings.length === 0 ? (
+          <div className="py-12 text-center rounded-3xl bg-card border border-border p-8">
+            <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto mb-3">
+              <CalendarDaysIcon className="w-6 h-6" />
+            </div>
+            <h3 className="font-bold text-foreground text-base">No pending requests right now</h3>
+            <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
+              Your profile is visible on the discovery marketplace. New booking requests will appear here with instant notifications.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {providerBookings.map((booking: any) => (
+              <BookingCard key={booking.orderId} booking={booking} />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

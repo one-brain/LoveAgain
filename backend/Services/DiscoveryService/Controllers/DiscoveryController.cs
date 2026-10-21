@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Security.Claims;
 using Cue.Domain;
 using Cue.Infrastructure.Data;
 using Microsoft.AspNetCore.Mvc;
@@ -48,6 +50,7 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<ProviderCardResponse>>> ListProviders(
         [FromQuery] string? q,
         [FromQuery] string? specialty,
+        [FromQuery] string? skillTag,
         [FromQuery] decimal? minRate,
         [FromQuery] decimal? maxRate,
         [FromQuery] string? sortBy,
@@ -73,6 +76,11 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
         if (!string.IsNullOrWhiteSpace(specialty))
         {
             query = query.Where(join => join.profile.Specialties.Contains(specialty.Trim()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(skillTag))
+        {
+            query = query.Where(join => join.profile.Specialties.Contains(skillTag.Trim()));
         }
 
         if (minRate.HasValue)
@@ -217,4 +225,26 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
         return Ok(response);
     }
 
+    [HttpGet("skill-tags")]
+    [ProducesResponseType(typeof(IReadOnlyList<string>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<string>>> GetAllSkillTags(
+        CancellationToken cancellationToken)
+    {
+        // Get all unique skill tags (specialties) from all active provider profiles
+        var allTags = await dbContext.ProviderProfiles
+            .AsNoTracking()
+            .Where(p => p.IsActive)
+            .SelectMany(p => p.Specialties)
+            .Distinct()
+            .OrderBy(tag => tag)
+            .ToListAsync(cancellationToken);
+
+        return Ok(allTags);
+    }
+
+    private bool TryGetUserId(out Guid userId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        return Guid.TryParse(userIdClaim, out userId);
+    }
 }

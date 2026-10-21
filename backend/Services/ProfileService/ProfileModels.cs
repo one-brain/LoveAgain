@@ -25,7 +25,8 @@ public sealed record SaveProviderProfileRequest(
     decimal HourlyRate,
     string? Bio,
     IReadOnlyCollection<string> Specialties,
-    decimal MaxRadiusKm
+    decimal MaxRadiusKm,
+    string? IntroVideoUrl = null
 );
 
 public sealed record ProviderProfileResponse(
@@ -39,7 +40,9 @@ public sealed record ProviderProfileResponse(
     bool IsActive,
     decimal AverageRating,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime? UpdatedAt,
+    DateTime? DeletedAt,
+    bool IsDeleted
 );
 
 public sealed record SetProviderProfileStatusRequest(bool Active);

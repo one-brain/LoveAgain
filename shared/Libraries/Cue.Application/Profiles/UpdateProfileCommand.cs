@@ -5,7 +5,13 @@ using MediatR;
 
 namespace Cue.Application.Profiles;
 
-public sealed record UpdateProfileCommand(Guid UserId, decimal HourlyRate, string Bio, IReadOnlyCollection<string> Specialties, decimal MaxRadiusKm) : IRequest<Unit>;
+public sealed record UpdateProfileCommand(
+    Guid UserId,
+    decimal HourlyRate,
+    string Bio,
+    IReadOnlyCollection<string> Specialties,
+    decimal MaxRadiusKm,
+    string? IntroVideoUrl = null) : IRequest<Unit>;
 
 public sealed class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileCommand>
 {
@@ -25,7 +31,7 @@ public sealed class UpdateProfileCommandHandler(IProviderProfileRepository repos
     {
         var profile = await repository.GetByUserIdAsync(command.UserId, cancellationToken)
             ?? throw new KeyNotFoundException("Provider profile was not found.");
-        profile.Update(command.HourlyRate, command.Bio, command.Specialties, command.MaxRadiusKm);
+        profile.Update(command.HourlyRate, command.Bio, command.Specialties, command.MaxRadiusKm, command.IntroVideoUrl);
         await repository.SaveChangesAsync(cancellationToken);
         return Unit.Value;
     }

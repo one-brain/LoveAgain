@@ -42,12 +42,7 @@ public sealed class CreateProviderProfileCommandHandler(
         }
 
         var profile = new ProviderProfile(
-            command.UserId, command.HourlyRate, command.Bio, command.Specialties);
-
-        if (command.MaxRadiusKm > 0)
-        {
-            profile.Update(command.HourlyRate, command.Bio, command.Specialties, command.MaxRadiusKm);
-        }
+            command.UserId, command.HourlyRate, command.Bio, command.Specialties, command.MaxRadiusKm);
 
         await repository.AddAsync(profile, cancellationToken);
         await repository.SaveChangesAsync(cancellationToken);
