@@ -296,6 +296,25 @@
       ]
     },
     {
+      "DownstreamPathTemplate": "/api/v1/admin/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "profile-service",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/v1/admin/{everything}",
+      "UpstreamHttpMethod": [
+        "GET",
+        "POST",
+        "PUT",
+        "PATCH",
+        "DELETE",
+        "OPTIONS"
+      ]
+    },
+    {
       "DownstreamPathTemplate": "/api/v1/discovery/{everything}",
       "DownstreamScheme": "http",
       "DownstreamHostAndPorts": [

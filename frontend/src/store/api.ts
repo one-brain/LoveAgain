@@ -9,6 +9,10 @@ export interface ProviderProfile {
   bio: string;
   maxRadiusKm: number;
   isActive: boolean;
+  status?: 'Draft' | 'PendingReview' | 'Approved' | 'Rejected' | 'Suspended';
+  idProofUrl?: string;
+  selfieVerificationUrl?: string;
+  rejectionReason?: string;
   averageRating: number;
   introVideoUrl?: string;
 }

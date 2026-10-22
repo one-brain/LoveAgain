@@ -347,8 +347,51 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         return Guid.TryParse(userIdClaim, out userId);
     }
 
+    [HttpPost("apply")]
+    [ProducesResponseType(typeof(ProviderProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<ProviderProfileResponse>> ApplyAsCompanion(
+        [FromBody] CompanionApplicationRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+
+        if (request.HourlyRate <= 0)
+        {
+            return BadRequest(new { error = "Hourly rate must be greater than zero." });
+        }
+
+        var profile = await dbContext.ProviderProfiles
+            .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+
+        if (profile == null)
+        {
+            profile = new ProviderProfile(
+                userId,
+                request.HourlyRate,
+                request.Bio,
+                request.Specialties,
+                request.MaxRadiusKm > 0 ? request.MaxRadiusKm : 50,
+                request.IntroVideoUrl
+            );
+            profile.SubmitForReview(request.IdProofUrl, request.SelfieVerificationUrl);
+            await dbContext.ProviderProfiles.AddAsync(profile, cancellationToken);
+        }
+        else
+        {
+            profile.Update(request.HourlyRate, request.Bio, request.Specialties, request.MaxRadiusKm > 0 ? request.MaxRadiusKm : 50, request.IntroVideoUrl);
+            profile.SubmitForReview(request.IdProofUrl, request.SelfieVerificationUrl);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(ToResponse(profile));
+    }
+
     private static ProviderProfileResponse ToResponse(ProviderProfile profile) =>
         new(profile.Id, profile.UserId, profile.HourlyRate, profile.Bio, profile.Specialties,
-            profile.MaxRadiusKm, profile.IntroVideoUrl, profile.IsActive, profile.AverageRating,
+            profile.MaxRadiusKm, profile.IntroVideoUrl, profile.IsActive, profile.Status,
+            profile.IdProofUrl, profile.SelfieVerificationUrl, profile.RejectionReason,
+            profile.AverageRating,
             profile.CreatedAt, profile.UpdatedAt, profile.DeletedAt, profile.IsDeleted);
 }

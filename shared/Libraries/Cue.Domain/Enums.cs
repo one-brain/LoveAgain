@@ -7,6 +7,15 @@ public enum UserRole
     Admin = 3
 }
 
+public enum VerificationStatus
+{
+    Draft = 1,
+    PendingReview = 2,
+    Approved = 3,
+    Rejected = 4,
+    Suspended = 5
+}
+
 public enum OrderStatus
 {
     PendingPayment = 1,

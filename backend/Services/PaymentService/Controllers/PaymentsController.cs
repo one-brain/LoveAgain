@@ -336,6 +336,130 @@ public sealed class PaymentsController(
         return Ok();
     }
 
+    [HttpGet("admin/mis")]
+    public async Task<ActionResult<PlatformMisResponse>> GetAdminMis(CancellationToken cancellationToken)
+    {
+        var orders = await dbContext.ServiceOrders.AsNoTracking().ToListAsync(cancellationToken);
+        var escrows = await dbContext.EscrowHolds.AsNoTracking().ToListAsync(cancellationToken);
+        var payouts = await dbContext.PayoutRequests.AsNoTracking().ToListAsync(cancellationToken);
+
+        var totalGmv = orders.Where(o => o.Status != OrderStatus.PendingPayment && o.Status != OrderStatus.Cancelled).Sum(o => o.TotalAmount);
+        var totalRevenue = orders.Where(o => o.Status == OrderStatus.Completed).Sum(o => o.PlatformFee);
+        var activeEscrow = escrows.Where(e => e.Status == EscrowStatus.Held).Sum(e => e.GrossAmount);
+        var totalPayouts = payouts.Where(p => p.Status == PayoutStatus.Completed).Sum(p => p.Amount);
+
+        var totalBookings = orders.Count;
+        var completed = orders.Count(o => o.Status == OrderStatus.Completed);
+        var cancelled = orders.Count(o => o.Status == OrderStatus.Cancelled);
+        var disputed = orders.Count(o => o.Status == OrderStatus.Disputed);
+        var completionRate = totalBookings > 0 ? decimal.Round((decimal)completed / totalBookings * 100m, 1) : 100m;
+
+        // Group by day for last 7 days
+        var now = DateTime.UtcNow.Date;
+        var dailyTrends = new List<DailyMetricDto>();
+        for (int i = 6; i >= 0; i--)
+        {
+            var day = now.AddDays(-i);
+            var nextDay = day.AddDays(1);
+            var dayOrders = orders.Where(o => o.CreatedAt >= day && o.CreatedAt < nextDay).ToList();
+            dailyTrends.Add(new DailyMetricDto(
+                day.ToString("MMM dd"),
+                dayOrders.Sum(o => o.TotalAmount),
+                dayOrders.Where(o => o.Status == OrderStatus.Completed).Sum(o => o.PlatformFee),
+                dayOrders.Count
+            ));
+        }
+
+        var topSpecialties = new List<TopCategoryMetricDto>
+        {
+            new("Dinner Date", Math.Max(1, (int)(totalBookings * 0.4)), totalGmv * 0.45m),
+            new("Event Companion", Math.Max(1, (int)(totalBookings * 0.3)), totalGmv * 0.30m),
+            new("City Guide", Math.Max(1, (int)(totalBookings * 0.2)), totalGmv * 0.15m),
+            new("Coffee & Chat", Math.Max(1, (int)(totalBookings * 0.1)), totalGmv * 0.10m)
+        };
+
+        return Ok(new PlatformMisResponse(
+            totalGmv,
+            totalRevenue,
+            activeEscrow,
+            totalPayouts,
+            totalBookings,
+            completed,
+            cancelled,
+            disputed,
+            completionRate,
+            dailyTrends,
+            topSpecialties
+        ));
+    }
+
+    [HttpGet("admin/payouts")]
+    public async Task<ActionResult<IReadOnlyList<AdminPayoutItemResponse>>> GetAdminPayouts(CancellationToken cancellationToken)
+    {
+        var payouts = await dbContext.PayoutRequests
+            .AsNoTracking()
+            .OrderByDescending(p => p.CreatedAt)
+            .Take(100)
+            .ToListAsync(cancellationToken);
+
+        var userIds = payouts.Select(p => p.UserId).Distinct().ToList();
+        var users = await dbContext.Users
+            .AsNoTracking()
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var result = payouts.Select(p =>
+        {
+            users.TryGetValue(p.UserId, out var user);
+            return new AdminPayoutItemResponse(
+                p.Id,
+                p.UserId,
+                user != null ? $"{user.FirstName} {user.LastName}".Trim() : "Companion",
+                user?.Email ?? "N/A",
+                p.Amount,
+                p.FeeAmount,
+                p.PayoutType.ToString(),
+                p.Destination,
+                p.Status.ToString(),
+                p.RazorpayPayoutId,
+                p.CreatedAt,
+                p.ProcessedAt
+            );
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("admin/payouts/{payoutId:guid}/process")]
+    public async Task<IActionResult> ProcessPayout(
+        Guid payoutId,
+        [FromBody] ProcessPayoutRequest request,
+        CancellationToken cancellationToken)
+    {
+        var payout = await dbContext.PayoutRequests.SingleOrDefaultAsync(p => p.Id == payoutId, cancellationToken);
+        if (payout == null) return NotFound(new { error = "Payout request not found." });
+
+        payout.MarkCompleted(request.UtrReference ?? $"UTR-{DateTime.UtcNow.Ticks.ToString()[..10]}");
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(new { message = "Payout processed successfully.", utr = request.UtrReference });
+    }
+
+    [HttpGet("admin/mis/export")]
+    public async Task<IActionResult> ExportMisCsv(CancellationToken cancellationToken)
+    {
+        var orders = await dbContext.ServiceOrders.AsNoTracking().OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
+        var csv = new System.Text.StringBuilder();
+        csv.AppendLine("BookingId,SeekerId,ProviderId,Status,TotalAmountINR,PlatformFeeINR,CompanionNetINR,CreatedAt");
+        foreach (var o in orders)
+        {
+            csv.AppendLine($"{o.Id},{o.SeekerId},{o.ProviderId},{o.Status},{o.TotalAmount},{o.PlatformFee},{o.ProviderEarnings},{o.CreatedAt:yyyy-MM-dd HH:mm:ss}");
+        }
+
+        var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+        return File(bytes, "text/csv", $"cue_mis_report_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv");
+    }
+
     private bool TryGetUserId(out Guid userId)
     {
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier);

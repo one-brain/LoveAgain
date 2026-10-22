@@ -2,6 +2,7 @@
   <Folder Name="/backend/" />
   <Folder Name="/backend/Services/">
     <Project Path="backend/Services/PaymentService/PaymentService.csproj" />
+    <Project Path="backend/Services/ReviewService/ReviewService.csproj" />
   </Folder>
   <Folder Name="/shared/" />
   <Folder Name="/shared/Libraries/">

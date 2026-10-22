@@ -166,3 +166,47 @@ public sealed record PayoutResponse(
     DateTime CreatedAt);
 
 public sealed record ReleaseEscrowRequest(Guid OrderId);
+
+public sealed record PlatformMisResponse(
+    decimal TotalGmv,
+    decimal TotalPlatformRevenue,
+    decimal ActiveEscrowLocked,
+    decimal TotalPayoutsCompleted,
+    int TotalBookings,
+    int CompletedBookings,
+    int CancelledBookings,
+    int DisputedBookings,
+    decimal CompletionRatePercent,
+    IReadOnlyList<DailyMetricDto> DailyTrends,
+    IReadOnlyList<TopCategoryMetricDto> TopSpecialties
+);
+
+public sealed record DailyMetricDto(
+    string Date,
+    decimal Gmv,
+    decimal Revenue,
+    int BookingsCount
+);
+
+public sealed record TopCategoryMetricDto(
+    string Specialty,
+    int BookingsCount,
+    decimal TotalVolume
+);
+
+public sealed record AdminPayoutItemResponse(
+    Guid Id,
+    Guid UserId,
+    string UserName,
+    string UserEmail,
+    decimal Amount,
+    decimal FeeAmount,
+    string PayoutType,
+    string Destination,
+    string Status,
+    string? RazorpayPayoutId,
+    DateTime CreatedAt,
+    DateTime? ProcessedAt
+);
+
+public sealed record ProcessPayoutRequest(string? UtrReference);

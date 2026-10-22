@@ -85,8 +85,7 @@ const Bookings: React.FC = () => {
   const { user } = useSelector((state: any) => state.auth);
 
   // Fetch profile to determine user type
-  const { data: profileData, isSuccess: isProfileSuccess } = useGetMyProfileQuery(undefined, { skip: !user });
-  const isProvider = isProfileSuccess && profileData?.profile !== undefined;
+  const { data: profileData } = useGetMyProfileQuery(undefined, { skip: !user });
 
   // Fetch bookings data
   const {
@@ -117,21 +116,25 @@ const Bookings: React.FC = () => {
     }
   }, [profileData, dispatch]);
 
+  const [roleMode, setRoleMode] = useState<'client' | 'companion'>('client');
+  const companionStatus = profileData?.profile?.status;
+
   // Use live data if fetched; fallback to showcase demo bookings only before initial fetch
   const bookings: BookingSummary[] = useMemo(() => {
-    const hasFetched = isProvider
-      ? (!isLoadingProvider && providerBookingsData !== undefined)
-      : (!isLoadingSeeker && seekerBookingsData !== undefined);
+    if (roleMode === 'companion') {
+      if (!isLoadingProvider && providerBookingsData !== undefined) {
+        return providerBookingsData?.bookings || [];
+      }
+      return [];
+    } else {
+      if (!isLoadingSeeker && seekerBookingsData !== undefined) {
+        return seekerBookingsData?.bookings || [];
+      }
+      return DEMO_BOOKINGS;
+    }
+  }, [providerBookingsData, seekerBookingsData, roleMode, isLoadingProvider, isLoadingSeeker]);
 
-    const list = isProvider
-      ? (providerBookingsData?.bookings || [])
-      : (seekerBookingsData?.bookings || []);
-
-    if (hasFetched) return list;
-    return DEMO_BOOKINGS;
-  }, [providerBookingsData, seekerBookingsData, isProvider, isLoadingProvider, isLoadingSeeker]);
-
-  const isLoading = isProvider ? isLoadingProvider : isLoadingSeeker;
+  const isLoading = roleMode === 'companion' ? isLoadingProvider : isLoadingSeeker;
 
   // Segregate, filter and sort bookings
   const upcomingBookings = useMemo(
@@ -220,18 +223,41 @@ const Bookings: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Page Title & Stats */}
+      {/* Unified Dual-Mode Toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
-            {isProvider ? 'Provider Hub' : 'Member Hub'}
-          </span>
-          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
-            {isProvider ? 'Incoming Bookings' : 'My Experience Bookings'}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage your companion schedule, monitor escrow releases, and join real-time chats.
-          </p>
+        <div className="flex items-center p-1 rounded-2xl bg-muted/60 border border-border/80 max-w-md w-full">
+          <button
+            type="button"
+            onClick={() => setRoleMode('client')}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+              roleMode === 'client'
+                ? 'bg-card text-foreground shadow-sm border border-border/80'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <span>My Bookings (Client)</span>
+            <span className="px-1.5 py-0.5 rounded-full bg-accent/15 text-accent text-[11px] font-mono">
+              {seekerBookingsData?.bookings?.length ?? DEMO_BOOKINGS.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setRoleMode('companion')}
+            className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
+              roleMode === 'companion'
+                ? 'bg-card text-foreground shadow-sm border border-border/80'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
+          >
+            <SparklesIcon className="w-3.5 h-3.5 text-accent" />
+            <span>Incoming Requests</span>
+            {providerBookingsData?.bookings?.length ? (
+              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-mono">
+                {providerBookingsData.bookings.length}
+              </span>
+            ) : null}
+          </button>
         </div>
 
         <Link
@@ -241,6 +267,46 @@ const Bookings: React.FC = () => {
           <SparklesIcon className="w-4 h-4" />
           <span>Find New Companion</span>
         </Link>
+      </div>
+
+      {/* Mode Description & Unverified Banner */}
+      {roleMode === 'companion' && companionStatus !== 'Approved' && (
+        <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
+              <ClockIcon className="w-4 h-4 text-amber-500" />
+              <span>{companionStatus === 'PendingReview' ? 'Companion Application In Review' : 'Start Earning as a Companion'}</span>
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {companionStatus === 'PendingReview'
+                ? 'Your profile & ID verification are being reviewed by the Cue safety team. Turnaround is ~24 hours.'
+                : 'Complete your companion application with hourly rates, specialties, and KYC to receive incoming bookings.'}
+            </p>
+          </div>
+          <Link
+            to="/apply-companion"
+            className="px-4 py-2 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-xs shrink-0"
+          >
+            {companionStatus === 'PendingReview' ? 'View Review Status' : 'Apply to Become Companion'}
+          </Link>
+        </div>
+      )}
+
+      {/* Page Title & Stats */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
+            {roleMode === 'companion' ? 'Companion Desk' : 'Client Mode'}
+          </span>
+          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
+            {roleMode === 'companion' ? 'Incoming Client Requests' : 'My Experience Bookings'}
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {roleMode === 'companion'
+              ? 'Review booking requests from clients, accept sessions, and monitor pending earnings.'
+              : 'Track active appointments, manage escrow payments, and coordinate with companions.'}
+          </p>
+        </div>
       </div>
 
       {/* Tabs and Controls Bar */}

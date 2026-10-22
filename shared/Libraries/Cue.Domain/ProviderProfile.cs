@@ -49,6 +49,12 @@ public sealed class ProviderProfile
     public decimal MaxRadiusKm { get; private set; }
     public string? IntroVideoUrl { get; private set; }
     public bool IsActive { get; private set; }
+    public VerificationStatus Status { get; private set; } = VerificationStatus.PendingReview;
+    public string? IdProofUrl { get; private set; }
+    public string? SelfieVerificationUrl { get; private set; }
+    public string? RejectionReason { get; private set; }
+    public DateTime? ReviewedAt { get; private set; }
+    public Guid? ReviewedByAdminId { get; private set; }
     public decimal AverageResponseTime { get; private set; }
     public decimal AverageRating { get; private set; }
     public double? Latitude { get; private set; }
@@ -60,6 +66,46 @@ public sealed class ProviderProfile
 
     public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
     public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
+
+    public void SubmitForReview(string? idProofUrl, string? selfieUrl)
+    {
+        IdProofUrl = idProofUrl?.Trim();
+        SelfieVerificationUrl = selfieUrl?.Trim();
+        Status = VerificationStatus.PendingReview;
+        RejectionReason = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Approve(Guid adminId)
+    {
+        Status = VerificationStatus.Approved;
+        IsActive = true;
+        ReviewedByAdminId = adminId;
+        ReviewedAt = DateTime.UtcNow;
+        RejectionReason = null;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Reject(Guid adminId, string reason)
+    {
+        if (string.IsNullOrWhiteSpace(reason)) throw new ArgumentException("A rejection reason is required.", nameof(reason));
+        Status = VerificationStatus.Rejected;
+        IsActive = false;
+        ReviewedByAdminId = adminId;
+        ReviewedAt = DateTime.UtcNow;
+        RejectionReason = reason.Trim();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Suspend(Guid adminId, string reason)
+    {
+        Status = VerificationStatus.Suspended;
+        IsActive = false;
+        ReviewedByAdminId = adminId;
+        ReviewedAt = DateTime.UtcNow;
+        RejectionReason = reason?.Trim();
+        UpdatedAt = DateTime.UtcNow;
+    }
     public void Delete()
     {
         if (IsDeleted) throw new InvalidOperationException("Provider profile is already deleted.");

@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { RootState } from '../store';
 import { logout, setUser } from '../store/slices/authSlice';
-import { useGetSeekerProfileQuery } from '../store/api';
+import { useGetSeekerProfileQuery, useGetMyProfileQuery } from '../store/api';
 import {
   SunIcon,
   MoonIcon,
@@ -14,8 +14,8 @@ import {
   CalendarIcon,
   SparklesIcon,
   ArrowRightOnRectangleIcon,
-  BriefcaseIcon,
   BanknotesIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/20/solid';
 import { useGetWalletBalanceQuery } from '../store/paymentApi';
@@ -36,6 +36,10 @@ const Header: React.FC = () => {
 
   // Sync profile data from REST API whenever authenticated
   const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated });
+  const { data: myProfileData } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated });
+
+  const companionStatus = myProfileData?.profile?.status;
+  const isAdmin = user?.roles?.includes('Admin') || user?.email?.toLowerCase().includes('admin');
 
   useEffect(() => {
     if (seekerProfileData?.profile?.firstName) {
@@ -187,16 +191,49 @@ const Header: React.FC = () => {
                 >
                   My Bookings
                 </Link>
-                <Link
-                  to="/provider"
-                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/provider')
-                      ? 'bg-accent/15 text-accent font-semibold shadow-xs'
-                      : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
-                  }`}
-                >
-                  Provider Hub
-                </Link>
+                {companionStatus === 'Approved' ? (
+                  <Link
+                    to="/provider"
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 border ${
+                      isActive('/provider')
+                        ? 'border-accent bg-accent/15 text-accent font-semibold shadow-xs'
+                        : 'border-border/60 bg-muted/30 text-foreground hover:bg-muted/70'
+                    }`}
+                  >
+                    <SparklesIcon className="w-3.5 h-3.5 text-accent" />
+                    <span>Companion Hub</span>
+                  </Link>
+                ) : companionStatus === 'PendingReview' ? (
+                  <Link
+                    to="/apply-companion"
+                    className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 flex items-center gap-1.5"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
+                    <span>In Review ⏳</span>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/apply-companion"
+                    className="px-3 py-1.5 rounded-xl text-xs font-bold bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 transition-all flex items-center gap-1.5"
+                  >
+                    <SparklesIcon className="w-3.5 h-3.5 text-accent" />
+                    <span>Become a Companion</span>
+                  </Link>
+                )}
+
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 border ${
+                      isActive('/admin')
+                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border-rose-500/40 shadow-xs'
+                        : 'bg-muted/40 text-foreground/90 border-border/70 hover:bg-muted'
+                    }`}
+                  >
+                    <ShieldCheckIcon className="w-4 h-4 text-rose-500" />
+                    <span>Admin Portal</span>
+                  </Link>
+                )}
                 <Link
                   to="/wallet"
                   className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 border ${
@@ -406,16 +443,26 @@ const Header: React.FC = () => {
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
                       >
                         <UserCircleIcon className="w-4 h-4 text-muted-foreground" />
-                        <span>Seeker Profile</span>
+                        <span>My Account</span>
                       </Link>
                       <Link
-                        to="/provider-profile"
+                        to={companionStatus === 'Approved' ? '/provider' : '/apply-companion'}
                         onClick={() => setUserDropdownOpen(false)}
                         className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
                       >
-                        <BriefcaseIcon className="w-4 h-4 text-muted-foreground" />
-                        <span>Provider Profile</span>
+                        <SparklesIcon className="w-4 h-4 text-accent" />
+                        <span>{companionStatus === 'Approved' ? 'Companion Hub' : companionStatus === 'PendingReview' ? 'Application Status ⏳' : 'Become a Companion'}</span>
                       </Link>
+                      {isAdmin && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setUserDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors font-bold"
+                        >
+                          <ShieldCheckIcon className="w-4 h-4 text-rose-500" />
+                          <span>Admin Portal</span>
+                        </Link>
+                      )}
                       <Link
                         to="/bookings"
                         onClick={() => setUserDropdownOpen(false)}

@@ -40,6 +40,16 @@ internal sealed class ProviderProfileConfiguration : IEntityTypeConfiguration<Pr
         builder.Property(profile => profile.Latitude).HasColumnName("latitude");
         builder.Property(profile => profile.Longitude).HasColumnName("longitude");
         builder.Property(profile => profile.DeletedAt).HasColumnName("deleted_at");
+
+        builder.Property(profile => profile.Status)
+            .HasColumnName("status")
+            .HasConversion<int>()
+            .HasDefaultValue(VerificationStatus.PendingReview);
+        builder.Property(profile => profile.IdProofUrl).HasColumnName("id_proof_url");
+        builder.Property(profile => profile.SelfieVerificationUrl).HasColumnName("selfie_verification_url");
+        builder.Property(profile => profile.RejectionReason).HasColumnName("rejection_reason");
+        builder.Property(profile => profile.ReviewedAt).HasColumnName("reviewed_at");
+        builder.Property(profile => profile.ReviewedByAdminId).HasColumnName("reviewed_by_admin_id");
     }
 }
 

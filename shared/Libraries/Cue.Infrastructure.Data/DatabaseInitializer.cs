@@ -142,7 +142,14 @@ public static class DatabaseInitializer
                 processed_at timestamp with time zone NULL
             );
             """,
-            "CREATE INDEX IF NOT EXISTS ix_payout_requests_user ON payments.payout_requests (user_id, created_at DESC);"
+            "CREATE INDEX IF NOT EXISTS ix_payout_requests_user ON payments.payout_requests (user_id, created_at DESC);",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS status integer DEFAULT 3;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS id_proof_url text;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS selfie_verification_url text;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS rejection_reason text;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS reviewed_at timestamp with time zone;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS reviewed_by_admin_id uuid;",
+            "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);"
         };
 
         foreach (var statement in statements)

@@ -12,6 +12,8 @@ import ProviderDetail from './pages/ProviderDetail';
 import Bookings from './pages/Bookings';
 import Chat from './pages/Chat';
 import WalletPage from './pages/Wallet';
+import ApplyCompanion from './pages/ApplyCompanion';
+import AdminDashboard from './pages/AdminDashboard';
 import type { RootState } from './store';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,6 +43,8 @@ function App() {
           <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="provider-profile/:userId?" element={<ProtectedRoute><ProviderProfile /></ProtectedRoute>} />
           <Route path="provider" element={<ProtectedRoute><ProviderDashboard /></ProtectedRoute>} />
+          <Route path="apply-companion" element={<ProtectedRoute><ApplyCompanion /></ProtectedRoute>} />
+          <Route path="admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
           <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
           <Route path="wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
           <Route path="chat/:orderId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />

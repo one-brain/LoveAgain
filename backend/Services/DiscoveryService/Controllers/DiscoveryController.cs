@@ -66,7 +66,7 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
 
         var query = dbContext.ProviderProfiles
             .AsNoTracking()
-            .Where(profile => profile.IsActive)
+            .Where(profile => profile.IsActive && profile.Status == VerificationStatus.Approved)
             .Join(dbContext.Users.AsNoTracking(),
                 profile => profile.UserId,
                 user => user.Id,
