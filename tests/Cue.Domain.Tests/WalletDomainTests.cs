@@ -52,10 +52,34 @@ public sealed class WalletDomainTests
         Assert.Equal(2000m, escrow.GrossAmount);
         Assert.Equal(300m, escrow.PlatformFee);
         Assert.Equal(1700m, escrow.NetAmount);
+        Assert.Equal(escrow.GrossAmount, escrow.PlatformFee + escrow.NetAmount);
 
         escrow.Release();
         Assert.Equal(EscrowStatus.Released, escrow.Status);
         Assert.NotNull(escrow.ReleasedAt);
+    }
+
+    [Fact]
+    public void EscrowHold_DoubleReleaseOrDoubleRefund_ThrowsInvalidOperation()
+    {
+        var escrow = new EscrowHold(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1000m, 150m);
+        escrow.Release();
+
+        // Double release must fail
+        Assert.Throws<InvalidOperationException>(() => escrow.Release());
+
+        // Refund after release must fail
+        Assert.Throws<InvalidOperationException>(() => escrow.Refund("Cannot refund released funds"));
+
+        // New escrow for refund testing
+        var escrow2 = new EscrowHold(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid(), 1000m, 150m);
+        escrow2.Refund("Seeker cancellation");
+
+        // Double refund must fail
+        Assert.Throws<InvalidOperationException>(() => escrow2.Refund("Already refunded"));
+
+        // Release after refund must fail
+        Assert.Throws<InvalidOperationException>(() => escrow2.Release());
     }
 
     [Fact]
@@ -86,4 +110,3 @@ public sealed class WalletDomainTests
         Assert.Equal(PayoutStatus.Completed, payout.Status);
     }
 }
-

@@ -117,9 +117,11 @@ public sealed class ProviderProfile
     /// <summary>
     /// Adds a single specialty, preserving the existing ones. Duplicate
     /// detection is case-insensitive so "Yoga" and "yoga" collapse to one entry.
+    /// If existingCatalog is provided and has a matching item, the canonical catalog casing is adopted.
     /// </summary>
     /// <param name="specialty">The specialty name to add</param>
-    public void AddSpecialty(string specialty)
+    /// <param name="existingCatalog">Optional collection of canonical catalog specialties to match against</param>
+    public void AddSpecialty(string specialty, IEnumerable<string>? existingCatalog = null)
     {
         if (string.IsNullOrWhiteSpace(specialty))
         {
@@ -127,12 +129,23 @@ public sealed class ProviderProfile
         }
 
         var trimmed = specialty.Trim();
-        if (Specialties.Any(s => s.Equals(trimmed, StringComparison.OrdinalIgnoreCase)))
+        var canonical = trimmed;
+
+        if (existingCatalog != null)
         {
-            throw new InvalidOperationException($"Specialty '{trimmed}' is already offered.");
+            var match = existingCatalog.FirstOrDefault(c => string.Equals(c.Trim(), trimmed, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrWhiteSpace(match))
+            {
+                canonical = match.Trim();
+            }
         }
 
-        Specialties = Specialties.Append(trimmed).ToArray();
+        if (Specialties.Any(s => s.Equals(canonical, StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidOperationException($"Specialty '{canonical}' is already offered.");
+        }
+
+        Specialties = Specialties.Append(canonical).ToArray();
         UpdatedAt = DateTime.UtcNow;
     }
 

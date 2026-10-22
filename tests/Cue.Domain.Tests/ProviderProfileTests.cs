@@ -204,4 +204,31 @@ public sealed class ProviderProfileTests
         Assert.Equal(75m, profile.MaxRadiusKm);
         Assert.Equal("https://example.com/video.mp4", profile.IntroVideoUrl);
     }
+
+    [Fact]
+    public void ProviderProfile_AddSpecialty_AdoptsCanonicalCatalogName_WhenCaseMatchesExisting()
+    {
+        var profile = new ProviderProfile(Guid.NewGuid(), 40m, "Bio", new[] { "Tennis" });
+        var catalog = new[] { "Badminton", "Cafe Catchup", "Board Games" };
+
+        profile.AddSpecialty("  badminton  ", catalog);
+
+        Assert.Equal(2, profile.Specialties.Count);
+        Assert.Contains("Badminton", profile.Specialties);
+        Assert.DoesNotContain("  badminton  ", profile.Specialties);
+        Assert.DoesNotContain("badminton", profile.Specialties);
+    }
+
+    [Fact]
+    public void ProviderProfile_AddSpecialty_AddsCustomSpecialty_WhenNotInCatalog()
+    {
+        var profile = new ProviderProfile(Guid.NewGuid(), 40m, "Bio", new[] { "Tennis" });
+        var catalog = new[] { "Badminton", "Cafe Catchup" };
+
+        profile.AddSpecialty("  Standup Comedy  ", catalog);
+
+        Assert.Equal(2, profile.Specialties.Count);
+        Assert.Contains("Standup Comedy", profile.Specialties);
+        Assert.DoesNotContain("  Standup Comedy  ", profile.Specialties);
+    }
 }

@@ -6,7 +6,15 @@ public sealed class ServiceOrder
     {
     }
 
-    public ServiceOrder(Guid providerId, Guid seekerId, DateTime startTime, DateTime endTime, decimal totalAmount, decimal platformFee, string? meetingAddress = null)
+    public ServiceOrder(
+        Guid providerId,
+        Guid seekerId,
+        DateTime startTime,
+        DateTime endTime,
+        decimal totalAmount,
+        decimal platformFee,
+        string? meetingAddress = null,
+        BookingRequirements? requirements = null)
     {
         if (providerId == Guid.Empty || seekerId == Guid.Empty) throw new ArgumentException("Provider and seeker are required.");
         if (providerId == seekerId) throw new ArgumentException("Provider and seeker must be different users.");
@@ -23,6 +31,7 @@ public sealed class ServiceOrder
         PlatformFee = platformFee;
         ProviderEarnings = totalAmount - platformFee;
         MeetingAddress = meetingAddress?.Trim();
+        Requirements = requirements;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -37,9 +46,20 @@ public sealed class ServiceOrder
     public decimal PlatformFee { get; private set; }
     public decimal ProviderEarnings { get; private set; }
     public string? MeetingAddress { get; private set; }
+    public BookingRequirements? Requirements { get; private set; }
     public string? CancellationReason { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
+
+    public void UpdateRequirements(BookingRequirements requirements)
+    {
+        if (Status is OrderStatus.InProgress or OrderStatus.Completed or OrderStatus.Cancelled)
+        {
+            throw new InvalidOperationException("Requirements cannot be modified once the booking is in progress, completed, or cancelled.");
+        }
+        Requirements = requirements ?? throw new ArgumentNullException(nameof(requirements));
+        UpdatedAt = DateTime.UtcNow;
+    }
 
     public void Confirm()
     {
