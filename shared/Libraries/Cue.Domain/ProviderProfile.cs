@@ -62,7 +62,7 @@ public sealed class ProviderProfile
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? DeletedAt { get; private set; }
-    public bool IsDeleted { get; private set; }
+    public bool IsDeleted => DeletedAt.HasValue;
 
     public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
     public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }
@@ -110,7 +110,6 @@ public sealed class ProviderProfile
     {
         if (IsDeleted) throw new InvalidOperationException("Provider profile is already deleted.");
         IsActive = false;
-        IsDeleted = true;
         DeletedAt = DateTime.UtcNow;
         UpdatedAt = DeletedAt.Value;
     }

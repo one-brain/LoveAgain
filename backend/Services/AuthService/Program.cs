@@ -64,11 +64,8 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<CueDbContext>();
     await DatabaseInitializer.InitializeAsync(dbContext);
 
-    if (app.Environment.IsDevelopment())
-    {
-        var passwords = scope.ServiceProvider.GetRequiredService<PasswordService>();
-        await DevelopmentSeed.EnsureDemoUserAsync(dbContext, passwords);
-    }
+    var passwords = scope.ServiceProvider.GetRequiredService<PasswordService>();
+    await DevelopmentSeed.EnsureDemoUserAsync(dbContext, passwords);
 }
 
 // Configure the HTTP request pipeline.

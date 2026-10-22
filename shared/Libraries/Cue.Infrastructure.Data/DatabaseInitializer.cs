@@ -149,6 +149,7 @@ public static class DatabaseInitializer
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS rejection_reason text;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS reviewed_at timestamp with time zone;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS reviewed_by_admin_id uuid;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS is_deleted boolean DEFAULT false;",
             "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);"
         };
 
