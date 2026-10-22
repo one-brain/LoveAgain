@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "cue-auth";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "cue-platform";
-var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? "cue-super-secret-development-key-that-is-at-least-256-bits-long!";
+var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? "development-only-change-this-signing-key-32-bytes";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

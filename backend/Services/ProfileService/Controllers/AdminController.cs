@@ -76,12 +76,10 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
 
         profile.Approve(adminId);
 
-        // Also add Provider role to the user if not already present
         var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == profile.UserId, cancellationToken);
-        if (user != null && !user.Roles.Contains(UserRole.Provider))
+        if (user != null)
         {
-            user.AddRole(UserRole.Provider);
-            user.Verify();
+            user.PromoteToVerifiedCompanion();
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -164,6 +162,118 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         }).ToList();
 
         return Ok(result);
+    }
+
+
+    [HttpGet("verifications/{profileId:guid}")]
+    [ProducesResponseType(typeof(AdminVerificationDetailResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<AdminVerificationDetailResponse>> GetVerificationDetail(
+        Guid profileId,
+        CancellationToken cancellationToken)
+    {
+        if (!IsAdmin()) return Forbid();
+
+        var profile = await dbContext.ProviderProfiles
+            .AsNoTracking()
+            .SingleOrDefaultAsync(p => p.Id == profileId, cancellationToken);
+        if (profile == null) return NotFound(new { error = "Verification application not found." });
+
+        var user = await dbContext.Users
+            .AsNoTracking()
+            .SingleOrDefaultAsync(u => u.Id == profile.UserId, cancellationToken);
+
+        return Ok(new AdminVerificationDetailResponse(
+            profile.Id,
+            profile.UserId,
+            user != null ? $"{user.FirstName} {user.LastName}".Trim() : "Applicant",
+            user?.Email ?? "N/A",
+            user?.Phone,
+            user?.PhotoUrl,
+            profile.HourlyRate,
+            profile.Bio,
+            profile.Specialties,
+            profile.Status,
+            profile.IdProofUrl,
+            profile.SelfieVerificationUrl,
+            profile.RejectionReason,
+            profile.CreatedAt,
+            profile.ReviewedAt,
+            profile.ReviewedByAdminId
+        ));
+    }
+
+    [HttpGet("bookings")]
+    [ProducesResponseType(typeof(IReadOnlyList<AdminBookingLedgerItemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<AdminBookingLedgerItemResponse>>> GetBookings(
+        [FromQuery] string? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 50,
+        CancellationToken cancellationToken = default)
+    {
+        if (!IsAdmin()) return Forbid();
+
+        var query = dbContext.ServiceOrders.AsNoTracking();
+        if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<OrderStatus>(status, true, out var orderStatus))
+        {
+            query = query.Where(o => o.Status == orderStatus);
+        }
+
+        var orders = await query
+            .OrderByDescending(o => o.CreatedAt)
+            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 100))
+            .Take(Math.Clamp(pageSize, 1, 100))
+            .ToListAsync(cancellationToken);
+
+        var userIds = orders.Select(o => o.SeekerId).Concat(orders.Select(o => o.ProviderId)).Distinct().ToList();
+        var users = await dbContext.Users.AsNoTracking().Where(u => userIds.Contains(u.Id)).ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var result = orders.Select(o =>
+        {
+            users.TryGetValue(o.SeekerId, out var seeker);
+            users.TryGetValue(o.ProviderId, out var provider);
+            return new AdminBookingLedgerItemResponse(
+                o.Id,
+                o.SeekerId,
+                seeker != null ? $"{seeker.FirstName} {seeker.LastName}".Trim() : "Seeker",
+                o.ProviderId,
+                provider != null ? $"{provider.FirstName} {provider.LastName}".Trim() : "Provider",
+                o.Status.ToString(),
+                o.TotalAmount,
+                o.PlatformFee,
+                o.ProviderEarnings,
+                o.StartTime,
+                o.EndTime,
+                o.CreatedAt
+            );
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    [HttpPost("users/{userId:guid}/toggle-suspend")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ToggleUserSuspend(
+        Guid userId,
+        CancellationToken cancellationToken)
+    {
+        if (!IsAdmin()) return Forbid();
+
+        var user = await dbContext.Users.IgnoreQueryFilters().SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        if (user == null) return NotFound(new { error = "User not found." });
+
+        if (user.TrustScore < 0)
+        {
+            user.ApplyTrustDelta(100);
+        }
+        else
+        {
+            user.ApplyTrustDelta(-1000);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(new { message = "User status updated.", isSuspended = user.TrustScore < 0, trustScore = user.TrustScore });
     }
 
     private bool IsAdmin()

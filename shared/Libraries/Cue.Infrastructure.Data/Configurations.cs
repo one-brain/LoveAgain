@@ -40,6 +40,7 @@ internal sealed class ProviderProfileConfiguration : IEntityTypeConfiguration<Pr
         builder.Property(profile => profile.Latitude).HasColumnName("latitude");
         builder.Property(profile => profile.Longitude).HasColumnName("longitude");
         builder.Property(profile => profile.DeletedAt).HasColumnName("deleted_at");
+        builder.HasQueryFilter(profile => profile.DeletedAt == null);
 
         builder.Property(profile => profile.Status)
             .HasColumnName("status")

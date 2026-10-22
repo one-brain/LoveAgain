@@ -337,8 +337,11 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("admin/mis")]
+    [Authorize]
+    [ProducesResponseType(typeof(PlatformMisResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<PlatformMisResponse>> GetAdminMis(CancellationToken cancellationToken)
     {
+        if (!IsAdmin()) return Forbid();
         var orders = await dbContext.ServiceOrders.AsNoTracking().ToListAsync(cancellationToken);
         var escrows = await dbContext.EscrowHolds.AsNoTracking().ToListAsync(cancellationToken);
         var payouts = await dbContext.PayoutRequests.AsNoTracking().ToListAsync(cancellationToken);
@@ -370,13 +373,34 @@ public sealed class PaymentsController(
             ));
         }
 
-        var topSpecialties = new List<TopCategoryMetricDto>
+        var providerIds = orders.Select(o => o.ProviderId).Distinct().ToList();
+        var providers = await dbContext.ProviderProfiles
+            .AsNoTracking()
+            .Where(p => providerIds.Contains(p.UserId) || providerIds.Contains(p.Id))
+            .ToListAsync(cancellationToken);
+
+        var specialtyStats = new Dictionary<string, (int Count, decimal Volume)>(StringComparer.OrdinalIgnoreCase);
+        foreach (var order in orders)
         {
-            new("Dinner Date", Math.Max(1, (int)(totalBookings * 0.4)), totalGmv * 0.45m),
-            new("Event Companion", Math.Max(1, (int)(totalBookings * 0.3)), totalGmv * 0.30m),
-            new("City Guide", Math.Max(1, (int)(totalBookings * 0.2)), totalGmv * 0.15m),
-            new("Coffee & Chat", Math.Max(1, (int)(totalBookings * 0.1)), totalGmv * 0.10m)
-        };
+            var provider = providers.FirstOrDefault(p => p.UserId == order.ProviderId || p.Id == order.ProviderId);
+            var specs = provider?.Specialties ?? ["General Companionship"];
+            foreach (var spec in specs)
+            {
+                var cur = specialtyStats.GetValueOrDefault(spec);
+                specialtyStats[spec] = (cur.Count + 1, cur.Volume + order.TotalAmount);
+            }
+        }
+
+        var topSpecialties = specialtyStats
+            .OrderByDescending(kv => kv.Value.Volume)
+            .Take(5)
+            .Select(kv => new TopCategoryMetricDto(kv.Key, kv.Value.Count, kv.Value.Volume))
+            .ToList();
+
+        if (topSpecialties.Count == 0)
+        {
+            topSpecialties.Add(new TopCategoryMetricDto("General Companionship", totalBookings, totalGmv));
+        }
 
         return Ok(new PlatformMisResponse(
             totalGmv,
@@ -394,8 +418,11 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("admin/payouts")]
+    [Authorize]
+    [ProducesResponseType(typeof(IReadOnlyList<AdminPayoutItemResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AdminPayoutItemResponse>>> GetAdminPayouts(CancellationToken cancellationToken)
     {
+        if (!IsAdmin()) return Forbid();
         var payouts = await dbContext.PayoutRequests
             .AsNoTracking()
             .OrderByDescending(p => p.CreatedAt)
@@ -431,11 +458,15 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("admin/payouts/{payoutId:guid}/process")]
+    [Authorize]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ProcessPayout(
         Guid payoutId,
         [FromBody] ProcessPayoutRequest request,
         CancellationToken cancellationToken)
     {
+        if (!IsAdmin()) return Forbid();
         var payout = await dbContext.PayoutRequests.SingleOrDefaultAsync(p => p.Id == payoutId, cancellationToken);
         if (payout == null) return NotFound(new { error = "Payout request not found." });
 
@@ -446,8 +477,10 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("admin/mis/export")]
+    [Authorize]
     public async Task<IActionResult> ExportMisCsv(CancellationToken cancellationToken)
     {
+        if (!IsAdmin()) return Forbid();
         var orders = await dbContext.ServiceOrders.AsNoTracking().OrderByDescending(o => o.CreatedAt).ToListAsync(cancellationToken);
         var csv = new System.Text.StringBuilder();
         csv.AppendLine("BookingId,SeekerId,ProviderId,Status,TotalAmountINR,PlatformFeeINR,CompanionNetINR,CreatedAt");
@@ -458,6 +491,13 @@ public sealed class PaymentsController(
 
         var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
         return File(bytes, "text/csv", $"cue_mis_report_{DateTime.UtcNow:yyyyMMdd_HHmmss}.csv");
+    }
+
+    private bool IsAdmin()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+               User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin");
     }
 
     private bool TryGetUserId(out Guid userId)

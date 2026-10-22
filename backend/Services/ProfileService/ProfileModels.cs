@@ -100,3 +100,37 @@ public sealed record AdminUserItemResponse(
 public sealed record SetProviderProfileStatusRequest(bool Active);
 
 public sealed record CreateAvailabilitySlotRequest(DateTime StartTime, DateTime EndTime);
+
+public sealed record AdminVerificationDetailResponse(
+    Guid ProfileId,
+    Guid UserId,
+    string FullName,
+    string Email,
+    string? Phone,
+    string? PhotoUrl,
+    decimal HourlyRate,
+    string Bio,
+    IReadOnlyCollection<string> Specialties,
+    VerificationStatus Status,
+    string? IdProofUrl,
+    string? SelfieVerificationUrl,
+    string? RejectionReason,
+    DateTime CreatedAt,
+    DateTime? ReviewedAt,
+    Guid? ReviewedByAdminId
+);
+
+public sealed record AdminBookingLedgerItemResponse(
+    Guid Id,
+    Guid SeekerId,
+    string SeekerName,
+    Guid ProviderId,
+    string ProviderName,
+    string Status,
+    decimal TotalAmount,
+    decimal PlatformFee,
+    decimal ProviderEarnings,
+    DateTime StartTime,
+    DateTime EndTime,
+    DateTime CreatedAt
+);

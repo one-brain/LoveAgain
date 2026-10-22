@@ -124,4 +124,11 @@ public sealed class User
         roles.Add(role);
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void PromoteToVerifiedCompanion()
+    {
+        roles.Add(UserRole.Provider);
+        IsVerified = true;
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

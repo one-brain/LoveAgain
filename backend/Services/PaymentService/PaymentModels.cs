@@ -14,6 +14,7 @@ public sealed class RazorpayOptions
     public string KeySecret { get; init; } = "rzp_secret_placeholder";
     public string WebhookSecret { get; init; } = "rzp_webhook_secret_placeholder";
     public string ApiBaseUrl { get; init; } = "https://api.razorpay.com/v1";
+    public bool AllowMockBypass { get; init; } = true;
 }
 
 public sealed record RazorpayOrderResult(string OrderId, decimal Amount, string Currency, string Status);
@@ -83,9 +84,15 @@ public sealed class RazorpayPaymentGateway(HttpClient httpClient, IOptions<Razor
             return false;
         }
 
-        if (orderId.StartsWith("order_mock_") || settings.KeySecret == "rzp_secret_placeholder")
+        // Allow mock bypass only if explicitly enabled via configuration (for local dev/sandbox testing)
+        if (settings.AllowMockBypass && orderId.StartsWith("order_mock_"))
         {
             return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.KeySecret) || settings.KeySecret == "rzp_secret_placeholder")
+        {
+            return false;
         }
 
         var payload = $"{orderId}|{paymentId}";
@@ -98,7 +105,11 @@ public sealed class RazorpayPaymentGateway(HttpClient httpClient, IOptions<Razor
     public bool VerifyWebhookSignature(string payload, string signature)
     {
         if (string.IsNullOrWhiteSpace(payload) || string.IsNullOrWhiteSpace(signature)) return false;
-        if (settings.WebhookSecret == "rzp_webhook_secret_placeholder") return true;
+
+        if (string.IsNullOrWhiteSpace(settings.WebhookSecret) || settings.WebhookSecret == "rzp_webhook_secret_placeholder")
+        {
+            return settings.AllowMockBypass;
+        }
 
         using var hmac = new HMACSHA256(Encoding.UTF8.GetBytes(settings.WebhookSecret));
         var hash = hmac.ComputeHash(Encoding.UTF8.GetBytes(payload));

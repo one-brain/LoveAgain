@@ -64,8 +64,13 @@ using (var scope = app.Services.CreateScope())
     var dbContext = scope.ServiceProvider.GetRequiredService<CueDbContext>();
     await DatabaseInitializer.InitializeAsync(dbContext);
 
-    var passwords = scope.ServiceProvider.GetRequiredService<PasswordService>();
-    await DevelopmentSeed.EnsureDemoUserAsync(dbContext, passwords);
+    var seedEnabled = app.Environment.IsDevelopment() ||
+        builder.Configuration.GetValue<bool>("SeedDemoAccounts", false);
+    if (seedEnabled)
+    {
+        var passwords = scope.ServiceProvider.GetRequiredService<PasswordService>();
+        await DevelopmentSeed.EnsureDemoUserAsync(dbContext, passwords);
+    }
 }
 
 // Configure the HTTP request pipeline.

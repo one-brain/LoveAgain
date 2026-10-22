@@ -3,6 +3,7 @@
   <Folder Name="/backend/Services/">
     <Project Path="backend/Services/ChatService/ChatService.csproj" />
     <Project Path="backend/Services/PaymentService/PaymentService.csproj" />
+    <Project Path="backend/Services/ProfileService/ProfileService.csproj" />
     <Project Path="backend/Services/ReviewService/ReviewService.csproj" />
   </Folder>
   <Folder Name="/shared/" />
@@ -12,5 +13,6 @@
     <Project Path="shared/Libraries/Cue.Domain/Cue.Domain.csproj" />
     <Project Path="shared/Libraries/Cue.Infrastructure.Data/Cue.Infrastructure.Data.csproj" />
     <Project Path="shared/Libraries/Cue.Infrastructure.Messaging/Cue.Infrastructure.Messaging.csproj" />
+    <Project Path="shared/Libraries/Cue.Infrastructure.Storage/Cue.Infrastructure.Storage.csproj" />
   </Folder>
 </Solution>
