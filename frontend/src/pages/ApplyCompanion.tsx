@@ -16,14 +16,25 @@ import {
 } from '@heroicons/react/24/outline';
 
 const SPECIALTY_OPTIONS = [
-  'Dinner Date',
-  'Event Companion',
-  'City Guide',
-  'Coffee & Chat',
-  'Art & Museum Tour',
-  'Workout Partner',
-  'Business Gala',
-  'Theater & Concert',
+  // 💼 Pro Skilled Services
+  'Photography & Video',
+  'Fitness & Sports Coaching',
+  'Yoga & Mindfulness',
+  'Language Tutoring',
+  'Coding & Tech Mentorship',
+  'DJ & Music Performance',
+  'Event Hosting & Emcee',
+  // 🤝 Companionship & Activities
+  'City Guide & Tours',
+  'Dinner Date & Foodie',
+  'Concert & Festival Buddy',
+  'Workout & Tennis Partner',
+  'Business Gala & Plus-One',
+  'Hiking & Outdoor Walks',
+  // 💍 Relationships & Matrimony
+  'Seeking Matrimony Match',
+  'Live-In Compatibility',
+  'Casual Dating & Coffee',
 ];
 
 const SAMPLE_GALLERY = [

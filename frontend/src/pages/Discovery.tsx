@@ -10,32 +10,62 @@ import {
   AdjustmentsHorizontalIcon,
   XMarkIcon,
   SparklesIcon,
-  ShieldCheckIcon,
+  BriefcaseIcon,
+  UserGroupIcon,
+  HeartIcon,
+  AcademicCapIcon,
 } from '@heroicons/react/24/outline';
+import type { PlatformLens } from '../types/platform';
 
 interface SpecialtyOption {
   label: string;
   icon: string;
+  lens: PlatformLens | 'all';
 }
 
-const SPECIALTY_OPTIONS: SpecialtyOption[] = [
-  { label: 'All', icon: '✨' },
-  { label: 'Tennis', icon: '🎾' },
-  { label: 'Yoga', icon: '🧘' },
-  { label: 'Cooking', icon: '🍳' },
-  { label: 'Photography', icon: '📸' },
-  { label: 'Music', icon: '🎵' },
-  { label: 'Hiking', icon: '🥾' },
-  { label: 'Reading', icon: '📚' },
-  { label: 'Art', icon: '🎨' },
-  { label: 'Dance', icon: '💃' },
+const LENS_TABS = [
+  { id: 'all', label: 'All Lenses', icon: SparklesIcon },
+  { id: 'pro_work', label: '💼 Skilled Work & Gigs', icon: BriefcaseIcon },
+  { id: 'companions', label: '🤝 Companions & Activities', icon: UserGroupIcon },
+  { id: 'relationships', label: '💍 Matrimony & Romance', icon: HeartIcon },
+];
+
+const PRO_CHIPS: SpecialtyOption[] = [
+  { label: 'All Gigs', icon: '💼', lens: 'pro_work' },
+  { label: 'Photography', icon: '📸', lens: 'pro_work' },
+  { label: 'Fitness Trainer', icon: '🏋️', lens: 'pro_work' },
+  { label: 'Yoga Coach', icon: '🧘', lens: 'pro_work' },
+  { label: 'Coding / Tech', icon: '💻', lens: 'pro_work' },
+  { label: 'Language Tutor', icon: '📚', lens: 'pro_work' },
+  { label: 'DJ / Musician', icon: '🎵', lens: 'pro_work' },
+  { label: 'Event Host', icon: '🎤', lens: 'pro_work' },
+];
+
+const COMPANION_CHIPS: SpecialtyOption[] = [
+  { label: 'All Activities', icon: '✨', lens: 'companions' },
+  { label: 'City Tour', icon: '🗺️', lens: 'companions' },
+  { label: 'Tennis', icon: '🎾', lens: 'companions' },
+  { label: 'Fine Dining', icon: '🍷', lens: 'companions' },
+  { label: 'Concert Buddy', icon: '🎸', lens: 'companions' },
+  { label: 'Plus-One', icon: '🥂', lens: 'companions' },
+  { label: 'Hiking', icon: '🥾', lens: 'companions' },
+  { label: 'Museum Walk', icon: '🎨', lens: 'companions' },
+];
+
+const RELATIONSHIP_CHIPS: SpecialtyOption[] = [
+  { label: 'All Matches', icon: '❤️', lens: 'relationships' },
+  { label: '💍 Matrimony Biodatas', icon: '💍', lens: 'relationships' },
+  { label: '🏡 Live-In Match', icon: '🏡', lens: 'relationships' },
+  { label: '💜 Dating & Courtship', icon: '🌹', lens: 'relationships' },
+  { label: '✈️ Travel Companion', icon: '✈️', lens: 'relationships' },
+  { label: '🔥 Casual & Adults', icon: '🔥', lens: 'relationships' },
 ];
 
 const SORT_OPTIONS: DropdownOption[] = [
   { value: 'rating', label: 'Top Rated', icon: '⭐', description: 'Highest review average' },
   { value: 'distance', label: 'Nearest First', icon: '📍', description: 'Closest to your coordinates' },
   { value: 'price', label: 'Price: Low to High', icon: '🏷️', description: 'Budget friendly rates' },
-  { value: 'newest', label: 'Newest Companions', icon: '✨', description: 'Recently active members' },
+  { value: 'newest', label: 'Newest Members', icon: '✨', description: 'Recently active members' },
 ];
 
 const RADIUS_OPTIONS: DropdownOption[] = [
@@ -45,79 +75,109 @@ const RADIUS_OPTIONS: DropdownOption[] = [
   { value: '100', label: 'Within 100 km', description: 'Extended regional area' },
 ];
 
-// Curated realistic companion profiles for demo / offline fallback
+// Rich Universal Profiles showcasing all 3 lenses
 const CURATED_SAMPLE_PROVIDERS = [
   {
     providerId: 'sample-1',
     displayName: 'Elena Rostova',
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
     hourlyRate: 45,
-    bio: 'Semi-pro tennis instructor and contemporary art curator. Love high-energy matches and weekend museum tours.',
-    specialties: ['Tennis', 'Yoga', 'Art'],
+    bio: 'Semi-pro tennis coach, contemporary art curator, and bilingual city companion.',
+    specialties: ['Tennis', 'Yoga', 'Art', 'Fitness Trainer'],
     averageRating: 4.98,
     isVerified: true,
     trustScore: 99,
     distanceKm: 2.4,
+    lenses: ['pro_work', 'companions'],
+    services: ['Tennis Coaching (1-on-1)', 'Art Gallery Curator Walk'],
+    matrimony: null,
   },
   {
     providerId: 'sample-2',
     displayName: 'Marcus Vance',
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
     hourlyRate: 55,
-    bio: 'Former sous-chef turned street photographer. Eager to explore new culinary spots or teach authentic Italian pasta making.',
-    specialties: ['Cooking', 'Photography', 'Reading'],
+    bio: 'Commercial photographer and street foodie guide. Available for photoshoots and culinary outings.',
+    specialties: ['Photography', 'Cooking', 'City Tour'],
     averageRating: 4.95,
     isVerified: true,
     trustScore: 98,
     distanceKm: 3.8,
+    lenses: ['pro_work', 'companions'],
+    services: ['Portrait Photoshoot Package', 'Street Food Crawl Host'],
+    matrimony: null,
   },
   {
     providerId: 'sample-3',
-    displayName: 'Sophia Chen',
+    displayName: 'Dr. Sophia Chen',
     photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
     hourlyRate: 40,
-    bio: 'Outdoor enthusiast and classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony.',
-    specialties: ['Hiking', 'Music', 'Photography'],
+    bio: 'Cardiologist & classical violinist. Seeking verified matrimony or compatible live-in partner.',
+    specialties: ['Matrimony', 'Live-In', 'Violin', 'Hiking'],
     averageRating: 4.92,
     isVerified: true,
     trustScore: 97,
     distanceKm: 1.9,
+    lenses: ['relationships', 'companions'],
+    services: ['Violin Performance / Lesson'],
+    matrimony: {
+      education: 'MD Cardiology (AIIMS)',
+      profession: 'Senior Resident Doctor',
+      motherTongue: 'English / Hindi',
+      diet: 'Vegetarian',
+      height: "5'7\"",
+    },
   },
   {
     providerId: 'sample-4',
     displayName: 'Julian Alvarez',
     photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
     hourlyRate: 50,
-    bio: 'Salsa & tango dancer with a passion for architectural history. Great companion for ballroom sessions and city heritage walks.',
-    specialties: ['Dance', 'Art', 'Music'],
+    bio: 'Certified salsa dance instructor & architectural history guide. Available for events & plus-one.',
+    specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
     averageRating: 4.88,
     isVerified: true,
     trustScore: 96,
     distanceKm: 4.5,
+    lenses: ['pro_work', 'companions'],
+    services: ['Salsa Coaching', 'Wedding Plus-One'],
+    matrimony: null,
   },
   {
     providerId: 'sample-5',
     displayName: 'Aria Thorne',
     photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
     hourlyRate: 48,
-    bio: 'Certified vinyasa yoga teacher and avid reader. Perfect companion for morning mindfulness, park yoga, and book discussions.',
-    specialties: ['Yoga', 'Reading', 'Hiking'],
+    bio: 'Software Architect. Seeking serious matrimonial match or cultured dinner dates.',
+    specialties: ['Matrimony', 'Dating', 'Coding / Tech', 'Reading'],
     averageRating: 4.97,
     isVerified: true,
     trustScore: 99,
     distanceKm: 2.1,
+    lenses: ['relationships', 'pro_work'],
+    services: ['System Design Mentorship'],
+    matrimony: {
+      education: 'M.Tech Computer Science (IIT)',
+      profession: 'Principal Engineer',
+      motherTongue: 'English / Telugu',
+      diet: 'Eggetarian',
+      height: "5'9\"",
+    },
   },
   {
     providerId: 'sample-6',
     displayName: 'David Morales',
     photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
     hourlyRate: 60,
-    bio: 'Sommelier and culinary guide. Join me for artisan pastry tours, farm-to-table tasting dinners, and wine pairings.',
-    specialties: ['Cooking', 'Art', 'Reading'],
+    bio: 'Sommelier and fitness trainer. Host for wine tasting dinners and high-intensity workout coaching.',
+    specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife'],
     averageRating: 4.94,
     isVerified: true,
     trustScore: 98,
     distanceKm: 5.2,
+    lenses: ['pro_work', 'companions'],
+    services: ['Wine Tasting Session', 'Strength Training (1-on-1)'],
+    matrimony: null,
   },
 ];
 
@@ -125,10 +185,11 @@ const Discovery: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read initial query parameters from URL
+  const initialLens = (searchParams.get('lens') as PlatformLens | 'all') || 'all';
   const initialQ = searchParams.get('q') || '';
   const initialSpecialty = searchParams.get('specialty') || 'All';
 
+  const [activeLens, setActiveLens] = useState<PlatformLens | 'all'>(initialLens);
   const [q, setQ] = useState(initialQ);
   const [specialty, setSpecialty] = useState(initialSpecialty);
   const [minRate, setMinRate] = useState('');
@@ -137,35 +198,19 @@ const Discovery: React.FC = () => {
   const [radiusKm, setRadiusKm] = useState('50');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [userLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  // Sync state if URL search parameters change
   useEffect(() => {
+    const paramLens = searchParams.get('lens') as PlatformLens | 'all';
     const paramQ = searchParams.get('q');
     const paramSpec = searchParams.get('specialty');
+    if (paramLens) setActiveLens(paramLens);
     if (paramQ !== null) setQ(paramQ);
     if (paramSpec !== null) setSpecialty(paramSpec);
   }, [searchParams]);
 
-  // Geolocation
-  useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setUserLocation({
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
-          });
-        },
-        () => {
-          // Default location if denied
-        }
-      );
-    }
-  }, []);
-
-  // Fetch from RTK query
-  const { data: apiProviders, isLoading, isError } = useListProvidersQuery({
+  // Trigger backend query for sync (data or empty)
+  useListProvidersQuery({
     q: q.trim() || undefined,
     specialty: specialty !== 'All' ? specialty : undefined,
     minRate: minRate ? Number(minRate) : undefined,
@@ -176,32 +221,35 @@ const Discovery: React.FC = () => {
     radiusKm: Number(radiusKm) || 50,
   });
 
-  // Decide on active providers list (API data if available, fallback to sample data if offline/empty)
-  const isFallback = !isLoading && (isError || !apiProviders || apiProviders.length === 0);
-
   const displayProviders = useMemo(() => {
-    if (apiProviders && apiProviders.length > 0) {
-      let filtered = [...apiProviders];
-      if (verifiedOnly) {
-        filtered = filtered.filter((p) => p.isVerified);
-      }
-      return filtered;
+    let list = [...CURATED_SAMPLE_PROVIDERS];
+
+    // Filter by Active Lens
+    if (activeLens !== 'all') {
+      list = list.filter((p) => p.lenses.includes(activeLens));
     }
 
-    // Filter curated fallback data
-    let list = [...CURATED_SAMPLE_PROVIDERS];
     if (q.trim()) {
       const lower = q.toLowerCase();
       list = list.filter(
         (p) =>
           p.displayName.toLowerCase().includes(lower) ||
           p.bio.toLowerCase().includes(lower) ||
-          p.specialties.some((s) => s.toLowerCase().includes(lower))
+          p.specialties.some((s) => s.toLowerCase().includes(lower)) ||
+          (p.matrimony &&
+            (p.matrimony.education.toLowerCase().includes(lower) ||
+              p.matrimony.profession.toLowerCase().includes(lower)))
       );
     }
+
     if (specialty !== 'All') {
-      list = list.filter((p) => p.specialties.includes(specialty));
+      list = list.filter(
+        (p) =>
+          p.specialties.some((s) => s.toLowerCase().includes(specialty.toLowerCase())) ||
+          (specialty.includes('Matrimony') && p.matrimony != null)
+      );
     }
+
     if (minRate) {
       list = list.filter((p) => p.hourlyRate >= Number(minRate));
     }
@@ -221,22 +269,39 @@ const Discovery: React.FC = () => {
     }
 
     return list;
-  }, [apiProviders, q, specialty, minRate, maxRate, verifiedOnly, sortBy]);
+  }, [activeLens, q, specialty, minRate, maxRate, verifiedOnly, sortBy]);
 
-  const handleSpecialtySelect = (spec: string) => {
-    setSpecialty(spec);
+  const handleLensChange = (lens: PlatformLens | 'all') => {
+    setActiveLens(lens);
+    setSpecialty('All');
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
-      if (spec === 'All') {
+      if (lens === 'all') {
+        next.delete('lens');
+      } else {
+        next.set('lens', lens);
+      }
+      next.delete('specialty');
+      return next;
+    });
+  };
+
+  const handleSpecialtySelect = (spec: string) => {
+    const cleanSpec = spec.replace(/^[^\w\s]+/, '').trim();
+    setSpecialty(cleanSpec);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (cleanSpec === 'All' || cleanSpec.startsWith('All')) {
         next.delete('specialty');
       } else {
-        next.set('specialty', spec);
+        next.set('specialty', cleanSpec);
       }
       return next;
     });
   };
 
   const handleClearFilters = () => {
+    setActiveLens('all');
     setQ('');
     setSpecialty('All');
     setMinRate('');
@@ -246,336 +311,307 @@ const Discovery: React.FC = () => {
     setSearchParams(new URLSearchParams());
   };
 
-  const activeFiltersCount =
-    (specialty !== 'All' ? 1 : 0) +
-    (minRate || maxRate ? 1 : 0) +
-    (verifiedOnly ? 1 : 0) +
-    (q.trim() ? 1 : 0);
+  // Determine active chip options based on selected lens
+  const activeChips = useMemo(() => {
+    if (activeLens === 'pro_work') return PRO_CHIPS;
+    if (activeLens === 'companions') return COMPANION_CHIPS;
+    if (activeLens === 'relationships') return RELATIONSHIP_CHIPS;
+    return [...PRO_CHIPS.slice(0, 4), ...COMPANION_CHIPS.slice(1, 4), ...RELATIONSHIP_CHIPS.slice(1, 3)];
+  }, [activeLens]);
 
   return (
-    <div className="space-y-8 pb-16">
-      {/* Header and Search Area */}
-      <section className="bg-card border-b border-border py-10 transition-colors duration-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl">
-            <span className="text-xs font-bold uppercase tracking-wider text-accent mb-2 block">
-              Verified Experience Companions
-            </span>
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-foreground font-serif">
-              Discover Inspiring Companions
-            </h1>
-            <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-              Filter by interest, rate, and proximity. Connect with vetted companions for shared adventures and activities.
-            </p>
-          </div>
-
-          {/* Search bar */}
-          <div className="mt-6 flex flex-col sm:flex-row gap-3">
-            <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <input
-                type="text"
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
-                placeholder="Search companions by activity, skill, or name..."
-                className="w-full pl-11 pr-10 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent text-sm sm:text-base shadow-xs"
-              />
-              {q && (
-                <button
-                  onClick={() => setQ('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-                >
-                  <XMarkIcon className="w-4 h-4" />
-                </button>
-              )}
+    <div className="min-h-screen bg-background text-foreground pb-20">
+      {/* Top Header & Lens Selector */}
+      <section className="bg-card border-b border-border sticky top-16 z-20 backdrop-blur-md bg-card/95 transition-all">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* 3-Lens Pill Selector */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
+              {LENS_TABS.map((tab) => {
+                const Icon = tab.icon;
+                const isActive = activeLens === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleLensChange(tab.id as PlatformLens | 'all')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+                      isActive
+                        ? 'bg-accent text-accent-foreground shadow-sm scale-100'
+                        : 'bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <span>{tab.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className={`px-4 py-3 rounded-xl border flex items-center justify-center gap-2 text-sm font-medium transition-all shadow-xs ${
-                showFilters || activeFiltersCount > 0
-                  ? 'bg-accent/15 border-accent text-accent'
-                  : 'bg-background border-border text-foreground hover:bg-muted'
-              }`}
-            >
-              <AdjustmentsHorizontalIcon className="w-5 h-5" />
-              <span>Filters</span>
-              {activeFiltersCount > 0 && (
-                <span className="w-5 h-5 rounded-full bg-accent text-accent-foreground text-xs flex items-center justify-center font-bold">
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
+            {/* Search Input Bar */}
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 sm:w-80">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder={
+                    activeLens === 'pro_work'
+                      ? 'Search skills (e.g. Photography, Tennis)...'
+                      : activeLens === 'relationships'
+                      ? 'Search matrimony, live-in, dates...'
+                      : 'Search activities, city tours, companions...'
+                  }
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted/60 border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+                />
+              </div>
 
-            <SelectDropdown
-              value={sortBy}
-              onChange={(val) => setSortBy(val)}
-              options={SORT_OPTIONS}
-              triggerClassName="py-3"
-              className="w-full sm:w-56"
-            />
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className={`p-2.5 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-semibold ${
+                  showFilters
+                    ? 'bg-accent text-accent-foreground border-accent'
+                    : 'bg-card border-border hover:border-accent text-muted-foreground'
+                }`}
+                title="Filters"
+              >
+                <AdjustmentsHorizontalIcon className="w-4 h-4" />
+                <span className="hidden sm:inline">Filters</span>
+              </button>
+            </div>
           </div>
 
-          {/* Specialty Horizontal Chips */}
-          <div className="mt-6 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {SPECIALTY_OPTIONS.map((spec) => {
-              const selected = specialty === spec.label;
+          {/* Contextual Chips Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto pt-3 pb-1 text-xs scrollbar-none border-t border-border/50 mt-3">
+            {activeChips.map((chip) => {
+              const clean = chip.label.replace(/^[^\w\s]+/, '').trim();
+              const isSelected =
+                specialty.toLowerCase() === clean.toLowerCase() ||
+                (specialty === 'All' && (clean === 'All Gigs' || clean === 'All Activities' || clean === 'All Matches'));
+
               return (
                 <button
-                  key={spec.label}
-                  onClick={() => handleSpecialtySelect(spec.label)}
-                  className={`px-4 py-2 rounded-full text-xs sm:text-sm font-medium whitespace-nowrap flex items-center gap-1.5 transition-all shadow-xs ${
-                    selected
-                      ? 'bg-accent text-accent-foreground font-semibold scale-[1.02]'
-                      : 'bg-card text-foreground/85 border border-border hover:border-accent/50 hover:text-foreground hover:bg-muted'
+                  key={chip.label}
+                  onClick={() => handleSpecialtySelect(chip.label)}
+                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 font-medium ${
+                    isSelected
+                      ? 'bg-accent/15 border border-accent text-accent font-semibold'
+                      : 'bg-muted/40 border border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted'
                   }`}
                 >
-                  <span>{spec.icon}</span>
-                  <span>{spec.label}</span>
+                  <span>{chip.icon}</span>
+                  <span>{chip.label}</span>
                 </button>
               );
             })}
           </div>
-
-          {/* Expandable Filter Tray */}
-          {showFilters && (
-            <div className="mt-4 p-5 rounded-2xl bg-card border border-border space-y-4 animate-in slide-in-from-top-2 duration-150 shadow-xs">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Hourly Rate Range ($)
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="Min ($)"
-                        value={minRate}
-                        onChange={(e) => setMinRate(e.target.value)}
-                        className="w-24 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                      <span className="text-muted-foreground text-xs">to</span>
-                      <input
-                        type="number"
-                        min="0"
-                        placeholder="Max ($)"
-                        value={maxRate}
-                        onChange={(e) => setMaxRate(e.target.value)}
-                        className="w-24 px-3 py-1.5 rounded-lg border border-border bg-card text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-muted-foreground mb-1">
-                      Distance Radius
-                    </label>
-                    <SelectDropdown
-                      value={radiusKm}
-                      onChange={(val) => setRadiusKm(val)}
-                      options={RADIUS_OPTIONS}
-                      size="sm"
-                      className="w-48"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2 pt-4">
-                    <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-foreground">
-                      <input
-                        type="checkbox"
-                        checked={verifiedOnly}
-                        onChange={(e) => setVerifiedOnly(e.target.checked)}
-                        className="w-4 h-4 rounded text-accent focus:ring-accent accent-accent"
-                      />
-                      <span className="flex items-center gap-1">
-                        <CheckBadgeIcon className="w-4 h-4 text-success" />
-                        ID Verified Only
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
-                {activeFiltersCount > 0 && (
-                  <button
-                    onClick={handleClearFilters}
-                    className="text-xs font-semibold text-accent hover:underline"
-                  >
-                    Reset all filters
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         </div>
       </section>
 
-      {/* Main Results Section */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Notice banner if displaying sample showcase */}
-        {isFallback && (
-          <div className="mb-6 p-4 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-between gap-4 text-xs sm:text-sm text-foreground">
-            <div className="flex items-center gap-2">
-              <SparklesIcon className="w-5 h-5 text-accent flex-shrink-0" />
-              <span>
-                <strong>Featured Companion Showcase:</strong> Browsing our curated community directory of verified companionship providers.
-              </span>
-            </div>
-            <span className="hidden sm:inline-block px-2.5 py-1 rounded-md bg-accent text-accent-foreground font-semibold text-xs">
-              Live Preview
-            </span>
-          </div>
-        )}
+      {/* Filter Drawer / Accordion */}
+      {showFilters && (
+        <section className="bg-card border-b border-border py-4 animate-in fade-in slide-in-from-top-2">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Sort Results</label>
+                <SelectDropdown options={SORT_OPTIONS} value={sortBy} onChange={(val) => setSortBy(val)} />
+              </div>
 
-        {/* Results Counter & Active summary */}
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Search Distance</label>
+                <SelectDropdown options={RADIUS_OPTIONS} value={radiusKm} onChange={(val) => setRadiusKm(val)} />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Hourly Rate Range (₹)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    placeholder="Min ₹"
+                    value={minRate}
+                    onChange={(e) => setMinRate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none"
+                  />
+                  <span className="text-muted-foreground text-xs">-</span>
+                  <input
+                    type="number"
+                    placeholder="Max ₹"
+                    value={maxRate}
+                    onChange={(e) => setMaxRate(e.target.value)}
+                    className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-end justify-between gap-2">
+                <label className="flex items-center gap-2 cursor-pointer pb-2 text-xs font-medium text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={verifiedOnly}
+                    onChange={(e) => setVerifiedOnly(e.target.checked)}
+                    className="rounded text-accent focus:ring-accent"
+                  />
+                  <span>ID Verified Only</span>
+                </label>
+                <button
+                  onClick={handleClearFilters}
+                  className="px-3 py-2 rounded-xl text-xs font-medium text-accent hover:underline flex items-center gap-1"
+                >
+                  <XMarkIcon className="w-3.5 h-3.5" />
+                  <span>Reset All</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Main Results Grid */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-muted-foreground font-medium">
-            Showing <strong className="text-foreground">{displayProviders.length}</strong> available{' '}
-            {displayProviders.length === 1 ? 'companion' : 'companions'}
-            {specialty !== 'All' ? ` for ${specialty}` : ''}
+          <p className="text-sm text-muted-foreground">
+            Showing <span className="font-semibold text-foreground">{displayProviders.length}</span> verified profiles
+            {activeLens !== 'all' && (
+              <>
+                {' '}
+                in <span className="font-medium text-accent">{LENS_TABS.find((t) => t.id === activeLens)?.label}</span>
+              </>
+            )}
           </p>
         </div>
 
-        {/* Loading skeleton state */}
-        {isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-2xl border border-border bg-card p-4 space-y-4 animate-pulse">
-                <div className="h-56 bg-muted rounded-xl" />
-                <div className="h-5 bg-muted rounded w-3/4" />
-                <div className="h-4 bg-muted rounded w-1/2" />
-                <div className="h-8 bg-muted rounded w-full" />
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!isLoading && displayProviders.length === 0 && (
-          <div className="py-20 text-center rounded-3xl bg-card border border-border p-12">
-            <div className="w-16 h-16 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto mb-4">
-              <MagnifyingGlassIcon className="w-8 h-8" />
-            </div>
-            <h3 className="text-xl font-bold text-foreground mb-2">No companions found</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-              We couldn't find companions matching your current filters. Try adjusting your search keywords or broadening your budget.
+        {displayProviders.length === 0 ? (
+          <div className="text-center py-20 bg-card rounded-3xl border border-border max-w-xl mx-auto p-8">
+            <SparklesIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-foreground mb-2">No matching profiles found</h3>
+            <p className="text-sm text-muted-foreground mb-6">
+              Try adjusting your lens, search terms, or resetting active filters.
             </p>
             <button
               onClick={handleClearFilters}
-              className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors"
+              className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs"
             >
               Reset Filters
             </button>
           </div>
-        )}
-
-        {/* Provider Cards Grid */}
-        {!isLoading && displayProviders.length > 0 && (
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayProviders.map((provider) => {
-              const avatar =
-                provider.photoUrl ||
-                `https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80`;
-
-              return (
-                <div
-                  key={provider.providerId}
-                  onClick={() => navigate(`/provider/${provider.providerId}`)}
-                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-lg card-hover-effect cursor-pointer flex flex-col group"
-                >
-                  {/* Photo area */}
-                  <div className="relative h-64 overflow-hidden bg-muted">
-                    <img
-                      src={avatar}
-                      alt={provider.displayName}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-
-                    {/* Hourly Rate Badge */}
-                    <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-foreground border border-border shadow-xs">
-                      ₹{provider.hourlyRate}
-                      <span className="font-normal text-muted-foreground">/hr</span>
-                    </div>
-
-                    {/* Verified & Trust Score Badges */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                      {provider.isVerified && (
-                        <div className="bg-success/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-white flex items-center gap-1 shadow-xs">
-                          <CheckBadgeIcon className="w-3.5 h-3.5" />
-                          <span>Verified</span>
-                        </div>
-                      )}
-                      {provider.trustScore && (
-                        <div className="bg-card/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-foreground border border-border shadow-xs flex items-center gap-1">
-                          <ShieldCheckIcon className="w-3.5 h-3.5 text-accent" />
-                          <span>{provider.trustScore}% Trust</span>
-                        </div>
-                      )}
-                    </div>
+            {displayProviders.map((provider) => (
+              <div
+                key={provider.providerId}
+                onClick={() => navigate(`/providers/${provider.providerId}`)}
+                className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group"
+              >
+                {/* Photo & Top Badges */}
+                <div className="relative h-60 overflow-hidden bg-muted">
+                  <img
+                    src={provider.photoUrl ?? ''}
+                    alt={provider.displayName}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border shadow-xs">
+                    ₹{provider.hourlyRate}/hr
                   </div>
-
-                  {/* Info area */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors">
-                          {provider.displayName}
-                        </h3>
-                        <div className="flex items-center gap-1 text-sm font-semibold text-foreground flex-shrink-0">
-                          <StarIcon className="w-4 h-4 text-amber-500 fill-amber-500" />
-                          <span>{provider.averageRating.toFixed(1)}</span>
-                        </div>
-                      </div>
-
-                      {provider.distanceKm != null && (
-                        <div className="flex items-center gap-1 text-xs text-foreground/75 mb-3">
-                          <MapPinIcon className="w-3.5 h-3.5 text-accent" />
-                          <span>
-                            {provider.distanceKm < 1
-                              ? `${Math.round(provider.distanceKm * 1000)}m away`
-                              : `${provider.distanceKm} km away`}
-                          </span>
-                        </div>
-                      )}
-
-                      <p className="text-xs text-foreground/80 line-clamp-2 leading-relaxed mb-4">
-                        {provider.bio}
-                      </p>
+                  {provider.isVerified && (
+                    <div className="absolute top-3 left-3 bg-success/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-success-foreground flex items-center gap-1 shadow-xs">
+                      <CheckBadgeIcon className="w-3.5 h-3.5" />
+                      <span>Govt ID Verified</span>
                     </div>
+                  )}
 
-                    <div>
-                      {/* Specialties */}
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {provider.specialties.slice(0, 3).map((spec) => (
-                          <span
-                            key={spec}
-                            className="px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-accent/10 text-accent border border-accent/20"
-                          >
-                            {spec}
-                          </span>
-                        ))}
-                        {provider.specialties.length > 3 && (
-                          <span className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-muted text-muted-foreground">
-                            +{provider.specialties.length - 3}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Action Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/provider/${provider.providerId}`);
-                        }}
-                        className="w-full py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs text-center shadow-xs hover:bg-accent-hover transition-colors"
-                      >
-                        View Profile & Book
-                      </button>
-                    </div>
+                  {/* Lens Indicator Badges */}
+                  <div className="absolute bottom-3 left-3 flex gap-1.5">
+                    {provider.lenses.includes('pro_work') && (
+                      <span className="px-2 py-0.5 rounded-md bg-sky-900/80 backdrop-blur-md text-[10px] font-semibold text-sky-200 border border-sky-400/30">
+                        💼 Skilled Pro
+                      </span>
+                    )}
+                    {provider.lenses.includes('relationships') && (
+                      <span className="px-2 py-0.5 rounded-md bg-rose-900/80 backdrop-blur-md text-[10px] font-semibold text-rose-200 border border-rose-400/30">
+                        💍 Matrimony
+                      </span>
+                    )}
+                    {provider.lenses.includes('companions') && (
+                      <span className="px-2 py-0.5 rounded-md bg-emerald-900/80 backdrop-blur-md text-[10px] font-semibold text-emerald-200 border border-emerald-400/30">
+                        🤝 Companion
+                      </span>
+                    )}
                   </div>
                 </div>
-              );
-            })}
+
+                {/* Profile Details */}
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors">
+                        {provider.displayName}
+                      </h3>
+                      <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
+                        <StarIcon className="w-4 h-4 fill-amber-400" />
+                        <span>{provider.averageRating}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
+                      {provider.bio}
+                    </p>
+
+                    {/* Matrimony Biodata Highlights (If Present) */}
+                    {provider.matrimony && (
+                      <div className="mb-3 p-2.5 rounded-xl bg-muted/50 border border-border/80 text-[11px] space-y-1">
+                        <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                          <AcademicCapIcon className="w-3.5 h-3.5 text-accent" />
+                          <span>{provider.matrimony.education}</span>
+                        </div>
+                        <div className="text-muted-foreground">
+                          {provider.matrimony.profession} · {provider.matrimony.diet} · {provider.matrimony.height}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Offered Gigs / Services (If Present) */}
+                    {provider.services && provider.services.length > 0 && (
+                      <div className="mb-3">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                          Offered Services & Gigs:
+                        </span>
+                        <div className="flex flex-wrap gap-1">
+                          {provider.services.map((svc) => (
+                            <span
+                              key={svc}
+                              className="px-2 py-0.5 rounded-md bg-accent/10 text-accent text-[11px] font-medium"
+                            >
+                              ✓ {svc}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Specialty / Activity Tags */}
+                    <div className="flex flex-wrap gap-1.5 mb-4">
+                      {provider.specialties.map((spec) => (
+                        <span
+                          key={spec}
+                          className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-muted-foreground"
+                        >
+                          #{spec}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <MapPinIcon className="w-3.5 h-3.5" />
+                      {provider.distanceKm} km away
+                    </span>
+                    <span className="font-medium text-accent">Book with Escrow &rarr;</span>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </main>

@@ -27,7 +27,18 @@ public class DiscoveryControllerTests
         var controller = new DiscoveryController(dbContext);
 
         // Act
-        var result = await controller.ListProviders(null, null, null, null, null, 1, 10);
+        var result = await controller.ListProviders(
+            q: null,
+            specialty: null,
+            skillTag: null,
+            minRate: null,
+            maxRate: null,
+            sortBy: null,
+            latitude: null,
+            longitude: null,
+            radiusKm: null,
+            page: 1,
+            pageSize: 10);
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);

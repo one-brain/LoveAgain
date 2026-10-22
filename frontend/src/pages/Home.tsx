@@ -7,62 +7,118 @@ import {
   SparklesIcon,
   ClockIcon,
   MapPinIcon,
-  ChatBubbleLeftRightIcon,
   CheckBadgeIcon,
   ArrowRightIcon,
+  BriefcaseIcon,
+  UserGroupIcon,
+  HeartIcon,
 } from '@heroicons/react/24/outline';
+import type { PlatformLens } from '../types/platform';
 
-interface CategoryItem {
+interface LensConfig {
+  id: PlatformLens;
   name: string;
-  count: number;
-  icon: string;
-  description: string;
-  specialtyParam: string;
+  tagline: string;
+  icon: React.ComponentType<{ className?: string }>;
+  searchPlaceholder: string;
+  badge: string;
 }
 
-const CATEGORIES: CategoryItem[] = [
-  { name: 'Sports & Fitness', count: 48, icon: '🎾', description: 'Tennis, squash, running partners & yoga', specialtyParam: 'Tennis' },
-  { name: 'Culinary & Dining', count: 62, icon: '🍳', description: 'Cooking classes, foodie tours & tastings', specialtyParam: 'Cooking' },
-  { name: 'Arts & Culture', count: 35, icon: '🎨', description: 'Museum visits, exhibitions & theatre', specialtyParam: 'Art' },
-  { name: 'Outdoor Adventures', count: 41, icon: '🥾', description: 'Scenic hikes, cycling & nature trails', specialtyParam: 'Hiking' },
-  { name: 'Skill & Creative', count: 29, icon: '📸', description: 'Photography walks, languages & craft', specialtyParam: 'Photography' },
-  { name: 'Music & Concerts', count: 33, icon: '🎵', description: 'Jazz clubs, live gigs & acoustics', specialtyParam: 'Music' },
+const LENSES: LensConfig[] = [
+  {
+    id: 'pro_work',
+    name: 'Cue Pro (Work & Gigs)',
+    tagline: 'Hire verified skilled talent or advertise your skills to earn with Escrow guarantee',
+    icon: BriefcaseIcon,
+    searchPlaceholder: 'Search skills (e.g. Photography, Tennis Coach, Python Tutor, DJ)...',
+    badge: 'Verified Freelancers & Pros',
+  },
+  {
+    id: 'companions',
+    name: 'Cue Companions',
+    tagline: 'Rent friendly companions for city tours, concerts, gym partners & dining',
+    icon: UserGroupIcon,
+    searchPlaceholder: 'Search activities (e.g. City Tour, Concert Buddy, Hiking, Foodie)...',
+    badge: '100% Platonic & Escrow Protected',
+  },
+  {
+    id: 'relationships',
+    name: 'Cue Relationships',
+    tagline: 'Verified matrimony biodatas, live-in compatibility & modern romance',
+    icon: HeartIcon,
+    searchPlaceholder: 'Search matches (e.g. Matrimony, Live-In Match, Coffee Date)...',
+    badge: 'ID-Verified & Boundary Safe',
+  },
 ];
 
-const FEATURED_COMPANIONS = [
+// Activity categories for Companions Lens
+const COMPANION_ACTIVITIES = [
+  { name: 'City Guide & Local Tours', count: 42, icon: '🗺️', desc: 'Hidden city gems, street food, heritage walks' },
+  { name: 'Sports & Fitness Partners', count: 54, icon: '🎾', desc: 'Tennis, gym accountability, jogging & yoga' },
+  { name: 'Fine Dining & Foodie Tastings', count: 68, icon: '🍷', desc: 'Artisan cafes, dinner company & chef tastings' },
+  { name: 'Concerts & Live Music', count: 39, icon: '🎸', desc: 'Gigs, music festivals, jazz clubs & theatre' },
+  { name: 'Events & Plus-One', count: 31, icon: '🥂', desc: 'Weddings, corporate galas & milestone dinners' },
+  { name: 'Outdoor Adventures & Hikes', count: 47, icon: '🥾', desc: 'Scenic mountain trails, nature getaways' },
+];
+
+// Skilled Pro Categories for Work Lens
+const PRO_SERVICES = [
+  { name: 'Fitness & Sports Coaching', count: 85, icon: '🏋️', desc: 'Personal trainers, yoga instructors & coaches' },
+  { name: 'Photography & Creative', count: 62, icon: '📸', desc: 'Portrait, event, product & street shoots' },
+  { name: 'Tutoring & Language Exchange', count: 44, icon: '📚', desc: 'English, French, Hindi & coding mentors' },
+  { name: 'Event Hosting & Entertainment', count: 38, icon: '🎤', desc: 'DJs, anchors, musicians & party hosts' },
+  { name: 'Tech & Digital Gigs', count: 51, icon: '💻', desc: 'Web dev, graphic design & content consulting' },
+  { name: 'Personal Styling & Shopping', count: 26, icon: '🛍️', desc: 'Fashion consulting & mall shopping experts' },
+];
+
+// Relationship Categories
+const RELATIONSHIP_PILLARS = [
+  { name: 'Verified Matrimony Biodatas', count: 120, icon: '💍', desc: 'Education, profession, family background & lifestyle compatibility' },
+  { name: 'Live-In Compatibility Match', count: 74, icon: '🏡', desc: 'Assess long-term cohabitation habits & lifestyle harmony' },
+  { name: 'Courtship & Dinner Dates', count: 96, icon: '🌹', desc: 'Romantic dinners, coffee dates & shared chemistry' },
+  { name: 'Travel & Vacation Companions', count: 45, icon: '✈️', desc: 'Weekend road trips & overseas exploration partners' },
+];
+
+const FEATURED_PROFILES = [
   {
-    id: 'f1',
+    id: 'p1',
     name: 'Elena Rostova',
-    specialties: ['Tennis', 'Yoga', 'Art'],
+    headline: 'Semi-Pro Tennis Coach & Event Plus-One',
+    activeLenses: ['pro_work', 'companions'],
+    tags: ['Tennis Coaching', 'City Tour', 'Art Gallery'],
     rate: 45,
+    rateType: 'hr',
     rating: 4.98,
     reviews: 64,
     distance: '2.4 km away',
-    bio: 'Semi-pro tennis instructor and contemporary art curator. Love sharing high-energy matches and weekend gallery strolls.',
     image: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
     trustScore: 99,
   },
   {
-    id: 'f2',
+    id: 'p2',
     name: 'Marcus Vance',
-    specialties: ['Cooking', 'Photography', 'Reading'],
+    headline: 'Commercial Photographer & Foodie Guide',
+    activeLenses: ['pro_work', 'companions'],
+    tags: ['Photography Gigs', 'Culinary Walk', 'Italian Cooking'],
     rate: 55,
+    rateType: 'hr',
     rating: 4.95,
     reviews: 82,
     distance: '3.8 km away',
-    bio: 'Former sous-chef turned street photographer. Eager to explore new culinary spots or teach pasta making from scratch.',
     image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
     trustScore: 98,
   },
   {
-    id: 'f3',
-    name: 'Sophia Chen',
-    specialties: ['Hiking', 'Music', 'Photography'],
+    id: 'p3',
+    name: 'Dr. Sophia Chen',
+    headline: 'Cardiologist · Seeking Verified Matrimony & Live-In',
+    activeLenses: ['relationships'],
+    tags: ['Matrimony Biodata', 'Live-In Open', 'Classical Violin'],
     rate: 40,
+    rateType: 'hr',
     rating: 4.92,
     reviews: 47,
     distance: '1.9 km away',
-    bio: 'Outdoor enthusiast and classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony.',
     image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
     trustScore: 97,
   },
@@ -70,44 +126,76 @@ const FEATURED_COMPANIONS = [
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const [activeLens, setActiveLens] = useState<PlatformLens>('pro_work');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const currentLensConfig = LENSES.find((l) => l.id === activeLens) || LENSES[0];
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (searchQuery.trim()) {
-      navigate(`/discovery?q=${encodeURIComponent(searchQuery.trim())}`);
-    } else {
-      navigate('/discovery');
-    }
+    const query = searchQuery.trim();
+    navigate(`/discovery?lens=${activeLens}${query ? `&q=${encodeURIComponent(query)}` : ''}`);
   };
 
   return (
     <div className="space-y-20 pb-20">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28">
-        {/* Ambient decorative glowing backdrops */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent blur-3xl pointer-events-none -z-10" />
+      {/* 3-Lens Hero Section */}
+      <section className="relative overflow-hidden pt-10 pb-16 lg:pt-16 lg:pb-24">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent blur-3xl pointer-events-none -z-10" />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Trust badge pill */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-wider mb-8">
-            <SparklesIcon className="w-4 h-4" />
-            <span>The Premier Experience Companion Platform</span>
+          {/* Lens Selector Segmented Control */}
+          <div className="inline-flex p-1.5 rounded-2xl bg-card border border-border shadow-md mb-8 max-w-full overflow-x-auto">
+            {LENSES.map((lens) => {
+              const Icon = lens.icon;
+              const isActive = activeLens === lens.id;
+              return (
+                <button
+                  key={lens.id}
+                  onClick={() => {
+                    setActiveLens(lens.id);
+                    setSearchQuery('');
+                  }}
+                  className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-medium text-xs sm:text-sm transition-all whitespace-nowrap ${
+                    isActive
+                      ? 'bg-accent text-accent-foreground shadow-sm font-semibold'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <Icon className="w-4 h-4 flex-shrink-0" />
+                  <span>{lens.name}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground font-serif max-w-4xl mx-auto leading-[1.12]">
-            Find inspiring companions for the{' '}
-            <span className="text-gradient">moments that matter</span>
+          {/* Dynamic Heading based on Lens */}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-foreground font-serif max-w-4xl mx-auto leading-tight">
+            {activeLens === 'pro_work' && (
+              <>
+                Hire skilled talent or <span className="text-gradient">monetize your expertise</span>
+              </>
+            )}
+            {activeLens === 'companions' && (
+              <>
+                Experience life together with <span className="text-gradient">verified companions</span>
+              </>
+            )}
+            {activeLens === 'relationships' && (
+              <>
+                Meaningful connections, verified <span className="text-gradient">matrimony & dating</span>
+              </>
+            )}
           </h1>
 
-          <p className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Connect with verified, vetted individuals for shared sports, culinary adventures, cultural outings, and skill sharing. Safe, escrow-protected, and genuine.
+          <p className="mt-4 sm:mt-6 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            {currentLensConfig.tagline}
           </p>
 
           {/* Interactive Search Bar Form */}
           <form
             onSubmit={handleSearchSubmit}
-            className="mt-10 max-w-2xl mx-auto p-2 bg-card rounded-2xl border border-border shadow-lg flex flex-col sm:flex-row items-center gap-2"
+            className="mt-8 max-w-2xl mx-auto p-2 bg-card rounded-2xl border border-border shadow-lg flex flex-col sm:flex-row items-center gap-2"
           >
             <div className="flex-1 flex items-center gap-3 px-3 w-full">
               <MagnifyingGlassIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
@@ -115,7 +203,7 @@ const Home: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="What experience are you seeking? (e.g. Tennis, Cooking, Gallery)"
+                placeholder={currentLensConfig.searchPlaceholder}
                 className="w-full bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none text-sm sm:text-base py-2"
               />
             </div>
@@ -123,109 +211,147 @@ const Home: React.FC = () => {
               type="submit"
               className="w-full sm:w-auto px-7 py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm transition-all shadow-sm hover:scale-[1.02] flex items-center justify-center gap-2 flex-shrink-0"
             >
-              <span>Explore Now</span>
+              <span>Explore</span>
               <ArrowRightIcon className="w-4 h-4" />
             </button>
           </form>
 
-          {/* Trust metrics */}
-          <div className="mt-12 pt-8 border-t border-border/60 max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          {/* Trust Guarantee Metrics */}
+          <div className="mt-12 pt-8 border-t border-border/60 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-2xl sm:text-3xl font-bold text-foreground">100%</div>
-              <div className="text-xs text-muted-foreground mt-0.5">ID & Face Verified</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Govt ID KYC Verified</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">Escrow Vault</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Guaranteed Razorpay Hold</div>
+            </div>
+            <div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">3 Lenses</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Work · Social · Love</div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-bold text-foreground">4.95★</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Community Rating</div>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground">12+</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Activity Types</div>
-            </div>
-            <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground">Escrow</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Guaranteed Payouts</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Community Trust Rating</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Categories Grid */}
+      {/* Dynamic Content Showcase for the Selected Lens */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
           <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold mb-2">
+              <SparklesIcon className="w-3.5 h-3.5" />
+              <span>{currentLensConfig.badge}</span>
+            </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-serif">
-              Curated Companion Experiences
+              {activeLens === 'pro_work' && 'Popular Skilled Gigs & Freelance Services'}
+              {activeLens === 'companions' && 'Curated Platonic Companion Activities'}
+              {activeLens === 'relationships' && 'Matrimonial Biodatas & Relationship Modes'}
             </h2>
-            <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-              Choose an activity you love, or try something entirely new with a verified companion.
-            </p>
           </div>
-          <Link
-            to="/discovery"
+          <button
+            onClick={() => navigate(`/discovery?lens=${activeLens}`)}
             className="mt-4 sm:mt-0 text-sm font-semibold text-accent hover:text-accent-hover flex items-center gap-1 group"
           >
-            <span>View all companions</span>
+            <span>View all in this category</span>
             <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          </button>
         </div>
 
+        {/* Dynamic Categories Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CATEGORIES.map((cat) => (
-            <div
-              key={cat.name}
-              onClick={() => navigate(`/discovery?specialty=${cat.specialtyParam}`)}
-              className="p-6 rounded-2xl bg-card border border-border hover:border-accent/40 shadow-xs card-hover-effect cursor-pointer flex flex-col justify-between"
-            >
-              <div>
-                <div className="text-4xl mb-4">{cat.icon}</div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">
-                  {cat.name}
-                </h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">
-                  {cat.description}
-                </p>
+          {activeLens === 'pro_work' &&
+            PRO_SERVICES.map((cat) => (
+              <div
+                key={cat.name}
+                onClick={() => navigate(`/discovery?lens=pro_work&q=${encodeURIComponent(cat.name)}`)}
+                className="p-6 rounded-2xl bg-card border border-border hover:border-accent/40 shadow-xs card-hover-effect cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="text-4xl mb-3">{cat.icon}</div>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">{cat.name}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{cat.desc}</p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-medium text-accent">
+                  <span>{cat.count} verified providers</span>
+                  <span>Hire Talent &rarr;</span>
+                </div>
               </div>
-              <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-medium text-accent">
-                <span>{cat.count} verified companions</span>
-                <span className="group-hover:translate-x-1 transition-transform">Book slot &rarr;</span>
+            ))}
+
+          {activeLens === 'companions' &&
+            COMPANION_ACTIVITIES.map((cat) => (
+              <div
+                key={cat.name}
+                onClick={() => navigate(`/discovery?lens=companions&q=${encodeURIComponent(cat.name)}`)}
+                className="p-6 rounded-2xl bg-card border border-border hover:border-accent/40 shadow-xs card-hover-effect cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="text-4xl mb-3">{cat.icon}</div>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">{cat.name}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{cat.desc}</p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-medium text-accent">
+                  <span>{cat.count} active companions</span>
+                  <span>Plan Outing &rarr;</span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+
+          {activeLens === 'relationships' &&
+            RELATIONSHIP_PILLARS.map((cat) => (
+              <div
+                key={cat.name}
+                onClick={() => navigate(`/discovery?lens=relationships&q=${encodeURIComponent(cat.name)}`)}
+                className="p-6 rounded-2xl bg-card border border-border hover:border-accent/40 shadow-xs card-hover-effect cursor-pointer flex flex-col justify-between"
+              >
+                <div>
+                  <div className="text-4xl mb-3">{cat.icon}</div>
+                  <h3 className="text-lg font-semibold text-foreground mb-1">{cat.name}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{cat.desc}</p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-border/60 flex items-center justify-between text-xs font-medium text-accent">
+                  <span>{cat.count} verified profiles</span>
+                  <span>Explore Matches &rarr;</span>
+                </div>
+              </div>
+            ))}
         </div>
       </section>
 
-      {/* Featured Companions Showcase */}
+      {/* Featured Profiles Across Lenses */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-card rounded-3xl border border-border p-8 sm:p-12 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-accent mb-2 block">
-                Top Rated This Week
+              <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
+                Vetted & ID-Verified
               </span>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-serif">
-                Featured Verified Companions
+                Featured Providers & Matches
               </h2>
-              <p className="text-muted-foreground mt-2 text-sm">
-                Each companion is identity verified, background checked, and vetted by fellow members.
+              <p className="text-muted-foreground mt-1 text-sm">
+                Every user is KYC verified with government ID and protected by 100% Escrow holds.
               </p>
             </div>
             <Link
-              to="/discovery"
+              to={`/discovery?lens=${activeLens}`}
               className="mt-4 sm:mt-0 px-4 py-2 rounded-xl border border-border hover:border-accent text-sm font-medium text-foreground hover:text-accent transition-colors"
             >
-              Browse All Profiles
+              Browse All in {currentLensConfig.name}
             </Link>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {FEATURED_COMPANIONS.map((comp) => (
+            {FEATURED_PROFILES.map((comp) => (
               <div
                 key={comp.id}
-                onClick={() => navigate('/discovery')}
+                onClick={() => navigate(`/discovery?lens=${comp.activeLenses[0]}`)}
                 className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group"
               >
-                {/* Photo container with verified badge & rate */}
                 <div className="relative h-64 overflow-hidden bg-muted">
                   <img
                     src={comp.image}
@@ -233,7 +359,7 @@ const Home: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border shadow-xs">
-                    ₹{comp.rate}/hr
+                    ₹{comp.rate}/{comp.rateType}
                   </div>
                   <div className="absolute top-3 left-3 bg-success/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-success-foreground flex items-center gap-1 shadow-xs">
                     <CheckBadgeIcon className="w-3.5 h-3.5" />
@@ -241,53 +367,37 @@ const Home: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Details */}
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors">
                         {comp.name}
                       </h3>
-                      <div className="flex items-center gap-1 text-sm font-semibold text-foreground">
-                        <StarIcon className="w-4 h-4 text-amber-500 fill-amber-500" />
+                      <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
+                        <StarIcon className="w-4 h-4 fill-amber-400" />
                         <span>{comp.rating}</span>
-                        <span className="text-xs text-muted-foreground font-normal">({comp.reviews})</span>
                       </div>
                     </div>
+                    <p className="text-xs text-accent font-medium mb-3">{comp.headline}</p>
 
-                    <div className="flex items-center gap-1 text-xs text-foreground/75 mb-3">
-                      <MapPinIcon className="w-3.5 h-3.5 text-accent" />
-                      <span>{comp.distance}</span>
-                      <span className="mx-1">•</span>
-                      <span>Trust: {comp.trustScore}%</span>
-                    </div>
-
-                    <p className="text-xs text-foreground/80 line-clamp-2 leading-relaxed mb-4">
-                      {comp.bio}
-                    </p>
-                  </div>
-
-                  <div>
                     <div className="flex flex-wrap gap-1.5 mb-4">
-                      {comp.specialties.map((spec) => (
+                      {comp.tags.map((tag) => (
                         <span
-                          key={spec}
-                          className="px-2 py-0.5 rounded-md text-[11px] font-medium bg-accent/10 text-accent border border-accent/20"
+                          key={tag}
+                          className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-muted-foreground"
                         >
-                          {spec}
+                          #{tag}
                         </span>
                       ))}
                     </div>
+                  </div>
 
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        navigate('/discovery');
-                      }}
-                      className="w-full py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs text-center shadow-xs hover:bg-accent-hover transition-colors"
-                    >
-                      View Profile & Schedule
-                    </button>
+                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <MapPinIcon className="w-3.5 h-3.5" />
+                      {comp.distance}
+                    </span>
+                    <span className="font-medium text-accent">View Profile &rarr;</span>
                   </div>
                 </div>
               </div>
@@ -296,117 +406,66 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* How it works */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-2 block">
-            Simple, Transparent, Safe
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif">
-            How Cue Works in 3 Steps
-          </h2>
-          <p className="text-muted-foreground mt-3 text-sm sm:text-base">
-            Everything is designed to make organizing shared experiences safe, intuitive, and enjoyable.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-8 rounded-2xl bg-card border border-border shadow-xs text-center relative">
-            <div className="w-14 h-14 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold text-2xl mx-auto mb-6">
-              1
-            </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">Explore & Match</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Filter companions by activity, location radius, schedule, and verified reviews. Check bios and specialty tags.
-            </p>
-          </div>
-
-          <div className="p-8 rounded-2xl bg-card border border-border shadow-xs text-center relative">
-            <div className="w-14 h-14 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold text-2xl mx-auto mb-6">
-              2
-            </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">Book with Escrow</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Select an available time slot. Payment is held securely in escrow and only released once the activity is safely completed.
-            </p>
-          </div>
-
-          <div className="p-8 rounded-2xl bg-card border border-border shadow-xs text-center relative">
-            <div className="w-14 h-14 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold text-2xl mx-auto mb-6">
-              3
-            </div>
-            <h3 className="text-lg font-bold text-foreground mb-2">Meet & Enjoy</h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Coordinate meeting spots via encrypted in-app chat. Perform seamless GPS safety check-ins and share your experience review.
-            </p>
-          </div>
-        </div>
-
-        <div className="text-center mt-10">
-          <Link
-            to="/how-it-works"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent-hover transition-colors group"
-          >
-            <span>Read full guide on Escrow Vault, KYC verification, & trust scores</span>
-            <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
-      </section>
-
-      {/* Safety & Trust Banner */}
+      {/* "Advertise Your Skills & Earn" Callout Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-primary via-primary-light to-primary text-primary-foreground border border-border/80 shadow-xl">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-foreground/10 text-primary-foreground text-xs font-semibold uppercase tracking-wider mb-4 border border-primary-foreground/15">
-              <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />
-              <span>Safety First Architecture</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-foreground/10 text-primary-foreground text-xs font-semibold uppercase tracking-wider mb-4 border border-primary-foreground/15">
+                <BriefcaseIcon className="w-4 h-4 text-emerald-400" />
+                <span>Monetize Your Skills</span>
+              </div>
+              <h2 className="text-2xl sm:text-4xl font-bold tracking-tight font-serif mb-4 text-primary-foreground">
+                Advertise your craft, host activities, or find your life partner
+              </h2>
+              <p className="text-primary-foreground/85 text-sm sm:text-base leading-relaxed mb-6">
+                Whether you are a certified fitness trainer, wedding photographer, bilingual tour guide, or looking for marriage, Cue lets you set your rates, find clients, and get paid guaranteed escrow payouts without payment defaults.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Link
+                  to="/apply-companion"
+                  className="px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-md hover:bg-accent-hover transition-all"
+                >
+                  Apply as a Provider / Companion
+                </Link>
+                <Link
+                  to="/how-it-works"
+                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm transition-all"
+                >
+                  How Payments & Escrow Work
+                </Link>
+              </div>
             </div>
-            <h2 className="text-2xl sm:text-4xl font-bold tracking-tight font-serif mb-4 text-primary-foreground">
-              Built on community trust and physical safety
-            </h2>
-            <p className="text-primary-foreground/85 text-sm sm:text-base leading-relaxed mb-8">
-              We verify provider identities with government ID scans, track bookings with GPS verification, monitor trust scores across every engagement, and resolve any disputes with 24/7 human review.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-4 border-t border-white/15">
-              <div className="flex items-start gap-3">
-                <CheckBadgeIcon className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-xs text-primary-foreground/90">Identity verification and background screening</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <ClockIcon className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-xs text-primary-foreground/90">Flexible cancellations and dispute mediation</span>
-              </div>
-              <div className="flex items-start gap-3">
-                <ChatBubbleLeftRightIcon className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                <span className="text-xs text-primary-foreground/90">Real-time encrypted chat with location anchors</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* CTA Section */}
-      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center pt-8">
-        <div className="p-10 sm:p-16 rounded-3xl bg-card border border-border shadow-md">
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif mb-4">
-            Ready to find your next companion?
-          </h2>
-          <p className="text-muted-foreground text-base max-w-xl mx-auto mb-8">
-            Join thousands of active seekers and verified providers who share activities, skills, and genuine human connection.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              to="/register"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-accent text-accent-foreground font-semibold text-base shadow-sm hover:bg-accent-hover transition-all hover:scale-[1.02]"
-            >
-              Sign Up for Free
-            </Link>
-            <Link
-              to="/discovery"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-base transition-all"
-            >
-              Explore Companions
-            </Link>
+            <div className="space-y-4">
+              <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15">
+                <div className="flex items-center gap-3">
+                  <CheckBadgeIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm text-white">100% Guaranteed Escrow Vault</h4>
+                    <p className="text-xs text-white/80">Clients deposit funds before the session begins. Zero non-payment risk.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15">
+                <div className="flex items-center gap-3">
+                  <ShieldCheckIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm text-white">Strict Identity & Safety Vetting</h4>
+                    <p className="text-xs text-white/80">Every participant is verified with government ID and selfie biometrics.</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/15">
+                <div className="flex items-center gap-3">
+                  <ClockIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-sm text-white">Flexible Hourly or Fixed Gig Rates</h4>
+                    <p className="text-xs text-white/80">You set your own terms, hourly rates, or custom package milestones.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
