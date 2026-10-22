@@ -14,6 +14,7 @@ import Chat from './pages/Chat';
 import WalletPage from './pages/Wallet';
 import ApplyCompanion from './pages/ApplyCompanion';
 import AdminDashboard from './pages/AdminDashboard';
+import HowItWorks from './pages/HowItWorks';
 import type { RootState } from './store';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -35,8 +36,9 @@ function App() {
           <Route path="login" element={<UnauthenticatedRoute><Login /></UnauthenticatedRoute>} />
           <Route path="register" element={<UnauthenticatedRoute><Register /></UnauthenticatedRoute>} />
 
-          {/* Discovery & Provider Detail are accessible publicly so visitors can explore companions */}
+          {/* Discovery, How It Works, & Provider Detail are accessible publicly so visitors can explore */}
           <Route path="discovery" element={<Discovery />} />
+          <Route path="how-it-works" element={<HowItWorks />} />
           <Route path="provider/:userId" element={<ProviderDetail />} />
 
           {/* Protected routes requiring authentication */}

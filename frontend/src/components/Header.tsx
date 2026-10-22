@@ -178,6 +178,16 @@ const Header: React.FC = () => {
             >
               Discover Companions
             </Link>
+            <Link
+              to="/how-it-works"
+              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                isActive('/how-it-works')
+                  ? 'bg-accent/15 text-accent font-semibold shadow-xs'
+                  : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
+              }`}
+            >
+              How It Works
+            </Link>
           </nav>
 
           {/* Right Action Area */}
@@ -463,6 +473,12 @@ const Header: React.FC = () => {
             className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
           >
             Discover Companions
+          </Link>
+          <Link
+            to="/how-it-works"
+            className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+          >
+            How It Works
           </Link>
           {isAuthenticated ? (
             <>

@@ -341,6 +341,16 @@ const Home: React.FC = () => {
             </p>
           </div>
         </div>
+
+        <div className="text-center mt-10">
+          <Link
+            to="/how-it-works"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-accent hover:text-accent-hover transition-colors group"
+          >
+            <span>Read full guide on Escrow Vault, KYC verification, & trust scores</span>
+            <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
       </section>
 
       {/* Safety & Trust Banner */}

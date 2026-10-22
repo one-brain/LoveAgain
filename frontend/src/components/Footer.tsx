@@ -67,10 +67,14 @@ const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li>
-                <span className="text-foreground/80">Identity Verification</span>
+                <Link to="/how-it-works" className="text-foreground/80 hover:text-accent transition-colors">
+                  Identity Verification
+                </Link>
               </li>
               <li>
-                <span className="text-foreground/80">GPS Check-in Protocol</span>
+                <Link to="/how-it-works" className="text-foreground/80 hover:text-accent transition-colors">
+                  Escrow & Safety Guarantees
+                </Link>
               </li>
               <li>
                 <span className="text-foreground/80">Trust Score System</span>
@@ -90,6 +94,11 @@ const Footer: React.FC = () => {
               Platform
             </h4>
             <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link to="/how-it-works" className="text-foreground/80 hover:text-accent transition-colors font-medium">
+                  How It Works
+                </Link>
+              </li>
               <li>
                 <Link to="/discovery" className="text-foreground/80 hover:text-accent transition-colors">
                   Find Companions
