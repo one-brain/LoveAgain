@@ -6,7 +6,6 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Discovery from './pages/Discovery';
 import ProfilePage from './pages/Profile';
-import { ProviderProfile } from './pages/ProviderProfile';
 import ProviderDashboard from './pages/ProviderDashboard';
 import ProviderDetail from './pages/ProviderDetail';
 import Bookings from './pages/Bookings';
@@ -44,7 +43,7 @@ function App() {
 
           {/* Protected routes requiring authentication */}
           <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="provider-profile/:userId?" element={<ProtectedRoute><ProviderProfile /></ProtectedRoute>} />
+          <Route path="provider-profile/:userId?" element={<Navigate to="/profile?tab=provider" replace />} />
           <Route path="provider" element={<ProtectedRoute><ProviderDashboard /></ProtectedRoute>} />
           <Route path="apply-companion" element={<ProtectedRoute><ApplyCompanion /></ProtectedRoute>} />
           <Route path="admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

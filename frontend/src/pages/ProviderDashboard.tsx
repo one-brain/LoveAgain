@@ -89,11 +89,11 @@ const ProviderDashboard: React.FC = () => {
         </div>
 
         <Link
-          to="/provider-profile"
+          to="/profile?tab=provider"
           className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card hover:bg-muted font-semibold text-sm text-foreground shadow-xs transition-colors"
         >
           <BriefcaseIcon className="w-4 h-4 text-accent" />
-          <span>Edit Provider Profile</span>
+          <span>Edit Companion Settings</span>
         </Link>
       </div>
 
