@@ -48,16 +48,75 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
   },
   'sample-3': {
     providerId: 'sample-3',
-    displayName: 'Sophia Chen',
+    displayName: 'Dr. Sophia Chen',
     photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
     hourlyRate: 40,
-    bio: 'Outdoor enthusiast and classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. I love nature photography and exchanging life stories.',
-    specialties: ['Hiking', 'Music', 'Photography'],
+    bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. Also seeking verified matrimony and serious relationship compatibility.',
+    specialties: ['Hiking', 'Music', 'Photography', 'Matrimony'],
     maxRadiusKm: 40,
     introVideoUrl: null,
     averageRating: 4.92,
     isVerified: true,
     trustScore: 97,
+    services: ['Violin Performance / Lesson'],
+    matrimony: {
+      education: 'MD Cardiology (AIIMS)',
+      profession: 'Senior Resident Doctor',
+      motherTongue: 'English / Hindi',
+      diet: 'Vegetarian',
+      height: "5'7\"",
+    },
+  },
+  'sample-4': {
+    providerId: 'sample-4',
+    displayName: 'Julian Alvarez',
+    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+    hourlyRate: 50,
+    bio: 'Certified salsa dancer and architectural history guide. Available for private dance sessions, wedding plus-one, and city heritage tours.',
+    specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
+    maxRadiusKm: 35,
+    introVideoUrl: null,
+    averageRating: 4.88,
+    isVerified: true,
+    trustScore: 96,
+    services: ['Salsa Coaching (1-on-1)', 'Wedding Plus-One & Social Host'],
+    matrimony: null,
+  },
+  'sample-5': {
+    providerId: 'sample-5',
+    displayName: 'Aria Thorne',
+    photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
+    hourlyRate: 48,
+    bio: 'Principal Software Architect & yoga practitioner. Seeking serious matrimonial match with shared intellectual values, or cultured dinner and coffee dates.',
+    specialties: ['Matrimony', 'Dating', 'Coding / Tech', 'Reading'],
+    maxRadiusKm: 25,
+    introVideoUrl: null,
+    averageRating: 4.97,
+    isVerified: true,
+    trustScore: 99,
+    services: ['System Design Mentorship', 'Yoga Morning Flow'],
+    matrimony: {
+      education: 'M.Tech Computer Science (IIT)',
+      profession: 'Principal Engineer',
+      motherTongue: 'English / Telugu',
+      diet: 'Eggetarian',
+      height: "5'9\"",
+    },
+  },
+  'sample-6': {
+    providerId: 'sample-6',
+    displayName: 'David Morales',
+    photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+    hourlyRate: 60,
+    bio: 'Sommelier and certified fitness trainer. Available to host wine tasting dinners, curated culinary tours, or 1-on-1 strength training sessions.',
+    specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife', 'Cooking'],
+    maxRadiusKm: 30,
+    introVideoUrl: null,
+    averageRating: 4.94,
+    isVerified: true,
+    trustScore: 98,
+    services: ['Curated Wine Tasting Session', 'Strength Training (1-on-1)'],
+    matrimony: null,
   },
 };
 
@@ -283,6 +342,49 @@ const ProviderDetail: React.FC = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Matrimonial Biodata (If available) */}
+              {provider.matrimony && (
+                <div className="p-6 rounded-2xl bg-muted/40 border border-border space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">💍</span>
+                    <h2 className="text-lg font-bold text-foreground font-serif">Verified Matrimonial Biodata</h2>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
+                    <div className="p-3 rounded-xl bg-card border border-border/80">
+                      <span className="text-muted-foreground block text-[11px]">Education</span>
+                      <strong className="text-foreground">{provider.matrimony.education}</strong>
+                    </div>
+                    <div className="p-3 rounded-xl bg-card border border-border/80">
+                      <span className="text-muted-foreground block text-[11px]">Profession</span>
+                      <strong className="text-foreground">{provider.matrimony.profession}</strong>
+                    </div>
+                    <div className="p-3 rounded-xl bg-card border border-border/80">
+                      <span className="text-muted-foreground block text-[11px]">Mother Tongue</span>
+                      <strong className="text-foreground">{provider.matrimony.motherTongue}</strong>
+                    </div>
+                    <div className="p-3 rounded-xl bg-card border border-border/80">
+                      <span className="text-muted-foreground block text-[11px]">Diet & Height</span>
+                      <strong className="text-foreground">{provider.matrimony.diet} · {provider.matrimony.height}</strong>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Offered Services & Gigs (If available) */}
+              {provider.services && provider.services.length > 0 && (
+                <div className="space-y-3">
+                  <h2 className="text-lg font-bold text-foreground font-serif">💼 Offered Services & Gigs</h2>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {provider.services.map((svc: string) => (
+                      <div key={svc} className="p-4 rounded-2xl bg-card border border-border flex items-center gap-3">
+                        <CheckCircleIcon className="w-5 h-5 text-accent shrink-0" />
+                        <span className="text-xs sm:text-sm font-semibold text-foreground">{svc}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Trust & Verification Badges */}
               <div className="p-5 rounded-2xl bg-background border border-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">

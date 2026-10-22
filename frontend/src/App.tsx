@@ -40,6 +40,7 @@ function App() {
           <Route path="discovery" element={<Discovery />} />
           <Route path="how-it-works" element={<HowItWorks />} />
           <Route path="provider/:userId" element={<ProviderDetail />} />
+          <Route path="providers/:userId" element={<ProviderDetail />} />
 
           {/* Protected routes requiring authentication */}
           <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

@@ -493,7 +493,7 @@ const Discovery: React.FC = () => {
             {displayProviders.map((provider) => (
               <div
                 key={provider.providerId}
-                onClick={() => navigate(`/providers/${provider.providerId}`)}
+                onClick={() => navigate(`/provider/${provider.providerId}`)}
                 className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group"
               >
                 {/* Photo & Top Badges */}
