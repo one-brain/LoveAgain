@@ -72,6 +72,8 @@ builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHealthChecks()
+    .AddNpgSql(builder.Configuration.GetConnectionString("CueDatabase")!);
 
 var app = builder.Build();
 
@@ -89,5 +91,10 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHealthChecks("/health");
+app.MapHealthChecks("/ready");
+app.MapHealthChecks("/health/ready");
+
+app.MapGet("/", () => "ChatService is running");
 
 app.Run();

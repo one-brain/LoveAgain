@@ -7,6 +7,7 @@ import {
   MapPinIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
+  CreditCardIcon,
 } from '@heroicons/react/24/outline';
 
 export interface BookingSummary {
@@ -26,6 +27,7 @@ export interface BookingSummary {
 interface BookingCardProps {
   booking: BookingSummary;
   onCancel?: (orderId: string) => void;
+  onPay?: (booking: BookingSummary) => void;
 }
 
 const STATUS_CONFIG: Record<
@@ -66,7 +68,7 @@ const STATUS_CONFIG: Record<
 
 function formatBookingTime(dateStr: string): string {
   const date = new Date(dateStr);
-  return date.toLocaleDateString('en-US', {
+  return date.toLocaleDateString('en-IN', {
     weekday: 'short',
     month: 'short',
     day: 'numeric',
@@ -77,16 +79,18 @@ function formatBookingTime(dateStr: string): string {
 function formatTimeWindow(startStr: string, endStr: string): string {
   const start = new Date(startStr);
   const end = new Date(endStr);
-  return `${start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} – ${end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`;
+  return `${start.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })} – ${end.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`;
 }
 
-export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel }) => {
+export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel, onPay }) => {
   const navigate = useNavigate();
   const statusInfo = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PendingPayment;
 
   const handleOpenChat = () => {
     navigate(`/chat/${booking.orderId}`);
   };
+
+  const isPendingPayment = booking.status === 'PendingPayment';
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-5 group">
@@ -133,16 +137,26 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel }) =
       <div className="flex items-center justify-between gap-3 pt-1">
         <div>
           <span className="text-[11px] text-muted-foreground block">Total Escrow</span>
-          <span className="text-lg font-bold font-serif text-foreground">
-            ${booking.totalAmount}
+          <span className="text-lg font-bold font-mono text-foreground">
+            ₹{booking.totalAmount.toLocaleString('en-IN')}
           </span>
         </div>
 
         <div className="flex items-center gap-2">
+          {isPendingPayment && onPay && (
+            <button
+              onClick={() => onPay(booking)}
+              className="px-3.5 py-2 rounded-xl bg-accent text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center gap-1.5 hover:opacity-95 cursor-pointer"
+            >
+              <CreditCardIcon className="w-4 h-4" />
+              <span>Pay & Secure</span>
+            </button>
+          )}
+
           {onCancel && booking.status !== 'Cancelled' && booking.status !== 'Completed' && (
             <button
               onClick={() => onCancel(booking.orderId)}
-              className="px-3 py-2 rounded-xl border border-border hover:border-destructive/40 text-muted-foreground hover:text-destructive text-xs font-semibold transition-colors"
+              className="px-3 py-2 rounded-xl border border-border hover:border-destructive/40 text-muted-foreground hover:text-destructive text-xs font-semibold transition-colors cursor-pointer"
             >
               Cancel
             </button>
@@ -150,10 +164,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel }) =
 
           <button
             onClick={handleOpenChat}
-            className="px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center gap-1.5"
+            className="px-3.5 py-2 rounded-xl border border-border hover:bg-muted text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
           >
             <ChatBubbleLeftRightIcon className="w-4 h-4" />
-            <span>Open Chat</span>
+            <span>Chat</span>
           </button>
         </div>
       </div>

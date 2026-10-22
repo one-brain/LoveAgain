@@ -37,11 +37,8 @@ internal sealed class ProviderProfileConfiguration : IEntityTypeConfiguration<Pr
             specialties => specialties.ToArray(),
             values => values);
 
-        // Location properties - stored as separate columns for simplicity
-        // PostGIS geography column can be computed from these via DB migration
         builder.Property(profile => profile.Latitude).HasColumnName("latitude");
         builder.Property(profile => profile.Longitude).HasColumnName("longitude");
-
         builder.Property(profile => profile.DeletedAt).HasColumnName("deleted_at");
     }
 }
@@ -107,6 +104,65 @@ internal sealed class PaymentTransactionConfiguration : IEntityTypeConfiguration
         builder.Property(transaction => transaction.Status).HasConversion<string>().HasMaxLength(50);
         builder.Property(transaction => transaction.Metadata).HasColumnType("jsonb");
         builder.HasIndex(transaction => transaction.StripePaymentIntentId).IsUnique();
+    }
+}
+
+internal sealed class WalletConfiguration : IEntityTypeConfiguration<Wallet>
+{
+    public void Configure(EntityTypeBuilder<Wallet> builder)
+    {
+        builder.ToTable("wallets", "payments");
+        builder.HasKey(w => w.Id);
+        builder.HasIndex(w => w.UserId).IsUnique();
+        builder.Property(w => w.AvailableBalance).HasPrecision(12, 2);
+        builder.Property(w => w.PendingBalance).HasPrecision(12, 2);
+        builder.Property(w => w.Currency).HasMaxLength(3).IsRequired();
+    }
+}
+
+internal sealed class WalletTransactionConfiguration : IEntityTypeConfiguration<WalletTransaction>
+{
+    public void Configure(EntityTypeBuilder<WalletTransaction> builder)
+    {
+        builder.ToTable("wallet_transactions", "payments");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Amount).HasPrecision(12, 2);
+        builder.Property(t => t.BalanceAfter).HasPrecision(12, 2);
+        builder.Property(t => t.Direction).HasConversion<string>().HasMaxLength(20);
+        builder.Property(t => t.Type).HasConversion<string>().HasMaxLength(30);
+        builder.Property(t => t.Description).HasMaxLength(500);
+        builder.HasIndex(t => new { t.WalletId, t.CreatedAt });
+    }
+}
+
+internal sealed class EscrowHoldConfiguration : IEntityTypeConfiguration<EscrowHold>
+{
+    public void Configure(EntityTypeBuilder<EscrowHold> builder)
+    {
+        builder.ToTable("escrow_holds", "payments");
+        builder.HasKey(e => e.Id);
+        builder.HasIndex(e => e.OrderId).IsUnique();
+        builder.Property(e => e.GrossAmount).HasPrecision(12, 2);
+        builder.Property(e => e.PlatformFee).HasPrecision(12, 2);
+        builder.Property(e => e.NetAmount).HasPrecision(12, 2);
+        builder.Property(e => e.Status).HasConversion<string>().HasMaxLength(30);
+        builder.HasIndex(e => new { e.SeekerId, e.Status });
+        builder.HasIndex(e => new { e.ProviderId, e.Status });
+    }
+}
+
+internal sealed class PayoutRequestConfiguration : IEntityTypeConfiguration<PayoutRequest>
+{
+    public void Configure(EntityTypeBuilder<PayoutRequest> builder)
+    {
+        builder.ToTable("payout_requests", "payments");
+        builder.HasKey(p => p.Id);
+        builder.Property(p => p.Amount).HasPrecision(12, 2);
+        builder.Property(p => p.FeeAmount).HasPrecision(12, 2);
+        builder.Property(p => p.PayoutType).HasConversion<string>().HasMaxLength(20);
+        builder.Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+        builder.Property(p => p.Destination).HasMaxLength(255).IsRequired();
+        builder.HasIndex(p => new { p.UserId, p.CreatedAt });
     }
 }
 

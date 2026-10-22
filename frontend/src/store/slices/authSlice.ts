@@ -1,17 +1,21 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  isVerified?: boolean;
+  trustScore?: number;
+  roles: ('Seeker' | 'Provider' | 'Admin')[];
+}
+
 interface AuthState {
   accessToken: string | null;
   refreshToken: string | null;
   isAuthenticated: boolean;
-  user: {
-    id: string;
-    email: string;
-    firstName: string;
-    lastName: string;
-    roles: ('Seeker' | 'Provider' | 'Admin')[];
-  } | null;
+  user: AuthUser | null;
 }
 
 const initialState: AuthState = {
@@ -33,7 +37,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginSuccess: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string | null; user: AuthState['user'] }>) => {
+    loginSuccess: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string | null; user: AuthUser | null }>) => {
       state.accessToken = action.payload.accessToken;
       if (action.payload.refreshToken) {
         state.refreshToken = action.payload.refreshToken;
@@ -42,7 +46,10 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       state.user = action.payload.user;
       localStorage.setItem('accessToken', action.payload.accessToken);
-      localStorage.setItem('user', JSON.stringify(action.payload.user));
+      if (action.payload.user) {
+        localStorage.setItem('user', JSON.stringify(action.payload.user));
+        localStorage.setItem('userId', action.payload.user.id);
+      }
     },
     logout: (state) => {
       state.accessToken = null;
@@ -54,8 +61,13 @@ const authSlice = createSlice({
       localStorage.removeItem('userId');
       localStorage.removeItem('user');
     },
-    setUser: (state, action: PayloadAction<AuthState['user']>) => {
+    setUser: (state, action: PayloadAction<AuthUser | null>) => {
       state.user = action.payload;
+      if (action.payload) {
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      } else {
+        localStorage.removeItem('user');
+      }
     },
     updateTokens: (state, action: PayloadAction<{ accessToken: string; refreshToken?: string | null }>) => {
       state.accessToken = action.payload.accessToken;

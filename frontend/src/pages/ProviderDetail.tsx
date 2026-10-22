@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetProviderQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
+import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import type { RootState } from '../store';
 import {
   StarIcon,
@@ -105,6 +106,8 @@ const ProviderDetail: React.FC = () => {
   const [bookingSuccessModal, setBookingSuccessModal] = useState(false);
   const [authPromptModal, setAuthPromptModal] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
+  const [checkoutOrderId, setCheckoutOrderId] = useState<string | null>(null);
+  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
 
   // Fetch API data
   const { data: apiProvider, isLoading } = useGetProviderQuery(
@@ -169,9 +172,9 @@ const ProviderDetail: React.FC = () => {
     setBookingError(null);
 
     try {
-      // Attempt API call if real provider
+      let createdOrderId = `order_${Date.now()}`;
       if (!userId.startsWith('sample-')) {
-        await createBooking({
+        const result = await createBooking({
           providerId: userId,
           startTime: selectedSlotData.startTime,
           endTime: selectedSlotData.endTime,
@@ -179,9 +182,13 @@ const ProviderDetail: React.FC = () => {
           durationHours,
           meetingAddress: meetingAddress.trim() || undefined,
         }).unwrap();
+        if (result?.orderId) {
+          createdOrderId = result.orderId;
+        }
       }
 
-      setBookingSuccessModal(true);
+      setCheckoutOrderId(createdOrderId);
+      setIsCheckoutModalOpen(true);
     } catch (err: any) {
       console.error('Booking API error:', err);
       setBookingError(err?.data?.error || err?.message || 'Failed to complete reservation. Please try again or check your account.');
@@ -245,7 +252,7 @@ const ProviderDetail: React.FC = () => {
 
                 <div className="bg-card/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-border/80 shadow-md text-foreground">
                   <div className="text-2xl font-bold font-serif text-foreground">
-                    ${provider.hourlyRate}
+                    ₹{provider.hourlyRate}
                     <span className="text-xs font-normal text-muted-foreground">/hr</span>
                   </div>
                 </div>
@@ -409,7 +416,7 @@ const ProviderDetail: React.FC = () => {
               <div className="p-4 rounded-xl bg-muted border border-border space-y-2 text-xs">
                 <div className="flex justify-between text-foreground/80">
                   <span>Companion Rate</span>
-                  <span>${provider.hourlyRate} / hour</span>
+                  <span>₹{provider.hourlyRate} / hour</span>
                 </div>
                 <div className="flex justify-between text-foreground/80">
                   <span>Selected Duration</span>
@@ -417,11 +424,11 @@ const ProviderDetail: React.FC = () => {
                 </div>
                 <div className="flex justify-between text-foreground/80">
                   <span>Platform Trust Fee</span>
-                  <span className="text-success font-medium">Free ($0.00 promo)</span>
+                  <span className="text-success font-medium">Free (₹0 promo)</span>
                 </div>
                 <div className="pt-2 border-t border-border flex justify-between font-bold text-sm text-foreground">
                   <span>Total Amount</span>
-                  <span className="text-accent">${totalAmount}</span>
+                  <span className="text-accent">₹{totalAmount}</span>
                 </div>
               </div>
             )}
@@ -442,7 +449,7 @@ const ProviderDetail: React.FC = () => {
                 {isBooking
                   ? 'Confirming Slot...'
                   : selectedSlot
-                  ? `Reserve Experience ($${totalAmount})`
+                  ? `Reserve & Pay (₹${totalAmount})`
                   : 'Select a Time Window Above'}
               </button>
               <p className="text-[11px] text-muted-foreground text-center mt-2">
@@ -519,6 +526,21 @@ const ProviderDetail: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Escrow Checkout Modal */}
+      {isCheckoutModalOpen && checkoutOrderId && (
+        <BookingCheckoutModal
+          orderId={checkoutOrderId}
+          totalAmount={parseFloat(totalAmount)}
+          providerName={provider.displayName}
+          isOpen={true}
+          onClose={() => setIsCheckoutModalOpen(false)}
+          onSuccess={() => {
+            setIsCheckoutModalOpen(false);
+            setBookingSuccessModal(true);
+          }}
+        />
       )}
     </div>
   );

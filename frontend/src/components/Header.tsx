@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { RootState } from '../store';
-import { logout } from '../store/slices/authSlice';
+import { logout, setUser } from '../store/slices/authSlice';
+import { useGetSeekerProfileQuery } from '../store/api';
 import {
   SunIcon,
   MoonIcon,
@@ -14,8 +15,10 @@ import {
   SparklesIcon,
   ArrowRightOnRectangleIcon,
   BriefcaseIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/20/solid';
+import { useGetWalletBalanceQuery } from '../store/paymentApi';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -23,11 +26,67 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const { data: walletData } = useGetWalletBalanceQuery(undefined, { skip: !isAuthenticated });
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
+
+  // Sync profile data from REST API whenever authenticated
+  const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated });
+
+  useEffect(() => {
+    if (seekerProfileData?.profile?.firstName) {
+      const p = seekerProfileData.profile;
+      if (p.firstName !== user?.firstName || p.lastName !== user?.lastName || p.isVerified !== user?.isVerified) {
+        dispatch(
+          setUser({
+            id: p.userId || user?.id || '',
+            email: p.email || user?.email || '',
+            firstName: p.firstName,
+            lastName: p.lastName || '',
+            isVerified: p.isVerified ?? true,
+            trustScore: p.trustScore ?? 99,
+            roles: user?.roles || ['Seeker', 'Provider'],
+          })
+        );
+      }
+    }
+  }, [seekerProfileData, user, dispatch]);
+
+  const userInitials = useMemo(() => {
+    if (!user) return 'U';
+    const first = user.firstName?.trim()?.charAt(0) || '';
+    const last = user.lastName?.trim()?.charAt(0) || '';
+    const combined = `${first}${last}`.toUpperCase();
+    if (combined && combined !== 'M' && combined !== 'ME') return combined;
+    if (first && first.toUpperCase() !== 'M') return first.toUpperCase();
+    if (user.email) {
+      const parts = user.email.split('@')[0].split('.');
+      if (parts.length >= 2) {
+        return `${parts[0].charAt(0)}${parts[1].charAt(0)}`.toUpperCase();
+      }
+      return user.email.charAt(0).toUpperCase();
+    }
+    return 'U';
+  }, [user]);
+
+  const userDisplayName = useMemo(() => {
+    if (!user) return 'My Account';
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim();
+    if (fullName && fullName.toLowerCase() !== 'member') return fullName;
+    if (user.firstName && user.firstName.toLowerCase() !== 'member') return user.firstName;
+    if (user.email) {
+      const parts = user.email.split('@')[0].split('.');
+      if (parts.length >= 2) {
+        return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+      }
+      return user.email.split('@')[0];
+    }
+    return 'My Account';
+  }, [user]);
 
   const [theme, setTheme] = useState<'light' | 'dark' | 'romantic'>(() => {
     const saved = localStorage.getItem('theme');
@@ -138,7 +197,34 @@ const Header: React.FC = () => {
                 >
                   Provider Hub
                 </Link>
+                <Link
+                  to="/wallet"
+                  className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 border ${
+                    isActive('/wallet')
+                      ? 'border-accent bg-accent/15 text-accent font-semibold shadow-xs'
+                      : 'border-border/60 bg-muted/30 text-foreground hover:bg-muted/70'
+                  }`}
+                >
+                  <BanknotesIcon className="w-4 h-4 text-accent" />
+                  <span>Wallet</span>
+                  <span className="font-mono text-xs font-bold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
+                    ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
+                  </span>
+                </Link>
               </>
+            )}
+
+            {!isAuthenticated && (
+              <Link
+                to="/wallet"
+                className={`px-3 py-1.5 rounded-xl text-sm font-medium transition-all flex items-center gap-1.5 border border-border/60 bg-muted/30 text-foreground hover:bg-muted/70`}
+              >
+                <BanknotesIcon className="w-4 h-4 text-accent" />
+                <span>Wallet</span>
+                <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded-md bg-accent/15 text-accent">
+                  Escrow Vault
+                </span>
+              </Link>
             )}
           </nav>
 
@@ -281,12 +367,12 @@ const Header: React.FC = () => {
                   aria-haspopup="menu"
                   aria-expanded={userDropdownOpen}
                 >
-                  <span className="max-w-[130px] truncate text-foreground font-semibold text-xs sm:text-sm">
-                    {user?.firstName ? `${user.firstName}` : 'My Account'}
+                  <span className="max-w-[140px] truncate text-foreground font-semibold text-xs sm:text-sm">
+                    {userDisplayName}
                   </span>
                   <div className="relative">
-                    <div className="w-8 h-8 rounded-lg bg-accent/20 text-accent font-bold flex items-center justify-center text-sm border border-accent/30">
-                      {user?.firstName?.charAt(0).toUpperCase() || 'U'}
+                    <div className="w-8 h-8 rounded-lg bg-accent/20 text-accent font-bold flex items-center justify-center text-xs tracking-wider border border-accent/30 font-sans">
+                      {userInitials}
                     </div>
                     <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full ring-2 ring-card">
                       <span className="sr-only">Online status: Active</span>
@@ -302,12 +388,12 @@ const Header: React.FC = () => {
                 {userDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-popover/95 text-popover-foreground border border-border/90 shadow-2xl backdrop-blur-md p-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
                     <div className="p-3 bg-muted/50 rounded-xl mb-1.5 border border-border/40">
-                      <div className="flex items-center justify-between">
-                        <p className="text-xs font-bold text-foreground">
-                          {user?.firstName} {user?.lastName}
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-bold text-foreground truncate">
+                          {userDisplayName}
                         </p>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-success/20 text-success uppercase tracking-wider">
-                          Verified
+                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-success/20 text-success uppercase tracking-wider flex-shrink-0">
+                          {user?.isVerified !== false ? 'Verified' : 'Member'}
                         </span>
                       </div>
                       <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
@@ -337,6 +423,19 @@ const Header: React.FC = () => {
                       >
                         <CalendarIcon className="w-4 h-4 text-muted-foreground" />
                         <span>My Bookings</span>
+                      </Link>
+                      <Link
+                        to="/wallet"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <BanknotesIcon className="w-4 h-4 text-accent" />
+                          <span>Cue Wallet</span>
+                        </div>
+                        <span className="font-mono text-xs font-bold text-accent">
+                          ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
+                        </span>
                       </Link>
                     </div>
 
@@ -418,6 +517,18 @@ const Header: React.FC = () => {
                 Provider Hub
               </Link>
               <Link
+                to="/wallet"
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+              >
+                <div className="flex items-center gap-2">
+                  <BanknotesIcon className="w-5 h-5 text-accent" />
+                  <span>Cue Wallet</span>
+                </div>
+                <span className="font-mono text-sm font-bold text-accent">
+                  ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
+                </span>
+              </Link>
+              <Link
                 to="/profile"
                 className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
               >
@@ -434,6 +545,18 @@ const Header: React.FC = () => {
             </>
           ) : (
             <div className="pt-2 flex flex-col gap-2">
+              <Link
+                to="/wallet"
+                className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-border/80 bg-muted/40 text-foreground font-medium"
+              >
+                <div className="flex items-center gap-2">
+                  <BanknotesIcon className="w-5 h-5 text-accent" />
+                  <span>Cue Wallet</span>
+                </div>
+                <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
+                  Escrow Vault
+                </span>
+              </Link>
               <Link
                 to="/login"
                 className="w-full text-center py-2.5 rounded-xl border border-border font-medium text-foreground"

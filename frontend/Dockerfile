@@ -15,23 +15,26 @@ COPY . .
 # Build the app
 RUN npm run build
 
-# Production stage
-FROM node:20-alpine
+# Production stage using Nginx
+FROM nginx:alpine
 
-WORKDIR /app
+WORKDIR /usr/share/nginx/html
 
-# Install a lightweight HTTP server to serve the static build
-RUN npm install -g serve
+# Remove default nginx static assets
+RUN rm -rf ./*
 
 # Copy built artifacts from builder
-COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/dist .
 
-# Expose port
+# Copy custom nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 3000
 EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+  CMD wget --quiet --tries=1 --spider http://localhost:3000/ || exit 1
 
-# Start the application
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Start Nginx
+CMD ["nginx", "-g", "daemon off;"]

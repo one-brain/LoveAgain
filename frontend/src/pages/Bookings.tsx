@@ -8,6 +8,7 @@ import {
   useCancelBookingMutation,
 } from '../store/bookingApi';
 import { BookingCard, type BookingSummary } from '../components/BookingCard';
+import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
@@ -88,14 +89,16 @@ const Bookings: React.FC = () => {
   const isProvider = isProfileSuccess && profileData?.profile !== undefined;
 
   // Fetch bookings data
-  const { data: providerBookingsData, isLoading: isLoadingProvider } = useGetProviderIncomingBookingsQuery(
-    user?.id || '',
-    { skip: !user?.id }
-  );
-  const { data: seekerBookingsData, isLoading: isLoadingSeeker } = useGetSeekerOutgoingBookingsQuery(
-    user?.id || '',
-    { skip: !user?.id }
-  );
+  const {
+    data: providerBookingsData,
+    isLoading: isLoadingProvider,
+    refetch: refetchProviderBookings,
+  } = useGetProviderIncomingBookingsQuery(user?.id || '', { skip: !user?.id });
+  const {
+    data: seekerBookingsData,
+    isLoading: isLoadingSeeker,
+    refetch: refetchSeekerBookings,
+  } = useGetSeekerOutgoingBookingsQuery(user?.id || '', { skip: !user?.id });
 
   const [cancelBooking] = useCancelBookingMutation();
 
@@ -105,6 +108,7 @@ const Bookings: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [statusFilter, setStatusFilter] = useState('all');
   const [bookingSort, setBookingSort] = useState('date-asc');
+  const [checkoutBooking, setCheckoutBooking] = useState<BookingSummary | null>(null);
 
   // Initialize specialties
   useEffect(() => {
@@ -339,7 +343,12 @@ const Bookings: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {upcomingBookings.map((b) => (
-                    <BookingCard key={b.orderId} booking={b} onCancel={handleCancel} />
+                    <BookingCard
+                      key={b.orderId}
+                      booking={b}
+                      onCancel={handleCancel}
+                      onPay={(bkg) => setCheckoutBooking(bkg)}
+                    />
                   ))}
                 </div>
               )}
@@ -451,7 +460,12 @@ const Bookings: React.FC = () => {
                     {bookings
                       .filter((b) => new Date(b.startTime).toDateString() === selectedDate.toDateString())
                       .map((b) => (
-                        <BookingCard key={b.orderId} booking={b} onCancel={handleCancel} />
+                        <BookingCard
+                          key={b.orderId}
+                          booking={b}
+                          onCancel={handleCancel}
+                          onPay={(bkg) => setCheckoutBooking(bkg)}
+                        />
                       ))}
                   </div>
                 )}
@@ -459,6 +473,21 @@ const Bookings: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {checkoutBooking && (
+        <BookingCheckoutModal
+          orderId={checkoutBooking.orderId}
+          totalAmount={checkoutBooking.totalAmount}
+          providerName={checkoutBooking.providerName}
+          isOpen={true}
+          onClose={() => setCheckoutBooking(null)}
+          onSuccess={() => {
+            setCheckoutBooking(null);
+            refetchProviderBookings();
+            refetchSeekerBookings();
+          }}
+        />
       )}
     </div>
   );

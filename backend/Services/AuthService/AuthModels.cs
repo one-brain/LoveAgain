@@ -29,7 +29,8 @@ public sealed record LoginRequest(string Email, string Password);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
 public sealed record VerifyEmailRequest(string Token);
-public sealed record TokenResponse(string AccessToken, int ExpiresIn, string TokenType = "Bearer");
+public sealed record UserSummary(Guid Id, string Email, string FirstName, string LastName, bool IsVerified, int TrustScore, string[] Roles);
+public sealed record TokenResponse(string AccessToken, int ExpiresIn, string TokenType = "Bearer", UserSummary? User = null);
 
 public sealed class PasswordService
 {
@@ -63,11 +64,27 @@ public sealed class JwtTokenService(JwtOptions options)
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
             new(JwtRegisteredClaimNames.Email, user.Email),
+            new(ClaimTypes.GivenName, user.FirstName),
+            new(ClaimTypes.Surname, user.LastName),
+            new(JwtRegisteredClaimNames.Name, $"{user.FirstName} {user.LastName}".Trim()),
+            new("firstName", user.FirstName),
+            new("lastName", user.LastName),
+            new("isVerified", user.IsVerified ? "true" : "false"),
+            new("trustScore", user.TrustScore.ToString()),
         };
         claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role.ToString())));
         var expires = DateTime.UtcNow.AddMinutes(options.AccessTokenMinutes);
         var token = new JwtSecurityToken(options.Issuer, options.Audience, claims, expires: expires, signingCredentials: credentials);
-        return new TokenResponse(new JwtSecurityTokenHandler().WriteToken(token), (int)(expires - DateTime.UtcNow).TotalSeconds);
+        var userInfo = new UserSummary(
+            user.Id,
+            user.Email,
+            user.FirstName,
+            user.LastName,
+            user.IsVerified,
+            user.TrustScore,
+            user.Roles.Select(r => r.ToString()).ToArray());
+
+        return new TokenResponse(new JwtSecurityTokenHandler().WriteToken(token), (int)(expires - DateTime.UtcNow).TotalSeconds, "Bearer", userInfo);
     }
 
     public (string Raw, string Hash) GenerateRefreshToken()

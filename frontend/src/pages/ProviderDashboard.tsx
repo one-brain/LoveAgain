@@ -9,6 +9,7 @@ import {
 } from '../store/bookingApi';
 import { ServiceManagement } from '../components/ServiceManagement';
 import { BookingCard } from '../components/BookingCard';
+import { ProviderEarningsCard } from '../components/payment/ProviderEarningsCard';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
   BriefcaseIcon,
@@ -131,6 +132,9 @@ const ProviderDashboard: React.FC = () => {
           <p className="text-xs text-muted-foreground">High responsiveness increases bookings</p>
         </div>
       </div>
+
+      {/* Provider Earnings & UPI Payout Section */}
+      <ProviderEarningsCard />
 
       {/* Service Management Component */}
       <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">

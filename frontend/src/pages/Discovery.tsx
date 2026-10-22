@@ -493,7 +493,7 @@ const Discovery: React.FC = () => {
 
                     {/* Hourly Rate Badge */}
                     <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-foreground border border-border shadow-xs">
-                      ${provider.hourlyRate}
+                      ₹{provider.hourlyRate}
                       <span className="font-normal text-muted-foreground">/hr</span>
                     </div>
 

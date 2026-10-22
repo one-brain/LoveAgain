@@ -233,7 +233,7 @@ const Home: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border shadow-xs">
-                    ${comp.rate}/hr
+                    ₹{comp.rate}/hr
                   </div>
                   <div className="absolute top-3 left-3 bg-success/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-success-foreground flex items-center gap-1 shadow-xs">
                     <CheckBadgeIcon className="w-3.5 h-3.5" />

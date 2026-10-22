@@ -91,11 +91,21 @@ export const profileApi = createApi({
       query: () => `/profiles/me`,
       providesTags: ['Profile'],
       transformResponse: (response: any) => {
+        const raw = response?.profile ?? response ?? {};
         return {
-          ...response,
           profile: {
-            ...response.profile,
-            specialties: response.profile?.specialties || [],
+            userId: raw.userId || raw.id || '',
+            email: raw.email || '',
+            firstName: raw.firstName || '',
+            lastName: raw.lastName || '',
+            phone: raw.phone || null,
+            dateOfBirth: raw.dateOfBirth || null,
+            photoUrl: raw.photoUrl || null,
+            isVerified: raw.isVerified ?? false,
+            trustScore: raw.trustScore ?? 50,
+            createdAt: raw.createdAt || '',
+            updatedAt: raw.updatedAt || '',
+            specialties: raw.specialties || [],
           },
         };
       },

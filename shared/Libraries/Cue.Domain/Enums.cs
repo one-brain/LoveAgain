@@ -52,3 +52,42 @@ public enum NotificationType
     ReviewSubmitted = 6,
     TrustScoreUpdated = 7
 }
+
+public enum WalletTransactionType
+{
+    TopUp = 1,
+    BookingPayment = 2,
+    BookingEarning = 3,
+    Refund = 4,
+    Payout = 5,
+    PayoutFee = 6,
+    Commission = 7
+}
+
+public enum TransactionDirection
+{
+    Credit = 1,
+    Debit = 2
+}
+
+public enum EscrowStatus
+{
+    Held = 1,
+    Released = 2,
+    Refunded = 3,
+    Disputed = 4
+}
+
+public enum PayoutStatus
+{
+    Pending = 1,
+    Processing = 2,
+    Completed = 3,
+    Failed = 4
+}
+
+public enum PayoutMethodType
+{
+    Upi = 1,
+    BankTransfer = 2
+}

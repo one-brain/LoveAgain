@@ -26,60 +26,99 @@ const Login: React.FC = () => {
 
     try {
       const result = await login({ email, password }).unwrap();
+      const user = result.user;
 
+      // 1. Immediately store session with verified user name & roles
+      dispatch(
+        loginSuccess({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          user: {
+            id: user?.id || result.userId,
+            email: user?.email || email,
+            firstName: user?.firstName || '',
+            lastName: user?.lastName || '',
+            isVerified: user?.isVerified ?? false,
+            trustScore: user?.trustScore ?? 50,
+            roles: user?.roles || ['Seeker', 'Provider'],
+          },
+        })
+      );
+
+      // 2. Fetch full seeker profile now that token is stored in localStorage
       try {
         const seekerData = await refetchSeeker().unwrap();
-        const profile = seekerData.profile;
-        dispatch(
-          loginSuccess({
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-            user: {
-              id: result.userId,
-              email: profile.email ?? email,
-              firstName: profile.firstName ?? 'Member',
-              lastName: profile.lastName ?? '',
-              roles: ['Seeker', 'Provider'],
-            },
-          })
-        );
+        const profile = seekerData?.profile;
+        if (profile?.firstName) {
+          dispatch(
+            loginSuccess({
+              accessToken: result.accessToken,
+              refreshToken: result.refreshToken,
+              user: {
+                id: result.userId,
+                email: profile.email || email,
+                firstName: profile.firstName,
+                lastName: profile.lastName || '',
+                isVerified: profile.isVerified,
+                trustScore: profile.trustScore,
+                roles: user?.roles || ['Seeker', 'Provider'],
+              },
+            })
+          );
+        }
       } catch {
-        dispatch(
-          loginSuccess({
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-            user: {
-              id: result.userId,
-              email,
-              firstName: 'Member',
-              lastName: '',
-              roles: ['Seeker', 'Provider'],
-            },
-          })
-        );
+        // Already logged in with validated user info from auth service
       }
 
       navigate('/discovery', { replace: true });
     } catch {
-      setError('Invalid email or password. You can also use the Instant Demo Login below.');
+      setError('Invalid email or password.');
     }
   };
 
-  const handleDemoLogin = (role: 'Seeker' | 'Provider') => {
-    dispatch(
-      loginSuccess({
-        accessToken: 'demo-jwt-token-12345',
-        refreshToken: 'demo-refresh-token-12345',
-        user: {
-          id: role === 'Seeker' ? 'user-self' : 'sample-1',
-          email: role === 'Seeker' ? 'seeker.demo@cue.com' : 'elena.provider@cue.com',
-          firstName: role === 'Seeker' ? 'Alex' : 'Elena',
-          lastName: role === 'Seeker' ? 'Rivera' : 'Rostova',
-          roles: ['Seeker', 'Provider'],
-        },
-      })
-    );
-    navigate(role === 'Provider' ? '/provider' : '/discovery', { replace: true });
+  const handleDemoLogin = async (role: 'Seeker' | 'Provider') => {
+    const demoEmail = role === 'Seeker' ? 'seeker.demo@cue.com' : 'elena.provider@cue.com';
+    const demoPassword = 'Password123!';
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    setError(null);
+
+    try {
+      const result = await login({ email: demoEmail, password: demoPassword }).unwrap();
+      const seekerData = await refetchSeeker().unwrap().catch(() => null);
+      const profile = seekerData?.profile;
+
+      dispatch(
+        loginSuccess({
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
+          user: {
+            id: result.userId,
+            email: profile?.email ?? demoEmail,
+            firstName: profile?.firstName ?? (role === 'Seeker' ? 'Alex' : 'Elena'),
+            lastName: profile?.lastName ?? (role === 'Seeker' ? 'Rivera' : 'Rostova'),
+            roles: ['Seeker', 'Provider'],
+          },
+        })
+      );
+      navigate(role === 'Provider' ? '/provider' : '/discovery', { replace: true });
+    } catch {
+      // Fallback only if REST service is offline
+      dispatch(
+        loginSuccess({
+          accessToken: 'demo-jwt-token-12345',
+          refreshToken: 'demo-refresh-token-12345',
+          user: {
+            id: role === 'Seeker' ? 'user-self' : 'sample-1',
+            email: demoEmail,
+            firstName: role === 'Seeker' ? 'Alex' : 'Elena',
+            lastName: role === 'Seeker' ? 'Rivera' : 'Rostova',
+            roles: ['Seeker', 'Provider'],
+          },
+        })
+      );
+      navigate(role === 'Provider' ? '/provider' : '/discovery', { replace: true });
+    }
   };
 
   return (

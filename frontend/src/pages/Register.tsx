@@ -65,7 +65,7 @@ const Register: React.FC = () => {
     }
 
     try {
-      await register({
+      const result = await register({
         email: formData.email,
         password: formData.password,
         firstName: formData.firstName,
@@ -73,23 +73,25 @@ const Register: React.FC = () => {
         roles: ['Seeker', 'Provider'],
       }).unwrap();
 
-      navigate('/login', { replace: true });
-    } catch {
-      // In local demo or offline mode, automatically log them in
       dispatch(
         loginSuccess({
-          accessToken: 'local-demo-token',
-          refreshToken: 'local-demo-refresh',
+          accessToken: result.accessToken,
+          refreshToken: result.refreshToken,
           user: {
-            id: `usr-${Date.now()}`,
-            email: formData.email,
-            firstName: formData.firstName,
-            lastName: formData.lastName,
-            roles: ['Seeker', 'Provider'],
+            id: result.user?.id || result.userId,
+            email: result.user?.email || formData.email,
+            firstName: result.user?.firstName || formData.firstName,
+            lastName: result.user?.lastName || formData.lastName,
+            isVerified: result.user?.isVerified ?? true,
+            trustScore: result.user?.trustScore ?? 99,
+            roles: result.user?.roles || ['Seeker', 'Provider'],
           },
         })
       );
       navigate('/discovery', { replace: true });
+    } catch (err: any) {
+      const msg = err?.data?.message || err?.data?.detail || err?.data?.error || 'Registration failed. Please check your credentials or try a different email.';
+      setErrors({ email: msg });
     }
   };
 

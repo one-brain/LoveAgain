@@ -11,6 +11,7 @@ import ProviderDashboard from './pages/ProviderDashboard';
 import ProviderDetail from './pages/ProviderDetail';
 import Bookings from './pages/Bookings';
 import Chat from './pages/Chat';
+import WalletPage from './pages/Wallet';
 import type { RootState } from './store';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -41,6 +42,7 @@ function App() {
           <Route path="provider-profile/:userId?" element={<ProtectedRoute><ProviderProfile /></ProtectedRoute>} />
           <Route path="provider" element={<ProtectedRoute><ProviderDashboard /></ProtectedRoute>} />
           <Route path="bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+          <Route path="wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
           <Route path="chat/:orderId" element={<ProtectedRoute><Chat /></ProtectedRoute>} />
 
           {/* Catch-all fallback redirect */}

@@ -63,11 +63,11 @@ pgAdmin:
   replicaCount: 1
   resources:
     limits:
-      memory: 128Mi
-      cpu: 100m
+      memory: 1Gi
+      cpu: 500m
     requests:
-      memory: 64Mi
-      cpu: 50m
+      memory: 256Mi
+      cpu: 100m
   defaultEmail: "admin@admin.com"
   defaultPassword: "admin"
 

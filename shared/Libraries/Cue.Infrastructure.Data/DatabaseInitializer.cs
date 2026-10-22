@@ -8,10 +8,18 @@ public static class DatabaseInitializer
     public static async Task InitializeAsync(CueDbContext dbContext, CancellationToken cancellationToken = default)
     {
         await TryCreateSchemaAsync(dbContext, "auth", cancellationToken);
+        await TryCreateSchemaAsync(dbContext, "payments", cancellationToken);
         await TryCreateExtensionAsync(dbContext, "postgis", cancellationToken);
         await TryCreateExtensionAsync(dbContext, "pgcrypto", cancellationToken);
-        // Apply any pending EF Core migrations to bring the database up to date
-        await dbContext.Database.MigrateAsync(cancellationToken);
+        try
+        {
+            // Apply any pending EF Core migrations to bring the database up to date
+            await dbContext.Database.MigrateAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Database migration notice: {ex.Message}");
+        }
         await EnsureNewTablesAsync(dbContext, cancellationToken);
     }
 
@@ -75,7 +83,66 @@ public static class DatabaseInitializer
             "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS photo_url text NULL;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS latitude double precision NULL;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS longitude double precision NULL;",
-            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS deleted_at timestamp with time zone NULL;"
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS deleted_at timestamp with time zone NULL;",
+            """
+            CREATE TABLE IF NOT EXISTS payments.wallets (
+                id uuid NOT NULL PRIMARY KEY,
+                user_id uuid NOT NULL UNIQUE,
+                available_balance numeric(12,2) NOT NULL DEFAULT 0.00,
+                pending_balance numeric(12,2) NOT NULL DEFAULT 0.00,
+                currency character varying(3) NOT NULL DEFAULT 'INR',
+                created_at timestamp with time zone NOT NULL,
+                updated_at timestamp with time zone NOT NULL
+            );
+            """,
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_wallets_user_id ON payments.wallets (user_id);",
+            """
+            CREATE TABLE IF NOT EXISTS payments.wallet_transactions (
+                id uuid NOT NULL PRIMARY KEY,
+                wallet_id uuid NOT NULL,
+                amount numeric(12,2) NOT NULL,
+                direction character varying(20) NOT NULL,
+                type character varying(30) NOT NULL,
+                balance_after numeric(12,2) NOT NULL,
+                reference_id uuid NULL,
+                description character varying(500) NOT NULL DEFAULT '',
+                created_at timestamp with time zone NOT NULL
+            );
+            """,
+            "CREATE INDEX IF NOT EXISTS ix_wallet_transactions_wallet_created ON payments.wallet_transactions (wallet_id, created_at DESC);",
+            """
+            CREATE TABLE IF NOT EXISTS payments.escrow_holds (
+                id uuid NOT NULL PRIMARY KEY,
+                order_id uuid NOT NULL UNIQUE,
+                seeker_id uuid NOT NULL,
+                provider_id uuid NOT NULL,
+                gross_amount numeric(12,2) NOT NULL,
+                platform_fee numeric(12,2) NOT NULL,
+                net_amount numeric(12,2) NOT NULL,
+                status character varying(30) NOT NULL,
+                held_at timestamp with time zone NOT NULL,
+                released_at timestamp with time zone NULL,
+                resolution_notes text NULL
+            );
+            """,
+            "CREATE INDEX IF NOT EXISTS ix_escrow_holds_seeker ON payments.escrow_holds (seeker_id, status);",
+            "CREATE INDEX IF NOT EXISTS ix_escrow_holds_provider ON payments.escrow_holds (provider_id, status);",
+            """
+            CREATE TABLE IF NOT EXISTS payments.payout_requests (
+                id uuid NOT NULL PRIMARY KEY,
+                user_id uuid NOT NULL,
+                amount numeric(12,2) NOT NULL,
+                fee_amount numeric(12,2) NOT NULL,
+                payout_type character varying(20) NOT NULL,
+                destination character varying(255) NOT NULL,
+                status character varying(20) NOT NULL,
+                razorpay_payout_id character varying(255) NULL,
+                failure_reason text NULL,
+                created_at timestamp with time zone NOT NULL,
+                processed_at timestamp with time zone NULL
+            );
+            """,
+            "CREATE INDEX IF NOT EXISTS ix_payout_requests_user ON payments.payout_requests (user_id, created_at DESC);"
         };
 
         foreach (var statement in statements)

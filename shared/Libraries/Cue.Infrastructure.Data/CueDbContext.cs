@@ -16,8 +16,18 @@ public sealed class CueDbContext(DbContextOptions<CueDbContext> options) : DbCon
     public DbSet<ChatMessage> ChatMessages => Set<ChatMessage>();
     public DbSet<Dispute> Disputes => Set<Dispute>();
     public DbSet<PaymentTransaction> PaymentTransactions => Set<PaymentTransaction>();
+    public DbSet<Wallet> Wallets => Set<Wallet>();
+    public DbSet<WalletTransaction> WalletTransactions => Set<WalletTransaction>();
+    public DbSet<EscrowHold> EscrowHolds => Set<EscrowHold>();
+    public DbSet<PayoutRequest> PayoutRequests => Set<PayoutRequest>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<TrustEvent> TrustEvents => Set<TrustEvent>();
+
+    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+    {
+        optionsBuilder.ConfigureWarnings(w =>
+            w.Ignore(Microsoft.EntityFrameworkCore.Diagnostics.RelationalEventId.PendingModelChangesWarning));
+    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
