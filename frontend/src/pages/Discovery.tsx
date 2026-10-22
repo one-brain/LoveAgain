@@ -2,6 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useListProvidersQuery } from '../store/discoveryApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
+import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
+import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import {
   MagnifyingGlassIcon,
   StarIcon,
@@ -10,9 +12,6 @@ import {
   AdjustmentsHorizontalIcon,
   XMarkIcon,
   SparklesIcon,
-  BriefcaseIcon,
-  UserGroupIcon,
-  HeartIcon,
   AcademicCapIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
@@ -23,11 +22,11 @@ interface SpecialtyOption {
   lens: PlatformLens | 'all';
 }
 
-const LENS_TABS = [
-  { id: 'all', label: 'All Lenses', icon: SparklesIcon },
-  { id: 'pro_work', label: '💼 Skilled Work & Gigs', icon: BriefcaseIcon },
-  { id: 'companions', label: '🤝 Companions & Activities', icon: UserGroupIcon },
-  { id: 'relationships', label: '💍 Matrimony & Romance', icon: HeartIcon },
+const LENS_DROPDOWN_OPTIONS: DropdownOption<PlatformLens | 'all'>[] = [
+  { value: 'all', label: 'All Lenses', icon: '✨', description: 'Show all categories & profiles' },
+  { value: 'pro_work', label: '💼 Skilled Work & Gigs', icon: '💼', description: 'Hire verified freelancers & pros' },
+  { value: 'companions', label: '🤝 Companions & Activities', icon: '🤝', description: 'Platonic outings & RentAFriend activities' },
+  { value: 'relationships', label: '💍 Matrimony & Romance', icon: '💍', description: 'Verified marriage biodatas & dates' },
 ];
 
 const PRO_CHIPS: SpecialtyOption[] = [
@@ -200,6 +199,11 @@ const Discovery: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [userLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
+  // Booking Modal State
+  const [selectedProviderForBooking, setSelectedProviderForBooking] = useState<any | null>(null);
+  const [activeCheckoutOrderId, setActiveCheckoutOrderId] = useState<string | null>(null);
+  const [checkoutTotalAmount, setCheckoutTotalAmount] = useState<number>(0);
+
   useEffect(() => {
     const paramLens = searchParams.get('lens') as PlatformLens | 'all';
     const paramQ = searchParams.get('q');
@@ -325,26 +329,15 @@ const Discovery: React.FC = () => {
       <section className="bg-card border-b border-border sticky top-16 z-20 backdrop-blur-md bg-card/95 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* 3-Lens Pill Selector */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 scrollbar-none">
-              {LENS_TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeLens === tab.id;
-                return (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleLensChange(tab.id as PlatformLens | 'all')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
-                      isActive
-                        ? 'bg-accent text-accent-foreground shadow-sm scale-100'
-                        : 'bg-muted/70 text-muted-foreground hover:text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    <Icon className="w-4 h-4 flex-shrink-0" />
-                    <span>{tab.label}</span>
-                  </button>
-                );
-              })}
+            {/* 3-Lens Dropdown Selector */}
+            <div className="w-full md:w-64">
+              <SelectDropdown
+                options={LENS_DROPDOWN_OPTIONS}
+                value={activeLens}
+                onChange={(val) => handleLensChange(val)}
+                className="w-full text-xs font-semibold"
+                triggerClassName="w-full bg-muted/70 hover:bg-muted border border-border/80 px-3 py-2 rounded-xl text-xs"
+              />
             </div>
 
             {/* Search Input Bar */}
@@ -475,7 +468,7 @@ const Discovery: React.FC = () => {
             {activeLens !== 'all' && (
               <>
                 {' '}
-                in <span className="font-medium text-accent">{LENS_TABS.find((t) => t.id === activeLens)?.label}</span>
+                in <span className="font-medium text-accent">{LENS_DROPDOWN_OPTIONS.find((t) => t.value === activeLens)?.label}</span>
               </>
             )}
           </p>
@@ -607,12 +600,51 @@ const Discovery: React.FC = () => {
                       <MapPinIcon className="w-3.5 h-3.5" />
                       {provider.distanceKm} km away
                     </span>
-                    <span className="font-medium text-accent">Book with Escrow &rarr;</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProviderForBooking(provider);
+                      }}
+                      className="px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent font-semibold transition-all shadow-2xs"
+                    >
+                      Book with Escrow &rarr;
+                    </button>
                   </div>
                 </div>
               </div>
             ))}
           </div>
+        )}
+
+        {/* Interactive Booking Request Modal */}
+        {selectedProviderForBooking && (
+          <BookingRequestModal
+            isOpen={Boolean(selectedProviderForBooking)}
+            onClose={() => setSelectedProviderForBooking(null)}
+            provider={selectedProviderForBooking}
+            onProceedToPayment={(bookingData: BookingRequirementData) => {
+              const generatedOrderId = `order_${Date.now()}`;
+              setCheckoutTotalAmount(bookingData.totalAmount);
+              setActiveCheckoutOrderId(generatedOrderId);
+              setSelectedProviderForBooking(null);
+            }}
+          />
+        )}
+
+        {/* Razorpay Escrow Checkout Modal */}
+        {activeCheckoutOrderId && (
+          <BookingCheckoutModal
+            orderId={activeCheckoutOrderId}
+            totalAmount={checkoutTotalAmount}
+            providerName="Companion"
+            isOpen={Boolean(activeCheckoutOrderId)}
+            onClose={() => setActiveCheckoutOrderId(null)}
+            onSuccess={() => {
+              setActiveCheckoutOrderId(null);
+              navigate('/bookings');
+            }}
+          />
         )}
       </main>
     </div>

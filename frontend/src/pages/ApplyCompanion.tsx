@@ -52,10 +52,23 @@ export const ApplyCompanion: React.FC = () => {
   const status = providerProfile?.status || 'Draft';
 
   const [step, setStep] = useState(1);
+  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>(() => {
+    const existing = (providerProfile?.specialties as string[]) || [];
+    const combined = [...SPECIALTY_OPTIONS];
+    for (const item of existing) {
+      if (!combined.some((s) => s.toLowerCase() === item.toLowerCase())) {
+        combined.push(item);
+      }
+    }
+    return combined;
+  });
+  const [customSpecialtyInput, setCustomSpecialtyInput] = useState('');
+  const [specialtyFeedback, setSpecialtyFeedback] = useState('');
+
   const [formData, setFormData] = useState({
     hourlyRate: providerProfile?.hourlyRate || 1500,
     bio: providerProfile?.bio || '',
-    specialties: (providerProfile?.specialties as string[]) || ['Dinner Date', 'Coffee & Chat'],
+    specialties: (providerProfile?.specialties as string[]) || ['Dinner Date & Foodie', 'City Guide & Tours'],
     maxRadiusKm: providerProfile?.maxRadiusKm || 25,
     idProofUrl: providerProfile?.idProofUrl || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=600',
     selfieVerificationUrl: providerProfile?.selfieVerificationUrl || SAMPLE_GALLERY[0],
@@ -66,12 +79,45 @@ export const ApplyCompanion: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState('');
 
   const toggleSpecialty = (item: string) => {
+    setSpecialtyFeedback('');
     setFormData((prev) => ({
       ...prev,
       specialties: prev.specialties.includes(item)
         ? prev.specialties.filter((s) => s !== item)
         : [...prev.specialties, item],
     }));
+  };
+
+  const handleAddCustomSpecialty = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = customSpecialtyInput.trim();
+    if (!query) return;
+
+    // Check case-insensitively against all available specialties
+    const matched = availableSpecialties.find(
+      (s) => s.trim().toLowerCase() === query.toLowerCase()
+    );
+
+    if (matched) {
+      // Reuse existing canonical specialty
+      if (!formData.specialties.includes(matched)) {
+        setFormData((prev) => ({
+          ...prev,
+          specialties: [...prev.specialties, matched],
+        }));
+      }
+      setSpecialtyFeedback(`Matched existing specialty: "${matched}"`);
+    } else {
+      // Capitalize first letter of words
+      const capitalized = query.replace(/\b\w/g, (c) => c.toUpperCase());
+      setAvailableSpecialties((prev) => [...prev, capitalized]);
+      setFormData((prev) => ({
+        ...prev,
+        specialties: [...prev.specialties, capitalized],
+      }));
+      setSpecialtyFeedback(`Added new custom specialty: "${capitalized}"`);
+    }
+    setCustomSpecialtyInput('');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -327,24 +373,58 @@ export const ApplyCompanion: React.FC = () => {
                 Specialties & Activities (Select 1 or more) <span className="text-destructive">*</span>
               </label>
               <div className="flex flex-wrap gap-2">
-                {SPECIALTY_OPTIONS.map((spec) => {
+                {availableSpecialties.map((spec) => {
                   const isSelected = formData.specialties.includes(spec);
                   return (
                     <button
                       key={spec}
                       type="button"
                       onClick={() => toggleSpecialty(spec)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border ${
+                      className={`px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all border flex items-center gap-1.5 ${
                         isSelected
                           ? 'bg-accent text-accent-foreground border-accent shadow-xs'
                           : 'bg-muted/40 text-foreground border-border/80 hover:bg-muted'
                       }`}
                     >
-                      {isSelected ? '✓ ' : '+ '}
-                      {spec}
+                      <span>{isSelected ? '✓' : '+'}</span>
+                      <span>{spec}</span>
                     </button>
                   );
                 })}
+              </div>
+
+              {/* Dynamic Specialty Adding with Deduplication */}
+              <div className="mt-3 p-3.5 rounded-2xl bg-muted/50 border border-border/80 space-y-2">
+                <label className="block text-xs font-semibold text-foreground">
+                  Can't find your specialty or activity? Add your own:
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={customSpecialtyInput}
+                    onChange={(e) => setCustomSpecialtyInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddCustomSpecialty();
+                      }
+                    }}
+                    placeholder="e.g. Squash Partner, Pottery, Architectural Tour..."
+                    className="flex-1 px-3 py-2 rounded-xl border border-border bg-background text-foreground text-xs focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleAddCustomSpecialty()}
+                    className="px-4 py-2 rounded-xl bg-accent text-accent-foreground font-semibold text-xs hover:bg-accent-hover transition-colors shadow-xs"
+                  >
+                    + Add
+                  </button>
+                </div>
+                {specialtyFeedback && (
+                  <p className="text-[11px] font-medium text-accent animate-in fade-in">
+                    {specialtyFeedback}
+                  </p>
+                )}
               </div>
             </div>
 

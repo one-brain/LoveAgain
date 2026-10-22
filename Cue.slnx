@@ -2,6 +2,8 @@
   <Folder Name="/backend/" />
   <Folder Name="/backend/Services/">
     <Project Path="backend/Services/ChatService/ChatService.csproj" />
+    <Project Path="backend/Services/DiscoveryService.Tests/DiscoveryService.Tests.csproj" />
+    <Project Path="backend/Services/DiscoveryService/DiscoveryService.csproj" />
     <Project Path="backend/Services/PaymentService/PaymentService.csproj" />
     <Project Path="backend/Services/ProfileService/ProfileService.csproj" />
     <Project Path="backend/Services/ReviewService/ReviewService.csproj" />
