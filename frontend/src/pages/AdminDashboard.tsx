@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   useGetAdminVerificationsQuery,
   useApproveVerificationMutation,
@@ -36,6 +36,22 @@ export const AdminDashboard: React.FC = () => {
   const [payoutUtr, setPayoutUtr] = useState('');
   const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (showRejectModal) {
+          setShowRejectModal(false);
+        } else if (selectedPayoutId) {
+          setSelectedPayoutId(null);
+        } else if (selectedVerification) {
+          setSelectedVerification(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showRejectModal, selectedPayoutId, selectedVerification]);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({ message, type });
@@ -749,17 +765,23 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Enhanced KYC & 3-Photo Inspection Modal */}
       {selectedVerification && !showRejectModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="kyc-modal-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+        >
           <div className="bg-card border border-border rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-border mb-6">
               <div>
-                <h2 className="text-lg font-bold text-foreground">Companion Application & Identity Verification</h2>
+                <h2 id="kyc-modal-title" className="text-lg font-bold text-foreground">Companion Application & Identity Verification</h2>
                 <p className="text-xs text-muted-foreground">
                   {selectedVerification.displayName ? `${selectedVerification.displayName} • Legal: ` : ''}{selectedVerification.fullName} ({selectedVerification.email})
                 </p>
               </div>
               <button
                 onClick={() => setSelectedVerification(null)}
+                aria-label="Close verification inspection modal"
                 className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground text-sm font-bold"
               >
                 ✕
@@ -872,9 +894,14 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Reject Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="reject-modal-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+        >
           <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-foreground mb-2">Provide Rejection Reason</h3>
+            <h3 id="reject-modal-title" className="text-base font-bold text-foreground mb-2">Provide Rejection Reason</h3>
             <p className="text-xs text-muted-foreground mb-4">
               Explain why this profile cannot be approved so the user can make corrections.
             </p>
@@ -908,9 +935,14 @@ export const AdminDashboard: React.FC = () => {
 
       {/* Process Payout Modal */}
       {selectedPayoutId && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="payout-modal-title"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+        >
           <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 shadow-2xl">
-            <h3 className="text-base font-bold text-foreground mb-2">Confirm UPI Settlement</h3>
+            <h3 id="payout-modal-title" className="text-base font-bold text-foreground mb-2">Confirm UPI Settlement</h3>
             <p className="text-xs text-muted-foreground mb-4">
               Enter the bank UTR / RazorpayX transaction ID for record-keeping:
             </p>

@@ -41,6 +41,17 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
 
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const availableBalance = walletData?.availableBalance ?? 0;
@@ -126,16 +137,22 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="checkout-modal-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
+    >
       <div className="relative w-full max-w-lg bg-card text-card-foreground rounded-3xl border border-border/80 shadow-2xl p-6 sm:p-8 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-border/60">
           <div>
-            <h3 className="text-xl font-bold font-serif text-foreground">Secure Escrow Checkout</h3>
+            <h3 id="checkout-modal-title" className="text-xl font-bold font-serif text-foreground">Secure Escrow Checkout</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Booking with {providerName}</p>
           </div>
           <button
             onClick={onClose}
+            aria-label="Close checkout modal"
             className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
           >
             <XMarkIcon className="w-5 h-5" />
@@ -144,7 +161,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
 
         {isSuccess ? (
           <div className="py-8 text-center space-y-3">
-            <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto animate-bounce" />
+            <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto animate-in zoom-in-75 duration-300 ease-out" />
             <h4 className="text-lg font-bold text-foreground">Payment Held in Escrow!</h4>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
               ₹{totalAmount.toLocaleString('en-IN')} is safely secured. Funds will only be released to {providerName} once your companionship session is completed.

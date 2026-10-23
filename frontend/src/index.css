@@ -314,26 +314,4 @@
     transform: translateY(-3px);
     box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.15), 0 0 0 1px var(--border);
   }
-
-  /* Gradient text */
-  .text-gradient {
-    background: linear-gradient(135deg, var(--accent) 0%, #F97316 60%, #FB923C 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .dark .text-gradient {
-    background: linear-gradient(135deg, #FB923C 0%, #F97316 50%, #EA580C 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .romantic .text-gradient {
-    background: linear-gradient(135deg, #FB7185 0%, #F43F5E 50%, #E11D48 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
 }

@@ -11,7 +11,6 @@ import {
   ArrowRightIcon,
   BriefcaseIcon,
   UserGroupIcon,
-  HeartIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
@@ -29,34 +28,34 @@ interface LensCard {
 
 const PILLAR_CARDS: LensCard[] = [
   {
-    id: 'pro_work',
-    name: 'Cue Pro (Work & Gigs)',
-    tagline: 'Hire verified freelancers, trainers, photographers & tutors — or advertise your craft to earn.',
-    badge: 'Verified Freelancers',
-    icon: BriefcaseIcon,
-    accentColor: 'text-sky-500',
-    bgGradient: 'from-sky-500/10 via-sky-500/5 to-transparent',
-    popularItems: ['Photography', 'Fitness Trainer', 'Coding Mentor', 'Language Tutor'],
-  },
-  {
     id: 'companions',
-    name: 'Cue Companions',
-    tagline: 'Rent friendly companions for city tours, concerts, tennis, dining, and outdoor adventures.',
-    badge: '100% Platonic Activities',
+    name: 'Cue Social & Events',
+    tagline: 'Connect with verified companions for city tours, concerts, dining, and social gatherings.',
+    badge: '100% Platonic & Escrowed',
     icon: UserGroupIcon,
     accentColor: 'text-emerald-500',
     bgGradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
-    popularItems: ['City Tours', 'Tennis Partner', 'Concerts', 'Fine Dining'],
+    popularItems: ['City Tours', 'Fine Dining', 'Concerts', 'Event Plus-One'],
   },
   {
-    id: 'relationships',
-    name: 'Cue Relationships',
-    tagline: 'Verified matrimonial biodatas, live-in compatibility checks & modern romantic courtship.',
-    badge: 'Verified Matrimony & Love',
-    icon: HeartIcon,
-    accentColor: 'text-rose-500',
-    bgGradient: 'from-rose-500/10 via-rose-500/5 to-transparent',
-    popularItems: ['Matrimony Biodata', 'Live-In Match', 'Coffee Dates', 'Courtship'],
+    id: 'wellness',
+    name: 'Cue Active & Wellness',
+    tagline: 'Partner up for tennis, gym workouts, morning runs, hiking trails, and yoga sessions.',
+    badge: 'Fitness & Outdoor Buddies',
+    icon: SparklesIcon,
+    accentColor: 'text-amber-500',
+    bgGradient: 'from-amber-500/10 via-amber-500/5 to-transparent',
+    popularItems: ['Tennis Partner', 'Hiking Trails', 'Gym Spotter', 'Yoga Buddy'],
+  },
+  {
+    id: 'pro_work',
+    name: 'Cue Skills & Mentorship',
+    tagline: 'Hire companion mentors for 1-on-1 photography walks, language practice, and creative hobbies.',
+    badge: 'Skill Sharing & Craft',
+    icon: BriefcaseIcon,
+    accentColor: 'text-sky-500',
+    bgGradient: 'from-sky-500/10 via-sky-500/5 to-transparent',
+    popularItems: ['Photography Walk', 'Language Practice', 'Cooking Sessions', 'Coding Mentorship'],
   },
 ];
 
@@ -107,7 +106,7 @@ const FEATURED_PROFILES = [
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedLens, setSelectedLens] = useState<PlatformLens>('pro_work');
+  const [selectedLens, setSelectedLens] = useState<PlatformLens>('companions');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleSearchSubmit = (e: React.FormEvent) => {

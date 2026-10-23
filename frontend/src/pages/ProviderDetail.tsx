@@ -67,21 +67,14 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=800&q=80',
     ],
     hourlyRate: 40,
-    bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. Also seeking verified matrimony and serious relationship compatibility.',
-    specialties: ['Hiking', 'Music', 'Photography', 'Matrimony'],
+    bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. Available for trail hikes and music sessions.',
+    specialties: ['Hiking', 'Music', 'Photography', 'Wellness'],
     maxRadiusKm: 40,
     introVideoUrl: null,
     averageRating: 4.92,
     isVerified: true,
     trustScore: 97,
     services: ['Violin Performance / Lesson'],
-    matrimony: {
-      education: 'MD Cardiology (AIIMS)',
-      profession: 'Senior Resident Doctor',
-      motherTongue: 'English / Hindi',
-      diet: 'Vegetarian',
-      height: "5'7\"",
-    },
   },
   'sample-4': {
     providerId: 'sample-4',
@@ -101,7 +94,6 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     isVerified: true,
     trustScore: 96,
     services: ['Salsa Coaching (1-on-1)', 'Wedding Plus-One & Social Host'],
-    matrimony: null,
   },
   'sample-5': {
     providerId: 'sample-5',
@@ -113,21 +105,14 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80',
     ],
     hourlyRate: 48,
-    bio: 'Principal Software Architect & yoga practitioner. Seeking serious matrimonial match with shared intellectual values, or cultured dinner and coffee dates.',
-    specialties: ['Matrimony', 'Dating', 'Coding / Tech', 'Reading'],
+    bio: 'Principal Software Architect & yoga practitioner. Available for system design deep-dives, career mentorship, or mindful yoga morning flows.',
+    specialties: ['Yoga Partner', 'Coding Mentorship', 'Reading', 'Career Coaching'],
     maxRadiusKm: 25,
     introVideoUrl: null,
     averageRating: 4.97,
     isVerified: true,
     trustScore: 99,
     services: ['System Design Mentorship', 'Yoga Morning Flow'],
-    matrimony: {
-      education: 'M.Tech Computer Science (IIT)',
-      profession: 'Principal Engineer',
-      motherTongue: 'English / Telugu',
-      diet: 'Eggetarian',
-      height: "5'9\"",
-    },
   },
   'sample-6': {
     providerId: 'sample-6',
@@ -147,7 +132,6 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     isVerified: true,
     trustScore: 98,
     services: ['Curated Wine Tasting Session', 'Strength Training (1-on-1)'],
-    matrimony: null,
   },
 };
 
@@ -390,6 +374,7 @@ const ProviderDetail: React.FC = () => {
                       key={idx}
                       type="button"
                       onClick={() => setActivePhotoIdx(idx)}
+                      aria-label={`Select photo ${idx + 1} of ${provider.displayName}`}
                       className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
                         activePhotoIdx === idx
                           ? 'border-accent ring-2 ring-accent/30 scale-105'
@@ -399,6 +384,8 @@ const ProviderDetail: React.FC = () => {
                       <img
                         src={imgUrl}
                         alt={`${provider.displayName} gallery ${idx + 1}`}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover"
                       />
                     </button>
@@ -431,34 +418,6 @@ const ProviderDetail: React.FC = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Matrimonial Biodata (If available) */}
-              {provider.matrimony && (
-                <div className="p-6 rounded-2xl bg-muted/40 border border-border space-y-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xl">💍</span>
-                    <h2 className="text-lg font-bold text-foreground font-serif">Verified Matrimonial Biodata</h2>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm">
-                    <div className="p-3 rounded-xl bg-card border border-border/80">
-                      <span className="text-muted-foreground block text-[11px]">Education</span>
-                      <strong className="text-foreground">{provider.matrimony.education}</strong>
-                    </div>
-                    <div className="p-3 rounded-xl bg-card border border-border/80">
-                      <span className="text-muted-foreground block text-[11px]">Profession</span>
-                      <strong className="text-foreground">{provider.matrimony.profession}</strong>
-                    </div>
-                    <div className="p-3 rounded-xl bg-card border border-border/80">
-                      <span className="text-muted-foreground block text-[11px]">Mother Tongue</span>
-                      <strong className="text-foreground">{provider.matrimony.motherTongue}</strong>
-                    </div>
-                    <div className="p-3 rounded-xl bg-card border border-border/80">
-                      <span className="text-muted-foreground block text-[11px]">Diet & Height</span>
-                      <strong className="text-foreground">{provider.matrimony.diet} · {provider.matrimony.height}</strong>
-                    </div>
-                  </div>
-                </div>
-              )}
 
               {/* Offered Services & Gigs (If available) */}
               {provider.services && provider.services.length > 0 && (

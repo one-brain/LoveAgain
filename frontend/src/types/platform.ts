@@ -1,8 +1,6 @@
-// Core 3-Lens Life Platform Types
+// Core 3-Pillar Companionship Platform Types
 
-export type PlatformLens = 'pro_work' | 'companions' | 'relationships';
-
-export type RelationshipIntent = 'matrimony' | 'live_in' | 'dating' | 'casual';
+export type PlatformLens = 'companions' | 'wellness' | 'pro_work';
 
 export interface SkilledServiceOffering {
   id: string;
@@ -12,18 +10,6 @@ export interface SkilledServiceOffering {
   rate: number;
   rateUnit: 'hour' | 'project';
   portfolioUrls?: string[];
-}
-
-export interface MatrimonyBiodata {
-  education: string;
-  profession: string;
-  annualIncome?: string;
-  motherTongue: string;
-  height: string;
-  diet: string;
-  familyBackground?: string;
-  partnerPreferences?: string;
-  horoscopeRashi?: string;
 }
 
 export interface UniversalProfile {
@@ -37,13 +23,11 @@ export interface UniversalProfile {
   isVerified: boolean;
   trustScore: number;
   distanceKm: number | null;
-  // 3-Lens Capabilities
+  // 3-Pillar Capabilities
   activeLenses: PlatformLens[];
   servicesOffered?: SkilledServiceOffering[];
   activitiesOffered?: string[];
   languages?: string[];
-  relationshipIntents?: RelationshipIntent[];
-  matrimonyBiodata?: MatrimonyBiodata;
   experienceYears?: number;
 }
 

@@ -12,7 +12,6 @@ import {
   AdjustmentsHorizontalIcon,
   XMarkIcon,
   SparklesIcon,
-  AcademicCapIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   PhotoIcon,
@@ -26,41 +25,38 @@ interface SpecialtyOption {
 }
 
 const LENS_DROPDOWN_OPTIONS: DropdownOption<PlatformLens | 'all'>[] = [
-  { value: 'all', label: 'All Lenses', icon: '✨', description: 'Show all categories & profiles' },
-  { value: 'pro_work', label: '💼 Skilled Work & Gigs', icon: '💼', description: 'Hire verified freelancers & pros' },
-  { value: 'companions', label: '🤝 Companions & Activities', icon: '🤝', description: 'Platonic outings & RentAFriend activities' },
-  { value: 'relationships', label: '💍 Matrimony & Romance', icon: '💍', description: 'Verified marriage biodatas & dates' },
-];
-
-const PRO_CHIPS: SpecialtyOption[] = [
-  { label: 'All Gigs', icon: '💼', lens: 'pro_work' },
-  { label: 'Photography', icon: '📸', lens: 'pro_work' },
-  { label: 'Fitness Trainer', icon: '🏋️', lens: 'pro_work' },
-  { label: 'Yoga Coach', icon: '🧘', lens: 'pro_work' },
-  { label: 'Coding / Tech', icon: '💻', lens: 'pro_work' },
-  { label: 'Language Tutor', icon: '📚', lens: 'pro_work' },
-  { label: 'DJ / Musician', icon: '🎵', lens: 'pro_work' },
-  { label: 'Event Host', icon: '🎤', lens: 'pro_work' },
+  { value: 'all', label: 'All Companions', icon: '✨', description: 'Show all verified companions & activities' },
+  { value: 'companions', label: '🤝 Social & Events', icon: '🤝', description: 'Platonic outings, city tours, dining & concerts' },
+  { value: 'wellness', label: '🏃 Active & Wellness', icon: '🏃', description: 'Tennis partners, hiking, yoga & gym buddies' },
+  { value: 'pro_work', label: '🎨 Skills & Mentorship', icon: '🎨', description: 'Photography walks, language practice & creative craft' },
 ];
 
 const COMPANION_CHIPS: SpecialtyOption[] = [
   { label: 'All Activities', icon: '✨', lens: 'companions' },
   { label: 'City Tour', icon: '🗺️', lens: 'companions' },
-  { label: 'Tennis', icon: '🎾', lens: 'companions' },
   { label: 'Fine Dining', icon: '🍷', lens: 'companions' },
   { label: 'Concert Buddy', icon: '🎸', lens: 'companions' },
   { label: 'Plus-One', icon: '🥂', lens: 'companions' },
-  { label: 'Hiking', icon: '🥾', lens: 'companions' },
   { label: 'Museum Walk', icon: '🎨', lens: 'companions' },
+  { label: 'Cafe & Chat', icon: '☕', lens: 'companions' },
 ];
 
-const RELATIONSHIP_CHIPS: SpecialtyOption[] = [
-  { label: 'All Matches', icon: '❤️', lens: 'relationships' },
-  { label: '💍 Matrimony Biodatas', icon: '💍', lens: 'relationships' },
-  { label: '🏡 Live-In Match', icon: '🏡', lens: 'relationships' },
-  { label: '💜 Dating & Courtship', icon: '🌹', lens: 'relationships' },
-  { label: '✈️ Travel Companion', icon: '✈️', lens: 'relationships' },
-  { label: '🔥 Casual & Adults', icon: '🔥', lens: 'relationships' },
+const WELLNESS_CHIPS: SpecialtyOption[] = [
+  { label: 'All Wellness', icon: '🏃', lens: 'wellness' },
+  { label: 'Tennis', icon: '🎾', lens: 'wellness' },
+  { label: 'Hiking', icon: '🥾', lens: 'wellness' },
+  { label: 'Yoga Partner', icon: '🧘', lens: 'wellness' },
+  { label: 'Gym Spotter', icon: '🏋️', lens: 'wellness' },
+  { label: 'Running Buddy', icon: '👟', lens: 'wellness' },
+];
+
+const PRO_CHIPS: SpecialtyOption[] = [
+  { label: 'All Mentorship', icon: '🎨', lens: 'pro_work' },
+  { label: 'Photography', icon: '📸', lens: 'pro_work' },
+  { label: 'Language Practice', icon: '📚', lens: 'pro_work' },
+  { label: 'Cooking & Baking', icon: '🍳', lens: 'pro_work' },
+  { label: 'Music & DJing', icon: '🎵', lens: 'pro_work' },
+  { label: 'Coding Mentorship', icon: '💻', lens: 'pro_work' },
 ];
 
 const SORT_OPTIONS: DropdownOption[] = [
@@ -90,14 +86,13 @@ const CURATED_SAMPLE_PROVIDERS = [
     ],
     hourlyRate: 45,
     bio: 'Semi-pro tennis coach, contemporary art curator, and bilingual city companion.',
-    specialties: ['Tennis', 'Yoga', 'Art', 'Fitness Trainer'],
+    specialties: ['Tennis', 'Yoga Partner', 'Museum Walk', 'Gym Spotter'],
     averageRating: 4.98,
     isVerified: true,
     trustScore: 99,
     distanceKm: 2.4,
-    lenses: ['pro_work', 'companions'],
+    lenses: ['wellness', 'companions'] as PlatformLens[],
     services: ['Tennis Coaching (1-on-1)', 'Art Gallery Curator Walk'],
-    matrimony: null,
   },
   {
     providerId: 'sample-2',
@@ -110,14 +105,13 @@ const CURATED_SAMPLE_PROVIDERS = [
     ],
     hourlyRate: 55,
     bio: 'Commercial photographer and street foodie guide. Available for photoshoots and culinary outings.',
-    specialties: ['Photography', 'Cooking', 'City Tour'],
+    specialties: ['Photography', 'Cooking & Baking', 'City Tour'],
     averageRating: 4.95,
     isVerified: true,
     trustScore: 98,
     distanceKm: 3.8,
-    lenses: ['pro_work', 'companions'],
+    lenses: ['pro_work', 'companions'] as PlatformLens[],
     services: ['Portrait Photoshoot Package', 'Street Food Crawl Host'],
-    matrimony: null,
   },
   {
     providerId: 'sample-3',
@@ -129,21 +123,14 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=600&q=80',
     ],
     hourlyRate: 40,
-    bio: 'Cardiologist & classical violinist. Seeking verified matrimony or compatible live-in partner.',
-    specialties: ['Matrimony', 'Live-In', 'Violin', 'Hiking'],
+    bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony.',
+    specialties: ['Hiking', 'Yoga Partner', 'Violin', 'City Tour'],
     averageRating: 4.92,
     isVerified: true,
     trustScore: 97,
     distanceKm: 1.9,
-    lenses: ['relationships', 'companions'],
+    lenses: ['wellness', 'companions'] as PlatformLens[],
     services: ['Violin Performance / Lesson'],
-    matrimony: {
-      education: 'MD Cardiology (AIIMS)',
-      profession: 'Senior Resident Doctor',
-      motherTongue: 'English / Hindi',
-      diet: 'Vegetarian',
-      height: "5'7\"",
-    },
   },
   {
     providerId: 'sample-4',
@@ -161,9 +148,8 @@ const CURATED_SAMPLE_PROVIDERS = [
     isVerified: true,
     trustScore: 96,
     distanceKm: 4.5,
-    lenses: ['pro_work', 'companions'],
+    lenses: ['pro_work', 'companions'] as PlatformLens[],
     services: ['Salsa Coaching', 'Wedding Plus-One'],
-    matrimony: null,
   },
   {
     providerId: 'sample-5',
@@ -175,21 +161,14 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=600&q=80',
     ],
     hourlyRate: 48,
-    bio: 'Software Architect. Seeking serious matrimonial match or cultured dinner dates.',
-    specialties: ['Matrimony', 'Dating', 'Coding / Tech', 'Reading'],
+    bio: 'Software Architect & avid book enthusiast. Available for coffee chats, tech career mentoring, and museum visits.',
+    specialties: ['Coding Mentorship', 'Language Practice', 'Museum Walk', 'Cafe & Chat'],
     averageRating: 4.97,
     isVerified: true,
     trustScore: 99,
     distanceKm: 2.1,
-    lenses: ['relationships', 'pro_work'],
+    lenses: ['pro_work', 'companions'] as PlatformLens[],
     services: ['System Design Mentorship'],
-    matrimony: {
-      education: 'M.Tech Computer Science (IIT)',
-      profession: 'Principal Engineer',
-      motherTongue: 'English / Telugu',
-      diet: 'Eggetarian',
-      height: "5'9\"",
-    },
   },
   {
     providerId: 'sample-6',
@@ -201,15 +180,14 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=600&q=80',
     ],
     hourlyRate: 60,
-    bio: 'Sommelier and fitness trainer. Host for wine tasting dinners and high-intensity workout coaching.',
-    specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife'],
+    bio: 'Sommelier and fitness trainer. Host for dining excursions and high-intensity workout coaching.',
+    specialties: ['Fine Dining', 'Gym Spotter', 'Tennis'],
     averageRating: 4.94,
     isVerified: true,
     trustScore: 98,
     distanceKm: 5.2,
-    lenses: ['pro_work', 'companions'],
+    lenses: ['wellness', 'companions'] as PlatformLens[],
     services: ['Wine Tasting Session', 'Strength Training (1-on-1)'],
-    matrimony: null,
   },
 ];
 
@@ -286,9 +264,8 @@ const Discovery: React.FC = () => {
         isVerified: Boolean(item.isVerified),
         trustScore: Number(item.trustScore || 99),
         distanceKm: Number(item.distanceKm ?? 2.0),
-        lenses: ['companions', 'pro_work'] as PlatformLens[],
+        lenses: ['companions', 'wellness', 'pro_work'] as PlatformLens[],
         services: [] as string[],
-        matrimony: null as any,
       };
     });
 
@@ -306,18 +283,14 @@ const Discovery: React.FC = () => {
         (p) =>
           p.displayName.toLowerCase().includes(lower) ||
           p.bio.toLowerCase().includes(lower) ||
-          p.specialties.some((s: string) => s.toLowerCase().includes(lower)) ||
-          (p.matrimony &&
-            (p.matrimony.education.toLowerCase().includes(lower) ||
-              p.matrimony.profession.toLowerCase().includes(lower)))
+          p.specialties.some((s: string) => s.toLowerCase().includes(lower))
       );
     }
 
     if (specialty !== 'All') {
       list = list.filter(
         (p) =>
-          p.specialties.some((s: string) => s.toLowerCase().includes(specialty.toLowerCase())) ||
-          (specialty.includes('Matrimony') && p.matrimony != null)
+          p.specialties.some((s: string) => s.toLowerCase().includes(specialty.toLowerCase()))
       );
     }
 
@@ -406,8 +379,8 @@ const Discovery: React.FC = () => {
   const activeChips = useMemo(() => {
     if (activeLens === 'pro_work') return PRO_CHIPS;
     if (activeLens === 'companions') return COMPANION_CHIPS;
-    if (activeLens === 'relationships') return RELATIONSHIP_CHIPS;
-    return [...PRO_CHIPS.slice(0, 4), ...COMPANION_CHIPS.slice(1, 4), ...RELATIONSHIP_CHIPS.slice(1, 3)];
+    if (activeLens === 'wellness') return WELLNESS_CHIPS;
+    return [...PRO_CHIPS.slice(0, 4), ...COMPANION_CHIPS.slice(1, 4), ...WELLNESS_CHIPS.slice(1, 3)];
   }, [activeLens]);
 
   return (
@@ -438,8 +411,8 @@ const Discovery: React.FC = () => {
                   placeholder={
                     activeLens === 'pro_work'
                       ? 'Search display name or skills (e.g. Photography, Tennis)...'
-                      : activeLens === 'relationships'
-                      ? 'Search matrimony, live-in, dates...'
+                      : activeLens === 'wellness'
+                      ? 'Search tennis, hiking, yoga, fitness buddies...'
                       : 'Search display name, activities, companions...'
                   }
                   className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted/60 border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
@@ -588,14 +561,25 @@ const Discovery: React.FC = () => {
               return (
                 <div
                   key={provider.providerId}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={`View profile for ${provider.displayName}`}
                   onClick={() => navigate(`/provider/${provider.providerId}`)}
-                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      navigate(`/provider/${provider.providerId}`);
+                    }
+                  }}
+                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group focus:outline-none focus:ring-2 focus:ring-accent/50"
                 >
                   {/* Interactive 3-Photo Carousel & Top Badges */}
                   <div className="relative h-64 overflow-hidden bg-muted">
                     <img
                       src={currentPhoto}
                       alt={`${provider.displayName} photo ${activeIdx + 1}`}
+                      loading="lazy"
+                      decoding="async"
                       className="w-full h-full object-cover transition-all duration-300"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/20 pointer-events-none" />
@@ -629,18 +613,18 @@ const Discovery: React.FC = () => {
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, -1, e)}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Previous photo"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-none"
+                          aria-label={`Previous photo of ${provider.displayName}`}
                         >
-                          <ChevronLeftIcon className="w-4 h-4" />
+                          <ChevronLeftIcon className="w-5 h-5" />
                         </button>
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, 1, e)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          title="Next photo"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-none"
+                          aria-label={`Next photo of ${provider.displayName}`}
                         >
-                          <ChevronRightIcon className="w-4 h-4" />
+                          <ChevronRightIcon className="w-5 h-5" />
                         </button>
                       </>
                     )}
@@ -653,9 +637,9 @@ const Discovery: React.FC = () => {
                             💼 Skilled Pro
                           </span>
                         )}
-                        {provider.lenses.includes('relationships') && (
-                          <span className="px-2 py-0.5 rounded-md bg-rose-900/80 backdrop-blur-md text-[10px] font-semibold text-rose-200 border border-rose-400/30">
-                            💍 Matrimony
+                        {provider.lenses.includes('wellness') && (
+                          <span className="px-2 py-0.5 rounded-md bg-teal-900/80 backdrop-blur-md text-[10px] font-semibold text-teal-200 border border-teal-400/30">
+                            🏃 Active & Wellness
                           </span>
                         )}
                         {provider.lenses.includes('companions') && (
@@ -708,19 +692,6 @@ const Discovery: React.FC = () => {
                       <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
                         {provider.bio}
                       </p>
-
-                      {/* Matrimony Biodata Highlights (If Present) */}
-                      {provider.matrimony && (
-                        <div className="mb-3 p-2.5 rounded-xl bg-muted/50 border border-border/80 text-[11px] space-y-1">
-                          <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                            <AcademicCapIcon className="w-3.5 h-3.5 text-accent" />
-                            <span>{provider.matrimony.education}</span>
-                          </div>
-                          <div className="text-muted-foreground">
-                            {provider.matrimony.profession} · {provider.matrimony.diet} · {provider.matrimony.height}
-                          </div>
-                        </div>
-                      )}
 
                       {/* Offered Gigs / Services (If Present) */}
                       {provider.services && provider.services.length > 0 && (
