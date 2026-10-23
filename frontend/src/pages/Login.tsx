@@ -27,6 +27,27 @@ const Login: React.FC = () => {
     try {
       const result = await login({ email, password }).unwrap();
       const user = result.user;
+      const isAdmin = user?.roles?.includes('Admin') || email.trim().toLowerCase() === 'admin@cue.local';
+
+      if (isAdmin) {
+        dispatch(
+          loginSuccess({
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            user: {
+              id: user?.id || result.userId,
+              email: user?.email || email,
+              firstName: user?.firstName || 'Back-Office',
+              lastName: user?.lastName || 'Administrator',
+              isVerified: true,
+              trustScore: 100,
+              roles: ['Admin'],
+            },
+          })
+        );
+        navigate('/admin', { replace: true });
+        return;
+      }
 
       // 1. Immediately store session with verified user name & roles
       dispatch(
@@ -76,15 +97,45 @@ const Login: React.FC = () => {
     }
   };
 
-  const handleDemoLogin = async (role: 'Seeker' | 'Provider') => {
-    const demoEmail = role === 'Seeker' ? 'seeker.demo@cue.com' : 'elena.provider@cue.com';
-    const demoPassword = 'Password123!';
+  const handleDemoLogin = async (role: 'Seeker' | 'Provider' | 'Admin') => {
+    let demoEmail = 'seeker.demo@cue.com';
+    let demoPassword = 'Password123!';
+
+    if (role === 'Provider') {
+      demoEmail = 'elena.provider@cue.com';
+      demoPassword = 'Password123!';
+    } else if (role === 'Admin') {
+      demoEmail = 'admin@cue.local';
+      demoPassword = 'CueAdmin123!';
+    }
+
     setEmail(demoEmail);
     setPassword(demoPassword);
     setError(null);
 
     try {
       const result = await login({ email: demoEmail, password: demoPassword }).unwrap();
+
+      if (role === 'Admin') {
+        dispatch(
+          loginSuccess({
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            user: {
+              id: result.userId,
+              email: demoEmail,
+              firstName: 'Back-Office',
+              lastName: 'Administrator',
+              isVerified: true,
+              trustScore: 100,
+              roles: ['Admin'],
+            },
+          })
+        );
+        navigate('/admin', { replace: true });
+        return;
+      }
+
       const seekerData = await refetchSeeker().unwrap().catch(() => null);
       const profile = seekerData?.profile;
 
@@ -104,6 +155,26 @@ const Login: React.FC = () => {
       navigate(role === 'Provider' ? '/provider' : '/discovery', { replace: true });
     } catch {
       // Fallback only if REST service is offline
+      if (role === 'Admin') {
+        dispatch(
+          loginSuccess({
+            accessToken: 'demo-admin-jwt-token-12345',
+            refreshToken: 'demo-admin-refresh-token-12345',
+            user: {
+              id: 'admin-self',
+              email: demoEmail,
+              firstName: 'Back-Office',
+              lastName: 'Administrator',
+              isVerified: true,
+              trustScore: 100,
+              roles: ['Admin'],
+            },
+          })
+        );
+        navigate('/admin', { replace: true });
+        return;
+      }
+
       dispatch(
         loginSuccess({
           accessToken: 'demo-jwt-token-12345',
@@ -229,20 +300,27 @@ const Login: React.FC = () => {
             <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block text-center">
               Instant Demo Access
             </span>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <button
                 type="button"
                 onClick={() => handleDemoLogin('Seeker')}
-                className="py-2.5 px-3 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                className="py-2.5 px-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center text-center"
               >
-                <span>Seeker Demo</span>
+                <span>Seeker</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleDemoLogin('Provider')}
-                className="py-2.5 px-3 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                className="py-2.5 px-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center text-center"
               >
-                <span>Provider Demo</span>
+                <span>Companion</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin('Admin')}
+                className="py-2.5 px-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-xs font-semibold transition-colors flex items-center justify-center text-center shadow-xs"
+              >
+                <span>Admin</span>
               </button>
             </div>
           </div>

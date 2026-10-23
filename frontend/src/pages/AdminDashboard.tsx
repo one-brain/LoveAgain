@@ -4,9 +4,11 @@ import {
   useApproveVerificationMutation,
   useRejectVerificationMutation,
   useGetAdminUsersQuery,
+  useToggleUserSuspendMutation,
   useGetAdminMisQuery,
   useGetAdminPayoutsQuery,
   useProcessAdminPayoutMutation,
+  useGetAdminBookingsQuery,
   type AdminVerificationItem,
 } from '../store/adminApi';
 import {
@@ -16,30 +18,46 @@ import {
   MagnifyingGlassIcon,
   ChartBarIcon,
   EyeIcon,
+  BanknotesIcon,
+  PhotoIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'verifications' | 'users' | 'payouts' | 'mis'>('verifications');
+  const [activeTab, setActiveTab] = useState<'verifications' | 'bookings' | 'users' | 'payouts' | 'mis'>('verifications');
   const [verificationFilter, setVerificationFilter] = useState<'All' | 'PendingReview' | 'Approved' | 'Rejected'>('PendingReview');
+  const [bookingFilter, setBookingFilter] = useState<string>('All');
   const [userSearch, setUserSearch] = useState('');
   const [selectedVerification, setSelectedVerification] = useState<AdminVerificationItem | null>(null);
   const [rejectReason, setRejectReason] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [payoutUtr, setPayoutUtr] = useState('');
   const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  };
 
   // Queries
   const { data: verificationsData, isLoading: isLoadingVerifications, refetch: refetchVerifications } = useGetAdminVerificationsQuery(
     verificationFilter === 'All' ? {} : { status: verificationFilter }
   );
-  const { data: usersData } = useGetAdminUsersQuery({ search: userSearch });
+  const { data: usersData, refetch: refetchUsers } = useGetAdminUsersQuery({ search: userSearch });
   const { data: misData, refetch: refetchMis } = useGetAdminMisQuery();
   const { data: payoutsData, refetch: refetchPayouts } = useGetAdminPayoutsQuery();
+  const { data: bookingsData, isLoading: isLoadingBookings, refetch: refetchBookings } = useGetAdminBookingsQuery(
+    bookingFilter === 'All' ? {} : { status: bookingFilter }
+  );
 
   // Mutations
   const [approveVerification, { isLoading: isApproving }] = useApproveVerificationMutation();
   const [rejectVerification, { isLoading: isRejecting }] = useRejectVerificationMutation();
   const [processPayout, { isLoading: isProcessingPayout }] = useProcessAdminPayoutMutation();
+  const [toggleUserSuspend, { isLoading: isTogglingSuspend }] = useToggleUserSuspendMutation();
 
   const handleApprove = async (profileId: string) => {
     try {
@@ -47,14 +65,15 @@ export const AdminDashboard: React.FC = () => {
       refetchVerifications();
       refetchMis();
       setSelectedVerification(null);
-    } catch (err) {
-      alert('Failed to approve application.');
+      showToast('Companion verification approved and published to discovery.');
+    } catch {
+      showToast('Failed to approve companion application.', 'error');
     }
   };
 
   const handleReject = async () => {
     if (!selectedVerification || !rejectReason.trim()) {
-      alert('Please enter a rejection reason for the applicant.');
+      showToast('Please enter a rejection reason for the applicant.', 'error');
       return;
     }
     try {
@@ -63,8 +82,9 @@ export const AdminDashboard: React.FC = () => {
       setShowRejectModal(false);
       setRejectReason('');
       setSelectedVerification(null);
-    } catch (err) {
-      alert('Failed to reject application.');
+      showToast('Companion application rejected with feedback sent to user.');
+    } catch {
+      showToast('Failed to reject application.', 'error');
     }
   };
 
@@ -76,8 +96,19 @@ export const AdminDashboard: React.FC = () => {
       refetchMis();
       setSelectedPayoutId(null);
       setPayoutUtr('');
-    } catch (err) {
-      alert('Failed to process payout.');
+      showToast('Companion UPI payout processed successfully.');
+    } catch {
+      showToast('Failed to process payout.', 'error');
+    }
+  };
+
+  const handleToggleSuspend = async (userId: string) => {
+    try {
+      const res = await toggleUserSuspend(userId).unwrap();
+      refetchUsers();
+      showToast(res.isSuspended ? 'User account suspended.' : 'User account reinstated.');
+    } catch {
+      showToast('Failed to toggle user suspension.', 'error');
     }
   };
 
@@ -86,19 +117,37 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-8 relative">
+      {/* Toast Notification */}
+      {toast && (
+        <div
+          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-sm font-semibold transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${
+            toast.type === 'success'
+              ? 'bg-card border-emerald-500/40 text-foreground ring-2 ring-emerald-500/20'
+              : 'bg-card border-rose-500/40 text-foreground ring-2 ring-rose-500/20'
+          }`}
+        >
+          {toast.type === 'success' ? (
+            <CheckCircleIcon className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+          ) : (
+            <ExclamationTriangleIcon className="w-5 h-5 text-rose-500 flex-shrink-0" />
+          )}
+          <span>{toast.message}</span>
+        </div>
+      )}
+
       {/* Executive Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 text-accent text-xs font-bold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold mb-2">
             <ShieldCheckIcon className="w-4 h-4" />
-            <span>Cue Back-Office Portal</span>
+            <span>Cue Back-Office Portal • Administrative Operations</span>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-            Platform Operations & MIS Hub
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground font-serif">
+            Revenue & Companion Verification Hub
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage companion verifications, user directories, escrow settlements, and executive growth metrics.
+            Real-time business performance oversight, companion application approvals, and financial ledger control.
           </p>
         </div>
 
@@ -108,66 +157,67 @@ export const AdminDashboard: React.FC = () => {
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-card border border-border/80 hover:bg-muted font-semibold text-sm text-foreground shadow-xs transition-all"
           >
             <ArrowDownTrayIcon className="w-4 h-4 text-accent" />
-            <span>Export MIS Report (CSV)</span>
+            <span>Export MIS Ledger (CSV)</span>
           </button>
         </div>
       </div>
 
-      {/* KPI Summary Cards */}
+      {/* Top Revenue & Performance KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-xs">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gross Merchandise Value</span>
-          <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1">
-            <span>₹{(misData?.totalGmv ?? 145000).toLocaleString('en-IN')}</span>
+          <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1 font-mono">
+            <span>₹{(misData?.totalGmv ?? 0).toLocaleString('en-IN')}</span>
           </div>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 inline-block">
-            All-time platform bookings volume
+            All-time platform booking volume
           </span>
         </div>
 
-        <div className="p-5 rounded-2xl bg-card border border-accent/20 bg-accent/5 shadow-xs">
-          <span className="text-xs font-semibold text-accent uppercase tracking-wider">Net Platform Revenue (15%)</span>
-          <div className="text-2xl font-black text-accent mt-1 flex items-baseline gap-1">
-            <span>₹{(misData?.totalPlatformRevenue ?? 21750).toLocaleString('en-IN')}</span>
+        <div className="p-5 rounded-2xl bg-card border border-amber-500/30 bg-amber-500/5 shadow-xs">
+          <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Net Platform Revenue (15%)</span>
+          <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 flex items-baseline gap-1 font-mono">
+            <span>₹{(misData?.totalPlatformRevenue ?? 0).toLocaleString('en-IN')}</span>
           </div>
           <span className="text-[11px] text-muted-foreground font-semibold mt-1 inline-block">
-            Direct realized commission
+            Direct platform take-rate
           </span>
         </div>
 
         <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-xs">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Escrow Liquidity Locked</span>
-          <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1">
-            <span>₹{(misData?.activeEscrowLocked ?? 12500).toLocaleString('en-IN')}</span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Companion Escrow Locked</span>
+          <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1 font-mono">
+            <span>₹{(misData?.activeEscrowLocked ?? 0).toLocaleString('en-IN')}</span>
           </div>
           <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1 inline-block">
-            Funds in ongoing escrow holds
+            Funds currently in active escrow holds
           </span>
         </div>
 
         <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-xs">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Booking Success Rate</span>
-          <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1">
-            <span>{misData?.completionRatePercent ?? 94.2}%</span>
+          <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1 font-mono">
+            <span>{misData?.completionRatePercent ?? 100}%</span>
           </div>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 inline-block">
-            {misData?.completedBookings ?? 42} Completed / {misData?.totalBookings ?? 45} Total
+            {misData?.completedBookings ?? 0} Completed / {misData?.totalBookings ?? 0} Total
           </span>
         </div>
       </div>
 
       {/* Tabs Segmented Control */}
-      <div className="flex border-b border-border/80 mb-6 space-x-6">
+      <div className="flex border-b border-border/80 mb-6 space-x-6 overflow-x-auto">
         {[
           { key: 'verifications', label: 'Companion Verifications', count: verificationsData?.length },
+          { key: 'bookings', label: 'Bookings & Revenue Ledger', count: bookingsData?.length },
           { key: 'users', label: 'Users Directory' },
-          { key: 'payouts', label: 'Payouts & Withdrawals', count: payoutsData?.filter(p => p.status === 'Pending').length },
-          { key: 'mis', label: 'MIS Business Reports' },
+          { key: 'payouts', label: 'Payouts & UPI Settlements', count: payoutsData?.filter(p => p.status === 'Pending').length },
+          { key: 'mis', label: 'MIS Trajectory & Analytics' },
         ].map((tab) => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key as any)}
-            className={`pb-3 font-semibold text-sm transition-all border-b-2 flex items-center gap-2 ${
+            className={`pb-3 font-semibold text-sm transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
               activeTab === tab.key
                 ? 'border-accent text-accent'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -185,7 +235,7 @@ export const AdminDashboard: React.FC = () => {
         ))}
       </div>
 
-      {/* TAB 1: VERIFICATIONS */}
+      {/* TAB 1: COMPANION VERIFICATIONS */}
       {activeTab === 'verifications' && (
         <div>
           {/* Subfilter */}
@@ -212,98 +262,253 @@ export const AdminDashboard: React.FC = () => {
           ) : verificationsData?.length === 0 ? (
             <div className="text-center py-16 bg-card border border-border/80 rounded-2xl p-8">
               <ShieldCheckIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="text-base font-bold text-foreground">No applications in this queue</p>
-              <p className="text-xs text-muted-foreground mt-1">All companion verification requests have been cleared.</p>
+              <p className="text-base font-bold text-foreground">No companion applications in this queue</p>
+              <p className="text-xs text-muted-foreground mt-1">All applicant verification requests have been reviewed.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {verificationsData?.map((item) => (
-                <div
-                  key={item.profileId}
-                  className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-accent/40 transition-all"
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={item.photoUrl || item.selfieVerificationUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'}
-                          alt={item.fullName}
-                          className="w-12 h-12 rounded-xl object-cover border border-border"
-                        />
-                        <div>
-                          <h3 className="font-bold text-sm text-foreground">{item.fullName}</h3>
-                          <p className="text-xs text-muted-foreground">{item.email}</p>
+              {verificationsData?.map((item) => {
+                const galleryImages = (item.profileImages && item.profileImages.length > 0)
+                  ? item.profileImages
+                  : (item.photoUrl ? [item.photoUrl] : []);
+
+                return (
+                  <div
+                    key={item.profileId}
+                    className="bg-card border border-border/80 rounded-2xl p-5 shadow-xs flex flex-col justify-between hover:border-accent/40 transition-all"
+                  >
+                    <div>
+                      {/* Top identity & status */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={galleryImages[0] || item.selfieVerificationUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200'}
+                            alt={item.displayName || item.fullName}
+                            className="w-12 h-12 rounded-xl object-cover border border-border"
+                          />
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <h3 className="font-bold text-sm text-foreground">
+                                {item.displayName || item.fullName}
+                              </h3>
+                              {item.displayName && item.displayName !== item.fullName && (
+                                <span className="text-[10px] text-muted-foreground">({item.fullName})</span>
+                              )}
+                            </div>
+                            <p className="text-xs text-muted-foreground">{item.email}</p>
+                          </div>
+                        </div>
+
+                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
+                          item.status === 'Approved'
+                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                            : item.status === 'Rejected'
+                            ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 animate-pulse'
+                        }`}>
+                          {item.status}
+                        </span>
+                      </div>
+
+                      {/* 3 Browse Profile Images Gallery Strip */}
+                      <div className="mb-3">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-semibold mb-1.5">
+                          <span className="flex items-center gap-1">
+                            <PhotoIcon className="w-3.5 h-3.5 text-accent" />
+                            <span>Browse Gallery ({galleryImages.length}/3 photos)</span>
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                          {[0, 1, 2].map((idx) => {
+                            const imgUrl = galleryImages[idx];
+                            return imgUrl ? (
+                              <div
+                                key={idx}
+                                className="aspect-square rounded-xl overflow-hidden border border-border/80 bg-muted/40 relative group cursor-pointer"
+                                onClick={() => setSelectedVerification(item)}
+                              >
+                                <img
+                                  src={imgUrl}
+                                  alt={`Browse photo ${idx + 1}`}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                />
+                                <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/60 text-[9px] text-white font-mono">
+                                  #{idx + 1}
+                                </span>
+                              </div>
+                            ) : (
+                              <div
+                                key={idx}
+                                className="aspect-square rounded-xl border border-dashed border-border/80 bg-muted/20 flex flex-col items-center justify-center text-[10px] text-muted-foreground"
+                              >
+                                <span>Empty</span>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${
-                        item.status === 'Approved'
-                          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                          : item.status === 'Rejected'
-                          ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                          : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 animate-pulse'
-                      }`}>
-                        {item.status}
-                      </span>
+                      <div className="flex items-center justify-between text-xs font-semibold py-2 px-3 rounded-xl bg-muted/40 mb-3">
+                        <span>Proposed Rate:</span>
+                        <span className="font-mono text-accent font-bold">₹{item.hourlyRate.toLocaleString('en-IN')}/hr</span>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                        {item.bio || 'No bio submitted.'}
+                      </p>
+
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {item.specialties?.map((s) => (
+                          <span key={s} className="px-2 py-0.5 rounded-md bg-muted text-[10px] font-medium text-foreground/80">
+                            {s}
+                          </span>
+                        ))}
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs font-semibold py-2 px-3 rounded-xl bg-muted/40 mb-3">
-                      <span>Hourly Rate:</span>
-                      <span className="font-mono text-accent font-bold">₹{item.hourlyRate.toLocaleString('en-IN')}/hr</span>
-                    </div>
+                    <div className="pt-3 border-t border-border/60 flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedVerification(item)}
+                        className="flex-1 px-3 py-2 rounded-xl bg-muted/60 hover:bg-muted text-foreground font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
+                      >
+                        <EyeIcon className="w-3.5 h-3.5" />
+                        <span>Inspect KYC & Photos</span>
+                      </button>
 
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                      {item.bio || 'No bio submitted.'}
-                    </p>
+                      {item.status !== 'Approved' && (
+                        <button
+                          onClick={() => handleApprove(item.profileId)}
+                          disabled={isApproving}
+                          className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-xs transition-all disabled:opacity-50"
+                        >
+                          Approve
+                        </button>
+                      )}
 
-                    <div className="flex flex-wrap gap-1 mb-4">
-                      {item.specialties?.map((s) => (
-                        <span key={s} className="px-2 py-0.5 rounded-md bg-muted text-[10px] font-medium text-foreground/80">
-                          {s}
-                        </span>
-                      ))}
+                      {item.status !== 'Rejected' && (
+                        <button
+                          onClick={() => {
+                            setSelectedVerification(item);
+                            setShowRejectModal(true);
+                          }}
+                          className="px-3 py-2 rounded-xl border border-rose-500/30 text-rose-600 hover:bg-rose-500/10 font-semibold text-xs transition-all"
+                        >
+                          Reject
+                        </button>
+                      )}
                     </div>
                   </div>
-
-                  <div className="pt-3 border-t border-border/60 flex items-center gap-2">
-                    <button
-                      onClick={() => setSelectedVerification(item)}
-                      className="flex-1 px-3 py-2 rounded-xl bg-muted/60 hover:bg-muted text-foreground font-semibold text-xs flex items-center justify-center gap-1.5 transition-all"
-                    >
-                      <EyeIcon className="w-3.5 h-3.5" />
-                      <span>Inspect KYC</span>
-                    </button>
-
-                    {item.status !== 'Approved' && (
-                      <button
-                        onClick={() => handleApprove(item.profileId)}
-                        disabled={isApproving}
-                        className="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-semibold text-xs hover:bg-emerald-700 shadow-xs transition-all disabled:opacity-50"
-                      >
-                        Approve
-                      </button>
-                    )}
-
-                    {item.status !== 'Rejected' && (
-                      <button
-                        onClick={() => {
-                          setSelectedVerification(item);
-                          setShowRejectModal(true);
-                        }}
-                        className="px-3 py-2 rounded-xl border border-rose-500/30 text-rose-600 hover:bg-rose-500/10 font-semibold text-xs transition-all"
-                      >
-                        Reject
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
       )}
 
-      {/* TAB 2: USERS DIRECTORY */}
+      {/* TAB 2: BOOKINGS & REVENUE LEDGER */}
+      {activeTab === 'bookings' && (
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/80 p-4 rounded-2xl">
+            <div className="flex items-center gap-2">
+              <BanknotesIcon className="w-5 h-5 text-accent" />
+              <h2 className="text-sm font-bold text-foreground">Escrow & Booking Revenue Ledger</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              {(['All', 'Completed', 'Confirmed', 'Pending', 'Cancelled'] as const).map((status) => (
+                <button
+                  key={status}
+                  onClick={() => setBookingFilter(status)}
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
+                    bookingFilter === status
+                      ? 'bg-accent text-accent-foreground border-accent shadow-xs'
+                      : 'bg-card text-muted-foreground border-border/80 hover:bg-muted'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+              <button
+                onClick={() => refetchBookings()}
+                className="p-1.5 rounded-xl border border-border hover:bg-muted text-muted-foreground"
+                title="Refresh Ledger"
+              >
+                <ArrowPathIcon className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
+            {isLoadingBookings ? (
+              <div className="py-20 flex justify-center">
+                <div className="w-8 h-8 border-4 border-accent border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : bookingsData?.length === 0 ? (
+              <div className="text-center py-16 p-8">
+                <BanknotesIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+                <p className="text-base font-bold text-foreground">No booking records found</p>
+                <p className="text-xs text-muted-foreground mt-1">Bookings matching this filter will appear here.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
+                    <tr>
+                      <th className="px-5 py-3.5">Booking / Order ID</th>
+                      <th className="px-4 py-3.5">Seeker</th>
+                      <th className="px-4 py-3.5">Companion</th>
+                      <th className="px-4 py-3.5 text-right">Gross GMV</th>
+                      <th className="px-4 py-3.5 text-right">Platform Fee (15%)</th>
+                      <th className="px-4 py-3.5 text-right">Companion Net (85%)</th>
+                      <th className="px-4 py-3.5">Status</th>
+                      <th className="px-4 py-3.5">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60">
+                    {bookingsData?.map((b) => (
+                      <tr key={b.bookingId} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground">
+                          {b.bookingId.slice(0, 8)}...
+                        </td>
+                        <td className="px-4 py-3.5 font-semibold text-foreground">
+                          {b.seekerName}
+                        </td>
+                        <td className="px-4 py-3.5 font-semibold text-accent">
+                          {b.providerName}
+                        </td>
+                        <td className="px-4 py-3.5 font-mono font-bold text-foreground text-right">
+                          ₹{b.totalAmount.toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400 text-right">
+                          ₹{b.platformFee.toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right">
+                          ₹{b.providerEarnings.toLocaleString('en-IN')}
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            b.status === 'Completed'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              : b.status === 'Cancelled'
+                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                              : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                          }`}>
+                            {b.status}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5 text-muted-foreground text-[11px]">
+                          {new Date(b.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: USERS DIRECTORY */}
       {activeTab === 'users' && (
         <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
           <div className="p-4 border-b border-border/80 flex items-center justify-between gap-4">
@@ -331,59 +536,97 @@ export const AdminDashboard: React.FC = () => {
                   <th className="px-4 py-3.5">Companion Status</th>
                   <th className="px-4 py-3.5">Trust Score</th>
                   <th className="px-4 py-3.5">Registered</th>
+                  <th className="px-5 py-3.5 text-right">Moderation Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {usersData?.map((user) => (
-                  <tr key={user.id} className="hover:bg-muted/30 transition-colors">
-                    <td className="px-5 py-3.5 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-accent/15 text-accent font-bold flex items-center justify-center text-xs">
-                        {user.firstName[0]}
-                      </div>
-                      <div>
-                        <p className="font-bold text-foreground">{user.firstName} {user.lastName}</p>
-                        <p className="text-[11px] text-muted-foreground">{user.email}</p>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      <div className="flex gap-1">
-                        {user.roles.map((r) => (
-                          <span key={r} className="px-2 py-0.5 rounded-md bg-muted text-[10px] font-semibold text-foreground">
-                            {r}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3.5">
-                      {user.hasCompanionProfile ? (
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          user.companionStatus === 'Approved'
-                            ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                            : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                {usersData?.map((user) => {
+                  const isSuspended = user.trustScore < 0;
+                  const isUserAnAdmin = user.roles?.includes('Admin') || user.email?.toLowerCase() === 'admin@cue.local';
+
+                  return (
+                    <tr key={user.id} className="hover:bg-muted/30 transition-colors">
+                      <td className="px-5 py-3.5 flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs ${
+                          isUserAnAdmin ? 'bg-amber-500/20 text-amber-500' : 'bg-accent/15 text-accent'
                         }`}>
-                          {user.companionStatus}
+                          {user.firstName?.[0] || 'U'}
+                        </div>
+                        <div>
+                          <p className="font-bold text-foreground flex items-center gap-1.5">
+                            <span>{user.firstName} {user.lastName}</span>
+                            {isSuspended && (
+                              <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[9px] font-extrabold uppercase">
+                                Suspended
+                              </span>
+                            )}
+                          </p>
+                          <p className="text-[11px] text-muted-foreground">{user.email}</p>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex gap-1">
+                          {user.roles.map((r) => (
+                            <span key={r} className={`px-2 py-0.5 rounded-md text-[10px] font-semibold ${
+                              r === 'Admin' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 font-bold' : 'bg-muted text-foreground'
+                            }`}>
+                              {r}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {user.hasCompanionProfile ? (
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            user.companionStatus === 'Approved'
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                          }`}>
+                            {user.companionStatus}
+                          </span>
+                        ) : (
+                          <span className="text-muted-foreground text-[11px]">
+                            {isUserAnAdmin ? 'Superuser Admin' : 'Seeker Only'}
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 font-bold">
+                        <span className={`px-2 py-0.5 rounded-md text-xs font-mono ${
+                          isSuspended
+                            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                        }`}>
+                          {user.trustScore}/100
                         </span>
-                      ) : (
-                        <span className="text-muted-foreground text-[11px]">Client Only</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3.5 font-bold">
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-mono">
-                        {user.trustScore}/100
-                      </span>
-                    </td>
-                    <td className="px-4 py-3.5 text-muted-foreground text-[11px]">
-                      {new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                      <td className="px-4 py-3.5 text-muted-foreground text-[11px]">
+                        {new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        {!isUserAnAdmin && (
+                          <button
+                            onClick={() => handleToggleSuspend(user.id)}
+                            disabled={isTogglingSuspend}
+                            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
+                              isSuspended
+                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20'
+                                : 'bg-rose-500/10 text-rose-600 border-rose-500/30 hover:bg-rose-500/20'
+                            }`}
+                          >
+                            {isSuspended ? 'Reinstate' : 'Suspend'}
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* TAB 3: PAYOUTS */}
+      {/* TAB 4: PAYOUTS */}
       {activeTab === 'payouts' && (
         <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-xs">
           <div className="p-4 border-b border-border/80 flex items-center justify-between">
@@ -451,7 +694,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: MIS REPORTS */}
+      {/* TAB 5: MIS REPORTS & TRAJECTORY */}
       {activeTab === 'mis' && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -504,29 +747,78 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* KYC Inspection Modal */}
+      {/* Enhanced KYC & 3-Photo Inspection Modal */}
       {selectedVerification && !showRejectModal && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-card border border-border rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl max-h-[92vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-border mb-6">
               <div>
-                <h2 className="text-lg font-bold text-foreground">KYC & Document Verification</h2>
-                <p className="text-xs text-muted-foreground">{selectedVerification.fullName} ({selectedVerification.email})</p>
+                <h2 className="text-lg font-bold text-foreground">Companion Application & Identity Verification</h2>
+                <p className="text-xs text-muted-foreground">
+                  {selectedVerification.displayName ? `${selectedVerification.displayName} • Legal: ` : ''}{selectedVerification.fullName} ({selectedVerification.email})
+                </p>
               </div>
               <button
                 onClick={() => setSelectedVerification(null)}
-                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
+                className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground text-sm font-bold"
               >
                 ✕
               </button>
             </div>
 
+            {/* 1. Public Browse Gallery Photos (3 Images) */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-foreground flex items-center gap-1.5 uppercase tracking-wider">
+                  <PhotoIcon className="w-4 h-4 text-accent" />
+                  <span>Public Discovery Profile Photos (Up to 3 Images)</span>
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  These 3 images will be visible to all seekers during discovery browsing
+                </span>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                {[0, 1, 2].map((idx) => {
+                  const images = selectedVerification.profileImages && selectedVerification.profileImages.length > 0
+                    ? selectedVerification.profileImages
+                    : (selectedVerification.photoUrl ? [selectedVerification.photoUrl] : []);
+                  const url = images[idx];
+
+                  return (
+                    <div key={idx} className="rounded-2xl overflow-hidden aspect-square border border-border bg-muted relative">
+                      {url ? (
+                        <>
+                          <img
+                            src={url}
+                            alt={`Profile Gallery photo ${idx + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <span className="absolute bottom-2 left-2 px-2 py-0.5 rounded-md bg-black/70 text-white text-[10px] font-mono">
+                            Photo #{idx + 1}
+                          </span>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/60 p-2 text-center text-xs">
+                          <PhotoIcon className="w-6 h-6 mb-1 opacity-50" />
+                          <span>Slot #{idx + 1} Empty</span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* 2. Verification KYC Credentials */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               <div>
-                <span className="text-xs font-semibold text-muted-foreground mb-2 block">1. Live Face Selfie</span>
+                <span className="text-xs font-bold text-foreground mb-2 block uppercase tracking-wider">
+                  Live Identity Selfie (Liveness Check)
+                </span>
                 <div className="rounded-2xl overflow-hidden aspect-square border border-border bg-muted">
                   <img
-                    src={selectedVerification.selfieVerificationUrl || selectedVerification.photoUrl || ''}
+                    src={selectedVerification.selfieVerificationUrl || selectedVerification.photoUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=400'}
                     alt="Applicant Selfie"
                     className="w-full h-full object-cover"
                   />
@@ -534,7 +826,9 @@ export const AdminDashboard: React.FC = () => {
               </div>
 
               <div>
-                <span className="text-xs font-semibold text-muted-foreground mb-2 block">2. Government ID Proof</span>
+                <span className="text-xs font-bold text-foreground mb-2 block uppercase tracking-wider">
+                  Government Photo ID Proof
+                </span>
                 <div className="rounded-2xl overflow-hidden aspect-square border border-border bg-muted">
                   <img
                     src={selectedVerification.idProofUrl || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=600'}
@@ -545,9 +839,17 @@ export const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4 rounded-xl bg-muted/40 border border-border/80 text-xs mb-6 space-y-1">
-              <p><strong className="text-foreground">Bio:</strong> {selectedVerification.bio}</p>
-              <p><strong className="text-foreground">Proposed Hourly Rate:</strong> ₹{selectedVerification.hourlyRate}/hr</p>
+            {/* 3. Applicant Details */}
+            <div className="p-4 rounded-xl bg-muted/40 border border-border/80 text-xs mb-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <p><strong className="text-foreground">Display Name:</strong> {selectedVerification.displayName || selectedVerification.fullName}</p>
+                <p><strong className="text-foreground">Proposed Hourly Rate:</strong> ₹{selectedVerification.hourlyRate}/hr</p>
+              </div>
+              <p><strong className="text-foreground">Bio:</strong> {selectedVerification.bio || 'No bio provided'}</p>
+              <div>
+                <strong className="text-foreground">Specialties:</strong>{' '}
+                {selectedVerification.specialties?.join(', ') || 'General Companionship'}
+              </div>
             </div>
 
             <div className="flex justify-end gap-3">

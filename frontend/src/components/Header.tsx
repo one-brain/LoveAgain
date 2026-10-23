@@ -26,7 +26,11 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { data: walletData } = useGetWalletBalanceQuery(undefined, { skip: !isAuthenticated });
+  const isAdmin = Boolean(
+    user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local'
+  );
+
+  const { data: walletData } = useGetWalletBalanceQuery(undefined, { skip: !isAuthenticated || isAdmin });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
@@ -35,11 +39,10 @@ const Header: React.FC = () => {
   const themeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync profile data from REST API whenever authenticated
-  const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated });
-  const { data: myProfileData } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated });
+  const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated || isAdmin });
+  const { data: myProfileData } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated || isAdmin });
 
   const companionStatus = myProfileData?.profile?.status;
-  const isAdmin = user?.roles?.includes('Admin') || user?.email?.toLowerCase().includes('admin');
 
   useEffect(() => {
     if (seekerProfileData?.profile?.firstName) {
@@ -151,44 +154,53 @@ const Header: React.FC = () => {
         <div className="flex h-18 items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent via-accent-hover to-accent/90 flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:scale-105 transition-transform duration-200">
-                <SparklesIcon className="w-6 h-6" />
+            <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-3 group">
+              <div className={`w-10 h-10 rounded-xl ${isAdmin ? 'bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 shadow-amber-500/20' : 'bg-gradient-to-br from-accent via-accent-hover to-accent/90'} flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:scale-105 transition-transform duration-200`}>
+                {isAdmin ? <ShieldCheckIcon className="w-6 h-6" /> : <SparklesIcon className="w-6 h-6" />}
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-bold tracking-tight text-foreground group-hover:text-accent transition-colors font-serif">
-                  Cue
+                <span className="text-xl font-bold tracking-tight text-foreground group-hover:text-accent transition-colors font-serif flex items-center gap-1.5">
+                  Cue {isAdmin && <span className="text-[11px] font-sans font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">Admin</span>}
                 </span>
                 <span className="text-[11px] font-medium tracking-wide uppercase text-muted-foreground -mt-1 hidden sm:inline">
-                  Companion Experiences
+                  {isAdmin ? 'Back-Office Portal' : 'Companion Experiences'}
                 </span>
               </div>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
-            <Link
-              to="/discovery"
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                isActive('/discovery')
-                  ? 'bg-accent/15 text-accent font-semibold shadow-xs'
-                  : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
-              }`}
-            >
-              Discover Companions
-            </Link>
-            <Link
-              to="/how-it-works"
-              className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                isActive('/how-it-works')
-                  ? 'bg-accent/15 text-accent font-semibold shadow-xs'
-                  : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
-              }`}
-            >
-              How It Works
-            </Link>
-          </nav>
+          {isAdmin ? (
+            <div className="hidden md:flex items-center gap-2">
+              <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center gap-2 shadow-xs">
+                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span>Back-Office Operations & Revenue Monitor</span>
+              </div>
+            </div>
+          ) : (
+            <nav className="hidden md:flex items-center gap-1">
+              <Link
+                to="/discovery"
+                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/discovery')
+                    ? 'bg-accent/15 text-accent font-semibold shadow-xs'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
+                }`}
+              >
+                Discover Companions
+              </Link>
+              <Link
+                to="/how-it-works"
+                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive('/how-it-works')
+                    ? 'bg-accent/15 text-accent font-semibold shadow-xs'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
+                }`}
+              >
+                How It Works
+              </Link>
+            </nav>
+          )}
 
           {/* Right Action Area */}
           <div className="hidden md:flex items-center gap-3">
@@ -362,53 +374,56 @@ const Header: React.FC = () => {
                     </div>
 
                     <div className="space-y-0.5">
-                      <Link
-                        to="/profile"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
-                      >
-                        <UserCircleIcon className="w-4 h-4 text-muted-foreground" />
-                        <span>My Account</span>
-                      </Link>
-                      <Link
-                        to={companionStatus === 'Approved' ? '/provider' : '/apply-companion'}
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
-                      >
-                        <SparklesIcon className="w-4 h-4 text-accent" />
-                        <span>{companionStatus === 'Approved' ? 'Companion Hub' : companionStatus === 'PendingReview' ? 'Application Status ⏳' : 'Become a Companion'}</span>
-                      </Link>
-                      {isAdmin && (
+                      {isAdmin ? (
                         <Link
                           to="/admin"
                           onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-colors font-bold"
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors font-bold"
                         >
-                          <ShieldCheckIcon className="w-4 h-4 text-rose-500" />
+                          <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
                           <span>Admin Portal</span>
                         </Link>
+                      ) : (
+                        <>
+                          <Link
+                            to="/profile"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                          >
+                            <UserCircleIcon className="w-4 h-4 text-muted-foreground" />
+                            <span>My Account</span>
+                          </Link>
+                          <Link
+                            to={companionStatus === 'Approved' ? '/provider' : '/apply-companion'}
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                          >
+                            <SparklesIcon className="w-4 h-4 text-accent" />
+                            <span>{companionStatus === 'Approved' ? 'Companion Hub' : companionStatus === 'PendingReview' ? 'Application Status ⏳' : 'Become a Companion'}</span>
+                          </Link>
+                          <Link
+                            to="/bookings"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                          >
+                            <CalendarIcon className="w-4 h-4 text-muted-foreground" />
+                            <span>My Bookings</span>
+                          </Link>
+                          <Link
+                            to="/wallet"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <BanknotesIcon className="w-4 h-4 text-accent" />
+                              <span>Cue Wallet</span>
+                            </div>
+                            <span className="font-mono text-xs font-bold text-accent">
+                              ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
+                            </span>
+                          </Link>
+                        </>
                       )}
-                      <Link
-                        to="/bookings"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
-                      >
-                        <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                        <span>My Bookings</span>
-                      </Link>
-                      <Link
-                        to="/wallet"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center justify-between px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <BanknotesIcon className="w-4 h-4 text-accent" />
-                          <span>Cue Wallet</span>
-                        </div>
-                        <span className="font-mono text-xs font-bold text-accent">
-                          ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
-                        </span>
-                      </Link>
                     </div>
 
                     <div className="border-t border-border/60 pt-1 mt-1.5">
@@ -468,49 +483,14 @@ const Header: React.FC = () => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border/80 bg-card px-4 pt-4 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-150">
-          <Link
-            to="/discovery"
-            className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-          >
-            Discover Companions
-          </Link>
-          <Link
-            to="/how-it-works"
-            className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-          >
-            How It Works
-          </Link>
-          {isAuthenticated ? (
+          {isAdmin ? (
             <>
               <Link
-                to="/bookings"
-                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2.5 rounded-xl text-base font-semibold text-amber-500 hover:bg-amber-500/10"
               >
-                My Bookings
-              </Link>
-              <Link
-                to="/provider"
-                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-              >
-                Provider Hub
-              </Link>
-              <Link
-                to="/wallet"
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-              >
-                <div className="flex items-center gap-2">
-                  <BanknotesIcon className="w-5 h-5 text-accent" />
-                  <span>Cue Wallet</span>
-                </div>
-                <span className="font-mono text-sm font-bold text-accent">
-                  ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
-                </span>
-              </Link>
-              <Link
-                to="/profile"
-                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-              >
-                Profile Settings
+                Admin Back-Office Portal
               </Link>
               <div className="border-t border-border/60 pt-3">
                 <button
@@ -522,32 +502,89 @@ const Header: React.FC = () => {
               </div>
             </>
           ) : (
-            <div className="pt-2 flex flex-col gap-2">
+            <>
               <Link
-                to="/wallet"
-                className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-border/80 bg-muted/40 text-foreground font-medium"
+                to="/discovery"
+                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
               >
-                <div className="flex items-center gap-2">
-                  <BanknotesIcon className="w-5 h-5 text-accent" />
-                  <span>Cue Wallet</span>
+                Discover Companions
+              </Link>
+              <Link
+                to="/how-it-works"
+                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+              >
+                How It Works
+              </Link>
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    to="/bookings"
+                    className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                  >
+                    My Bookings
+                  </Link>
+                  <Link
+                    to="/provider"
+                    className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                  >
+                    Provider Hub
+                  </Link>
+                  <Link
+                    to="/wallet"
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BanknotesIcon className="w-5 h-5 text-accent" />
+                      <span>Cue Wallet</span>
+                    </div>
+                    <span className="font-mono text-sm font-bold text-accent">
+                      ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
+                    </span>
+                  </Link>
+                  <Link
+                    to="/profile"
+                    className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                  >
+                    Profile Settings
+                  </Link>
+                  <div className="border-t border-border/60 pt-3">
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-3 py-2.5 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10"
+                    >
+                      Log Out
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="pt-2 flex flex-col gap-2">
+                  <Link
+                    to="/wallet"
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-border/80 bg-muted/40 text-foreground font-medium"
+                  >
+                    <div className="flex items-center gap-2">
+                      <BanknotesIcon className="w-5 h-5 text-accent" />
+                      <span>Cue Wallet</span>
+                    </div>
+                    <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
+                      Escrow Vault
+                    </span>
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="w-full text-center py-2.5 rounded-xl border border-border font-medium text-foreground"
+                  >
+                    Log In
+                  </Link>
+                  <Link
+                    to="/register"
+                    className="w-full text-center py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold"
+                  >
+                    Get Started
+                  </Link>
                 </div>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded-md bg-accent/15 text-accent">
-                  Escrow Vault
-                </span>
-              </Link>
-              <Link
-                to="/login"
-                className="w-full text-center py-2.5 rounded-xl border border-border font-medium text-foreground"
-              >
-                Log In
-              </Link>
-              <Link
-                to="/register"
-                className="w-full text-center py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold"
-              >
-                Get Started
-              </Link>
-            </div>
+              )}
+            </>
           )}
         </div>
       )}

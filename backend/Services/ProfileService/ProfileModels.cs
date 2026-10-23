@@ -83,7 +83,9 @@ public sealed record AdminVerificationItemResponse(
     string? SelfieVerificationUrl,
     string? RejectionReason,
     DateTime CreatedAt,
-    DateTime? ReviewedAt
+    DateTime? ReviewedAt,
+    string? DisplayName = null,
+    IReadOnlyCollection<string>? ProfileImages = null
 );
 
 public sealed record RejectApplicationRequest(string Reason);
@@ -123,7 +125,9 @@ public sealed record AdminVerificationDetailResponse(
     string? RejectionReason,
     DateTime CreatedAt,
     DateTime? ReviewedAt,
-    Guid? ReviewedByAdminId
+    Guid? ReviewedByAdminId,
+    string? DisplayName = null,
+    IReadOnlyCollection<string>? ProfileImages = null
 );
 
 public sealed record AdminBookingLedgerItemResponse(

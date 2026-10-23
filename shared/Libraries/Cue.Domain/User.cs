@@ -38,9 +38,16 @@ public sealed class User
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
 
-        foreach (var role in roles)
+        if (roles.Contains(UserRole.Admin))
         {
-            this.roles.Add(role);
+            this.roles.Add(UserRole.Admin);
+        }
+        else
+        {
+            foreach (var role in roles)
+            {
+                this.roles.Add(role);
+            }
         }
     }
 
@@ -119,14 +126,49 @@ public sealed class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetRoles(IEnumerable<UserRole> newRoles)
+    {
+        roles.Clear();
+        if (newRoles.Contains(UserRole.Admin))
+        {
+            roles.Add(UserRole.Admin);
+        }
+        else
+        {
+            foreach (var r in newRoles)
+            {
+                roles.Add(r);
+            }
+        }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void AddRole(UserRole role)
     {
+        if (role == UserRole.Admin)
+        {
+            roles.Clear();
+            roles.Add(UserRole.Admin);
+            UpdatedAt = DateTime.UtcNow;
+            return;
+        }
+
+        if (roles.Contains(UserRole.Admin))
+        {
+            throw new InvalidOperationException("Administrators cannot have Seeker or Provider roles.");
+        }
+
         roles.Add(role);
         UpdatedAt = DateTime.UtcNow;
     }
 
     public void PromoteToVerifiedCompanion()
     {
+        if (roles.Contains(UserRole.Admin))
+        {
+            throw new InvalidOperationException("Administrators cannot become companions.");
+        }
+
         roles.Add(UserRole.Provider);
         IsVerified = true;
         UpdatedAt = DateTime.UtcNow;

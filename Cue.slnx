@@ -1,6 +1,7 @@
 <Solution>
   <Folder Name="/backend/" />
   <Folder Name="/backend/Services/">
+    <Project Path="backend/Services/AuthService/AuthService.csproj" />
     <Project Path="backend/Services/ChatService/ChatService.csproj" />
     <Project Path="backend/Services/DiscoveryService.Tests/DiscoveryService.Tests.csproj" />
     <Project Path="backend/Services/DiscoveryService/DiscoveryService.csproj" />
@@ -14,6 +15,7 @@
     <Project Path="shared/Libraries/Cue.Common/Cue.Common.csproj" />
     <Project Path="shared/Libraries/Cue.Domain/Cue.Domain.csproj" />
     <Project Path="shared/Libraries/Cue.Infrastructure.Data/Cue.Infrastructure.Data.csproj" />
+    <Project Path="shared/Libraries/Cue.Infrastructure.Email/Cue.Infrastructure.Email.csproj" />
     <Project Path="shared/Libraries/Cue.Infrastructure.Messaging/Cue.Infrastructure.Messaging.csproj" />
     <Project Path="shared/Libraries/Cue.Infrastructure.Storage/Cue.Infrastructure.Storage.csproj" />
   </Folder>

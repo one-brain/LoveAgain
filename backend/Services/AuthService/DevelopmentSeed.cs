@@ -24,19 +24,19 @@ public static class DevelopmentSeed
             dbContext.Users.Add(user);
         }
 
-        // 2. Ensure Admin user
+        // 2. Ensure Admin user (Admin ONLY - cannot act as Seeker or Companion)
         var normalizedAdminEmail = AdminEmail.ToLowerInvariant();
         var adminUser = await dbContext.Users.SingleOrDefaultAsync(user => user.Email == normalizedAdminEmail, cancellationToken);
         if (adminUser == null)
         {
-            adminUser = new User(normalizedAdminEmail, "Cue", "Admin", new[] { UserRole.Admin, UserRole.Seeker });
+            adminUser = new User(normalizedAdminEmail, "Cue", "Admin", new[] { UserRole.Admin });
             adminUser.SetPasswordHash(passwords.Hash(AdminPassword));
             adminUser.Verify();
             dbContext.Users.Add(adminUser);
         }
-        else if (!adminUser.Roles.Contains(UserRole.Admin))
+        else
         {
-            adminUser.AddRole(UserRole.Admin);
+            adminUser.SetRoles(new[] { UserRole.Admin });
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);

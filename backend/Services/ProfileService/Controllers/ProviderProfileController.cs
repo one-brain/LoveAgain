@@ -25,6 +25,8 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
             return Unauthorized(new { error = "Invalid user token." });
         }
 
+        if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
+
         var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
             .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
@@ -65,6 +67,8 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
             return Conflict(new { error = ex.Message });
         }
 
+        if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
+
         var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
             .SingleAsync(p => p.UserId == userId, cancellationToken);
@@ -99,6 +103,8 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
             return Conflict(new { error = ex.Message });
         }
 
+        if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
+
         var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
             .SingleAsync(p => p.UserId == userId, cancellationToken);
@@ -125,7 +131,9 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         try
         {
             var result = await sender.Send(command, cancellationToken);
-            var profile = await dbContext.ProviderProfiles
+            if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
+
+        var profile = await dbContext.ProviderProfiles
                 .AsNoTracking()
                 .SingleAsync(p => p.Id == result.ProfileId, cancellationToken);
             return CreatedAtAction(nameof(GetMyProviderProfile), ToResponse(profile));
@@ -185,6 +193,8 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
             return BadRequest(new { error = string.Join(" ", ex.Errors.Select(e => e.ErrorMessage)) });
         }
 
+        if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
+
         var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
             .SingleAsync(p => p.UserId == userId, cancellationToken);
@@ -217,6 +227,8 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         {
             return BadRequest(new { error = string.Join(" ", ex.Errors.Select(e => e.ErrorMessage)) });
         }
+
+        if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
 
         var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
@@ -348,6 +360,14 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         }
     }
 
+    private async Task<bool> IsUserAdminAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        var roleClaim = User.FindFirstValue(ClaimTypes.Role);
+        if (string.Equals(roleClaim, "Admin", System.StringComparison.OrdinalIgnoreCase)) return true;
+        var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+        return user != null && user.Roles.Contains(UserRole.Admin);
+    }
+
     private bool TryGetUserId(out Guid userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
@@ -389,11 +409,14 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         CancellationToken cancellationToken)
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
+        if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators cannot apply or act as a companion." });
 
         if (request.HourlyRate <= 0)
         {
             return BadRequest(new { error = "Hourly rate must be greater than zero." });
         }
+
+        if (await IsUserAdminAsync(userId, cancellationToken)) return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
 
         var profile = await dbContext.ProviderProfiles
             .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);

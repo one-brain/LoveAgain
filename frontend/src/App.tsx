@@ -28,14 +28,37 @@ const RouteLoader: React.FC = () => (
   </div>
 );
 
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+const isUserAdmin = (user: any) =>
+  Boolean(user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local');
+
+const NonAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (isUserAdmin(user)) return <Navigate to="/admin" replace />;
+  return <>{children}</>;
+};
+
+const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  if (!isUserAdmin(user)) return <Navigate to="/discovery" replace />;
+  return <>{children}</>;
+};
+
+const PublicOrNonAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  if (isAuthenticated && isUserAdmin(user)) {
+    return <Navigate to="/admin" replace />;
+  }
+  return <>{children}</>;
 };
 
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  return isAuthenticated ? <Navigate to="/discovery" replace /> : <>{children}</>;
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  if (isAuthenticated) {
+    return isUserAdmin(user) ? <Navigate to="/admin" replace /> : <Navigate to="/discovery" replace />;
+  }
+  return <>{children}</>;
 };
 
 function App() {
@@ -43,7 +66,14 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
+          <Route
+            index
+            element={
+              <PublicOrNonAdminRoute>
+                <Home />
+              </PublicOrNonAdminRoute>
+            }
+          />
           <Route
             path="login"
             element={
@@ -70,7 +100,9 @@ function App() {
             path="discovery"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <Discovery />
+                <PublicOrNonAdminRoute>
+                  <Discovery />
+                </PublicOrNonAdminRoute>
               </Suspense>
             }
           />
@@ -86,7 +118,9 @@ function App() {
             path="provider/:userId"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProviderDetail />
+                <PublicOrNonAdminRoute>
+                  <ProviderDetail />
+                </PublicOrNonAdminRoute>
               </Suspense>
             }
           />
@@ -94,7 +128,9 @@ function App() {
             path="providers/:userId"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProviderDetail />
+                <PublicOrNonAdminRoute>
+                  <ProviderDetail />
+                </PublicOrNonAdminRoute>
               </Suspense>
             }
           />
@@ -104,9 +140,9 @@ function App() {
             path="profile"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProtectedRoute>
+                <NonAdminRoute>
                   <ProfilePage />
-                </ProtectedRoute>
+                </NonAdminRoute>
               </Suspense>
             }
           />
@@ -115,9 +151,9 @@ function App() {
             path="provider"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProtectedRoute>
+                <NonAdminRoute>
                   <ProviderDashboard />
-                </ProtectedRoute>
+                </NonAdminRoute>
               </Suspense>
             }
           />
@@ -125,9 +161,9 @@ function App() {
             path="apply-companion"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProtectedRoute>
+                <NonAdminRoute>
                   <ApplyCompanion />
-                </ProtectedRoute>
+                </NonAdminRoute>
               </Suspense>
             }
           />
@@ -135,9 +171,9 @@ function App() {
             path="admin"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProtectedRoute>
+                <AdminRoute>
                   <AdminDashboard />
-                </ProtectedRoute>
+                </AdminRoute>
               </Suspense>
             }
           />
@@ -145,9 +181,9 @@ function App() {
             path="bookings"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProtectedRoute>
+                <NonAdminRoute>
                   <Bookings />
-                </ProtectedRoute>
+                </NonAdminRoute>
               </Suspense>
             }
           />
@@ -155,9 +191,9 @@ function App() {
             path="wallet"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProtectedRoute>
+                <NonAdminRoute>
                   <WalletPage />
-                </ProtectedRoute>
+                </NonAdminRoute>
               </Suspense>
             }
           />
@@ -165,9 +201,9 @@ function App() {
             path="chat/:orderId"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <ProtectedRoute>
+                <NonAdminRoute>
                   <Chat />
-                </ProtectedRoute>
+                </NonAdminRoute>
               </Suspense>
             }
           />

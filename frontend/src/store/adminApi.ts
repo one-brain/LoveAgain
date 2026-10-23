@@ -15,6 +15,8 @@ export interface AdminVerificationItem {
   profileId: string;
   userId: string;
   fullName: string;
+  displayName?: string;
+  profileImages?: string[];
   email: string;
   phone?: string;
   photoUrl?: string;
@@ -27,6 +29,21 @@ export interface AdminVerificationItem {
   rejectionReason?: string;
   createdAt: string;
   reviewedAt?: string;
+}
+
+export interface AdminBookingLedgerItem {
+  bookingId: string;
+  seekerId: string;
+  seekerName: string;
+  providerId: string;
+  providerName: string;
+  status: string;
+  totalAmount: number;
+  platformFee: number;
+  providerEarnings: number;
+  startTime: string;
+  endTime: string;
+  createdAt: string;
 }
 
 export interface AdminUserItem {
@@ -94,10 +111,20 @@ export const adminApi = createApi({
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
+      const userStr = localStorage.getItem('cue_user') || sessionStorage.getItem('cue_user');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (user.id) headers.set('X-User-Id', user.id);
+          if (user.email) headers.set('X-User-Email', user.email);
+        } catch {
+          // ignore parsing error
+        }
+      }
       return headers;
     },
   }),
-  tagTypes: ['Verifications', 'AdminUsers', 'AdminMis', 'AdminPayouts', 'Profile'],
+  tagTypes: ['Verifications', 'AdminUsers', 'AdminMis', 'AdminPayouts', 'AdminBookings', 'Profile'],
   endpoints: (builder) => ({
     applyCompanion: builder.mutation<any, CompanionApplicationRequest>({
       query: (body) => ({
@@ -141,6 +168,14 @@ export const adminApi = createApi({
       providesTags: ['AdminUsers'],
     }),
 
+    toggleUserSuspend: builder.mutation<{ message: string; isSuspended: boolean }, string>({
+      query: (userId) => ({
+        url: `/admin/users/${userId}/toggle-suspend`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['AdminUsers'],
+    }),
+
     getAdminMis: builder.query<PlatformMisReport, void>({
       query: () => '/payments/admin/mis',
       providesTags: ['AdminMis'],
@@ -159,6 +194,14 @@ export const adminApi = createApi({
       }),
       invalidatesTags: ['AdminPayouts', 'AdminMis'],
     }),
+
+    getAdminBookings: builder.query<AdminBookingLedgerItem[], { status?: string }>({
+      query: (params) => ({
+        url: '/admin/bookings',
+        params,
+      }),
+      providesTags: ['AdminBookings'],
+    }),
   }),
 });
 
@@ -168,8 +211,10 @@ export const {
   useApproveVerificationMutation,
   useRejectVerificationMutation,
   useGetAdminUsersQuery,
+  useToggleUserSuspendMutation,
   useGetAdminMisQuery,
   useGetAdminPayoutsQuery,
   useProcessAdminPayoutMutation,
+  useGetAdminBookingsQuery,
 } = adminApi;
 

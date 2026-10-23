@@ -9,9 +9,43 @@ namespace ProfileService.Controllers;
 
 [ApiController]
 [Route("api/v1/admin")]
-[Authorize]
 public sealed class AdminController(CueDbContext dbContext) : ControllerBase
 {
+    private async Task<bool> IsAdminAsync(CancellationToken cancellationToken = default)
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role);
+        if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+            User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin"))
+        {
+            return true;
+        }
+
+        if (TryGetUserId(out var userId))
+        {
+            var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
+            if (user != null && user.Roles.Contains(UserRole.Admin)) return true;
+        }
+
+        var email = User.FindFirstValue(ClaimTypes.Email)
+            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(email))
+        {
+            var normalized = email.Trim().ToLowerInvariant();
+            var user = await dbContext.Users.AsNoTracking().FirstOrDefaultAsync(u => u.Email.ToLower() == normalized, cancellationToken);
+            if (user != null && user.Roles.Contains(UserRole.Admin)) return true;
+        }
+
+        return false;
+    }
+
+    private bool TryGetUserId(out Guid userId)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+        return Guid.TryParse(userIdClaim, out userId);
+    }
+
     [HttpGet("verifications")]
     [ProducesResponseType(typeof(IReadOnlyList<AdminVerificationItemResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AdminVerificationItemResponse>>> GetVerifications(
@@ -20,7 +54,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        if (!IsAdmin()) return Forbid();
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
 
         var query = dbContext.ProviderProfiles
             .AsNoTracking()
@@ -53,7 +87,9 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
                 x.p.SelfieVerificationUrl,
                 x.p.RejectionReason,
                 x.p.CreatedAt,
-                x.p.ReviewedAt
+                x.p.ReviewedAt,
+                x.p.DisplayName,
+                x.p.ProfileImages
             ))
             .ToListAsync(cancellationToken);
 
@@ -67,7 +103,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         Guid profileId,
         CancellationToken cancellationToken)
     {
-        if (!IsAdmin()) return Forbid();
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
         TryGetUserId(out var adminId);
 
         var profile = await dbContext.ProviderProfiles
@@ -95,7 +131,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         [FromBody] RejectApplicationRequest request,
         CancellationToken cancellationToken)
     {
-        if (!IsAdmin()) return Forbid();
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
         TryGetUserId(out var adminId);
 
         if (string.IsNullOrWhiteSpace(request.Reason))
@@ -120,7 +156,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        if (!IsAdmin()) return Forbid();
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
 
         var query = dbContext.Users.AsNoTracking().Where(u => u.DeletedAt == null);
 
@@ -164,7 +200,6 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         return Ok(result);
     }
 
-
     [HttpGet("verifications/{profileId:guid}")]
     [ProducesResponseType(typeof(AdminVerificationDetailResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -172,7 +207,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         Guid profileId,
         CancellationToken cancellationToken)
     {
-        if (!IsAdmin()) return Forbid();
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
 
         var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
@@ -199,7 +234,9 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             profile.RejectionReason,
             profile.CreatedAt,
             profile.ReviewedAt,
-            profile.ReviewedByAdminId
+            profile.ReviewedByAdminId,
+            profile.DisplayName,
+            profile.ProfileImages
         ));
     }
 
@@ -211,7 +248,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         [FromQuery] int pageSize = 50,
         CancellationToken cancellationToken = default)
     {
-        if (!IsAdmin()) return Forbid();
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
 
         var query = dbContext.ServiceOrders.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(status) && Enum.TryParse<OrderStatus>(status, true, out var orderStatus))
@@ -258,7 +295,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         Guid userId,
         CancellationToken cancellationToken)
     {
-        if (!IsAdmin()) return Forbid();
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
 
         var user = await dbContext.Users.IgnoreQueryFilters().SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user == null) return NotFound(new { error = "User not found." });
@@ -275,18 +312,4 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         await dbContext.SaveChangesAsync(cancellationToken);
         return Ok(new { message = "User status updated.", isSuspended = user.TrustScore < 0, trustScore = user.TrustScore });
     }
-
-    private bool IsAdmin()
-    {
-        var role = User.FindFirstValue(ClaimTypes.Role);
-        return string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
-               User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin");
-    }
-
-    private bool TryGetUserId(out Guid userId)
-    {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out userId);
-    }
 }
-
