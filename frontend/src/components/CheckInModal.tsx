@@ -149,3 +149,4 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
     </div>
   );
 };
+

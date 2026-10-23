@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import { setUser } from '../store/slices/authSlice';
 import { useSearchParams, Link } from 'react-router-dom';
 import type { RootState } from '../store';
 import {
@@ -38,6 +39,7 @@ const PRESET_SPECIALTIES = [
 ];
 
 const Profile: React.FC = () => {
+  const dispatch = useDispatch();
   const { user, accessToken } = useSelector((state: RootState) => state.auth);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -67,7 +69,7 @@ const Profile: React.FC = () => {
 
   // Queries
   const shouldSkip = !accessToken;
-  const { data: seekerData, isLoading: seekerLoading } = useGetSeekerProfileQuery(undefined, { skip: shouldSkip });
+  const { data: seekerData, isLoading: seekerLoading, refetch: refetchSeeker } = useGetSeekerProfileQuery(undefined, { skip: shouldSkip });
   const { data: providerData, isLoading: providerLoading, refetch: refetchProvider } = useGetMyProfileQuery(undefined, { skip: shouldSkip });
 
   // Mutations
@@ -138,17 +140,35 @@ const Profile: React.FC = () => {
     setPersonalError(null);
     setPersonalSuccess(false);
     try {
+      const cleanFirst = firstName.trim();
+      const cleanLast = lastName.trim();
+      const cleanPhone = phone.trim() || null;
+      const cleanDob = dateOfBirth.trim() || null;
+
       await updateSeeker({
-        firstName,
-        lastName,
-        phone: phone || null,
-        dateOfBirth: dateOfBirth || null,
+        firstName: cleanFirst,
+        lastName: cleanLast,
+        phone: cleanPhone,
+        dateOfBirth: cleanDob,
       }).unwrap();
+
+      if (user) {
+        dispatch(
+          setUser({
+            ...user,
+            firstName: cleanFirst,
+            lastName: cleanLast,
+          })
+        );
+      }
+
+      await refetchSeeker();
       setPersonalSuccess(true);
       setTimeout(() => setPersonalSuccess(false), 4000);
-    } catch {
-      setPersonalSuccess(true);
-      setTimeout(() => setPersonalSuccess(false), 4000);
+    } catch (err: any) {
+      setPersonalError(
+        err?.data?.error || 'Failed to update personal details. Please verify your inputs.'
+      );
     }
   };
 
@@ -425,9 +445,19 @@ const Profile: React.FC = () => {
           </div>
 
           {providerSuccess && (
-            <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-semibold flex items-center gap-2">
-              <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
-              <span>Companion settings updated successfully!</span>
+            <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
+                <span>Companion settings saved and persisted!</span>
+              </div>
+              {companionStatus === 'Draft' && (
+                <Link
+                  to="/apply-companion"
+                  className="px-3 py-1 rounded-lg bg-accent text-accent-foreground text-[11px] font-bold hover:opacity-90 transition-opacity w-fit"
+                >
+                  Complete Verification (ID & Payout) &rarr;
+                </Link>
+              )}
             </div>
           )}
 

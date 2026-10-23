@@ -87,9 +87,12 @@ export const adminApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: '/api/v1',
     prepareHeaders: (headers) => {
-      const token = localStorage.getItem('cue_token') || sessionStorage.getItem('cue_token');
+      const token =
+        localStorage.getItem('accessToken') ||
+        localStorage.getItem('cue_token') ||
+        sessionStorage.getItem('cue_token');
       if (token) {
-        headers.set('authorization', `Bearer ${token}`);
+        headers.set('Authorization', `Bearer ${token}`);
       }
       return headers;
     },

@@ -29,9 +29,23 @@ public sealed class UpdateProfileCommandHandler(IProviderProfileRepository repos
 {
     public async Task<Unit> Handle(UpdateProfileCommand command, CancellationToken cancellationToken)
     {
-        var profile = await repository.GetByUserIdAsync(command.UserId, cancellationToken)
-            ?? throw new KeyNotFoundException("Provider profile was not found.");
-        profile.Update(command.HourlyRate, command.Bio, command.Specialties, command.MaxRadiusKm, command.IntroVideoUrl);
+        var profile = await repository.GetByUserIdAsync(command.UserId, cancellationToken);
+        if (profile == null)
+        {
+            profile = new ProviderProfile(
+                command.UserId,
+                command.HourlyRate,
+                command.Bio ?? string.Empty,
+                command.Specialties,
+                command.MaxRadiusKm > 0 ? command.MaxRadiusKm : 50,
+                command.IntroVideoUrl
+            );
+            await repository.AddAsync(profile, cancellationToken);
+        }
+        else
+        {
+            profile.Update(command.HourlyRate, command.Bio ?? string.Empty, command.Specialties, command.MaxRadiusKm, command.IntroVideoUrl);
+        }
         await repository.SaveChangesAsync(cancellationToken);
         return Unit.Value;
     }

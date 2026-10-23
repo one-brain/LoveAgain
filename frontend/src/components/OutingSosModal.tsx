@@ -125,3 +125,4 @@ export const OutingSosModal: React.FC<OutingSosModalProps> = ({
     </div>
   );
 };
+
