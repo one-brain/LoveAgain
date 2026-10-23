@@ -6,3 +6,4 @@ public record BookingRequirements(
     string? TransportMode = null,
     string? SpecialNotes = null
 );
+

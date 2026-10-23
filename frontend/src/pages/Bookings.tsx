@@ -9,6 +9,9 @@ import {
 } from '../store/bookingApi';
 import { BookingCard, type BookingSummary } from '../components/BookingCard';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
+import { CheckInModal } from '../components/CheckInModal';
+import { OutingSosModal } from '../components/OutingSosModal';
+import { useCompleteBookingMutation } from '../store/bookingApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
@@ -108,6 +111,29 @@ const Bookings: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [bookingSort, setBookingSort] = useState('date-asc');
   const [checkoutBooking, setCheckoutBooking] = useState<BookingSummary | null>(null);
+  const [completeBooking] = useCompleteBookingMutation();
+  const [checkInBooking, setCheckInBooking] = useState<BookingSummary | null>(null);
+  const [sosBooking, setSosBooking] = useState<BookingSummary | null>(null);
+
+  const handleCheckIn = (b: BookingSummary) => {
+    setCheckInBooking(b);
+  };
+
+  const handleComplete = async (orderId: string) => {
+    if (window.confirm('Confirm that this outing experience has completed safely? This will finalize the session and release escrow funds.')) {
+      try {
+        await completeBooking(orderId).unwrap();
+        refetchProviderBookings();
+        refetchSeekerBookings();
+      } catch (err: any) {
+        alert(err?.data?.error || 'Failed to complete session');
+      }
+    }
+  };
+
+  const handleOpenSos = (b: BookingSummary) => {
+    setSosBooking(b);
+  };
 
   // Initialize specialties
   useEffect(() => {
@@ -412,8 +438,12 @@ const Bookings: React.FC = () => {
                     <BookingCard
                       key={b.orderId}
                       booking={b}
+                      roleMode={roleMode}
                       onCancel={handleCancel}
                       onPay={(bkg) => setCheckoutBooking(bkg)}
+                      onCheckIn={handleCheckIn}
+                      onComplete={handleComplete}
+                      onOpenSos={handleOpenSos}
                     />
                   ))}
                 </div>
@@ -431,7 +461,12 @@ const Bookings: React.FC = () => {
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {pastBookings.map((b) => (
-                    <BookingCard key={b.orderId} booking={b} />
+                    <BookingCard
+                      key={b.orderId}
+                      booking={b}
+                      roleMode={roleMode}
+                      onOpenSos={handleOpenSos}
+                    />
                   ))}
                 </div>
               )}
@@ -529,8 +564,12 @@ const Bookings: React.FC = () => {
                         <BookingCard
                           key={b.orderId}
                           booking={b}
+                          roleMode={roleMode}
                           onCancel={handleCancel}
                           onPay={(bkg) => setCheckoutBooking(bkg)}
+                          onCheckIn={handleCheckIn}
+                          onComplete={handleComplete}
+                          onOpenSos={handleOpenSos}
                         />
                       ))}
                   </div>
@@ -539,6 +578,29 @@ const Bookings: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {checkInBooking && (
+        <CheckInModal
+          isOpen={true}
+          onClose={() => setCheckInBooking(null)}
+          orderId={checkInBooking.orderId}
+          clientName={checkInBooking.providerName || 'Client'}
+          meetingAddress={checkInBooking.meetingAddress}
+          onSuccess={() => {
+            refetchProviderBookings();
+            refetchSeekerBookings();
+          }}
+        />
+      )}
+
+      {sosBooking && (
+        <OutingSosModal
+          isOpen={true}
+          onClose={() => setSosBooking(null)}
+          orderId={sosBooking.orderId}
+          meetingAddress={sosBooking.meetingAddress}
+        />
       )}
 
       {checkoutBooking && (

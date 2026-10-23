@@ -88,6 +88,14 @@ export const bookingApi = createApi({
       }),
       invalidatesTags: ['Bookings'],
     }),
+    checkInBooking: builder.mutation<void, { orderId: string; pin: string }>({
+      query: ({ orderId, pin }) => ({
+        url: `/bookings/${orderId}/checkin`,
+        method: 'PATCH',
+        body: { pin },
+      }),
+      invalidatesTags: ['Bookings'],
+    }),
     startBooking: builder.mutation<void, string>({
       query: (orderId) => ({
         url: `/bookings/${orderId}/start`,
@@ -144,6 +152,7 @@ export const {
   useCreateBookingMutation,
   useGetMyBookingsQuery,
   useConfirmBookingMutation,
+  useCheckInBookingMutation,
   useStartBookingMutation,
   useCompleteBookingMutation,
   useCancelBookingMutation,

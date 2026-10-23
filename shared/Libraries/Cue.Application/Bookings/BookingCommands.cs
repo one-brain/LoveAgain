@@ -70,6 +70,39 @@ public sealed class StartOrderCommandHandler(
     }
 }
 
+public sealed record CheckInBookingCommand(Guid OrderId, Guid ProviderId, string Pin) : IRequest<Unit>;
+
+public sealed class CheckInBookingCommandValidator : AbstractValidator<CheckInBookingCommand>
+{
+    public CheckInBookingCommandValidator()
+    {
+        RuleFor(command => command.OrderId).NotEmpty();
+        RuleFor(command => command.ProviderId).NotEmpty();
+        RuleFor(command => command.Pin).NotEmpty().Length(6);
+    }
+}
+
+public sealed class CheckInBookingCommandHandler(
+    IBookingRepository repository,
+    IEventPublisher eventPublisher) : IRequestHandler<CheckInBookingCommand, Unit>
+{
+    public async Task<Unit> Handle(CheckInBookingCommand command, CancellationToken cancellationToken)
+    {
+        var order = await repository.GetByIdAsync(command.OrderId, cancellationToken)
+            ?? throw new KeyNotFoundException("Booking was not found.");
+
+        if (order.ProviderId != command.ProviderId)
+        {
+            throw new UnauthorizedAccessException("Only the provider/companion can verify the check-in PIN.");
+        }
+
+        order.CheckIn(command.Pin);
+        await repository.SaveChangesAsync(cancellationToken);
+        await eventPublisher.PublishAsync(new BookingConfirmedEvent(order.Id, order.Status.ToString()), cancellationToken);
+        return Unit.Value;
+    }
+}
+
 public sealed record CancelBookingCommand(Guid OrderId, Guid UserId, string Reason) : IRequest<Unit>;
 
 public sealed class CancelBookingCommandValidator : AbstractValidator<CancelBookingCommand>

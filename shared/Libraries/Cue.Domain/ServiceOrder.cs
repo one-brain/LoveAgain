@@ -14,7 +14,8 @@ public sealed class ServiceOrder
         decimal totalAmount,
         decimal platformFee,
         string? meetingAddress = null,
-        BookingRequirements? requirements = null)
+        BookingRequirements? requirements = null,
+        string? checkInPin = null)
     {
         if (providerId == Guid.Empty || seekerId == Guid.Empty) throw new ArgumentException("Provider and seeker are required.");
         if (providerId == seekerId) throw new ArgumentException("Provider and seeker must be different users.");
@@ -32,6 +33,7 @@ public sealed class ServiceOrder
         ProviderEarnings = totalAmount - platformFee;
         MeetingAddress = meetingAddress?.Trim();
         Requirements = requirements;
+        CheckInPin = checkInPin?.Trim();
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -47,6 +49,8 @@ public sealed class ServiceOrder
     public decimal ProviderEarnings { get; private set; }
     public string? MeetingAddress { get; private set; }
     public BookingRequirements? Requirements { get; private set; }
+    public string? CheckInPin { get; private set; }
+    public DateTime? CheckedInAt { get; private set; }
     public string? CancellationReason { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -65,6 +69,20 @@ public sealed class ServiceOrder
     {
         EnsureStatus(OrderStatus.PendingPayment);
         Status = OrderStatus.Confirmed;
+        CheckInPin ??= Random.Shared.Next(100000, 999999).ToString();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void CheckIn(string pin)
+    {
+        EnsureStatus(OrderStatus.Confirmed);
+        if (string.IsNullOrWhiteSpace(pin) || !string.Equals(pin.Trim(), CheckInPin, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Invalid check-in PIN.");
+        }
+
+        Status = OrderStatus.InProgress;
+        CheckedInAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -72,6 +90,7 @@ public sealed class ServiceOrder
     {
         EnsureStatus(OrderStatus.Confirmed);
         Status = OrderStatus.InProgress;
+        CheckedInAt = DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 

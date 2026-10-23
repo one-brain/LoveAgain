@@ -14,7 +14,11 @@ public sealed record BookingSummary(
     DateTime StartTime,
     DateTime EndTime,
     [property: JsonConverter(typeof(JsonStringEnumConverter))] OrderStatus Status,
-    decimal TotalAmount);
+    decimal TotalAmount,
+    string? MeetingAddress = null,
+    string? CheckInPin = null,
+    DateTime? CheckedInAt = null,
+    BookingRequirements? Requirements = null);
 
 public sealed record GetUserBookingsQuery(Guid UserId) : IRequest<IReadOnlyList<BookingSummary>>;
 
@@ -23,7 +27,19 @@ public sealed class GetUserBookingsQueryHandler(IBookingRepository repository) :
     public async Task<IReadOnlyList<BookingSummary>> Handle(GetUserBookingsQuery query, CancellationToken cancellationToken)
     {
         var orders = await repository.GetForUserAsync(query.UserId, cancellationToken);
-        return orders.Select(order => new BookingSummary(order.Id, order.ProviderId, order.SeekerId, order.StartTime, order.EndTime, order.Status, order.TotalAmount)).ToArray();
+        return orders.Select(order => new BookingSummary(
+            order.Id,
+            order.ProviderId,
+            order.SeekerId,
+            order.StartTime,
+            order.EndTime,
+            order.Status,
+            order.TotalAmount,
+            order.MeetingAddress,
+            order.SeekerId == query.UserId ? order.CheckInPin : (order.Status is OrderStatus.InProgress or OrderStatus.Completed ? order.CheckInPin : null),
+            order.CheckedInAt,
+            order.Requirements
+        )).ToArray();
     }
 }
 
@@ -42,7 +58,19 @@ public sealed class GetProviderIncomingBookingsQueryHandler(IBookingRepository r
         }
 
         var orders = await repository.GetProviderIncomingAsync(query.ProviderId, cancellationToken);
-        return orders.Select(order => new BookingSummary(order.Id, order.ProviderId, order.SeekerId, order.StartTime, order.EndTime, order.Status, order.TotalAmount)).ToArray();
+        return orders.Select(order => new BookingSummary(
+            order.Id,
+            order.ProviderId,
+            order.SeekerId,
+            order.StartTime,
+            order.EndTime,
+            order.Status,
+            order.TotalAmount,
+            order.MeetingAddress,
+            order.Status is OrderStatus.InProgress or OrderStatus.Completed ? order.CheckInPin : null,
+            order.CheckedInAt,
+            order.Requirements
+        )).ToArray();
     }
 }
 
@@ -60,7 +88,19 @@ public sealed class GetSeekerOutgoingBookingsQueryHandler(IBookingRepository rep
         }
 
         var orders = await repository.GetSeekerOutgoingAsync(query.SeekerId, cancellationToken);
-        return orders.Select(order => new BookingSummary(order.Id, order.ProviderId, order.SeekerId, order.StartTime, order.EndTime, order.Status, order.TotalAmount)).ToArray();
+        return orders.Select(order => new BookingSummary(
+            order.Id,
+            order.ProviderId,
+            order.SeekerId,
+            order.StartTime,
+            order.EndTime,
+            order.Status,
+            order.TotalAmount,
+            order.MeetingAddress,
+            order.CheckInPin,
+            order.CheckedInAt,
+            order.Requirements
+        )).ToArray();
     }
 }
 

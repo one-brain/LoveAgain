@@ -111,6 +111,21 @@ public sealed class BookingsController(ISender sender) : ControllerBase
         return await SendLifecycle(new ConfirmBookingCommand(orderId, userId), cancellationToken);
     }
 
+    [HttpPatch("{orderId:guid}/checkin")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> CheckIn(
+        Guid orderId,
+        [FromBody] CheckInBookingRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        return await SendLifecycle(new CheckInBookingCommand(orderId, userId, request.Pin), cancellationToken);
+    }
+
     [HttpPatch("{orderId:guid}/start")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Start(Guid orderId, CancellationToken cancellationToken)
@@ -181,5 +196,6 @@ public sealed class BookingsController(ISender sender) : ControllerBase
         return Guid.TryParse(value, out userId);
     }
 
+    public sealed record CheckInBookingRequest(string Pin);
     public sealed record CancelBookingRequest(string Reason);
 }

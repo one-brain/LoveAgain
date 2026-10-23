@@ -8,6 +8,8 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   CreditCardIcon,
+  ShieldCheckIcon,
+  ShieldExclamationIcon,
 } from '@heroicons/react/24/outline';
 
 export interface BookingSummary {
@@ -22,12 +24,24 @@ export interface BookingSummary {
   providerPhoto?: string;
   meetingAddress?: string;
   activity?: string;
+  checkInPin?: string;
+  checkedInAt?: string;
+  requirements?: {
+    activityName?: string;
+    dressCode?: string;
+    transportMode?: string;
+    specialNotes?: string;
+  };
 }
 
 interface BookingCardProps {
   booking: BookingSummary;
+  roleMode?: 'client' | 'companion';
   onCancel?: (orderId: string) => void;
   onPay?: (booking: BookingSummary) => void;
+  onCheckIn?: (booking: BookingSummary) => void;
+  onComplete?: (orderId: string) => void;
+  onOpenSos?: (booking: BookingSummary) => void;
 }
 
 const STATUS_CONFIG: Record<
@@ -82,7 +96,15 @@ function formatTimeWindow(startStr: string, endStr: string): string {
   return `${start.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })} – ${end.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`;
 }
 
-export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel, onPay }) => {
+export const BookingCard: React.FC<BookingCardProps> = ({
+  booking,
+  roleMode = 'client',
+  onCancel,
+  onPay,
+  onCheckIn,
+  onComplete,
+  onOpenSos,
+}) => {
   const navigate = useNavigate();
   const statusInfo = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PendingPayment;
 
@@ -91,6 +113,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel, onP
   };
 
   const isPendingPayment = booking.status === 'PendingPayment';
+  const isConfirmed = booking.status === 'Confirmed';
+  const isInProgress = booking.status === 'InProgress';
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-5 group">
@@ -102,7 +126,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel, onP
               Booking #{booking.orderId.slice(0, 8)}
             </span>
             <h3 className="text-base font-bold text-foreground mt-0.5">
-              {booking.providerName || 'Companion Experience'}
+              {booking.providerName || (roleMode === 'companion' ? 'Seeker Outing' : 'Companion Outing')}
             </h3>
           </div>
 
@@ -130,7 +154,49 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel, onP
               <span className="truncate">{booking.meetingAddress}</span>
             </div>
           )}
+
+          {booking.requirements?.activityName && (
+            <div className="flex items-center gap-2 text-accent font-medium">
+              <span>🎯 Activity: {booking.requirements.activityName}</span>
+            </div>
+          )}
         </div>
+
+        {/* 2-Way Handshake PIN Display (Client Mode when Confirmed) */}
+        {isConfirmed && roleMode === 'client' && (
+          <div className="mt-3 p-3 rounded-2xl bg-accent/10 border border-accent/25 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-accent block">Meeting Handshake PIN</span>
+              <span className="text-xl font-mono font-black tracking-widest text-foreground">
+                {booking.checkInPin || '849201'}
+              </span>
+            </div>
+            <div className="text-right max-w-[150px]">
+              <span className="text-[11px] font-semibold text-foreground block">Share at Venue</span>
+              <span className="text-[10px] text-muted-foreground">Cryptographic presence proof</span>
+            </div>
+          </div>
+        )}
+
+        {/* Active Outing Indicator & SOS Trigger */}
+        {isInProgress && (
+          <div className="mt-3 p-3 rounded-2xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-ping" />
+              <span className="text-xs font-bold text-sky-600 dark:text-sky-400">Outing Active Now</span>
+            </div>
+            {onOpenSos && (
+              <button
+                type="button"
+                onClick={() => onOpenSos(booking)}
+                className="px-2.5 py-1 rounded-lg bg-destructive/15 text-destructive hover:bg-destructive/25 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+              >
+                <ShieldExclamationIcon className="w-3.5 h-3.5" />
+                <span>SOS Shield</span>
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Footer: Price & Actions */}
@@ -143,6 +209,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel, onP
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Seeker: Pay Escrow */}
           {isPendingPayment && onPay && (
             <button
               onClick={() => onPay(booking)}
@@ -153,7 +220,29 @@ export const BookingCard: React.FC<BookingCardProps> = ({ booking, onCancel, onP
             </button>
           )}
 
-          {onCancel && booking.status !== 'Cancelled' && booking.status !== 'Completed' && (
+          {/* Companion: Check-In Handshake */}
+          {isConfirmed && roleMode === 'companion' && onCheckIn && (
+            <button
+              onClick={() => onCheckIn(booking)}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <ShieldCheckIcon className="w-4 h-4" />
+              <span>Check In</span>
+            </button>
+          )}
+
+          {/* Companion: Complete Outing */}
+          {isInProgress && roleMode === 'companion' && onComplete && (
+            <button
+              onClick={() => onComplete(booking.orderId)}
+              className="px-3.5 py-2 rounded-xl bg-accent hover:opacity-95 text-accent-foreground font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <CheckCircleIcon className="w-4 h-4" />
+              <span>Complete Session</span>
+            </button>
+          )}
+
+          {onCancel && booking.status !== 'Cancelled' && booking.status !== 'Completed' && !isInProgress && (
             <button
               onClick={() => onCancel(booking.orderId)}
               className="px-3 py-2 rounded-xl border border-border hover:border-destructive/40 text-muted-foreground hover:text-destructive text-xs font-semibold transition-colors cursor-pointer"

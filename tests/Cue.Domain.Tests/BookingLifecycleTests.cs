@@ -96,4 +96,29 @@ public sealed class BookingLifecycleTests
         order.Complete();
         Assert.Throws<InvalidOperationException>(() => order.UpdateRequirements(updated));
     }
+
+    [Fact]
+    public void ServiceOrder_Handshake_VerifiesCheckInPin_AndTransitionsToInProgress()
+    {
+        var order = new ServiceOrder(
+            Guid.NewGuid(),
+            Guid.NewGuid(),
+            DateTime.UtcNow.AddHours(1),
+            DateTime.UtcNow.AddHours(3),
+            1000m,
+            150m
+        );
+
+        order.Confirm();
+        Assert.NotNull(order.CheckInPin);
+        Assert.Equal(6, order.CheckInPin.Length);
+
+        // Wrong PIN should fail
+        Assert.Throws<InvalidOperationException>(() => order.CheckIn("000000"));
+
+        // Correct PIN should succeed
+        order.CheckIn(order.CheckInPin);
+        Assert.Equal(OrderStatus.InProgress, order.Status);
+        Assert.NotNull(order.CheckedInAt);
+    }
 }

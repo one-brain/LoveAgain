@@ -76,6 +76,8 @@ internal sealed class ServiceOrderConfiguration : IEntityTypeConfiguration<Servi
         builder.Property(order => order.TotalAmount).HasPrecision(10, 2);
         builder.Property(order => order.PlatformFee).HasPrecision(10, 2);
         builder.Property(order => order.ProviderEarnings).HasPrecision(10, 2);
+        builder.Property(order => order.CheckInPin).HasMaxLength(10);
+        builder.Ignore(order => order.Requirements);
         builder.HasIndex(order => new { order.SeekerId, order.Status });
         builder.HasIndex(order => new { order.ProviderId, order.Status });
         builder.HasIndex(order => new { order.StartTime, order.EndTime });
