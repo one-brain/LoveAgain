@@ -1,3 +1,4 @@
+using Cue.Infrastructure.Storage;
 using System.Security.Claims;
 using Cue.Application.Profiles;
 using Cue.Domain;
@@ -12,7 +13,7 @@ namespace ProfileService.Controllers;
 [ApiController]
 [Route("api/v1/profiles/provider")]
 [Authorize]
-public sealed class ProviderProfileController(CueDbContext dbContext, ISender sender) : ControllerBase
+public sealed class ProviderProfileController(CueDbContext dbContext, ISender sender, IBlobStorage blobStorage) : ControllerBase
 {
     [HttpGet]
     [ProducesResponseType(typeof(ProviderProfileResponse), StatusCodes.Status200OK)]
@@ -159,7 +160,14 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         }
 
         var command = new UpdateProfileCommand(
-            userId, request.HourlyRate, request.Bio ?? string.Empty, request.Specialties, request.MaxRadiusKm, request.IntroVideoUrl);
+            userId,
+            request.HourlyRate,
+            request.Bio ?? string.Empty,
+            request.Specialties,
+            request.MaxRadiusKm,
+            request.IntroVideoUrl,
+            request.DisplayName,
+            request.ProfileImages);
 
         try
         {
@@ -373,14 +381,23 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
                 request.Bio,
                 request.Specialties,
                 request.MaxRadiusKm > 0 ? request.MaxRadiusKm : 50,
-                request.IntroVideoUrl
+                request.IntroVideoUrl,
+                request.DisplayName,
+                request.ProfileImages
             );
             profile.SubmitForReview(request.IdProofUrl, request.SelfieVerificationUrl);
             await dbContext.ProviderProfiles.AddAsync(profile, cancellationToken);
         }
         else
         {
-            profile.Update(request.HourlyRate, request.Bio, request.Specialties, request.MaxRadiusKm > 0 ? request.MaxRadiusKm : 50, request.IntroVideoUrl);
+            profile.Update(
+                request.HourlyRate,
+                request.Bio,
+                request.Specialties,
+                request.MaxRadiusKm > 0 ? request.MaxRadiusKm : 50,
+                request.IntroVideoUrl,
+                request.DisplayName,
+                request.ProfileImages);
             profile.SubmitForReview(request.IdProofUrl, request.SelfieVerificationUrl);
         }
 
@@ -388,10 +405,69 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         return Ok(ToResponse(profile));
     }
 
+    [HttpPost("upload-photo")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> UploadCompanionPhoto(IFormFile file, CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized(new { error = "Invalid user token." });
+        }
+
+        const long maxBytes = 5 * 1024 * 1024;
+        if (file is null || file.Length == 0)
+        {
+            return BadRequest(new { error = "An image file is required." });
+        }
+        if (file.Length > maxBytes)
+        {
+            return BadRequest(new { error = "Image must be 5MB or smaller." });
+        }
+
+        var permittedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (!permittedTypes.Contains(file.ContentType))
+        {
+            return BadRequest(new { error = "Only JPEG, PNG or WebP images are accepted." });
+        }
+
+        var extension = Path.GetExtension(file.FileName);
+        if (string.IsNullOrEmpty(extension))
+        {
+            extension = file.ContentType switch
+            {
+                "image/png" => ".png",
+                "image/webp" => ".webp",
+                _ => ".jpg",
+            };
+        }
+        var objectName = $"companions/{userId}/{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+        ms.Position = 0;
+
+        string photoUrl;
+        try
+        {
+            photoUrl = await blobStorage.UploadAsync(objectName, ms, file.ContentType, cancellationToken);
+        }
+        catch
+        {
+            // Resilient fallback to inline Data URI when S3/MinIO is not provisioned in cluster
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoUrl = $"data:{file.ContentType};base64,{base64}";
+        }
+
+        return Ok(new { photoUrl });
+    }
+
     private static ProviderProfileResponse ToResponse(ProviderProfile profile) =>
         new(profile.Id, profile.UserId, profile.HourlyRate, profile.Bio, profile.Specialties,
             profile.MaxRadiusKm, profile.IntroVideoUrl, profile.IsActive, profile.Status,
             profile.IdProofUrl, profile.SelfieVerificationUrl, profile.RejectionReason,
             profile.AverageRating,
-            profile.CreatedAt, profile.UpdatedAt, profile.DeletedAt, profile.IsDeleted);
+            profile.CreatedAt, profile.UpdatedAt, profile.DeletedAt, profile.IsDeleted,
+            profile.DisplayName, profile.ProfileImages);
 }

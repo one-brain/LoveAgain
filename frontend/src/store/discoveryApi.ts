@@ -18,6 +18,7 @@ export const discoveryApi = createApi({
         isVerified: boolean;
         trustScore: number;
         distanceKm: number | null;
+        profileImages?: string[];
       }>,
       {
         q?: string;
@@ -61,6 +62,7 @@ export const discoveryApi = createApi({
         isVerified: boolean;
         trustScore: number;
         upcomingSlots: Array<{ slotId: string; startTime: string; endTime: string; isBooked: boolean }>;
+        profileImages?: string[];
       },
       string
     >({

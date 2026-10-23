@@ -6,7 +6,15 @@ public sealed class ProviderProfile
     {
     }
 
-    public ProviderProfile(Guid userId, decimal hourlyRate, string bio, IEnumerable<string> specialties, decimal maxRadiusKm = 50, string? introVideoUrl = null)
+    public ProviderProfile(
+        Guid userId,
+        decimal hourlyRate,
+        string bio,
+        IEnumerable<string> specialties,
+        decimal maxRadiusKm = 50,
+        string? introVideoUrl = null,
+        string? displayName = null,
+        IEnumerable<string>? profileImages = null)
     {
         if (userId == Guid.Empty)
         {
@@ -36,6 +44,8 @@ public sealed class ProviderProfile
         Specialties = normalizedSpecialties;
         MaxRadiusKm = maxRadiusKm > 0 ? maxRadiusKm : 50;
         IntroVideoUrl = introVideoUrl;
+        DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
+        ProfileImages = NormalizeProfileImages(profileImages);
         IsActive = false;
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
@@ -43,6 +53,8 @@ public sealed class ProviderProfile
 
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
+    public string? DisplayName { get; private set; }
+    public IReadOnlyCollection<string> ProfileImages { get; private set; } = [];
     public decimal HourlyRate { get; private set; }
     public string Bio { get; private set; } = string.Empty;
     public IReadOnlyCollection<string> Specialties { get; private set; } = [];
@@ -106,6 +118,7 @@ public sealed class ProviderProfile
         RejectionReason = reason?.Trim();
         UpdatedAt = DateTime.UtcNow;
     }
+
     public void Delete()
     {
         if (IsDeleted) throw new InvalidOperationException("Provider profile is already deleted.");
@@ -191,15 +204,14 @@ public sealed class ProviderProfile
         UpdatedAt = DateTime.UtcNow;
     }
 
-    /// <summary>
-    /// Updates the profile details (hourly rate, bio, specialties, max radius, intro video).
-    /// </summary>
-    /// <param name="hourlyRate">New hourly rate (must be positive)</param>
-    /// <param name="bio">New bio (up to 4000 characters)</param>
-    /// <param name="specialties">New specialties (at least one required)</param>
-    /// <param name="maxRadiusKm">New max radius in km (must be positive)</param>
-    /// <param name="introVideoUrl">Optional intro video URL</param>
-    public void Update(decimal hourlyRate, string bio, IEnumerable<string> specialties, decimal maxRadiusKm, string? introVideoUrl = null)
+    public void Update(
+        decimal hourlyRate,
+        string bio,
+        IEnumerable<string> specialties,
+        decimal maxRadiusKm,
+        string? introVideoUrl = null,
+        string? displayName = null,
+        IEnumerable<string>? profileImages = null)
     {
         if (hourlyRate <= 0)
         {
@@ -227,6 +239,24 @@ public sealed class ProviderProfile
         Specialties = normalizedSpecialties;
         MaxRadiusKm = maxRadiusKm;
         IntroVideoUrl = introVideoUrl;
+        if (displayName != null)
+        {
+            DisplayName = string.IsNullOrWhiteSpace(displayName) ? null : displayName.Trim();
+        }
+        if (profileImages != null)
+        {
+            ProfileImages = NormalizeProfileImages(profileImages);
+        }
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    private static string[] NormalizeProfileImages(IEnumerable<string>? profileImages)
+    {
+        if (profileImages == null) return [];
+        return profileImages
+            .Where(img => !string.IsNullOrWhiteSpace(img))
+            .Select(img => img.Trim())
+            .Take(3)
+            .ToArray();
     }
 }

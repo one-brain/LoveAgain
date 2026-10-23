@@ -13,6 +13,9 @@ import {
   XMarkIcon,
   SparklesIcon,
   AcademicCapIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
 
@@ -74,12 +77,17 @@ const RADIUS_OPTIONS: DropdownOption[] = [
   { value: '100', label: 'Within 100 km', description: 'Extended regional area' },
 ];
 
-// Rich Universal Profiles showcasing all 3 lenses
+// Rich Universal Profiles showcasing Display Name and 3 Profile Images
 const CURATED_SAMPLE_PROVIDERS = [
   {
     providerId: 'sample-1',
     displayName: 'Elena Rostova',
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=600&q=80',
+    ],
     hourlyRate: 45,
     bio: 'Semi-pro tennis coach, contemporary art curator, and bilingual city companion.',
     specialties: ['Tennis', 'Yoga', 'Art', 'Fitness Trainer'],
@@ -95,6 +103,11 @@ const CURATED_SAMPLE_PROVIDERS = [
     providerId: 'sample-2',
     displayName: 'Marcus Vance',
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+    ],
     hourlyRate: 55,
     bio: 'Commercial photographer and street foodie guide. Available for photoshoots and culinary outings.',
     specialties: ['Photography', 'Cooking', 'City Tour'],
@@ -110,6 +123,11 @@ const CURATED_SAMPLE_PROVIDERS = [
     providerId: 'sample-3',
     displayName: 'Dr. Sophia Chen',
     photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=600&q=80',
+    ],
     hourlyRate: 40,
     bio: 'Cardiologist & classical violinist. Seeking verified matrimony or compatible live-in partner.',
     specialties: ['Matrimony', 'Live-In', 'Violin', 'Hiking'],
@@ -131,6 +149,11 @@ const CURATED_SAMPLE_PROVIDERS = [
     providerId: 'sample-4',
     displayName: 'Julian Alvarez',
     photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=600&q=80',
+    ],
     hourlyRate: 50,
     bio: 'Certified salsa dance instructor & architectural history guide. Available for events & plus-one.',
     specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
@@ -146,6 +169,11 @@ const CURATED_SAMPLE_PROVIDERS = [
     providerId: 'sample-5',
     displayName: 'Aria Thorne',
     photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=600&q=80',
+    ],
     hourlyRate: 48,
     bio: 'Software Architect. Seeking serious matrimonial match or cultured dinner dates.',
     specialties: ['Matrimony', 'Dating', 'Coding / Tech', 'Reading'],
@@ -167,6 +195,11 @@ const CURATED_SAMPLE_PROVIDERS = [
     providerId: 'sample-6',
     displayName: 'David Morales',
     photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&w=600&q=80',
+      'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=600&q=80',
+    ],
     hourlyRate: 60,
     bio: 'Sommelier and fitness trainer. Host for wine tasting dinners and high-intensity workout coaching.',
     specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife'],
@@ -199,6 +232,9 @@ const Discovery: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [userLocation] = useState<{ latitude: number; longitude: number } | null>(null);
 
+  // Track active photo index per provider card for interactive 3-photo browsing
+  const [activePhotoIndexByProvider, setActivePhotoIndexByProvider] = useState<Record<string, number>>({});
+
   // Booking Modal State
   const [selectedProviderForBooking, setSelectedProviderForBooking] = useState<any | null>(null);
   const [activeCheckoutOrderId, setActiveCheckoutOrderId] = useState<string | null>(null);
@@ -213,8 +249,8 @@ const Discovery: React.FC = () => {
     if (paramSpec !== null) setSpecialty(paramSpec);
   }, [searchParams]);
 
-  // Trigger backend query for sync (data or empty)
-  useListProvidersQuery({
+  // Query live backend providers
+  const { data: backendData } = useListProvidersQuery({
     q: q.trim() || undefined,
     specialty: specialty !== 'All' ? specialty : undefined,
     minRate: minRate ? Number(minRate) : undefined,
@@ -226,7 +262,38 @@ const Discovery: React.FC = () => {
   });
 
   const displayProviders = useMemo(() => {
-    let list = [...CURATED_SAMPLE_PROVIDERS];
+    const rawItems = Array.isArray(backendData)
+      ? backendData
+      : Array.isArray((backendData as any)?.items)
+      ? (backendData as any).items
+      : [];
+    const liveItems = rawItems.map((item: any) => {
+      const imgs: string[] =
+        item.profileImages && item.profileImages.length > 0
+          ? item.profileImages
+          : item.photoUrl
+          ? [item.photoUrl]
+          : ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'];
+      return {
+        providerId: item.providerId as string,
+        displayName: (item.displayName || 'Verified Companion') as string,
+        photoUrl: imgs[0],
+        profileImages: imgs,
+        hourlyRate: Number(item.hourlyRate || 1500),
+        bio: (item.bio || '') as string,
+        specialties: (item.specialties || []) as string[],
+        averageRating: Number(item.averageRating || 5.0),
+        isVerified: Boolean(item.isVerified),
+        trustScore: Number(item.trustScore || 99),
+        distanceKm: Number(item.distanceKm ?? 2.0),
+        lenses: ['companions', 'pro_work'] as PlatformLens[],
+        services: [] as string[],
+        matrimony: null as any,
+      };
+    });
+
+    const existingIds = new Set(liveItems.map((i: any) => i.providerId));
+    let list = [...liveItems, ...CURATED_SAMPLE_PROVIDERS.filter((s) => !existingIds.has(s.providerId))];
 
     // Filter by Active Lens
     if (activeLens !== 'all') {
@@ -239,7 +306,7 @@ const Discovery: React.FC = () => {
         (p) =>
           p.displayName.toLowerCase().includes(lower) ||
           p.bio.toLowerCase().includes(lower) ||
-          p.specialties.some((s) => s.toLowerCase().includes(lower)) ||
+          p.specialties.some((s: string) => s.toLowerCase().includes(lower)) ||
           (p.matrimony &&
             (p.matrimony.education.toLowerCase().includes(lower) ||
               p.matrimony.profession.toLowerCase().includes(lower)))
@@ -249,7 +316,7 @@ const Discovery: React.FC = () => {
     if (specialty !== 'All') {
       list = list.filter(
         (p) =>
-          p.specialties.some((s) => s.toLowerCase().includes(specialty.toLowerCase())) ||
+          p.specialties.some((s: string) => s.toLowerCase().includes(specialty.toLowerCase())) ||
           (specialty.includes('Matrimony') && p.matrimony != null)
       );
     }
@@ -273,7 +340,27 @@ const Discovery: React.FC = () => {
     }
 
     return list;
-  }, [activeLens, q, specialty, minRate, maxRate, verifiedOnly, sortBy]);
+  }, [backendData, activeLens, q, specialty, minRate, maxRate, verifiedOnly, sortBy]);
+
+  const handleSelectPhoto = (providerId: string, idx: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActivePhotoIndexByProvider((prev) => ({
+      ...prev,
+      [providerId]: idx,
+    }));
+  };
+
+  const handleStepPhoto = (providerId: string, total: number, delta: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActivePhotoIndexByProvider((prev) => {
+      const current = prev[providerId] ?? 0;
+      const next = (current + delta + total) % total;
+      return {
+        ...prev,
+        [providerId]: next,
+      };
+    });
+  };
 
   const handleLensChange = (lens: PlatformLens | 'all') => {
     setActiveLens(lens);
@@ -350,10 +437,10 @@ const Discovery: React.FC = () => {
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={
                     activeLens === 'pro_work'
-                      ? 'Search skills (e.g. Photography, Tennis)...'
+                      ? 'Search display name or skills (e.g. Photography, Tennis)...'
                       : activeLens === 'relationships'
                       ? 'Search matrimony, live-in, dates...'
-                      : 'Search activities, city tours, companions...'
+                      : 'Search display name, activities, companions...'
                   }
                   className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted/60 border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
                 />
@@ -490,130 +577,203 @@ const Discovery: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {displayProviders.map((provider) => (
-              <div
-                key={provider.providerId}
-                onClick={() => navigate(`/provider/${provider.providerId}`)}
-                className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group"
-              >
-                {/* Photo & Top Badges */}
-                <div className="relative h-60 overflow-hidden bg-muted">
-                  <img
-                    src={provider.photoUrl ?? ''}
-                    alt={provider.displayName}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border shadow-xs">
-                    ₹{provider.hourlyRate}/hr
-                  </div>
-                  {provider.isVerified && (
-                    <div className="absolute top-3 left-3 bg-success/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-success-foreground flex items-center gap-1 shadow-xs">
-                      <CheckBadgeIcon className="w-3.5 h-3.5" />
-                      <span>Govt ID Verified</span>
-                    </div>
-                  )}
+            {displayProviders.map((provider) => {
+              const images =
+                provider.profileImages && provider.profileImages.length > 0
+                  ? provider.profileImages.slice(0, 3)
+                  : [provider.photoUrl ?? ''];
+              const activeIdx = activePhotoIndexByProvider[provider.providerId] ?? 0;
+              const currentPhoto = images[activeIdx] || images[0] || '';
 
-                  {/* Lens Indicator Badges */}
-                  <div className="absolute bottom-3 left-3 flex gap-1.5">
-                    {provider.lenses.includes('pro_work') && (
-                      <span className="px-2 py-0.5 rounded-md bg-sky-900/80 backdrop-blur-md text-[10px] font-semibold text-sky-200 border border-sky-400/30">
-                        💼 Skilled Pro
-                      </span>
-                    )}
-                    {provider.lenses.includes('relationships') && (
-                      <span className="px-2 py-0.5 rounded-md bg-rose-900/80 backdrop-blur-md text-[10px] font-semibold text-rose-200 border border-rose-400/30">
-                        💍 Matrimony
-                      </span>
-                    )}
-                    {provider.lenses.includes('companions') && (
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-900/80 backdrop-blur-md text-[10px] font-semibold text-emerald-200 border border-emerald-400/30">
-                        🤝 Companion
-                      </span>
-                    )}
-                  </div>
-                </div>
+              return (
+                <div
+                  key={provider.providerId}
+                  onClick={() => navigate(`/provider/${provider.providerId}`)}
+                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group"
+                >
+                  {/* Interactive 3-Photo Carousel & Top Badges */}
+                  <div className="relative h-64 overflow-hidden bg-muted">
+                    <img
+                      src={currentPhoto}
+                      alt={`${provider.displayName} photo ${activeIdx + 1}`}
+                      className="w-full h-full object-cover transition-all duration-300"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/20 pointer-events-none" />
 
-                {/* Profile Details */}
-                <div className="p-5 flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors">
-                        {provider.displayName}
-                      </h3>
-                      <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
-                        <StarIcon className="w-4 h-4 fill-amber-400" />
-                        <span>{provider.averageRating}</span>
-                      </div>
+                    {/* Top Right Rate Badge */}
+                    <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border shadow-xs">
+                      ₹{provider.hourlyRate}/hr
                     </div>
 
-                    <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
-                      {provider.bio}
-                    </p>
+                    {/* Top Left Verified + Photo Count Badge */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      {provider.isVerified && (
+                        <div className="bg-success/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-success-foreground flex items-center gap-1 shadow-xs">
+                          <CheckBadgeIcon className="w-3.5 h-3.5" />
+                          <span>Verified</span>
+                        </div>
+                      )}
+                      {images.length > 1 && (
+                        <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-semibold text-white flex items-center gap-1">
+                          <PhotoIcon className="w-3 h-3" />
+                          <span>
+                            {activeIdx + 1}/{images.length}
+                          </span>
+                        </div>
+                      )}
+                    </div>
 
-                    {/* Matrimony Biodata Highlights (If Present) */}
-                    {provider.matrimony && (
-                      <div className="mb-3 p-2.5 rounded-xl bg-muted/50 border border-border/80 text-[11px] space-y-1">
-                        <div className="flex items-center gap-1.5 font-semibold text-foreground">
-                          <AcademicCapIcon className="w-3.5 h-3.5 text-accent" />
-                          <span>{provider.matrimony.education}</span>
-                        </div>
-                        <div className="text-muted-foreground">
-                          {provider.matrimony.profession} · {provider.matrimony.diet} · {provider.matrimony.height}
-                        </div>
-                      </div>
+                    {/* Left / Right Photo Navigation Arrows */}
+                    {images.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={(e) => handleStepPhoto(provider.providerId, images.length, -1, e)}
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Previous photo"
+                        >
+                          <ChevronLeftIcon className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => handleStepPhoto(provider.providerId, images.length, 1, e)}
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/50 hover:bg-black/75 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="Next photo"
+                        >
+                          <ChevronRightIcon className="w-4 h-4" />
+                        </button>
+                      </>
                     )}
 
-                    {/* Offered Gigs / Services (If Present) */}
-                    {provider.services && provider.services.length > 0 && (
-                      <div className="mb-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                          Offered Services & Gigs:
-                        </span>
-                        <div className="flex flex-wrap gap-1">
-                          {provider.services.map((svc) => (
-                            <span
-                              key={svc}
-                              className="px-2 py-0.5 rounded-md bg-accent/10 text-accent text-[11px] font-medium"
+                    {/* Bottom Bar: Lens Badges (Left) & 3-Photo Thumbnail Switcher (Right) */}
+                    <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
+                      <div className="flex flex-wrap gap-1">
+                        {provider.lenses.includes('pro_work') && (
+                          <span className="px-2 py-0.5 rounded-md bg-sky-900/80 backdrop-blur-md text-[10px] font-semibold text-sky-200 border border-sky-400/30">
+                            💼 Skilled Pro
+                          </span>
+                        )}
+                        {provider.lenses.includes('relationships') && (
+                          <span className="px-2 py-0.5 rounded-md bg-rose-900/80 backdrop-blur-md text-[10px] font-semibold text-rose-200 border border-rose-400/30">
+                            💍 Matrimony
+                          </span>
+                        )}
+                        {provider.lenses.includes('companions') && (
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-900/80 backdrop-blur-md text-[10px] font-semibold text-emerald-200 border border-emerald-400/30">
+                            🤝 Companion
+                          </span>
+                        )}
+                      </div>
+
+                      {/* 3-Photo Mini Thumbnails */}
+                      {images.length > 1 && (
+                        <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md p-1 rounded-xl border border-white/15">
+                          {images.map((imgUrl: string, idx: number) => (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={(e) => handleSelectPhoto(provider.providerId, idx, e)}
+                              className={`w-7 h-7 rounded-lg overflow-hidden border-2 transition-all ${
+                                activeIdx === idx
+                                  ? 'border-accent scale-105 shadow-xs'
+                                  : 'border-transparent opacity-70 hover:opacity-100'
+                              }`}
+                              title={`View photo ${idx + 1}`}
                             >
-                              ✓ {svc}
-                            </span>
+                              <img
+                                src={imgUrl}
+                                alt={`${provider.displayName} thumb ${idx + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </button>
                           ))}
                         </div>
-                      </div>
-                    )}
-
-                    {/* Specialty / Activity Tags */}
-                    <div className="flex flex-wrap gap-1.5 mb-4">
-                      {provider.specialties.map((spec) => (
-                        <span
-                          key={spec}
-                          className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-muted-foreground"
-                        >
-                          #{spec}
-                        </span>
-                      ))}
+                      )}
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <MapPinIcon className="w-3.5 h-3.5" />
-                      {provider.distanceKm} km away
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedProviderForBooking(provider);
-                      }}
-                      className="px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent font-semibold transition-all shadow-2xs"
-                    >
-                      Book with Escrow &rarr;
-                    </button>
+                  {/* Profile Details */}
+                  <div className="p-5 flex-1 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors">
+                          {provider.displayName}
+                        </h3>
+                        <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
+                          <StarIcon className="w-4 h-4 fill-amber-400" />
+                          <span>{provider.averageRating}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
+                        {provider.bio}
+                      </p>
+
+                      {/* Matrimony Biodata Highlights (If Present) */}
+                      {provider.matrimony && (
+                        <div className="mb-3 p-2.5 rounded-xl bg-muted/50 border border-border/80 text-[11px] space-y-1">
+                          <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                            <AcademicCapIcon className="w-3.5 h-3.5 text-accent" />
+                            <span>{provider.matrimony.education}</span>
+                          </div>
+                          <div className="text-muted-foreground">
+                            {provider.matrimony.profession} · {provider.matrimony.diet} · {provider.matrimony.height}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Offered Gigs / Services (If Present) */}
+                      {provider.services && provider.services.length > 0 && (
+                        <div className="mb-3">
+                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
+                            Offered Services & Gigs:
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {provider.services.map((svc: string) => (
+                              <span
+                                key={svc}
+                                className="px-2 py-0.5 rounded-md bg-accent/10 text-accent text-[11px] font-medium"
+                              >
+                                ✓ {svc}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Specialty / Activity Tags */}
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {provider.specialties.map((spec: string) => (
+                          <span
+                            key={spec}
+                            className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-muted-foreground"
+                          >
+                            #{spec}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <MapPinIcon className="w-3.5 h-3.5" />
+                        {provider.distanceKm} km away
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProviderForBooking(provider);
+                        }}
+                        className="px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent font-semibold transition-all shadow-2xs"
+                      >
+                        Book with Escrow &rarr;
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

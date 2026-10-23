@@ -231,4 +231,44 @@ public sealed class ProviderProfileTests
         Assert.Contains("Standup Comedy", profile.Specialties);
         Assert.DoesNotContain("  Standup Comedy  ", profile.Specialties);
     }
+
+    [Fact]
+    public void ProviderProfile_SupportsDisplayNameAndUpToThreeProfileImages()
+    {
+        var images = new[]
+        {
+            " https://example.com/1.jpg ",
+            "https://example.com/2.jpg",
+            "https://example.com/3.jpg",
+            "https://example.com/4.jpg"
+        };
+
+        var profile = new ProviderProfile(
+            Guid.NewGuid(),
+            45m,
+            "Bio",
+            new[] { "Tennis" },
+            50m,
+            null,
+            "  Elena R.  ",
+            images);
+
+        Assert.Equal("Elena R.", profile.DisplayName);
+        Assert.Equal(3, profile.ProfileImages.Count);
+        Assert.Equal(
+            new[] { "https://example.com/1.jpg", "https://example.com/2.jpg", "https://example.com/3.jpg" },
+            profile.ProfileImages.ToArray());
+
+        profile.Update(
+            60m,
+            "Updated Bio",
+            new[] { "Tennis" },
+            50m,
+            null,
+            "Elena Rostova",
+            new[] { "https://example.com/a.jpg", "https://example.com/b.jpg" });
+
+        Assert.Equal("Elena Rostova", profile.DisplayName);
+        Assert.Equal(2, profile.ProfileImages.Count);
+    }
 }

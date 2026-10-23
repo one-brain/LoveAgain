@@ -28,7 +28,9 @@ public sealed record SaveProviderProfileRequest(
     string? Bio,
     IReadOnlyCollection<string> Specialties,
     decimal MaxRadiusKm,
-    string? IntroVideoUrl = null
+    string? IntroVideoUrl = null,
+    string? DisplayName = null,
+    IReadOnlyCollection<string>? ProfileImages = null
 );
 
 public sealed record CompanionApplicationRequest(
@@ -39,7 +41,9 @@ public sealed record CompanionApplicationRequest(
     string? IdProofUrl,
     string? SelfieVerificationUrl,
     string? UpiId = null,
-    string? IntroVideoUrl = null
+    string? IntroVideoUrl = null,
+    string? DisplayName = null,
+    IReadOnlyCollection<string>? ProfileImages = null
 );
 
 public sealed record ProviderProfileResponse(
@@ -59,7 +63,9 @@ public sealed record ProviderProfileResponse(
     DateTime CreatedAt,
     DateTime? UpdatedAt,
     DateTime? DeletedAt,
-    bool IsDeleted
+    bool IsDeleted,
+    string? DisplayName = null,
+    IReadOnlyCollection<string>? ProfileImages = null
 );
 
 public sealed record AdminVerificationItemResponse(

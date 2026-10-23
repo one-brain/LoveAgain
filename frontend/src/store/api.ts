@@ -4,6 +4,8 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 export interface ProviderProfile {
   userId: string;
+  displayName?: string;
+  profileImages?: string[];
   specialties: string[];
   hourlyRate: number;
   bio: string;
@@ -42,6 +44,8 @@ export interface UpdateProviderProfileRequest {
   Specialties: string[];
   MaxRadiusKm: number;
   IntroVideoUrl?: string;
+  DisplayName?: string;
+  ProfileImages?: string[];
 }
 
 export interface SeekerProfileResponse {
@@ -82,9 +86,6 @@ export const profileApi = createApi({
       query: () => `/profiles/provider`,
       providesTags: ['Profile'],
       transformResponse: (response: any) => {
-        // Backend returns the provider profile directly (ProviderProfileResponse),
-        // but consumers expect it wrapped under `profile` for consistency with
-        // the seeker profile shape.
         if (response && !response.profile) {
           return { profile: response };
         }
@@ -122,11 +123,25 @@ export const profileApi = createApi({
       }),
       invalidatesTags: ['Profile'],
     }),
+    uploadSeekerPhoto: builder.mutation<SeekerProfileResponse, FormData>({
+      query: (formData) => ({
+        url: `/profiles/me/photo`,
+        method: 'PUT',
+        body: formData,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
+    uploadCompanionPhoto: builder.mutation<{ photoUrl: string }, FormData>({
+      query: (formData) => ({
+        url: `/profiles/provider/upload-photo`,
+        method: 'POST',
+        body: formData,
+      }),
+    }),
     getSlots: builder.query<AvailabilitySlot[], string>({
       query: (providerId) => `/profiles/provider/slots/${providerId}`,
       providesTags: ['Availability'],
     }),
-    // Provider profile management endpoints
     updateProviderProfile: builder.mutation<ProviderProfileResponse, UpdateProviderProfileRequest>({
       query: (profileData) => ({
         url: `/profiles/provider`,
@@ -157,6 +172,8 @@ export const {
   useGetMyProfileQuery,
   useGetSeekerProfileQuery,
   useUpdateSeekerProfileMutation,
+  useUploadSeekerPhotoMutation,
+  useUploadCompanionPhotoMutation,
   useGetSlotsQuery,
   useUpdateProviderProfileMutation,
   useDeleteProviderProfileMutation,

@@ -32,6 +32,11 @@ internal sealed class ProviderProfileConfiguration : IEntityTypeConfiguration<Pr
         builder.HasIndex(profile => profile.UserId).IsUnique();
         builder.Property(profile => profile.HourlyRate).HasPrecision(10, 2);
         builder.Property(profile => profile.MaxRadiusKm).HasPrecision(5, 2);
+        builder.Property(profile => profile.DisplayName).HasColumnName("display_name").HasMaxLength(150);
+        builder.Property(profile => profile.ProfileImages).HasColumnName("profile_images").HasColumnType("text[]");
+        builder.Property(profile => profile.ProfileImages).HasConversion(
+            images => images.ToArray(),
+            values => values ?? Array.Empty<string>());
         builder.Property(profile => profile.Specialties).HasColumnType("text[]");
         builder.Property(profile => profile.Specialties).HasConversion(
             specialties => specialties.ToArray(),

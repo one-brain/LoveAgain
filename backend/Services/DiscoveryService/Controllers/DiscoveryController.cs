@@ -17,7 +17,8 @@ public sealed record ProviderCardResponse(
     decimal AverageRating,
     bool IsVerified,
     int TrustScore,
-    double? DistanceKm);
+    double? DistanceKm,
+    IReadOnlyCollection<string>? ProfileImages = null);
 
 public sealed record ProviderDetailResponse(
     Guid ProviderId,
@@ -31,7 +32,8 @@ public sealed record ProviderDetailResponse(
     decimal AverageRating,
     bool IsVerified,
     int TrustScore,
-    IReadOnlyCollection<AvailabilitySlotResponse> UpcomingSlots);
+    IReadOnlyCollection<AvailabilitySlotResponse> UpcomingSlots,
+    IReadOnlyCollection<string>? ProfileImages = null);
 
 public sealed record AvailabilitySlotResponse(
     Guid SlotId,
@@ -147,21 +149,32 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                 p.profile.Specialties.Any(s => s.ToLower().Contains(term)));
         }
 
-        var cards = await projectQuery
+        var rawItems = await projectQuery
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .Select(p => new ProviderCardResponse(
-                p.profile.UserId,
-                p.user.FirstName + " " + p.user.LastName,
-                p.user.PhotoUrl,
-                p.profile.HourlyRate,
-                p.profile.Bio,
-                p.profile.Specialties,
-                p.profile.AverageRating,
-                p.user.IsVerified,
-                p.user.TrustScore,
-                p.Distance != null ? Math.Round(p.Distance.Value, 1) : null))
             .ToListAsync(cancellationToken);
+
+        var cards = rawItems
+            .Select(p =>
+            {
+                var displayName = !string.IsNullOrWhiteSpace(p.profile.DisplayName)
+                    ? p.profile.DisplayName
+                    : p.user.FirstName + " " + p.user.LastName;
+                var primaryPhoto = p.profile.ProfileImages.FirstOrDefault() ?? p.user.PhotoUrl;
+                return new ProviderCardResponse(
+                    p.profile.UserId,
+                    displayName,
+                    primaryPhoto,
+                    p.profile.HourlyRate,
+                    p.profile.Bio,
+                    p.profile.Specialties,
+                    p.profile.AverageRating,
+                    p.user.IsVerified,
+                    p.user.TrustScore,
+                    p.Distance != null ? Math.Round(p.Distance.Value, 1) : null,
+                    p.profile.ProfileImages);
+            })
+            .ToList();
 
         return Ok(cards);
     }
@@ -185,8 +198,10 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
             {
                 Provider = new ProviderDetailResponse(
                     join.profile.UserId,
-                    join.user.FirstName + " " + join.user.LastName,
-                    join.user.PhotoUrl,
+                    !string.IsNullOrWhiteSpace(join.profile.DisplayName)
+                        ? join.profile.DisplayName
+                        : join.user.FirstName + " " + join.user.LastName,
+                    join.profile.ProfileImages.FirstOrDefault() ?? join.user.PhotoUrl,
                     join.profile.HourlyRate,
                     join.profile.Bio,
                     join.profile.Specialties,
@@ -195,7 +210,8 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                     join.profile.AverageRating,
                     join.user.IsVerified,
                     join.user.TrustScore,
-                    new List<AvailabilitySlotResponse>()),
+                    new List<AvailabilitySlotResponse>(),
+                    join.profile.ProfileImages),
                 UserId = join.profile.UserId
             })
             .FirstOrDefaultAsync(cancellationToken);

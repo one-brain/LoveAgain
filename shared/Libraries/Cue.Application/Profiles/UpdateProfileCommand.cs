@@ -11,7 +11,9 @@ public sealed record UpdateProfileCommand(
     string Bio,
     IReadOnlyCollection<string> Specialties,
     decimal MaxRadiusKm,
-    string? IntroVideoUrl = null) : IRequest<Unit>;
+    string? IntroVideoUrl = null,
+    string? DisplayName = null,
+    IReadOnlyCollection<string>? ProfileImages = null) : IRequest<Unit>;
 
 public sealed class UpdateProfileCommandValidator : AbstractValidator<UpdateProfileCommand>
 {
@@ -38,13 +40,22 @@ public sealed class UpdateProfileCommandHandler(IProviderProfileRepository repos
                 command.Bio ?? string.Empty,
                 command.Specialties,
                 command.MaxRadiusKm > 0 ? command.MaxRadiusKm : 50,
-                command.IntroVideoUrl
+                command.IntroVideoUrl,
+                command.DisplayName,
+                command.ProfileImages
             );
             await repository.AddAsync(profile, cancellationToken);
         }
         else
         {
-            profile.Update(command.HourlyRate, command.Bio ?? string.Empty, command.Specialties, command.MaxRadiusKm, command.IntroVideoUrl);
+            profile.Update(
+                command.HourlyRate,
+                command.Bio ?? string.Empty,
+                command.Specialties,
+                command.MaxRadiusKm,
+                command.IntroVideoUrl,
+                command.DisplayName,
+                command.ProfileImages);
         }
         await repository.SaveChangesAsync(cancellationToken);
         return Unit.Value;

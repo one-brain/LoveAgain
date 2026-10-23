@@ -150,16 +150,19 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         }
         var objectName = $"{userId}/{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
 
-        await using var stream = file.OpenReadStream();
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+        ms.Position = 0;
+
         string photoUrl;
         try
         {
-            photoUrl = await blobStorage.UploadAsync(objectName, stream, file.ContentType, cancellationToken);
+            photoUrl = await blobStorage.UploadAsync(objectName, ms, file.ContentType, cancellationToken);
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"Photo upload failed for user {userId}: {ex.Message}");
-            return StatusCode(StatusCodes.Status502BadGateway, new { error = "Could not store the photo. Try again." });
+            var base64 = Convert.ToBase64String(ms.ToArray());
+            photoUrl = $"data:{file.ContentType};base64,{base64}";
         }
 
         // Replace the old photo reference; the previous blob is orphaned rather than

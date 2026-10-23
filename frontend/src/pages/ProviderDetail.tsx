@@ -16,14 +16,20 @@ import {
   SparklesIcon,
   VideoCameraIcon,
   CheckCircleIcon,
+  PhotoIcon,
 } from '@heroicons/react/24/outline';
 
-// Fallback provider data lookup for offline or showcase demonstration
+// Fallback provider data lookup with Display Name and 3 Profile Images
 const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
   'sample-1': {
     providerId: 'sample-1',
     displayName: 'Elena Rostova',
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
+    ],
     hourlyRate: 45,
     bio: 'Hi, I am Elena! I am a semi-professional tennis player and contemporary art curator based in the city. Whether you want to hit the courts for a friendly, competitive rally, improve your backhand, or spend a relaxing Saturday exploring modern art galleries with lively discussion, I would love to accompany you. I value authenticity, positive energy, and great sportsmanship.',
     specialties: ['Tennis', 'Yoga', 'Art', 'Fitness'],
@@ -37,6 +43,11 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     providerId: 'sample-2',
     displayName: 'Marcus Vance',
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
+    ],
     hourlyRate: 55,
     bio: 'Former restaurant sous-chef and active urban photographer. I specialize in culinary walks, private handmade pasta sessions, and exploring bustling farmers markets. I believe great food and shared conversation create the warmest human connections.',
     specialties: ['Cooking', 'Photography', 'Reading'],
@@ -50,6 +61,11 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     providerId: 'sample-3',
     displayName: 'Dr. Sophia Chen',
     photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=800&q=80',
+    ],
     hourlyRate: 40,
     bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. Also seeking verified matrimony and serious relationship compatibility.',
     specialties: ['Hiking', 'Music', 'Photography', 'Matrimony'],
@@ -71,6 +87,11 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     providerId: 'sample-4',
     displayName: 'Julian Alvarez',
     photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
+    ],
     hourlyRate: 50,
     bio: 'Certified salsa dancer and architectural history guide. Available for private dance sessions, wedding plus-one, and city heritage tours.',
     specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
@@ -86,6 +107,11 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     providerId: 'sample-5',
     displayName: 'Aria Thorne',
     photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80',
+    ],
     hourlyRate: 48,
     bio: 'Principal Software Architect & yoga practitioner. Seeking serious matrimonial match with shared intellectual values, or cultured dinner and coffee dates.',
     specialties: ['Matrimony', 'Dating', 'Coding / Tech', 'Reading'],
@@ -107,6 +133,11 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     providerId: 'sample-6',
     displayName: 'David Morales',
     photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=800&q=80',
+    ],
     hourlyRate: 60,
     bio: 'Sommelier and certified fitness trainer. Available to host wine tasting dinners, curated culinary tours, or 1-on-1 strength training sessions.',
     specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife', 'Cooking'],
@@ -160,6 +191,7 @@ const ProviderDetail: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
 
+  const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [meetingAddress, setMeetingAddress] = useState('');
   const [bookingSuccessModal, setBookingSuccessModal] = useState(false);
@@ -178,7 +210,15 @@ const ProviderDetail: React.FC = () => {
 
   // Resolve provider data
   const provider = useMemo(() => {
-    if (apiProvider) return apiProvider;
+    if (apiProvider) {
+      const slots = apiProvider.upcomingSlots?.length
+        ? apiProvider.upcomingSlots
+        : generateDemoSlots();
+      return {
+        ...apiProvider,
+        upcomingSlots: slots,
+      };
+    }
     if (userId && FALLBACK_PROVIDERS_MAP[userId]) {
       return {
         ...FALLBACK_PROVIDERS_MAP[userId],
@@ -190,6 +230,11 @@ const ProviderDetail: React.FC = () => {
       providerId: userId || 'companion',
       displayName: 'Verified Companion',
       photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+      profileImages: [
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
+        'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
+      ],
       hourlyRate: 50,
       bio: 'Enthusiastic and experienced companion offering activities, city tours, and skill exchange with verified background checks and safety check-ins.',
       specialties: ['Tennis', 'Cooking', 'Art', 'Hiking'],
@@ -212,6 +257,12 @@ const ProviderDetail: React.FC = () => {
       </div>
     );
   }
+
+  const galleryImages: string[] =
+    provider.profileImages && provider.profileImages.length > 0
+      ? provider.profileImages.slice(0, 3)
+      : [provider.photoUrl];
+  const currentHeroPhoto = galleryImages[activePhotoIdx] || galleryImages[0];
 
   const availableSlots = (provider.upcomingSlots || []).filter((s: any) => !s.isBooked);
   const selectedSlotData = availableSlots.find((s: any) => s.slotId === selectedSlot);
@@ -275,11 +326,20 @@ const ProviderDetail: React.FC = () => {
             {/* Portrait Header */}
             <div className="relative h-80 sm:h-96 bg-muted overflow-hidden">
               <img
-                src={provider.photoUrl}
+                src={currentHeroPhoto}
                 alt={provider.displayName}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover transition-all duration-300"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+
+              {galleryImages.length > 1 && (
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 border border-white/15">
+                  <PhotoIcon className="w-4 h-4 text-accent" />
+                  <span>
+                    Photo {activePhotoIdx + 1} of {galleryImages.length}
+                  </span>
+                </div>
+              )}
 
               <div className="absolute bottom-6 left-6 right-6 text-white flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
@@ -317,6 +377,35 @@ const ProviderDetail: React.FC = () => {
                 </div>
               </div>
             </div>
+
+            {/* 3-Photo Interactive Gallery Strip */}
+            {galleryImages.length > 1 && (
+              <div className="px-6 pt-5 pb-2 bg-muted/20 border-b border-border flex items-center gap-3 overflow-x-auto">
+                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
+                  Profile Gallery ({galleryImages.length}):
+                </span>
+                <div className="flex items-center gap-2.5">
+                  {galleryImages.map((imgUrl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setActivePhotoIdx(idx)}
+                      className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                        activePhotoIdx === idx
+                          ? 'border-accent ring-2 ring-accent/30 scale-105'
+                          : 'border-border opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      <img
+                        src={imgUrl}
+                        alt={`${provider.displayName} gallery ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Profile Content Body */}
             <div className="p-6 sm:p-8 space-y-8">
