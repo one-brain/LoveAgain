@@ -17,10 +17,10 @@ public sealed record UserProfileResponse(
 );
 
 public sealed record UpdateProfileRequest(
-    string FirstName,
-    string LastName,
+    string? FirstName,
+    string? LastName,
     string? Phone,
-    DateOnly? DateOfBirth
+    string? DateOfBirth
 );
 
 public sealed record SaveProviderProfileRequest(

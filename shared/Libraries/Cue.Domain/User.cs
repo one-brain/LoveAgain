@@ -71,20 +71,20 @@ public sealed class User
         UpdatedAt = DeletedAt.Value;
     }
 
-    public void UpdateContact(string? phone, string firstName, string lastName)
+    public void UpdateContact(string? phone, string firstName, string? lastName)
     {
-        if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
+        if (string.IsNullOrWhiteSpace(firstName))
         {
-            throw new ArgumentException("A first and last name are required.");
+            throw new ArgumentException("First name is required.");
         }
 
         Phone = string.IsNullOrWhiteSpace(phone) ? null : phone.Trim();
         FirstName = firstName.Trim();
-        LastName = lastName.Trim();
+        LastName = string.IsNullOrWhiteSpace(lastName) ? string.Empty : lastName.Trim();
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateProfile(string firstName, string lastName, string? phone, DateOnly? dateOfBirth)
+    public void UpdateProfile(string firstName, string? lastName, string? phone, DateOnly? dateOfBirth)
     {
         UpdateContact(phone, firstName, lastName);
         DateOfBirth = dateOfBirth;

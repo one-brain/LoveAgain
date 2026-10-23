@@ -151,7 +151,9 @@ public static class DatabaseInitializer
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS reviewed_by_admin_id uuid;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS is_deleted boolean DEFAULT false;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS display_name character varying(150) NULL;",
-            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS profile_images text[] NULL;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS profile_images text[] DEFAULT ARRAY[]::text[];",
+            "UPDATE profiles.provider_profiles SET profile_images = ARRAY[]::text[] WHERE profile_images IS NULL;",
+            "ALTER TABLE auth.users ALTER COLUMN phone TYPE character varying(50);",
             "ALTER TABLE bookings.service_orders ADD COLUMN IF NOT EXISTS check_in_pin character varying(10) NULL;",
             "ALTER TABLE bookings.service_orders ADD COLUMN IF NOT EXISTS checked_in_at timestamp with time zone NULL;",
             "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);"

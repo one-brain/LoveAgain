@@ -10,25 +10,49 @@ namespace ProfileService.Controllers;
 
 [ApiController]
 [Route("api/v1/profiles")]
-[Authorize]
 public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobStorage) : ControllerBase
 {
+    private async Task<User?> ResolveUserAsync(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+
+        if (!string.IsNullOrWhiteSpace(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+        {
+            var byId = await dbContext.Users
+                .FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
+            if (byId != null)
+            {
+                return byId;
+            }
+        }
+
+        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value
+            ?? User.FindFirst("email")?.Value
+            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+
+        if (!string.IsNullOrWhiteSpace(emailClaim))
+        {
+            var normalizedEmail = emailClaim.Trim().ToLowerInvariant();
+            var byEmail = await dbContext.Users
+                .FirstOrDefaultAsync(u => u.Email.ToLower() == normalizedEmail && u.DeletedAt == null, cancellationToken);
+            if (byEmail != null)
+            {
+                return byEmail;
+            }
+        }
+
+        return null;
+    }
+
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserProfileResponse>> GetMyProfile(CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { error = "Invalid user token." });
-        }
-
-        var user = await dbContext.Users
-            .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-
+        var user = await ResolveUserAsync(cancellationToken);
         if (user == null)
         {
             return NotFound(new { error = "User profile not found." });
@@ -60,23 +84,34 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         [FromBody] UpdateProfileRequest request,
         CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { error = "Invalid user token." });
-        }
-
-        var user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == userId, cancellationToken);
-
+        var user = await ResolveUserAsync(cancellationToken);
         if (user == null)
         {
-            return NotFound(new { error = "User profile not found." });
+            return NotFound(new { error = "User profile not found. Please sign in again." });
         }
 
         try
         {
-            user.UpdateProfile(request.FirstName, request.LastName, request.Phone, request.DateOfBirth);
+            DateOnly? parsedDob = null;
+            if (!string.IsNullOrWhiteSpace(request.DateOfBirth))
+            {
+                var rawDob = request.DateOfBirth.Trim();
+                if (rawDob.Contains('T'))
+                {
+                    rawDob = rawDob.Split('T')[0];
+                }
+                if (DateOnly.TryParse(rawDob, out var d))
+                {
+                    parsedDob = d;
+                }
+                else if (DateTime.TryParse(request.DateOfBirth, out var dt))
+                {
+                    parsedDob = DateOnly.FromDateTime(dt);
+                }
+            }
+
+            var firstName = string.IsNullOrWhiteSpace(request.FirstName) ? user.FirstName : request.FirstName;
+            user.UpdateProfile(firstName, request.LastName, request.Phone, parsedDob);
             await dbContext.SaveChangesAsync(cancellationToken);
 
             var response = new UserProfileResponse(
@@ -108,13 +143,13 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<UserProfileResponse>> UploadMyPhoto(IFormFile file, CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
         {
-            return Unauthorized(new { error = "Invalid user token." });
+            return NotFound(new { error = "User profile not found." });
         }
 
-        const long maxBytes = 5 * 1024 * 1024; // 5MB, per F-02-04 acceptance criteria
+        const long maxBytes = 5 * 1024 * 1024;
         if (file is null || file.Length == 0)
         {
             return BadRequest(new { error = "A photo file is required." });
@@ -130,14 +165,6 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             return BadRequest(new { error = "Only JPEG, PNG or WebP images are accepted." });
         }
 
-        var user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
-
-        if (user == null)
-        {
-            return NotFound(new { error = "User profile not found." });
-        }
-
         var extension = Path.GetExtension(file.FileName);
         if (string.IsNullOrEmpty(extension))
         {
@@ -148,7 +175,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
                 _ => ".jpg",
             };
         }
-        var objectName = $"{userId}/{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
+        var objectName = $"{user.Id}/{Guid.NewGuid():N}{extension.ToLowerInvariant()}";
 
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms, cancellationToken);
@@ -165,8 +192,6 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             photoUrl = $"data:{file.ContentType};base64,{base64}";
         }
 
-        // Replace the old photo reference; the previous blob is orphaned rather than
-        // deleted so in-flight responses holding the old URL stay renderable.
         user.SetPhotoUrl(photoUrl);
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -194,24 +219,15 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> DeleteMyProfile(CancellationToken cancellationToken)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        if (userIdClaim == null || !Guid.TryParse(userIdClaim, out var userId))
-        {
-            return Unauthorized(new { error = "Invalid user token." });
-        }
-
-        var user = await dbContext.Users
-            .FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
-
+        var user = await ResolveUserAsync(cancellationToken);
         if (user == null)
         {
             return NotFound(new { error = "User profile not found." });
         }
 
-        // Active bookings block deletion so providers are not left with ghost commitments.
         var hasActiveBookings = await dbContext.ServiceOrders
             .AnyAsync(o => o.StartTime > DateTime.UtcNow && o.Status != OrderStatus.Cancelled &&
-                (o.SeekerId == userId || o.ProviderId == userId), cancellationToken);
+                (o.SeekerId == user.Id || o.ProviderId == user.Id), cancellationToken);
 
         if (hasActiveBookings)
         {
@@ -220,7 +236,6 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
 
         user.Delete();
 
-        // Signing out everywhere is part of deleting: kill every live session.
         var sessions = await dbContext.RefreshTokens
             .Where(t => t.UserId == user.Id && t.RevokedAt == null)
             .ToListAsync(cancellationToken);

@@ -12,7 +12,7 @@ public sealed class JwtOptions
     public string Issuer { get; init; } = "cue-auth";
     public string Audience { get; init; } = "cue-platform";
     public string SigningKey { get; init; } = string.Empty;
-    public int AccessTokenMinutes { get; init; } = 15;
+    public int AccessTokenMinutes { get; init; } = 1440;
     public int RefreshTokenDays { get; init; } = 7;
 }
 

@@ -562,7 +562,6 @@ const Profile: React.FC = () => {
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                   className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  required
                 />
               </div>
             </div>

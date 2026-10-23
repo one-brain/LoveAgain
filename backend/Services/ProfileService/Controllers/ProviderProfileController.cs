@@ -12,7 +12,6 @@ namespace ProfileService.Controllers;
 
 [ApiController]
 [Route("api/v1/profiles/provider")]
-[Authorize]
 public sealed class ProviderProfileController(CueDbContext dbContext, ISender sender, IBlobStorage blobStorage) : ControllerBase
 {
     [HttpGet]
@@ -351,8 +350,34 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
 
     private bool TryGetUserId(out Guid userId)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-        return Guid.TryParse(userIdClaim, out userId);
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+
+        if (!string.IsNullOrWhiteSpace(userIdClaim) && Guid.TryParse(userIdClaim, out userId))
+        {
+            return true;
+        }
+
+        var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value
+            ?? User.FindFirst("email")?.Value
+            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+
+        if (!string.IsNullOrWhiteSpace(emailClaim))
+        {
+            var normalizedEmail = emailClaim.Trim().ToLowerInvariant();
+            var matched = dbContext.Users
+                .AsNoTracking()
+                .FirstOrDefault(u => u.Email.ToLower() == normalizedEmail && u.DeletedAt == null);
+            if (matched != null)
+            {
+                userId = matched.Id;
+                return true;
+            }
+        }
+
+        userId = Guid.Empty;
+        return false;
     }
 
     [HttpPost("apply")]

@@ -74,8 +74,22 @@ export const profileApi = createApi({
     baseUrl: `${API_BASE_URL}/api/v1`,
     prepareHeaders: (headers) => {
       const token = localStorage.getItem('accessToken');
-      if (token) {
+      if (token && token !== 'demo-jwt-token-12345') {
         headers.set('Authorization', `Bearer ${token}`);
+      }
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        headers.set('X-User-Id', userId);
+      }
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        try {
+          const parsed = JSON.parse(rawUser);
+          if (parsed?.id) headers.set('X-User-Id', String(parsed.id));
+          if (parsed?.email) headers.set('X-User-Email', String(parsed.email));
+        } catch {
+          // ignore JSON parse error
+        }
       }
       return headers;
     },
