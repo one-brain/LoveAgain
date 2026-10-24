@@ -51,6 +51,7 @@ interface BookingCardProps {
   onCheckIn?: (booking: BookingSummary) => void;
   onComplete?: (orderId: string) => void;
   onOpenSos?: (booking: BookingSummary) => void;
+  onViewProfile?: (providerId: string) => void;
 }
 
 const STATUS_CONFIG: Record<
@@ -114,6 +115,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   onCheckIn,
   onComplete,
   onOpenSos,
+  onViewProfile,
 }) => {
   const navigate = useNavigate();
   const statusInfo = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PendingPayment;
@@ -141,7 +143,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const handleViewProfile = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (roleMode === 'client' && booking.providerId) {
-      navigate(`/provider/${booking.providerId}`);
+      if (onViewProfile) {
+        onViewProfile(booking.providerId);
+      } else {
+        navigate(`/provider/${booking.providerId}`);
+      }
     }
   };
 

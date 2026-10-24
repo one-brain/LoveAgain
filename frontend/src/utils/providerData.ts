@@ -200,10 +200,14 @@ export interface ResolvedProviderInfo {
   trustScore?: number;
   specialty?: string;
   specialties?: string[];
+  bio?: string;
+  maxRadiusKm?: number;
+  distanceKm?: number;
+  services?: string[];
 }
 
 /**
- * Resolves a companion's full display info (photo, name, rating, verified badge)
+ * Resolves a companion's full display info (photo, name, rating, verified badge, bio)
  * against curated sample providers or live backend providers.
  */
 export function resolveProviderInfo(
@@ -231,6 +235,10 @@ export function resolveProviderInfo(
       trustScore: sample.trustScore,
       specialty: sample.specialties[0],
       specialties: sample.specialties,
+      bio: sample.bio,
+      maxRadiusKm: sample.maxRadiusKm,
+      distanceKm: sample.distanceKm,
+      services: sample.services,
     };
   }
 
@@ -251,6 +259,10 @@ export function resolveProviderInfo(
         trustScore: found.trustScore,
         specialty: found.specialties ? found.specialties[0] : undefined,
         specialties: found.specialties,
+        bio: found.bio,
+        maxRadiusKm: found.maxRadiusKm,
+        distanceKm: found.distanceKm,
+        services: found.services,
       };
     }
   }

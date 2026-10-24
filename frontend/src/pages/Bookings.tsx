@@ -12,6 +12,7 @@ import { BookingCard, type BookingSummary } from '../components/BookingCard';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { CheckInModal } from '../components/CheckInModal';
 import { OutingSosModal } from '../components/OutingSosModal';
+import { ProviderProfileModal } from '../components/booking/ProviderProfileModal';
 import { useCompleteBookingMutation } from '../store/bookingApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { setSpecialties } from '../store/slices/profileSlice';
@@ -128,6 +129,7 @@ const Bookings: React.FC = () => {
   const [completeBooking] = useCompleteBookingMutation();
   const [checkInBooking, setCheckInBooking] = useState<BookingSummary | null>(null);
   const [sosBooking, setSosBooking] = useState<BookingSummary | null>(null);
+  const [previewProviderId, setPreviewProviderId] = useState<string | null>(null);
 
   const handleCheckIn = (b: BookingSummary) => {
     setCheckInBooking(b);
@@ -459,6 +461,7 @@ const Bookings: React.FC = () => {
                       onCheckIn={handleCheckIn}
                       onComplete={handleComplete}
                       onOpenSos={handleOpenSos}
+                      onViewProfile={(id) => setPreviewProviderId(id)}
                     />
                   ))}
                 </div>
@@ -482,6 +485,7 @@ const Bookings: React.FC = () => {
                       roleMode={roleMode}
                       liveProviders={liveProviders}
                       onOpenSos={handleOpenSos}
+                      onViewProfile={(id) => setPreviewProviderId(id)}
                     />
                   ))}
                 </div>
@@ -587,6 +591,7 @@ const Bookings: React.FC = () => {
                           onCheckIn={handleCheckIn}
                           onComplete={handleComplete}
                           onOpenSos={handleOpenSos}
+                          onViewProfile={(id) => setPreviewProviderId(id)}
                         />
                       ))}
                   </div>
@@ -595,6 +600,16 @@ const Bookings: React.FC = () => {
             </div>
           )}
         </>
+      )}
+
+      {/* Pop-up Data View: Companion Profile Modal */}
+      {previewProviderId && (
+        <ProviderProfileModal
+          isOpen={Boolean(previewProviderId)}
+          onClose={() => setPreviewProviderId(null)}
+          providerId={previewProviderId}
+          liveProviders={liveProviders}
+        />
       )}
 
       {checkInBooking && (
