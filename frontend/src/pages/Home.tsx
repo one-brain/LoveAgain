@@ -14,6 +14,7 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
+import { formatRate } from '../utils/currency';
 
 interface LensCard {
   id: PlatformLens;
@@ -66,7 +67,7 @@ const FEATURED_PROFILES = [
     headline: 'Semi-Pro Tennis Coach & Event Plus-One',
     activeLenses: ['pro_work', 'companions'],
     tags: ['Tennis Coaching', 'City Tour', 'Art Gallery'],
-    rate: 45,
+    rate: 1500,
     rateType: 'hr',
     rating: 4.98,
     reviews: 64,
@@ -80,7 +81,7 @@ const FEATURED_PROFILES = [
     headline: 'Commercial Photographer & Foodie Guide',
     activeLenses: ['pro_work', 'companions'],
     tags: ['Photography Gigs', 'Culinary Walk', 'Italian Cooking'],
-    rate: 55,
+    rate: 1800,
     rateType: 'hr',
     rating: 4.95,
     reviews: 82,
@@ -91,10 +92,10 @@ const FEATURED_PROFILES = [
   {
     id: 'p3',
     name: 'Dr. Sophia Chen',
-    headline: 'Cardiologist · Seeking Verified Matrimony & Live-In',
-    activeLenses: ['relationships'],
-    tags: ['Matrimony Biodata', 'Live-In Open', 'Classical Violin'],
-    rate: 40,
+    headline: 'Cardiologist · Classical Violinist & Trail Guide',
+    activeLenses: ['wellness', 'companions'],
+    tags: ['Hiking Partner', 'Violin Music', 'City Tour'],
+    rate: 1200,
     rateType: 'hr',
     rating: 4.92,
     reviews: 47,
@@ -281,7 +282,7 @@ const Home: React.FC = () => {
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                   <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-foreground border border-border shadow-xs">
-                    ₹{comp.rate}/{comp.rateType}
+                    {formatRate(comp.rate)}
                   </div>
                   <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white flex items-center gap-1 shadow-xs">
                     <CheckBadgeIcon className="w-3.5 h-3.5" />

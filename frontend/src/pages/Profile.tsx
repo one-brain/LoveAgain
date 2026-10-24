@@ -820,7 +820,7 @@ const Profile: React.FC = () => {
                   />
                 </div>
                 <span className="text-[11px] text-muted-foreground mt-1 block">
-                  You receive <strong>₹{netRate}/hr</strong> (85% net take-home via Escrow Vault)
+                  Recommended: ₹800 – ₹3,000/hr. You receive <strong>₹{netRate}/hr</strong> (85% net take-home via Escrow Vault).
                 </span>
               </div>
 

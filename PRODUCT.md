@@ -22,6 +22,10 @@ Unlike conventional dating apps or informal social forums, Cue is an **identity-
 
 ## Operating Context
 
+- Target Market: India (tier-1 metro hubs: Bengaluru, Mumbai, Delhi-NCR, Hyderabad, Pune, Chennai).
+- Currency Standard: Indian Rupees (`INR` / `₹`) using Indian numbering formatting (`en-IN`).
+- Pricing Dynamics: Standard companion hourly rates range from ₹800/hr to ₹2,500/hr (benchmark average ₹1,500/hr). Minimum recommended rate is ₹300/hr.
+- Settlement Rails: Razorpay UPI (Google Pay, PhonePe, Paytm, BHIM, CRED), NetBanking, and RuPay/Visa/Mastercard cards.
 - Web platform (responsive mobile-first layout accessible from phones, tablets, and desktops).
 - Real-time category and specialty filtering (dining, tennis/fitness, city walks, art galleries, event attendance).
 - Escrow transaction lifecycle: Booking requested -> Companion confirms -> Wallet funds escrowed -> Session takes place -> Funds settled (85% to companion wallet, 15% platform commission).

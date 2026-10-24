@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useGetMyProfileQuery } from '../store/api';
 import { useApplyCompanionMutation } from '../store/adminApi';
+import { formatRate } from '../utils/currency';
 import {
   SparklesIcon,
   ShieldCheckIcon,
@@ -131,7 +132,7 @@ export const ApplyCompanion: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <CheckCircleIcon className="w-5 h-5 text-emerald-500 shrink-0" />
                   <span className="text-xs sm:text-sm text-foreground/90 font-medium">
-                    Companion Settings Linked (₹{hourlyRate}/hr • {specialties.length} specialties)
+                    Companion Settings Linked ({formatRate(hourlyRate)} • {specialties.length} specialties)
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -247,7 +248,7 @@ export const ApplyCompanion: React.FC = () => {
               Synced Companion Profile
             </span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
-              ₹{hourlyRate}/hr • {maxRadiusKm} km radius
+              {formatRate(hourlyRate)} • {maxRadiusKm} km radius
             </span>
           </div>
           <p className="text-xs text-foreground/90 line-clamp-1 font-medium">{bio}</p>

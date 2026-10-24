@@ -24,6 +24,7 @@ import {
   ExclamationTriangleIcon,
   ArrowPathIcon,
 } from '@heroicons/react/24/outline';
+import { formatINR, formatRate } from '../utils/currency';
 
 export const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'verifications' | 'bookings' | 'users' | 'payouts' | 'mis'>('verifications');
@@ -183,7 +184,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-xs">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Gross Merchandise Value</span>
           <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1 font-mono">
-            <span>₹{(misData?.totalGmv ?? 0).toLocaleString('en-IN')}</span>
+            <span>{formatINR(misData?.totalGmv ?? 0)}</span>
           </div>
           <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold mt-1 inline-block">
             All-time platform booking volume
@@ -193,7 +194,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="p-5 rounded-2xl bg-card border border-amber-500/30 bg-amber-500/5 shadow-xs">
           <span className="text-xs font-semibold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Net Platform Revenue (15%)</span>
           <div className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1 flex items-baseline gap-1 font-mono">
-            <span>₹{(misData?.totalPlatformRevenue ?? 0).toLocaleString('en-IN')}</span>
+            <span>{formatINR(misData?.totalPlatformRevenue ?? 0)}</span>
           </div>
           <span className="text-[11px] text-muted-foreground font-semibold mt-1 inline-block">
             Direct platform take-rate
@@ -203,7 +204,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="p-5 rounded-2xl bg-card border border-border/80 shadow-xs">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Companion Escrow Locked</span>
           <div className="text-2xl font-black text-foreground mt-1 flex items-baseline gap-1 font-mono">
-            <span>₹{(misData?.activeEscrowLocked ?? 0).toLocaleString('en-IN')}</span>
+            <span>{formatINR(misData?.activeEscrowLocked ?? 0)}</span>
           </div>
           <span className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1 inline-block">
             Funds currently in active escrow holds
@@ -366,7 +367,7 @@ export const AdminDashboard: React.FC = () => {
 
                       <div className="flex items-center justify-between text-xs font-semibold py-2 px-3 rounded-xl bg-muted/40 mb-3">
                         <span>Proposed Rate:</span>
-                        <span className="font-mono text-accent font-bold">₹{item.hourlyRate.toLocaleString('en-IN')}/hr</span>
+                        <span className="font-mono text-accent font-bold">{formatRate(item.hourlyRate)}</span>
                       </div>
 
                       <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
@@ -492,13 +493,13 @@ export const AdminDashboard: React.FC = () => {
                           {b.providerName}
                         </td>
                         <td className="px-4 py-3.5 font-mono font-bold text-foreground text-right">
-                          ₹{b.totalAmount.toLocaleString('en-IN')}
+                          {formatINR(b.totalAmount)}
                         </td>
                         <td className="px-4 py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400 text-right">
-                          ₹{b.platformFee.toLocaleString('en-IN')}
+                          {formatINR(b.platformFee)}
                         </td>
                         <td className="px-4 py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right">
-                          ₹{b.providerEarnings.toLocaleString('en-IN')}
+                          {formatINR(b.providerEarnings)}
                         </td>
                         <td className="px-4 py-3.5">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
@@ -670,7 +671,7 @@ export const AdminDashboard: React.FC = () => {
                       <p className="text-[11px] text-muted-foreground">{payout.userEmail}</p>
                     </td>
                     <td className="px-4 py-3.5 font-mono font-bold text-sm text-foreground">
-                      ₹{payout.amount.toLocaleString('en-IN')}
+                      {formatINR(payout.amount)}
                     </td>
                     <td className="px-4 py-3.5 font-mono text-accent">
                       {payout.destination}
@@ -731,7 +732,7 @@ export const AdminDashboard: React.FC = () => {
                       />
                     </div>
                     <div className="text-right font-mono font-bold">
-                      <span className="text-foreground">₹{d.gmv.toLocaleString('en-IN')}</span>
+                      <span className="text-foreground">{formatINR(d.gmv)}</span>
                       <span className="text-muted-foreground text-[10px] ml-1.5">({d.bookingsCount} bks)</span>
                     </div>
                   </div>
@@ -753,7 +754,7 @@ export const AdminDashboard: React.FC = () => {
                       <p className="text-[10px] text-muted-foreground">{cat.bookingsCount} completed bookings</p>
                     </div>
                     <span className="font-mono text-sm font-bold text-accent">
-                      ₹{cat.totalVolume.toLocaleString('en-IN')}
+                      {formatINR(cat.totalVolume)}
                     </span>
                   </div>
                 ))}
@@ -865,7 +866,7 @@ export const AdminDashboard: React.FC = () => {
             <div className="p-4 rounded-xl bg-muted/40 border border-border/80 text-xs mb-6 space-y-2">
               <div className="flex items-center justify-between">
                 <p><strong className="text-foreground">Display Name:</strong> {selectedVerification.displayName || selectedVerification.fullName}</p>
-                <p><strong className="text-foreground">Proposed Hourly Rate:</strong> ₹{selectedVerification.hourlyRate}/hr</p>
+                <p><strong className="text-foreground">Proposed Hourly Rate:</strong> {formatRate(selectedVerification.hourlyRate)}</p>
               </div>
               <p><strong className="text-foreground">Bio:</strong> {selectedVerification.bio || 'No bio provided'}</p>
               <div>

@@ -7,6 +7,7 @@ import {
   CalendarDaysIcon,
   AdjustmentsHorizontalIcon,
 } from '@heroicons/react/24/outline';
+import { formatINR, formatRate } from '../../utils/currency';
 
 export interface BookingRequirementData {
   activity: string;
@@ -157,7 +158,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   Book {provider.displayName}
                 </h2>
                 <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[11px] font-bold">
-                  ₹{provider.hourlyRate}/hr
+                  {formatRate(provider.hourlyRate)}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -265,7 +266,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                     Duration: <strong className="text-foreground">{durationHours} hours</strong>
                   </span>
                   <span className="text-xs font-bold text-accent">
-                    ₹{provider.hourlyRate} × {durationHours} = ₹{subtotal}
+                    {formatINR(provider.hourlyRate)} × {durationHours} = {formatINR(subtotal)}
                   </span>
                 </div>
                 <input
@@ -292,7 +293,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   <ShieldCheckIcon className="w-5 h-5 text-emerald-500 flex-shrink-0" />
                   <span className="text-muted-foreground">100% Protected in Escrow Vault</span>
                 </div>
-                <span className="text-sm font-bold text-foreground">₹{totalAmount}</span>
+                <span className="text-sm font-bold text-foreground">{formatINR(totalAmount)}</span>
               </div>
 
               <div className="pt-2 flex justify-end">
@@ -387,7 +388,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   required
                 />
                 <span>
-                  I understand this deposit of <strong>₹{totalAmount}</strong> is locked securely in the Escrow Vault and released only after the meetup completes.
+                  I understand this deposit of <strong>{formatINR(totalAmount)}</strong> is locked securely in the Escrow Vault and released only after the meetup completes.
                 </span>
               </label>
 
@@ -403,7 +404,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   type="submit"
                   className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-md hover:bg-accent-hover transition-all flex items-center gap-1.5"
                 >
-                  <span>Lock ₹{totalAmount} in Escrow</span>
+                  <span>Lock {formatINR(totalAmount)} in Escrow</span>
                   <CheckCircleIcon className="w-4 h-4" />
                 </button>
               </div>

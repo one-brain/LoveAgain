@@ -4,6 +4,7 @@ import { useListProvidersQuery } from '../store/discoveryApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
+import { formatRate } from '../utils/currency';
 import {
   MagnifyingGlassIcon,
   StarIcon,
@@ -84,7 +85,7 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=600&q=80',
     ],
-    hourlyRate: 45,
+    hourlyRate: 1500,
     bio: 'Semi-pro tennis coach, contemporary art curator, and bilingual city companion.',
     specialties: ['Tennis', 'Yoga Partner', 'Museum Walk', 'Gym Spotter'],
     averageRating: 4.98,
@@ -103,7 +104,7 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
     ],
-    hourlyRate: 55,
+    hourlyRate: 1800,
     bio: 'Commercial photographer and street foodie guide. Available for photoshoots and culinary outings.',
     specialties: ['Photography', 'Cooking & Baking', 'City Tour'],
     averageRating: 4.95,
@@ -122,7 +123,7 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=600&q=80',
     ],
-    hourlyRate: 40,
+    hourlyRate: 1200,
     bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony.',
     specialties: ['Hiking', 'Yoga Partner', 'Violin', 'City Tour'],
     averageRating: 4.92,
@@ -141,7 +142,7 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=600&q=80',
     ],
-    hourlyRate: 50,
+    hourlyRate: 1600,
     bio: 'Certified salsa dance instructor & architectural history guide. Available for events & plus-one.',
     specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
     averageRating: 4.88,
@@ -160,7 +161,7 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=600&q=80',
     ],
-    hourlyRate: 48,
+    hourlyRate: 1500,
     bio: 'Software Architect & avid book enthusiast. Available for coffee chats, tech career mentoring, and museum visits.',
     specialties: ['Coding Mentorship', 'Language Practice', 'Museum Walk', 'Cafe & Chat'],
     averageRating: 4.97,
@@ -179,7 +180,7 @@ const CURATED_SAMPLE_PROVIDERS = [
       'https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&w=600&q=80',
       'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=600&q=80',
     ],
-    hourlyRate: 60,
+    hourlyRate: 2000,
     bio: 'Sommelier and fitness trainer. Host for dining excursions and high-intensity workout coaching.',
     specialties: ['Fine Dining', 'Gym Spotter', 'Tennis'],
     averageRating: 4.94,
@@ -477,11 +478,11 @@ const Discovery: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Hourly Rate Range (₹)</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Hourly Rate Range (₹ INR)</label>
                 <div className="flex items-center gap-2">
                   <input
                     type="number"
-                    placeholder="Min ₹"
+                    placeholder="Min ₹ (e.g. 500)"
                     value={minRate}
                     onChange={(e) => setMinRate(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none"
@@ -489,7 +490,7 @@ const Discovery: React.FC = () => {
                   <span className="text-muted-foreground text-xs">-</span>
                   <input
                     type="number"
-                    placeholder="Max ₹"
+                    placeholder="Max ₹ (e.g. 3000)"
                     value={maxRate}
                     onChange={(e) => setMaxRate(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none"
@@ -586,7 +587,7 @@ const Discovery: React.FC = () => {
 
                     {/* Top Right Rate Badge */}
                     <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border shadow-xs">
-                      ₹{provider.hourlyRate}/hr
+                      {formatRate(provider.hourlyRate)}
                     </div>
 
                     {/* Top Left Verified + Photo Count Badge */}

@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useGetProviderQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
+import { formatINR, formatRate } from '../utils/currency';
 import type { RootState } from '../store';
 import {
   StarIcon,
@@ -30,7 +31,7 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
     ],
-    hourlyRate: 45,
+    hourlyRate: 1500,
     bio: 'Hi, I am Elena! I am a semi-professional tennis player and contemporary art curator based in the city. Whether you want to hit the courts for a friendly, competitive rally, improve your backhand, or spend a relaxing Saturday exploring modern art galleries with lively discussion, I would love to accompany you. I value authenticity, positive energy, and great sportsmanship.',
     specialties: ['Tennis', 'Yoga', 'Art', 'Fitness'],
     maxRadiusKm: 25,
@@ -48,7 +49,7 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
     ],
-    hourlyRate: 55,
+    hourlyRate: 1800,
     bio: 'Former restaurant sous-chef and active urban photographer. I specialize in culinary walks, private handmade pasta sessions, and exploring bustling farmers markets. I believe great food and shared conversation create the warmest human connections.',
     specialties: ['Cooking', 'Photography', 'Reading'],
     maxRadiusKm: 30,
@@ -66,7 +67,7 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=800&q=80',
     ],
-    hourlyRate: 40,
+    hourlyRate: 1200,
     bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. Available for trail hikes and music sessions.',
     specialties: ['Hiking', 'Music', 'Photography', 'Wellness'],
     maxRadiusKm: 40,
@@ -85,7 +86,7 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
     ],
-    hourlyRate: 50,
+    hourlyRate: 1600,
     bio: 'Certified salsa dancer and architectural history guide. Available for private dance sessions, wedding plus-one, and city heritage tours.',
     specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
     maxRadiusKm: 35,
@@ -104,7 +105,7 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80',
     ],
-    hourlyRate: 48,
+    hourlyRate: 1500,
     bio: 'Principal Software Architect & yoga practitioner. Available for system design deep-dives, career mentorship, or mindful yoga morning flows.',
     specialties: ['Yoga Partner', 'Coding Mentorship', 'Reading', 'Career Coaching'],
     maxRadiusKm: 25,
@@ -123,7 +124,7 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
       'https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&w=800&q=80',
       'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=800&q=80',
     ],
-    hourlyRate: 60,
+    hourlyRate: 2000,
     bio: 'Sommelier and certified fitness trainer. Available to host wine tasting dinners, curated culinary tours, or 1-on-1 strength training sessions.',
     specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife', 'Cooking'],
     maxRadiusKm: 30,
@@ -219,7 +220,7 @@ const ProviderDetail: React.FC = () => {
         'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
         'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
       ],
-      hourlyRate: 50,
+      hourlyRate: 1500,
       bio: 'Enthusiastic and experienced companion offering activities, city tours, and skill exchange with verified background checks and safety check-ins.',
       specialties: ['Tennis', 'Cooking', 'Art', 'Hiking'],
       maxRadiusKm: 25,
@@ -355,7 +356,7 @@ const ProviderDetail: React.FC = () => {
 
                 <div className="bg-card/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-border/80 shadow-md text-foreground">
                   <div className="text-2xl font-bold font-serif text-foreground">
-                    ₹{provider.hourlyRate}
+                    {formatINR(provider.hourlyRate)}
                     <span className="text-xs font-normal text-muted-foreground">/hr</span>
                   </div>
                 </div>
@@ -566,7 +567,7 @@ const ProviderDetail: React.FC = () => {
               <div className="p-4 rounded-xl bg-muted border border-border space-y-2 text-xs">
                 <div className="flex justify-between text-foreground/80">
                   <span>Companion Rate</span>
-                  <span>₹{provider.hourlyRate} / hour</span>
+                  <span>{formatRate(provider.hourlyRate)}</span>
                 </div>
                 <div className="flex justify-between text-foreground/80">
                   <span>Selected Duration</span>
@@ -578,7 +579,7 @@ const ProviderDetail: React.FC = () => {
                 </div>
                 <div className="pt-2 border-t border-border flex justify-between font-bold text-sm text-foreground">
                   <span>Total Amount</span>
-                  <span className="text-accent">₹{totalAmount}</span>
+                  <span className="text-accent">{formatINR(totalAmount)}</span>
                 </div>
               </div>
             )}
@@ -599,7 +600,7 @@ const ProviderDetail: React.FC = () => {
                 {isBooking
                   ? 'Confirming Slot...'
                   : selectedSlot
-                  ? `Reserve & Pay (₹${totalAmount})`
+                  ? `Reserve & Pay (${formatINR(totalAmount)})`
                   : 'Select a Time Window Above'}
               </button>
               <p className="text-[11px] text-muted-foreground text-center mt-2">

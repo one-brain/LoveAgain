@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { formatINR } from '../utils/currency';
 import {
   ChatBubbleLeftRightIcon,
   CalendarDaysIcon,
@@ -204,7 +205,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         <div>
           <span className="text-[11px] text-muted-foreground block">Total Escrow</span>
           <span className="text-lg font-bold font-mono text-foreground">
-            ₹{booking.totalAmount.toLocaleString('en-IN')}
+            {formatINR(booking.totalAmount)}
           </span>
         </div>
 

@@ -11,6 +11,7 @@ import {
   useRequestPayoutMutation,
   useGetPayoutHistoryQuery,
 } from '../../store/paymentApi';
+import { formatINR } from '../../utils/currency';
 
 export const ProviderEarningsCard: React.FC = () => {
   const { data: earnings, isLoading, refetch } = useGetProviderEarningsQuery();
@@ -39,7 +40,7 @@ export const ProviderEarningsCard: React.FC = () => {
     }
 
     if (amountNum > clearedBalance) {
-      setStatusMessage({ type: 'error', text: `Amount exceeds available cleared balance (₹${clearedBalance.toLocaleString('en-IN')}).` });
+      setStatusMessage({ type: 'error', text: `Amount exceeds available cleared balance (${formatINR(clearedBalance)}).` });
       return;
     }
 
@@ -57,7 +58,7 @@ export const ProviderEarningsCard: React.FC = () => {
 
       setStatusMessage({
         type: 'success',
-        text: `Payout request for ₹${amountNum.toLocaleString('en-IN')} submitted successfully!`,
+        text: `Payout request for ${formatINR(amountNum)} submitted successfully!`,
       });
       setPayoutAmount('');
       setDestination('');
@@ -93,7 +94,7 @@ export const ProviderEarningsCard: React.FC = () => {
           className="px-5 py-2.5 rounded-2xl bg-accent text-accent-foreground font-semibold text-xs transition-all shadow-sm flex items-center gap-2 hover:opacity-95 disabled:opacity-50 cursor-pointer self-start sm:self-auto"
         >
           <ArrowUpRightIcon className="w-4 h-4" />
-          <span>Withdraw to UPI (₹{clearedBalance.toLocaleString('en-IN')})</span>
+          <span>Withdraw to UPI ({formatINR(clearedBalance)})</span>
         </button>
       </div>
 
@@ -105,7 +106,7 @@ export const ProviderEarningsCard: React.FC = () => {
             Cleared & Withdrawable
           </span>
           <p className="text-2xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
-            {isLoading ? '...' : `₹${clearedBalance.toLocaleString('en-IN')}`}
+            {isLoading ? '...' : formatINR(clearedBalance)}
           </p>
           <p className="text-[10px] text-muted-foreground">Ready for instant UPI transfer</p>
         </div>
@@ -116,7 +117,7 @@ export const ProviderEarningsCard: React.FC = () => {
             Pending Clearance
           </span>
           <p className="text-2xl font-extrabold font-mono text-sky-600 dark:text-sky-400">
-            {isLoading ? '...' : `₹${pendingBalance.toLocaleString('en-IN')}`}
+            {isLoading ? '...' : formatINR(pendingBalance)}
           </p>
           <p className="text-[10px] text-muted-foreground">Held until session ends</p>
         </div>
@@ -127,7 +128,7 @@ export const ProviderEarningsCard: React.FC = () => {
             Total Gross Bookings
           </span>
           <p className="text-2xl font-extrabold font-mono text-foreground">
-            {isLoading ? '...' : `₹${grossRevenue.toLocaleString('en-IN')}`}
+            {isLoading ? '...' : formatINR(grossRevenue)}
           </p>
           <p className="text-[10px] text-muted-foreground">Lifetime volume generated</p>
         </div>
@@ -248,7 +249,7 @@ export const ProviderEarningsCard: React.FC = () => {
                     Amount to Withdraw (₹)
                   </label>
                   <span className="text-[11px] text-muted-foreground font-mono">
-                    Available: ₹{clearedBalance.toLocaleString('en-IN')}
+                    Available: {formatINR(clearedBalance)}
                   </span>
                 </div>
                 <div className="relative">

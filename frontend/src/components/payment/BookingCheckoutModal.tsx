@@ -15,6 +15,7 @@ import {
   useVerifyTopUpMutation,
 } from '../../store/paymentApi';
 import { loadRazorpayScript } from '../../utils/razorpay';
+import { formatINR } from '../../utils/currency';
 
 interface BookingCheckoutModalProps {
   orderId: string;
@@ -164,7 +165,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto animate-in zoom-in-75 duration-300 ease-out" />
             <h4 className="text-lg font-bold text-foreground">Payment Held in Escrow!</h4>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              ₹{totalAmount.toLocaleString('en-IN')} is safely secured. Funds will only be released to {providerName} once your companionship session is completed.
+              {formatINR(totalAmount)} is safely secured. Funds will only be released to {providerName} once your companionship session is completed.
             </p>
           </div>
         ) : (
@@ -173,19 +174,19 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
                 <span>Companionship Session Total:</span>
-                <span className="font-semibold text-foreground">₹{totalAmount.toLocaleString('en-IN')}</span>
+                <span className="font-semibold text-foreground">{formatINR(totalAmount)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>15% Platform Commission:</span>
-                <span>₹{platformFee.toLocaleString('en-IN')}</span>
+                <span>{formatINR(platformFee)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>Net Companion Earnings:</span>
-                <span>₹{companionEarnings.toLocaleString('en-IN')}</span>
+                <span>{formatINR(companionEarnings)}</span>
               </div>
               <div className="pt-2 border-t border-border/40 flex justify-between font-bold text-foreground text-base">
                 <span>Total Payable:</span>
-                <span className="text-accent font-mono">₹{totalAmount.toLocaleString('en-IN')}</span>
+                <span className="text-accent font-mono">{formatINR(totalAmount)}</span>
               </div>
             </div>
 
@@ -200,7 +201,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                     Cue Wallet Available
                   </p>
                   <p className="text-xl font-bold font-mono text-foreground">
-                    {walletLoading ? '...' : `₹${availableBalance.toLocaleString('en-IN')}`}
+                    {walletLoading ? '...' : formatINR(availableBalance)}
                   </p>
                 </div>
               </div>
@@ -210,7 +211,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                 </span>
               ) : (
                 <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-600 border border-amber-500/30">
-                  Short by ₹{shortage.toLocaleString('en-IN')}
+                  Short by {formatINR(shortage)}
                 </span>
               )}
             </div>
@@ -251,7 +252,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                   ) : (
                     <>
                       <ShieldCheckIcon className="w-5 h-5" />
-                      <span>Pay ₹{totalAmount.toLocaleString('en-IN')} with Wallet</span>
+                      <span>Pay {formatINR(totalAmount)} with Wallet</span>
                     </>
                   )}
                 </button>
@@ -270,7 +271,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                   ) : (
                     <>
                       <CreditCardIcon className="w-5 h-5" />
-                      <span>Top-Up ₹{shortage.toLocaleString('en-IN')} & Pay via UPI</span>
+                      <span>Top-Up {formatINR(shortage)} & Pay via UPI</span>
                     </>
                   )}
                 </button>
