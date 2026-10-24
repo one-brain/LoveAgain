@@ -28,6 +28,7 @@ Unlike conventional dating apps or informal social forums, Cue is an **identity-
 - Settlement Rails: Razorpay UPI (Google Pay, PhonePe, Paytm, BHIM, CRED), NetBanking, and RuPay/Visa/Mastercard cards.
 - Web platform (responsive mobile-first layout accessible from phones, tablets, and desktops).
 - Real-time category and specialty filtering (dining, tennis/fitness, city walks, art galleries, event attendance).
+- Unified Canonical Booking Standard ("Book with Escrow"): All bookings across Discovery cards and Companion Detail pages follow a single, unified 2-step escrow reservation pattern (Step 1: Experience & venue specifications; Step 2: Escrow wallet/Razorpay deposit).
 - Escrow transaction lifecycle: Booking requested -> Companion confirms -> Wallet funds escrowed -> Session takes place -> Funds settled (85% to companion wallet, 15% platform commission).
 - Strict separation between administrative oversight and marketplace participation.
 
@@ -35,7 +36,7 @@ Unlike conventional dating apps or informal social forums, Cue is an **identity-
 
 - **Capabilities**:
   - Browse verified companion cards with 3 curated discovery photos, bio, hourly rate, and specialties.
-  - Interactive booking checkout with duration, date/time, meeting location, and notes.
+  - Single canonical "Book with Escrow" flow: Experience specifications (date, time, venue, activity, boundaries) followed by Razorpay/Wallet escrow checkout.
   - Razorpay-backed digital wallet with escrow holds, deposits, and transaction history.
   - Real-time messaging and chat between confirmed seeker and companion.
   - Comprehensive Admin Portal with GMV analytics, KYC inspection, bookings ledger, and account moderation.

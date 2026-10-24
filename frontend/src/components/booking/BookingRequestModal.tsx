@@ -35,6 +35,10 @@ interface BookingRequestModalProps {
     specialties: string[];
     maxRadiusKm?: number;
   };
+  initialDate?: string;
+  initialTime?: string;
+  initialDuration?: number;
+  initialActivity?: string;
   onProceedToPayment: (bookingData: BookingRequirementData) => void;
 }
 
@@ -78,6 +82,10 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   isOpen,
   onClose,
   provider,
+  initialDate,
+  initialTime,
+  initialDuration,
+  initialActivity,
   onProceedToPayment,
 }) => {
   const tomorrow = new Date();
@@ -85,11 +93,11 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const defaultDateStr = tomorrow.toISOString().split('T')[0];
 
   const [step, setStep] = useState<1 | 2>(1);
-  const [activity, setActivity] = useState(provider.specialties[0] || 'Companionship / Activity');
+  const [activity, setActivity] = useState(initialActivity || provider.specialties[0] || 'Companionship / Activity');
   const [customActivity] = useState('');
-  const [startDate, setStartDate] = useState(defaultDateStr);
-  const [startTime, setStartTime] = useState('18:00');
-  const [durationHours, setDurationHours] = useState(2);
+  const [startDate, setStartDate] = useState(initialDate || defaultDateStr);
+  const [startTime, setStartTime] = useState(initialTime || '18:00');
+  const [durationHours, setDurationHours] = useState(initialDuration || 2);
   const [meetingVenue, setMeetingVenue] = useState('');
   const [dressCode, setDressCode] = useState(DRESS_CODES[0]);
   const [transportMode, setTransportMode] = useState(TRANSPORT_MODES[0]);
@@ -99,6 +107,22 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const [specialNotes, setSpecialNotes] = useState('');
   const [agreedToPlatonicPolicy, setAgreedToPlatonicPolicy] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+
+  React.useEffect(() => {
+    if (initialDate) setStartDate(initialDate);
+    if (initialTime) setStartTime(initialTime);
+    if (initialDuration) setDurationHours(initialDuration);
+    if (initialActivity) setActivity(initialActivity);
+  }, [initialDate, initialTime, initialDuration, initialActivity]);
+
+  React.useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -142,7 +166,12 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="booking-request-title"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+    >
       <div className="bg-card border border-border w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="p-5 border-b border-border flex items-center justify-between bg-muted/40">
@@ -154,8 +183,8 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
             />
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-foreground font-serif">
-                  Book {provider.displayName}
+                <h2 id="booking-request-title" className="text-base sm:text-lg font-bold text-foreground font-serif">
+                  Book with Escrow: {provider.displayName}
                 </h2>
                 <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[11px] font-bold">
                   {formatRate(provider.hourlyRate)}
@@ -168,7 +197,8 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            aria-label="Close booking dialog"
+            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>

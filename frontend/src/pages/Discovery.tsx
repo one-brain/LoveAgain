@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
 import { useListProvidersQuery } from '../store/discoveryApi';
+import { useCreateBookingMutation } from '../store/bookingApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
@@ -195,6 +198,8 @@ const CURATED_SAMPLE_PROVIDERS = [
 const Discovery: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const [createBooking] = useCreateBookingMutation();
 
   const initialLens = (searchParams.get('lens') as PlatformLens | 'all') || 'all';
   const initialQ = searchParams.get('q') || '';
@@ -214,10 +219,12 @@ const Discovery: React.FC = () => {
   // Track active photo index per provider card for interactive 3-photo browsing
   const [activePhotoIndexByProvider, setActivePhotoIndexByProvider] = useState<Record<string, number>>({});
 
-  // Booking Modal State
+  // Single Canonical Booking Flow Modal States
+  const [authPromptModal, setAuthPromptModal] = useState(false);
   const [selectedProviderForBooking, setSelectedProviderForBooking] = useState<any | null>(null);
   const [activeCheckoutOrderId, setActiveCheckoutOrderId] = useState<string | null>(null);
   const [checkoutTotalAmount, setCheckoutTotalAmount] = useState<number>(0);
+  const [checkoutProviderName, setCheckoutProviderName] = useState<string>('Companion');
 
   useEffect(() => {
     const paramLens = searchParams.get('lens') as PlatformLens | 'all';
@@ -735,6 +742,10 @@ const Discovery: React.FC = () => {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
+                          if (!isAuthenticated) {
+                            setAuthPromptModal(true);
+                            return;
+                          }
                           setSelectedProviderForBooking(provider);
                         }}
                         className="px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent font-semibold transition-all shadow-2xs"
@@ -749,15 +760,35 @@ const Discovery: React.FC = () => {
           </div>
         )}
 
-        {/* Interactive Booking Request Modal */}
+        {/* Single Canonical Booking Flow: Escrow Request Modal */}
         {selectedProviderForBooking && (
           <BookingRequestModal
             isOpen={Boolean(selectedProviderForBooking)}
             onClose={() => setSelectedProviderForBooking(null)}
             provider={selectedProviderForBooking}
-            onProceedToPayment={(bookingData: BookingRequirementData) => {
-              const generatedOrderId = `order_${Date.now()}`;
+            onProceedToPayment={async (bookingData: BookingRequirementData) => {
+              let generatedOrderId = `order_${Date.now()}`;
+              if (selectedProviderForBooking.providerId && !selectedProviderForBooking.providerId.startsWith('sample-')) {
+                try {
+                  const startD = new Date(`${bookingData.startDate}T${bookingData.startTime}:00Z`);
+                  const endD = new Date(startD.getTime() + bookingData.durationHours * 3600000);
+                  const result = await createBooking({
+                    providerId: selectedProviderForBooking.providerId,
+                    startTime: startD.toISOString(),
+                    endTime: endD.toISOString(),
+                    hourlyRate: selectedProviderForBooking.hourlyRate,
+                    durationHours: bookingData.durationHours,
+                    meetingAddress: bookingData.meetingVenue,
+                  }).unwrap();
+                  if (result?.orderId) {
+                    generatedOrderId = result.orderId;
+                  }
+                } catch (err: any) {
+                  console.error('Booking API error:', err);
+                }
+              }
               setCheckoutTotalAmount(bookingData.totalAmount);
+              setCheckoutProviderName(selectedProviderForBooking.displayName);
               setActiveCheckoutOrderId(generatedOrderId);
               setSelectedProviderForBooking(null);
             }}
@@ -769,7 +800,7 @@ const Discovery: React.FC = () => {
           <BookingCheckoutModal
             orderId={activeCheckoutOrderId}
             totalAmount={checkoutTotalAmount}
-            providerName="Companion"
+            providerName={checkoutProviderName}
             isOpen={Boolean(activeCheckoutOrderId)}
             onClose={() => setActiveCheckoutOrderId(null)}
             onSuccess={() => {
@@ -777,6 +808,44 @@ const Discovery: React.FC = () => {
               navigate('/bookings');
             }}
           />
+        )}
+
+        {/* Auth Prompt Modal for Guest Visitors */}
+        {authPromptModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <div className="w-full max-w-md rounded-3xl bg-card border border-border p-6 sm:p-8 text-center space-y-4 shadow-2xl">
+              <div className="w-16 h-16 rounded-full bg-accent/15 text-accent flex items-center justify-center mx-auto">
+                <SparklesIcon className="w-9 h-9" />
+              </div>
+              <h3 className="text-2xl font-bold font-serif text-foreground">
+                Sign In to Reserve
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                To guarantee community safety and escrow payment protection, an authenticated account is required to book a companion.
+              </p>
+              <div className="pt-2 flex flex-col gap-2">
+                <Link
+                  to="/register"
+                  className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors block"
+                >
+                  Create Account (Quick & Free)
+                </Link>
+                <Link
+                  to="/login"
+                  className="w-full py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-xs transition-colors block"
+                >
+                  Existing User Log In
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setAuthPromptModal(false)}
+                  className="text-xs text-muted-foreground hover:underline pt-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </main>
     </div>

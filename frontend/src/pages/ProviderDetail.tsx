@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useGetProviderQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
+import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { formatINR, formatRate } from '../utils/currency';
 import type { RootState } from '../store';
 import {
@@ -178,12 +179,12 @@ const ProviderDetail: React.FC = () => {
 
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
-  const [meetingAddress, setMeetingAddress] = useState('');
   const [bookingSuccessModal, setBookingSuccessModal] = useState(false);
   const [authPromptModal, setAuthPromptModal] = useState(false);
-  const [bookingError, setBookingError] = useState<string | null>(null);
   const [checkoutOrderId, setCheckoutOrderId] = useState<string | null>(null);
+  const [checkoutTotalAmount, setCheckoutTotalAmount] = useState<number>(0);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   // Fetch API data
   const { data: apiProvider, isLoading } = useGetProviderQuery(
@@ -191,7 +192,7 @@ const ProviderDetail: React.FC = () => {
     { skip: !userId || userId.startsWith('sample-') }
   );
 
-  const [createBooking, { isLoading: isBooking }] = useCreateBookingMutation();
+  const [createBooking] = useCreateBookingMutation();
 
   // Resolve provider data
   const provider = useMemo(() => {
@@ -255,39 +256,41 @@ const ProviderDetail: React.FC = () => {
   const durationHours = selectedSlotData
     ? (new Date(selectedSlotData.endTime).getTime() - new Date(selectedSlotData.startTime).getTime()) / (1000 * 60 * 60)
     : 0;
-  const totalAmount = (durationHours * provider.hourlyRate).toFixed(2);
 
-  const handleBookingConfirm = async () => {
-    if (!isAuthenticated) {
-      setAuthPromptModal(true);
-      return;
-    }
+  const prefilledDate = selectedSlotData
+    ? new Date(selectedSlotData.startTime).toISOString().split('T')[0]
+    : undefined;
+  const prefilledTime = selectedSlotData
+    ? new Date(selectedSlotData.startTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+    : undefined;
+  const prefilledDuration = durationHours > 0 ? durationHours : 2;
 
-    if (!selectedSlotData || !userId) return;
-    setBookingError(null);
-
-    try {
-      let createdOrderId = `order_${Date.now()}`;
-      if (!userId.startsWith('sample-')) {
+  const handleProceedToPayment = async (bookingData: BookingRequirementData) => {
+    let createdOrderId = `order_${Date.now()}`;
+    if (userId && !userId.startsWith('sample-')) {
+      try {
+        const startD = new Date(`${bookingData.startDate}T${bookingData.startTime}:00Z`);
+        const endD = new Date(startD.getTime() + bookingData.durationHours * 3600000);
         const result = await createBooking({
           providerId: userId,
-          startTime: selectedSlotData.startTime,
-          endTime: selectedSlotData.endTime,
+          startTime: startD.toISOString(),
+          endTime: endD.toISOString(),
           hourlyRate: provider.hourlyRate,
-          durationHours,
-          meetingAddress: meetingAddress.trim() || undefined,
+          durationHours: bookingData.durationHours,
+          meetingAddress: bookingData.meetingVenue,
         }).unwrap();
         if (result?.orderId) {
           createdOrderId = result.orderId;
         }
+      } catch (err: any) {
+        console.error('Booking API error:', err);
       }
-
-      setCheckoutOrderId(createdOrderId);
-      setIsCheckoutModalOpen(true);
-    } catch (err: any) {
-      console.error('Booking API error:', err);
-      setBookingError(err?.data?.error || err?.message || 'Failed to complete reservation. Please try again or check your account.');
     }
+
+    setCheckoutOrderId(createdOrderId);
+    setCheckoutTotalAmount(bookingData.totalAmount);
+    setIsRequestModalOpen(false);
+    setIsCheckoutModalOpen(true);
   };
 
   return (
@@ -478,34 +481,61 @@ const ProviderDetail: React.FC = () => {
           </div>
         </div>
 
-        {/* Right Column: Sticky Booking Widget */}
+        {/* Right Column: Sticky "Book with Escrow" Reservation Hub */}
         <div className="lg:col-span-1">
           <div className="sticky top-24 bg-card rounded-3xl border border-border p-6 shadow-md space-y-6">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-accent block mb-1">
-                Schedule Companion
+                Escrow-Protected Experience
               </span>
-              <h2 className="text-xl font-bold font-serif text-foreground">
-                Book an Experience
+              <h2 className="text-2xl font-bold font-serif text-foreground">
+                Book with Escrow
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Select an open time slot to reserve companion time.
+                100% of your funds are secured in the Escrow Vault and only released after your companion meetup concludes safely.
               </p>
             </div>
 
-            {/* Time Slot Picker */}
+            {/* Rate & Escrow Guarantee Summary */}
+            <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2.5 text-xs">
+              <div className="flex justify-between items-center text-foreground">
+                <span className="text-muted-foreground">Companion Rate:</span>
+                <span className="text-base font-bold font-serif text-accent">{formatRate(provider.hourlyRate)}</span>
+              </div>
+              <div className="flex justify-between items-center text-foreground">
+                <span className="text-muted-foreground">Estimated Deposit ({durationHours || 2} hrs):</span>
+                <span className="font-mono font-semibold text-foreground">{formatINR(provider.hourlyRate * (durationHours || 2))}</span>
+              </div>
+              <div className="pt-2 border-t border-border/60 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
+                <ShieldCheckIcon className="w-4 h-4 text-emerald-500 shrink-0" />
+                <span>100% Refund Guarantee if Cancelled</span>
+              </div>
+            </div>
+
+            {/* Time Slot Picker (Optional Quick Pick) */}
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-1.5">
-                <CalendarDaysIcon className="w-4 h-4 text-accent" />
-                <span>Available Windows</span>
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                  <CalendarDaysIcon className="w-4 h-4 text-accent" />
+                  <span>Available Windows (Optional)</span>
+                </label>
+                {selectedSlot && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSlot(null)}
+                    className="text-[11px] text-accent hover:underline font-medium cursor-pointer"
+                  >
+                    Clear Selection
+                  </button>
+                )}
+              </div>
 
               {availableSlots.length === 0 ? (
                 <div className="p-4 rounded-xl bg-muted/60 text-center text-xs text-muted-foreground">
-                  No upcoming open slots right now. Contact provider for custom hours.
+                  No predefined windows. You can customize date & hours in the booking request.
                 </div>
               ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                   {availableSlots.map((slot: any) => {
                     const isSelected = selectedSlot === slot.slotId;
                     const startDate = new Date(slot.startTime);
@@ -516,7 +546,7 @@ const ProviderDetail: React.FC = () => {
                         key={slot.slotId}
                         type="button"
                         onClick={() => setSelectedSlot(isSelected ? null : slot.slotId)}
-                        className={`w-full p-3 rounded-xl border text-left transition-all text-xs flex items-center justify-between shadow-2xs ${
+                        className={`w-full p-3 rounded-xl border text-left transition-all text-xs flex items-center justify-between shadow-2xs cursor-pointer ${
                           isSelected
                             ? 'border-accent bg-accent/15 text-foreground ring-1 ring-accent'
                             : 'border-border bg-card hover:border-accent/40 text-foreground'
@@ -548,63 +578,35 @@ const ProviderDetail: React.FC = () => {
               )}
             </div>
 
-            {/* Meeting Location */}
-            <div>
-              <label className="block text-xs font-semibold text-foreground/80 mb-1.5">
-                Proposed Meeting Location (Optional)
-              </label>
-              <input
-                type="text"
-                value={meetingAddress}
-                onChange={(e) => setMeetingAddress(e.target.value)}
-                placeholder="e.g. Hudson River Park Tennis Courts"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-muted text-foreground text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-              />
+            {/* Safety & Boundary Highlights */}
+            <div className="p-3.5 rounded-2xl bg-accent/5 border border-accent/15 text-[11px] text-foreground/80 space-y-1.5">
+              <div className="font-bold text-accent flex items-center gap-1.5">
+                <SparklesIcon className="w-3.5 h-3.5" />
+                <span>Cue Safety Standard</span>
+              </div>
+              <p className="text-muted-foreground leading-relaxed">
+                Meetups occur exclusively at public venues (cafes, sports clubs, art plazas). Platonic conduct boundaries strictly guaranteed.
+              </p>
             </div>
 
-            {/* Cost Breakdown */}
-            {selectedSlotData && (
-              <div className="p-4 rounded-xl bg-muted border border-border space-y-2 text-xs">
-                <div className="flex justify-between text-foreground/80">
-                  <span>Companion Rate</span>
-                  <span>{formatRate(provider.hourlyRate)}</span>
-                </div>
-                <div className="flex justify-between text-foreground/80">
-                  <span>Selected Duration</span>
-                  <span>{durationHours.toFixed(1)} hours</span>
-                </div>
-                <div className="flex justify-between text-foreground/80">
-                  <span>Platform Trust Fee</span>
-                  <span className="text-success font-medium">Free (₹0 promo)</span>
-                </div>
-                <div className="pt-2 border-t border-border flex justify-between font-bold text-sm text-foreground">
-                  <span>Total Amount</span>
-                  <span className="text-accent">{formatINR(totalAmount)}</span>
-                </div>
-              </div>
-            )}
-
-            {/* Booking CTA Button */}
+            {/* Primary Action Button: Book with Escrow */}
             <div className="space-y-2">
-              {bookingError && (
-                <div className="p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs font-medium">
-                  {bookingError}
-                </div>
-              )}
               <button
                 type="button"
-                disabled={!selectedSlot || isBooking}
-                onClick={handleBookingConfirm}
-                className="w-full py-3.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed hover:scale-[1.01]"
+                onClick={() => {
+                  if (!isAuthenticated) {
+                    setAuthPromptModal(true);
+                    return;
+                  }
+                  setIsRequestModalOpen(true);
+                }}
+                className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all cursor-pointer hover:scale-[1.01] flex items-center justify-center gap-2"
               >
-                {isBooking
-                  ? 'Confirming Slot...'
-                  : selectedSlot
-                  ? `Reserve & Pay (${formatINR(totalAmount)})`
-                  : 'Select a Time Window Above'}
+                <ShieldCheckIcon className="w-5 h-5" />
+                <span>Book with Escrow &rarr;</span>
               </button>
               <p className="text-[11px] text-muted-foreground text-center mt-2">
-                🔒 Funds held securely in escrow until activity completion.
+                🔒 Protected by Cue Escrow Vault until activity completion.
               </p>
             </div>
           </div>
@@ -679,11 +681,24 @@ const ProviderDetail: React.FC = () => {
         </div>
       )}
 
+      {/* Single Canonical Booking Flow: Escrow Request Modal */}
+      {isRequestModalOpen && (
+        <BookingRequestModal
+          isOpen={isRequestModalOpen}
+          onClose={() => setIsRequestModalOpen(false)}
+          provider={provider}
+          initialDate={prefilledDate}
+          initialTime={prefilledTime}
+          initialDuration={prefilledDuration}
+          onProceedToPayment={handleProceedToPayment}
+        />
+      )}
+
       {/* Escrow Checkout Modal */}
       {isCheckoutModalOpen && checkoutOrderId && (
         <BookingCheckoutModal
           orderId={checkoutOrderId}
-          totalAmount={parseFloat(totalAmount)}
+          totalAmount={checkoutTotalAmount || (provider.hourlyRate * 2)}
           providerName={provider.displayName}
           isOpen={true}
           onClose={() => setIsCheckoutModalOpen(false)}
