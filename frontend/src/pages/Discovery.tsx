@@ -8,6 +8,7 @@ import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { formatRate } from '../utils/currency';
+import { SAMPLE_PROVIDERS_LIST } from '../utils/providerData';
 import {
   MagnifyingGlassIcon,
   StarIcon,
@@ -78,122 +79,7 @@ const RADIUS_OPTIONS: DropdownOption[] = [
 ];
 
 // Rich Universal Profiles showcasing Display Name and 3 Profile Images
-const CURATED_SAMPLE_PROVIDERS = [
-  {
-    providerId: 'sample-1',
-    displayName: 'Elena Rostova',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=600&q=80',
-    ],
-    hourlyRate: 1500,
-    bio: 'Semi-pro tennis coach, contemporary art curator, and bilingual city companion.',
-    specialties: ['Tennis', 'Yoga Partner', 'Museum Walk', 'Gym Spotter'],
-    averageRating: 4.98,
-    isVerified: true,
-    trustScore: 99,
-    distanceKm: 2.4,
-    lenses: ['wellness', 'companions'] as PlatformLens[],
-    services: ['Tennis Coaching (1-on-1)', 'Art Gallery Curator Walk'],
-  },
-  {
-    providerId: 'sample-2',
-    displayName: 'Marcus Vance',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
-    ],
-    hourlyRate: 1800,
-    bio: 'Commercial photographer and street foodie guide. Available for photoshoots and culinary outings.',
-    specialties: ['Photography', 'Cooking & Baking', 'City Tour'],
-    averageRating: 4.95,
-    isVerified: true,
-    trustScore: 98,
-    distanceKm: 3.8,
-    lenses: ['pro_work', 'companions'] as PlatformLens[],
-    services: ['Portrait Photoshoot Package', 'Street Food Crawl Host'],
-  },
-  {
-    providerId: 'sample-3',
-    displayName: 'Dr. Sophia Chen',
-    photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=600&q=80',
-    ],
-    hourlyRate: 1200,
-    bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony.',
-    specialties: ['Hiking', 'Yoga Partner', 'Violin', 'City Tour'],
-    averageRating: 4.92,
-    isVerified: true,
-    trustScore: 97,
-    distanceKm: 1.9,
-    lenses: ['wellness', 'companions'] as PlatformLens[],
-    services: ['Violin Performance / Lesson'],
-  },
-  {
-    providerId: 'sample-4',
-    displayName: 'Julian Alvarez',
-    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=600&q=80',
-    ],
-    hourlyRate: 1600,
-    bio: 'Certified salsa dance instructor & architectural history guide. Available for events & plus-one.',
-    specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
-    averageRating: 4.88,
-    isVerified: true,
-    trustScore: 96,
-    distanceKm: 4.5,
-    lenses: ['pro_work', 'companions'] as PlatformLens[],
-    services: ['Salsa Coaching', 'Wedding Plus-One'],
-  },
-  {
-    providerId: 'sample-5',
-    displayName: 'Aria Thorne',
-    photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=600&q=80',
-    ],
-    hourlyRate: 1500,
-    bio: 'Software Architect & avid book enthusiast. Available for coffee chats, tech career mentoring, and museum visits.',
-    specialties: ['Coding Mentorship', 'Language Practice', 'Museum Walk', 'Cafe & Chat'],
-    averageRating: 4.97,
-    isVerified: true,
-    trustScore: 99,
-    distanceKm: 2.1,
-    lenses: ['pro_work', 'companions'] as PlatformLens[],
-    services: ['System Design Mentorship'],
-  },
-  {
-    providerId: 'sample-6',
-    displayName: 'David Morales',
-    photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&w=600&q=80',
-      'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=600&q=80',
-    ],
-    hourlyRate: 2000,
-    bio: 'Sommelier and fitness trainer. Host for dining excursions and high-intensity workout coaching.',
-    specialties: ['Fine Dining', 'Gym Spotter', 'Tennis'],
-    averageRating: 4.94,
-    isVerified: true,
-    trustScore: 98,
-    distanceKm: 5.2,
-    lenses: ['wellness', 'companions'] as PlatformLens[],
-    services: ['Wine Tasting Session', 'Strength Training (1-on-1)'],
-  },
-];
+const CURATED_SAMPLE_PROVIDERS = SAMPLE_PROVIDERS_LIST;
 
 const Discovery: React.FC = () => {
   const navigate = useNavigate();

@@ -7,6 +7,7 @@ import {
   useGetMyProfileQuery,
   useCancelBookingMutation,
 } from '../store/bookingApi';
+import { useListProvidersQuery } from '../store/discoveryApi';
 import { BookingCard, type BookingSummary } from '../components/BookingCard';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { CheckInModal } from '../components/CheckInModal';
@@ -32,7 +33,12 @@ const DEMO_BOOKINGS: BookingSummary[] = [
     status: 'Confirmed',
     totalAmount: 3000,
     providerName: 'Elena Rostova',
+    providerPhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
+    averageRating: 4.98,
+    specialty: 'Tennis & Art Gallery',
+    isVerified: true,
     meetingAddress: 'Central Tennis Club, Court 4',
+    activity: 'Tennis Coaching',
   },
   {
     orderId: 'a12b45cd-7f89',
@@ -43,7 +49,12 @@ const DEMO_BOOKINGS: BookingSummary[] = [
     status: 'Completed',
     totalAmount: 3600,
     providerName: 'Marcus Vance',
+    providerPhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+    averageRating: 4.95,
+    specialty: 'Photography & Culinary',
+    isVerified: true,
     meetingAddress: 'Little Italy Market Stroll',
+    activity: 'Street Food Crawl',
   },
 ];
 
@@ -101,6 +112,9 @@ const Bookings: React.FC = () => {
     isLoading: isLoadingSeeker,
     refetch: refetchSeekerBookings,
   } = useGetSeekerOutgoingBookingsQuery(user?.id || '', { skip: !user?.id });
+
+  // Query live backend providers to enrich candidate profiles
+  const { data: liveProviders } = useListProvidersQuery({});
 
   const [cancelBooking] = useCancelBookingMutation();
 
@@ -439,6 +453,7 @@ const Bookings: React.FC = () => {
                       key={b.orderId}
                       booking={b}
                       roleMode={roleMode}
+                      liveProviders={liveProviders}
                       onCancel={handleCancel}
                       onPay={(bkg) => setCheckoutBooking(bkg)}
                       onCheckIn={handleCheckIn}
@@ -465,6 +480,7 @@ const Bookings: React.FC = () => {
                       key={b.orderId}
                       booking={b}
                       roleMode={roleMode}
+                      liveProviders={liveProviders}
                       onOpenSos={handleOpenSos}
                     />
                   ))}
@@ -565,6 +581,7 @@ const Bookings: React.FC = () => {
                           key={b.orderId}
                           booking={b}
                           roleMode={roleMode}
+                          liveProviders={liveProviders}
                           onCancel={handleCancel}
                           onPay={(bkg) => setCheckoutBooking(bkg)}
                           onCheckIn={handleCheckIn}

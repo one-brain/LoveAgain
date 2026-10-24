@@ -6,6 +6,7 @@ import { useCreateBookingMutation } from '../store/bookingApi';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { formatINR, formatRate } from '../utils/currency';
+import { SAMPLE_PROVIDERS_MAP, generateDemoSlots } from '../utils/providerData';
 import type { RootState } from '../store';
 import {
   StarIcon,
