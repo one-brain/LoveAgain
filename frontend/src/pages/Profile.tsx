@@ -23,6 +23,7 @@ import {
   BanknotesIcon,
   PhotoIcon,
   ArrowUpTrayIcon,
+  ArrowRightIcon,
   TrashIcon,
 } from '@heroicons/react/24/outline';
 
@@ -636,9 +637,10 @@ const Profile: React.FC = () => {
             ) : (
               <Link
                 to="/apply-companion"
-                className="px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-colors whitespace-nowrap shrink-0 self-start sm:self-auto shadow-xs"
               >
-                Apply for Companion Verification &rarr;
+                <span>Apply for Companion Verification</span>
+                <ArrowRightIcon className="w-3.5 h-3.5 shrink-0" />
               </Link>
             )}
           </div>
@@ -652,9 +654,10 @@ const Profile: React.FC = () => {
               {companionStatus === 'Draft' && (
                 <Link
                   to="/apply-companion"
-                  className="px-3 py-1 rounded-lg bg-accent text-accent-foreground text-[11px] font-bold hover:opacity-90 transition-opacity w-fit"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-[11px] font-bold hover:opacity-90 transition-opacity whitespace-nowrap shrink-0 w-fit"
                 >
-                  Complete Verification (ID & Payout) &rarr;
+                  <span>Complete Verification (ID & Payout)</span>
+                  <ArrowRightIcon className="w-3 h-3 shrink-0" />
                 </Link>
               )}
             </div>

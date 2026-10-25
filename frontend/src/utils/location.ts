@@ -134,3 +134,4 @@ export function getCurrentCoordinates(): Promise<{ latitude: number; longitude: 
     );
   });
 }
+

@@ -247,3 +247,4 @@ export const CompanionLocationCard: React.FC<CompanionLocationCardProps> = ({
     </div>
   );
 };
+
