@@ -26,6 +26,7 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   BuildingLibraryIcon,
+  ArrowLeftIcon,
 } from '@heroicons/react/24/outline';
 
 /**
@@ -80,7 +81,11 @@ async function compressImageFile(file: File, maxDim = 600, quality = 0.85): Prom
   });
 }
 
-export const AdminProfileView: React.FC = () => {
+interface AdminProfileViewProps {
+  onBackToDashboard?: () => void;
+}
+
+export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDashboard }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
 
@@ -291,6 +296,20 @@ export const AdminProfileView: React.FC = () => {
             <ExclamationTriangleIcon className="w-5 h-5 text-rose-500 flex-shrink-0" />
           )}
           <span>{toast.message}</span>
+        </div>
+      )}
+
+      {/* Navigation Return Shortcut */}
+      {onBackToDashboard && (
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            onClick={onBackToDashboard}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border/80 bg-card hover:bg-muted text-xs font-semibold text-foreground transition-all shadow-2xs hover:shadow-xs active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
+          >
+            <ArrowLeftIcon className="w-3.5 h-3.5 text-accent" />
+            <span>Return to Operations Dashboard</span>
+          </button>
         </div>
       )}
 

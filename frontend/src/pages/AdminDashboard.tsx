@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   useGetAdminVerificationsQuery,
@@ -34,26 +34,14 @@ type TabKey = 'verifications' | 'bookings' | 'users' | 'payouts' | 'mis' | 'prof
 
 export const AdminDashboard: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const initialTab = searchParams.get('tab') as TabKey | null;
-
   const validTabs: TabKey[] = ['verifications', 'bookings', 'users', 'payouts', 'mis', 'profile'];
-  const [activeTab, setActiveTab] = useState<TabKey>(
-    initialTab && validTabs.includes(initialTab) ? initialTab : 'verifications'
-  );
+  const rawTab = searchParams.get('tab') as TabKey | null;
+  const activeTab: TabKey = rawTab && validTabs.includes(rawTab) ? rawTab : 'verifications';
 
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
 
-  // Sync state with URL search params
-  useEffect(() => {
-    const t = searchParams.get('tab') as TabKey | null;
-    if (t && validTabs.includes(t)) {
-      setActiveTab(t);
-    }
-  }, [searchParams]);
-
   const handleTabChange = (tab: TabKey) => {
-    setActiveTab(tab);
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       if (tab === 'verifications') {
@@ -344,7 +332,9 @@ export const AdminDashboard: React.FC = () => {
           />
         )}
 
-        {activeTab === 'profile' && <AdminProfileView />}
+        {activeTab === 'profile' && (
+          <AdminProfileView onBackToDashboard={() => handleTabChange('verifications')} />
+        )}
       </main>
     </div>
   );
