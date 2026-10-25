@@ -179,7 +179,7 @@ export const profileApi = createApi({
       }),
       invalidatesTags: ['Profile'],
     }),
-    activateProfile: builder.mutation<void, { active: boolean }>({
+    activateProfile: builder.mutation<ProviderProfileResponse, { active: boolean }>({
       query: (body) => ({
         url: `/profiles/provider/status`,
         method: 'PATCH',

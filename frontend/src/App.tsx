@@ -147,6 +147,7 @@ function App() {
             }
           />
           <Route path="provider-profile/:userId?" element={<Navigate to="/profile?tab=provider" replace />} />
+          <Route path="companion" element={<Navigate to="/provider" replace />} />
           <Route
             path="provider"
             element={

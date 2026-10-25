@@ -12,6 +12,7 @@ import {
   useUploadCompanionPhotoMutation,
 } from '../store/api';
 import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
+import { DiscoveryVisibilityCard } from '../components/profile/DiscoveryVisibilityCard';
 import {
   BriefcaseIcon,
   CheckBadgeIcon,
@@ -503,7 +504,7 @@ const Profile: React.FC = () => {
           }`}
         >
           <BriefcaseIcon className="w-4 h-4" />
-          <span>2. Companion & Provider Settings</span>
+          <span>2. Companion Profile & Settings</span>
         </button>
 
         <button
@@ -620,16 +621,24 @@ const Profile: React.FC = () => {
         <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold font-serif text-foreground">Companion & Provider Settings</h2>
+              <h2 className="text-xl font-bold font-serif text-foreground">Companion Profile & Settings</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Configure your public Display Name, 3 Browse Profile photos, hourly rate, and offered activities.
+                Configure your public Display Name, 3 Browse Profile photos, hourly rate, offered activities, and discovery visibility.
               </p>
             </div>
 
             {companionStatus === 'Approved' ? (
-              <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-bold w-fit">
-                ✓ Approved Companion
-              </span>
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-bold w-fit">
+                  ✓ Approved Companion
+                </span>
+                <DiscoveryVisibilityCard
+                  compact={true}
+                  isActive={providerProfile?.isActive ?? true}
+                  isApproved={true}
+                  onToggleSuccess={() => refetchProvider()}
+                />
+              </div>
             ) : companionStatus === 'PendingReview' ? (
               <span className="px-3 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold w-fit">
                 ⏳ Application In Review

@@ -11,6 +11,7 @@ import { ServiceManagement } from '../components/ServiceManagement';
 import { BookingCard } from '../components/BookingCard';
 import { ProviderEarningsCard } from '../components/payment/ProviderEarningsCard';
 import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
+import { DiscoveryVisibilityCard } from '../components/profile/DiscoveryVisibilityCard';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
   BriefcaseIcon,
@@ -67,7 +68,7 @@ const ProviderDashboard: React.FC = () => {
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading Provider Hub...</p>
+          <p className="text-sm text-muted-foreground">Loading Companion Hub...</p>
         </div>
       </div>
     );
@@ -82,7 +83,7 @@ const ProviderDashboard: React.FC = () => {
             Companion Management Hub
           </span>
           <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
-            Provider Dashboard
+            Companion Dashboard
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             Manage your service offerings, set availability rates, and review incoming companion requests.
@@ -133,6 +134,14 @@ const ProviderDashboard: React.FC = () => {
           <p className="text-xs text-muted-foreground">High responsiveness increases bookings</p>
         </div>
       </div>
+
+      {/* Discovery Visibility Control (Pause & Resume Anytime) */}
+      <DiscoveryVisibilityCard
+        isActive={profileData?.profile?.isActive ?? (profileData as any)?.isActive ?? true}
+        isApproved={
+          (profileData?.profile?.status ?? (profileData as any)?.status) === 'Approved'
+        }
+      />
 
       {/* Base Location & Proximity Service Area */}
       <CompanionLocationCard

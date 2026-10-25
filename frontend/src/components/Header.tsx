@@ -527,7 +527,7 @@ const Header: React.FC = () => {
                     to="/provider"
                     className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
                   >
-                    Provider Hub
+                    Companion Hub
                   </Link>
                   <Link
                     to="/wallet"
