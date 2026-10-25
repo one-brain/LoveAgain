@@ -39,7 +39,7 @@ const Header: React.FC = () => {
   const themeDropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync profile data from REST API whenever authenticated
-  const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated || isAdmin });
+  const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated });
   const { data: myProfileData } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated || isAdmin });
 
   const companionStatus = myProfileData?.profile?.status;
@@ -47,21 +47,27 @@ const Header: React.FC = () => {
   useEffect(() => {
     if (seekerProfileData?.profile?.firstName) {
       const p = seekerProfileData.profile;
-      if (p.firstName !== user?.firstName || p.lastName !== user?.lastName || p.isVerified !== user?.isVerified) {
+      if (
+        p.firstName !== user?.firstName ||
+        p.lastName !== user?.lastName ||
+        p.isVerified !== user?.isVerified ||
+        p.photoUrl !== user?.photoUrl
+      ) {
         dispatch(
           setUser({
             id: p.userId || user?.id || '',
             email: p.email || user?.email || '',
             firstName: p.firstName,
             lastName: p.lastName || '',
+            photoUrl: p.photoUrl || null,
             isVerified: p.isVerified ?? true,
             trustScore: p.trustScore ?? 99,
-            roles: user?.roles || ['Seeker', 'Provider'],
+            roles: user?.roles || (isAdmin ? ['Admin'] : ['Seeker', 'Provider']),
           })
         );
       }
     }
-  }, [seekerProfileData, user, dispatch]);
+  }, [seekerProfileData, user, isAdmin, dispatch]);
 
   const userInitials = useMemo(() => {
     if (!user) return 'U';
@@ -171,12 +177,29 @@ const Header: React.FC = () => {
 
           {/* Desktop Navigation */}
           {isAdmin ? (
-            <div className="hidden md:flex items-center gap-2">
-              <div className="px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center gap-2 shadow-xs">
-                <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                <span>Back-Office Operations & Revenue Monitor</span>
-              </div>
-            </div>
+            <nav className="hidden md:flex items-center gap-2">
+              <Link
+                to="/admin"
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all ${
+                  isActive('/admin') && !location.search.includes('tab=profile')
+                    ? 'bg-amber-500/20 border border-amber-500/40 text-amber-500 shadow-xs'
+                    : 'border border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
+                }`}
+              >
+                <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
+                <span>Back-Office Operations</span>
+              </Link>
+              <Link
+                to="/discovery"
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  isActive('/discovery')
+                    ? 'bg-accent/15 text-accent font-semibold shadow-xs'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
+                }`}
+              >
+                Browse Profiles
+              </Link>
+            </nav>
           ) : (
             <nav className="hidden md:flex items-center gap-1">
               <Link
@@ -345,9 +368,17 @@ const Header: React.FC = () => {
                     {userDisplayName}
                   </span>
                   <div className="relative">
-                    <div className="w-8 h-8 rounded-lg bg-accent/20 text-accent font-bold flex items-center justify-center text-xs tracking-wider border border-accent/30 font-sans">
-                      {userInitials}
-                    </div>
+                    {user?.photoUrl ? (
+                      <img
+                        src={user.photoUrl}
+                        alt={userDisplayName}
+                        className="w-8 h-8 rounded-lg object-cover border border-accent/30"
+                      />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-lg ${isAdmin ? 'bg-amber-500/20 text-amber-500 border-amber-500/30' : 'bg-accent/20 text-accent border-accent/30'} font-bold flex items-center justify-center text-xs tracking-wider border font-sans`}>
+                        {userInitials}
+                      </div>
+                    )}
                     <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-success rounded-full ring-2 ring-card">
                       <span className="sr-only">Online status: Active</span>
                     </span>
@@ -375,14 +406,32 @@ const Header: React.FC = () => {
 
                     <div className="space-y-0.5">
                       {isAdmin ? (
-                        <Link
-                          to="/admin"
-                          onClick={() => setUserDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors font-bold"
-                        >
-                          <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
-                          <span>Admin Portal</span>
-                        </Link>
+                        <>
+                          <Link
+                            to="/admin"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                          >
+                            <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
+                            <span>Admin Portal</span>
+                          </Link>
+                          <Link
+                            to="/admin?tab=profile"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors font-bold"
+                          >
+                            <UserCircleIcon className="w-4 h-4 text-amber-500" />
+                            <span>Admin Profile & Security</span>
+                          </Link>
+                          <Link
+                            to="/discovery"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                          >
+                            <SparklesIcon className="w-4 h-4 text-accent" />
+                            <span>Browse Profiles</span>
+                          </Link>
+                        </>
                       ) : (
                         <>
                           <Link
@@ -491,6 +540,20 @@ const Header: React.FC = () => {
                 className="block px-3 py-2.5 rounded-xl text-base font-semibold text-amber-500 hover:bg-amber-500/10"
               >
                 Admin Back-Office Portal
+              </Link>
+              <Link
+                to="/admin?tab=profile"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+              >
+                Admin Profile & Security
+              </Link>
+              <Link
+                to="/discovery"
+                onClick={() => setMobileMenuOpen(false)}
+                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+              >
+                Browse Profiles
               </Link>
               <div className="border-t border-border/60 pt-3">
                 <button

@@ -6,6 +6,7 @@ export interface AuthUser {
   email: string;
   firstName: string;
   lastName: string;
+  photoUrl?: string | null;
   isVerified?: boolean;
   trustScore?: number;
   roles: ('Seeker' | 'Provider' | 'Admin')[];

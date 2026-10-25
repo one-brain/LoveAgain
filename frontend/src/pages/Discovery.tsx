@@ -101,7 +101,8 @@ const CURATED_SAMPLE_PROVIDERS = SAMPLE_PROVIDERS_LIST;
 const Discovery: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = Boolean(user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local');
   const [createBooking] = useCreateBookingMutation();
 
   const initialLens = (searchParams.get('lens') as PlatformLens | 'all') || 'all';
@@ -794,20 +795,33 @@ const Discovery: React.FC = () => {
                           {provider.area ? ` • ${provider.area}` : provider.city ? ` • ${provider.city}` : ''}
                         </span>
                       </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!isAuthenticated) {
-                            setAuthPromptModal(true);
-                            return;
-                          }
-                          setSelectedProviderForBooking(provider);
-                        }}
-                        className="px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent font-semibold transition-all shadow-2xs"
-                      >
-                        Book with Escrow &rarr;
-                      </button>
+                      {isAdmin ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/provider/${provider.providerId}`);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 font-semibold transition-all border border-amber-500/30 shadow-2xs"
+                        >
+                          Inspect Profile &rarr;
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isAuthenticated) {
+                              setAuthPromptModal(true);
+                              return;
+                            }
+                            setSelectedProviderForBooking(provider);
+                          }}
+                          className="px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent font-semibold transition-all shadow-2xs"
+                        >
+                          Book with Escrow &rarr;
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

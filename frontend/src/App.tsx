@@ -34,7 +34,7 @@ const isUserAdmin = (user: any) =>
 const NonAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (isUserAdmin(user)) return <Navigate to="/admin" replace />;
+  if (isUserAdmin(user)) return <Navigate to="/admin?tab=profile" replace />;
   return <>{children}</>;
 };
 
@@ -42,14 +42,6 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (!isUserAdmin(user)) return <Navigate to="/discovery" replace />;
-  return <>{children}</>;
-};
-
-const PublicOrNonAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  if (isAuthenticated && isUserAdmin(user)) {
-    return <Navigate to="/admin" replace />;
-  }
   return <>{children}</>;
 };
 
@@ -68,11 +60,7 @@ function App() {
         <Route path="/" element={<MainLayout />}>
           <Route
             index
-            element={
-              <PublicOrNonAdminRoute>
-                <Home />
-              </PublicOrNonAdminRoute>
-            }
+            element={<Home />}
           />
           <Route
             path="login"
@@ -100,9 +88,7 @@ function App() {
             path="discovery"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <PublicOrNonAdminRoute>
-                  <Discovery />
-                </PublicOrNonAdminRoute>
+                <Discovery />
               </Suspense>
             }
           />
@@ -118,9 +104,7 @@ function App() {
             path="provider/:userId"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <PublicOrNonAdminRoute>
-                  <ProviderDetail />
-                </PublicOrNonAdminRoute>
+                <ProviderDetail />
               </Suspense>
             }
           />
@@ -128,9 +112,7 @@ function App() {
             path="providers/:userId"
             element={
               <Suspense fallback={<RouteLoader />}>
-                <PublicOrNonAdminRoute>
-                  <ProviderDetail />
-                </PublicOrNonAdminRoute>
+                <ProviderDetail />
               </Suspense>
             }
           />

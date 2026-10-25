@@ -202,6 +202,14 @@ export const adminApi = createApi({
       }),
       providesTags: ['AdminBookings'],
     }),
+
+    changeAdminPassword: builder.mutation<{ message: string }, { currentPassword: string; newPassword: string }>({
+      query: (body) => ({
+        url: '/auth/change-password',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -216,5 +224,6 @@ export const {
   useGetAdminPayoutsQuery,
   useProcessAdminPayoutMutation,
   useGetAdminBookingsQuery,
+  useChangeAdminPasswordMutation,
 } = adminApi;
 

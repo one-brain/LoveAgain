@@ -188,7 +188,8 @@ function generateDemoSlots() {
 const ProviderDetail: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = Boolean(user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local');
 
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
@@ -327,6 +328,22 @@ const ProviderDetail: React.FC = () => {
           <span>Back to all companions</span>
         </button>
       </div>
+
+      {/* Admin Inspection Mode Notice Banner */}
+      {isAdmin && (
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs shadow-xs">
+          <div className="flex items-center gap-2.5 text-amber-600 dark:text-amber-400 font-bold">
+            <ShieldCheckIcon className="w-5 h-5 text-amber-500 flex-shrink-0" />
+            <span>Administrative Inspection Mode • You are viewing this companion profile with Platform Administrator clearance.</span>
+          </div>
+          <Link
+            to="/admin"
+            className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold text-[11px] self-start sm:self-auto transition-colors whitespace-nowrap"
+          >
+            &larr; Return to Admin Portal
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left 2 Columns: Companion Profile Details */}
@@ -611,26 +628,46 @@ const ProviderDetail: React.FC = () => {
               </p>
             </div>
 
-            {/* Primary Action Button: Book with Escrow */}
-            <div className="space-y-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (!isAuthenticated) {
-                    setAuthPromptModal(true);
-                    return;
-                  }
-                  setIsRequestModalOpen(true);
-                }}
-                className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all cursor-pointer hover:scale-[1.01] flex items-center justify-center gap-2"
-              >
-                <ShieldCheckIcon className="w-5 h-5" />
-                <span>Book with Escrow &rarr;</span>
-              </button>
-              <p className="text-[11px] text-muted-foreground text-center mt-2">
-                🔒 Protected by Cue Escrow Vault until activity completion.
-              </p>
-            </div>
+            {/* Primary Action Button: Book with Escrow OR Admin Inspection Mode */}
+            {isAdmin ? (
+              <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-center space-y-2">
+                <div className="flex items-center justify-center gap-2 font-bold text-xs text-amber-600 dark:text-amber-400">
+                  <ShieldCheckIcon className="w-4 h-4 text-amber-500 flex-shrink-0" />
+                  <span>Administrative Inspection Mode</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Booking creation is disabled for administrative accounts. Platform administrators maintain operational neutrality and cannot initiate companion bookings.
+                </p>
+                <div className="pt-1">
+                  <Link
+                    to="/admin"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold text-xs transition-colors"
+                  >
+                    <span>Manage in Admin Portal</span>
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      setAuthPromptModal(true);
+                      return;
+                    }
+                    setIsRequestModalOpen(true);
+                  }}
+                  className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all cursor-pointer hover:scale-[1.01] flex items-center justify-center gap-2"
+                >
+                  <ShieldCheckIcon className="w-5 h-5" />
+                  <span>Book with Escrow &rarr;</span>
+                </button>
+                <p className="text-[11px] text-muted-foreground text-center mt-2">
+                  🔒 Protected by Cue Escrow Vault until activity completion.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

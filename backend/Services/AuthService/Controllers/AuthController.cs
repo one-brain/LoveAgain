@@ -232,6 +232,60 @@ public sealed class AuthController(
         return NoContent();
     }
 
+    [HttpPost("change-password")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest request, CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User.FindFirst("sub")?.Value
+            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+
+        User? user = null;
+        if (!string.IsNullOrWhiteSpace(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
+        {
+            user = await dbContext.Users.FirstOrDefaultAsync(u => u.Id == userId && u.DeletedAt == null, cancellationToken);
+        }
+
+        if (user == null)
+        {
+            var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value
+                ?? User.FindFirst("email")?.Value
+                ?? Request.Headers["X-User-Email"].FirstOrDefault();
+            if (!string.IsNullOrWhiteSpace(emailClaim))
+            {
+                var normalized = emailClaim.Trim().ToLowerInvariant();
+                user = await dbContext.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == normalized && u.DeletedAt == null, cancellationToken);
+            }
+        }
+
+        if (user == null || user.IsDeleted)
+        {
+            return Unauthorized(new { error = "User not authenticated or account not found." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.CurrentPassword) || string.IsNullOrWhiteSpace(request.NewPassword))
+        {
+            return BadRequest(new { error = "Current password and new password are required." });
+        }
+
+        if (request.NewPassword.Length < 8)
+        {
+            return BadRequest(new { error = "New password must be at least 8 characters long." });
+        }
+
+        if (user.PasswordHash == null || !passwords.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            return BadRequest(new { error = "Current password is incorrect." });
+        }
+
+        user.SetPasswordHash(passwords.Hash(request.NewPassword));
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(new { message = "Password updated successfully." });
+    }
+
     [HttpPost("verify-email")]
     public async Task<IActionResult> VerifyEmail(VerifyEmailRequest request, CancellationToken cancellationToken)
     {

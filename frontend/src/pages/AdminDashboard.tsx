@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
 import {
   useGetAdminVerificationsQuery,
   useApproveVerificationMutation,
@@ -23,11 +24,47 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline';
+import { AdminProfileView } from '../components/admin/AdminProfileView';
 import { formatINR, formatRate } from '../utils/currency';
 
 export const AdminDashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'verifications' | 'bookings' | 'users' | 'payouts' | 'mis'>('verifications');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialTab = searchParams.get('tab');
+  const [activeTab, setActiveTab] = useState<'verifications' | 'bookings' | 'users' | 'payouts' | 'mis' | 'profile'>(
+    initialTab === 'profile'
+      ? 'profile'
+      : initialTab === 'bookings'
+      ? 'bookings'
+      : initialTab === 'users'
+      ? 'users'
+      : initialTab === 'payouts'
+      ? 'payouts'
+      : initialTab === 'mis'
+      ? 'mis'
+      : 'verifications'
+  );
+
+  useEffect(() => {
+    const t = searchParams.get('tab');
+    if (t && ['verifications', 'bookings', 'users', 'payouts', 'mis', 'profile'].includes(t)) {
+      setActiveTab(t as any);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'verifications' | 'bookings' | 'users' | 'payouts' | 'mis' | 'profile') => {
+    setActiveTab(tab);
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (tab === 'verifications') {
+        next.delete('tab');
+      } else {
+        next.set('tab', tab);
+      }
+      return next;
+    });
+  };
   const [verificationFilter, setVerificationFilter] = useState<'All' | 'PendingReview' | 'Approved' | 'Rejected'>('PendingReview');
   const [bookingFilter, setBookingFilter] = useState<string>('All');
   const [userSearch, setUserSearch] = useState('');
@@ -230,16 +267,18 @@ export const AdminDashboard: React.FC = () => {
           { key: 'users', label: 'Users Directory' },
           { key: 'payouts', label: 'Payouts & UPI Settlements', count: payoutsData?.filter(p => p.status === 'Pending').length },
           { key: 'mis', label: 'MIS Trajectory & Analytics' },
+          { key: 'profile', label: 'Admin Profile & Security' },
         ].map((tab) => (
           <button
             key={tab.key}
-            onClick={() => setActiveTab(tab.key as any)}
+            onClick={() => handleTabChange(tab.key as any)}
             className={`pb-3 font-semibold text-sm transition-all border-b-2 flex items-center gap-2 whitespace-nowrap ${
               activeTab === tab.key
                 ? 'border-accent text-accent'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
+            {tab.key === 'profile' && <UserCircleIcon className="w-4 h-4 text-amber-500" />}
             <span>{tab.label}</span>
             {tab.count !== undefined && tab.count > 0 && (
               <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
@@ -620,19 +659,31 @@ export const AdminDashboard: React.FC = () => {
                         {new Date(user.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                       <td className="px-5 py-3.5 text-right">
-                        {!isUserAnAdmin && (
-                          <button
-                            onClick={() => handleToggleSuspend(user.id)}
-                            disabled={isTogglingSuspend}
-                            className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
-                              isSuspended
-                                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20'
-                                : 'bg-rose-500/10 text-rose-600 border-rose-500/30 hover:bg-rose-500/20'
-                            }`}
-                          >
-                            {isSuspended ? 'Reinstate' : 'Suspend'}
-                          </button>
-                        )}
+                        <div className="flex items-center justify-end gap-2">
+                          {user.hasCompanionProfile && (
+                            <Link
+                              to={`/provider/${user.id}`}
+                              className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-all border border-border/80 inline-flex items-center gap-1 shadow-2xs"
+                              title="Inspect Companion Profile Details"
+                            >
+                              <EyeIcon className="w-3.5 h-3.5 text-accent" />
+                              <span>Inspect</span>
+                            </Link>
+                          )}
+                          {!isUserAnAdmin && (
+                            <button
+                              onClick={() => handleToggleSuspend(user.id)}
+                              disabled={isTogglingSuspend}
+                              className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
+                                isSuspended
+                                  ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30 hover:bg-emerald-500/20'
+                                  : 'bg-rose-500/10 text-rose-600 border-rose-500/30 hover:bg-rose-500/20'
+                              }`}
+                            >
+                              {isSuspended ? 'Reinstate' : 'Suspend'}
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -763,6 +814,9 @@ export const AdminDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* TAB 6: ADMIN PROFILE & SECURITY */}
+      {activeTab === 'profile' && <AdminProfileView />}
 
       {/* Enhanced KYC & 3-Photo Inspection Modal */}
       {selectedVerification && !showRejectModal && (

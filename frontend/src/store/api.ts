@@ -153,6 +153,13 @@ export const profileApi = createApi({
       }),
       invalidatesTags: ['Profile'],
     }),
+    deleteSeekerPhoto: builder.mutation<SeekerProfileResponse, void>({
+      query: () => ({
+        url: `/profiles/me/photo`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Profile'],
+    }),
     uploadCompanionPhoto: builder.mutation<{ photoUrl: string }, FormData>({
       query: (formData) => ({
         url: `/profiles/provider/upload-photo`,
@@ -203,6 +210,7 @@ export const {
   useGetSeekerProfileQuery,
   useUpdateSeekerProfileMutation,
   useUploadSeekerPhotoMutation,
+  useDeleteSeekerPhotoMutation,
   useUploadCompanionPhotoMutation,
   useGetSlotsQuery,
   useUpdateProviderProfileMutation,

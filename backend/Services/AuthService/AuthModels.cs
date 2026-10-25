@@ -29,6 +29,7 @@ public sealed record LoginRequest(string Email, string Password);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
 public sealed record VerifyEmailRequest(string Token);
+public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public sealed record UserSummary(Guid Id, string Email, string FirstName, string LastName, bool IsVerified, int TrustScore, string[] Roles);
 public sealed record TokenResponse(string AccessToken, int ExpiresIn, string TokenType = "Bearer", UserSummary? User = null);
 

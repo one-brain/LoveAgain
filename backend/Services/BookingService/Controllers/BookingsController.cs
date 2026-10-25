@@ -20,6 +20,11 @@ public sealed class BookingsController(ISender sender) : ControllerBase
         [FromBody] CreateBookingCommand command,
         CancellationToken cancellationToken)
     {
+        if (IsAdmin())
+        {
+            return BadRequest(new { error = "Platform administrators are not permitted to create companion bookings." });
+        }
+
         // The seeker is always taken from the authenticated session, never from the body.
         if (!TryGetUserId(out var seekerId))
         {
@@ -190,9 +195,31 @@ public sealed class BookingsController(ISender sender) : ControllerBase
         }
     }
 
+    private bool IsAdmin()
+    {
+        var role = User.FindFirstValue(ClaimTypes.Role)
+            ?? Request.Headers["X-User-Role"].FirstOrDefault();
+        if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
+            User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin"))
+        {
+            return true;
+        }
+
+        var email = User.FindFirstValue(ClaimTypes.Email)
+            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+        if (!string.IsNullOrWhiteSpace(email) && email.Trim().Equals("admin@cue.local", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     private bool TryGetUserId(out Guid userId)
     {
-        var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirst("sub")?.Value
+            ?? Request.Headers["X-User-Id"].FirstOrDefault();
         return Guid.TryParse(value, out userId);
     }
 

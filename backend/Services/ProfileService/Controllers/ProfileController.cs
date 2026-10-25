@@ -212,6 +212,38 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         return Ok(response);
     }
 
+    [HttpDelete("me/photo")]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserProfileResponse>> DeleteMyPhoto(CancellationToken cancellationToken)
+    {
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { error = "User profile not found." });
+        }
+
+        user.SetPhotoUrl(null);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var response = new UserProfileResponse(
+            user.Id,
+            user.Email,
+            user.FirstName,
+            user.LastName,
+            user.Phone,
+            user.DateOfBirth,
+            user.PhotoUrl,
+            user.IsVerified,
+            user.TrustScore,
+            user.CreatedAt,
+            user.UpdatedAt
+        );
+
+        return Ok(response);
+    }
+
     [HttpDelete("me")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
