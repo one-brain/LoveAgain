@@ -6,6 +6,7 @@ import {
   InformationCircleIcon,
   CalendarDaysIcon,
   AdjustmentsHorizontalIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 import { formatINR, formatRate } from '../../utils/currency';
 
@@ -34,6 +35,10 @@ interface BookingRequestModalProps {
     hourlyRate: number;
     specialties: string[];
     maxRadiusKm?: number;
+    latitude?: number;
+    longitude?: number;
+    city?: string;
+    area?: string;
   };
   initialDate?: string;
   initialTime?: string;
@@ -349,6 +354,14 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
                   required
                 />
+                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
+                  <MapPinIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+                  <span>
+                    {provider.displayName} operates near{' '}
+                    <strong className="text-foreground">{provider.area || provider.city || 'Central City Hub'}</strong> and travels up to{' '}
+                    <strong className="text-foreground">{provider.maxRadiusKm ?? 25} km</strong>.
+                  </span>
+                </p>
                 {/* Venue Quick Chips */}
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {VENUE_SUGGESTIONS.map((v) => (

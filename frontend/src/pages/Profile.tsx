@@ -11,6 +11,7 @@ import {
   useUpdateProviderProfileMutation,
   useUploadCompanionPhotoMutation,
 } from '../store/api';
+import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
 import {
   BriefcaseIcon,
   CheckBadgeIcon,
@@ -19,7 +20,6 @@ import {
   UserCircleIcon,
   ShieldCheckIcon,
   SparklesIcon,
-  MapPinIcon,
   BanknotesIcon,
   PhotoIcon,
   ArrowUpTrayIcon,
@@ -801,50 +801,38 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Hourly Rate (₹ INR)
-                </label>
-                <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-foreground">₹</span>
-                  <input
-                    type="number"
-                    min="500"
-                    max="50000"
-                    step="50"
-                    value={hourlyRate}
-                    onChange={(e) => setHourlyRate(e.target.value)}
-                    className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
-                    required
-                  />
-                </div>
-                <span className="text-[11px] text-muted-foreground mt-1 block">
-                  Recommended: ₹800 – ₹3,000/hr. You receive <strong>₹{netRate}/hr</strong> (85% net take-home via Escrow Vault).
-                </span>
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                Hourly Rate (₹ INR)
+              </label>
+              <div className="relative max-w-sm">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-foreground">₹</span>
+                <input
+                  type="number"
+                  min="500"
+                  max="50000"
+                  step="50"
+                  value={hourlyRate}
+                  onChange={(e) => setHourlyRate(e.target.value)}
+                  className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
+                  required
+                />
               </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Max Travel Radius (km)
-                </label>
-                <div className="relative">
-                  <MapPinIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input
-                    type="number"
-                    min="5"
-                    max="100"
-                    value={maxRadiusKm}
-                    onChange={(e) => setMaxRadiusKm(e.target.value)}
-                    className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    required
-                  />
-                </div>
-                <span className="text-[11px] text-muted-foreground mt-1 block">
-                  Maximum distance from your home location you are willing to travel for meets.
-                </span>
-              </div>
+              <span className="text-[11px] text-muted-foreground mt-1 block">
+                Recommended: ₹800 – ₹3,000/hr. You receive <strong>₹{netRate}/hr</strong> (85% net take-home via Escrow Vault).
+              </span>
             </div>
+
+            {/* Dynamic Companion Location & Travel Radius Switcher */}
+            <CompanionLocationCard
+              currentLatitude={providerProfile?.latitude}
+              currentLongitude={providerProfile?.longitude}
+              currentMaxRadiusKm={Number(maxRadiusKm) || 25}
+              onLocationUpdated={(_newLat, _newLon, newRadius) => {
+                setMaxRadiusKm(String(newRadius));
+                refetchProvider();
+              }}
+            />
 
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">

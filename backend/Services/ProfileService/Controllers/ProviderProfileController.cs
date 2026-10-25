@@ -511,11 +511,67 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         return Ok(new { photoUrl });
     }
 
+    [HttpPut("location")]
+    [ProducesResponseType(typeof(ProviderProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ProviderProfileResponse>> UpdateLocation(
+        [FromBody] UpdateProviderLocationRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized(new { error = "Invalid user token." });
+        }
+
+        if (await IsUserAdminAsync(userId, cancellationToken))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Administrators do not hold companion profiles." });
+        }
+
+        if (request.Latitude < -90 || request.Latitude > 90)
+        {
+            return BadRequest(new { error = "Latitude must be between -90 and 90." });
+        }
+
+        if (request.Longitude < -180 || request.Longitude > 180)
+        {
+            return BadRequest(new { error = "Longitude must be between -180 and 180." });
+        }
+
+        var profile = await dbContext.ProviderProfiles
+            .SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+
+        if (profile == null)
+        {
+            return NotFound(new { error = "No provider profile yet. Create one first." });
+        }
+
+        profile.SetLocation(request.Latitude, request.Longitude);
+
+        if (request.MaxRadiusKm.HasValue && request.MaxRadiusKm.Value > 0)
+        {
+            profile.Update(
+                profile.HourlyRate,
+                profile.Bio,
+                profile.Specialties,
+                request.MaxRadiusKm.Value,
+                profile.IntroVideoUrl,
+                profile.DisplayName,
+                profile.ProfileImages);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(ToResponse(profile));
+    }
+
     private static ProviderProfileResponse ToResponse(ProviderProfile profile) =>
         new(profile.Id, profile.UserId, profile.HourlyRate, profile.Bio, profile.Specialties,
             profile.MaxRadiusKm, profile.IntroVideoUrl, profile.IsActive, profile.Status,
             profile.IdProofUrl, profile.SelfieVerificationUrl, profile.RejectionReason,
             profile.AverageRating,
             profile.CreatedAt, profile.UpdatedAt, profile.DeletedAt, profile.IsDeleted,
-            profile.DisplayName, profile.ProfileImages);
+            profile.DisplayName, profile.ProfileImages,
+            profile.Latitude, profile.Longitude);
 }

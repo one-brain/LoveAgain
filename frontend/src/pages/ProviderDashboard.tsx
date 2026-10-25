@@ -10,6 +10,7 @@ import {
 import { ServiceManagement } from '../components/ServiceManagement';
 import { BookingCard } from '../components/BookingCard';
 import { ProviderEarningsCard } from '../components/payment/ProviderEarningsCard';
+import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
   BriefcaseIcon,
@@ -132,6 +133,13 @@ const ProviderDashboard: React.FC = () => {
           <p className="text-xs text-muted-foreground">High responsiveness increases bookings</p>
         </div>
       </div>
+
+      {/* Base Location & Proximity Service Area */}
+      <CompanionLocationCard
+        currentLatitude={profileData?.profile?.latitude ?? (profileData as any)?.latitude}
+        currentLongitude={profileData?.profile?.longitude ?? (profileData as any)?.longitude}
+        currentMaxRadiusKm={profileData?.profile?.maxRadiusKm ?? (profileData as any)?.maxRadiusKm ?? 25}
+      />
 
       {/* Provider Earnings & UPI Payout Section */}
       <ProviderEarningsCard />

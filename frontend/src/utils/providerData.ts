@@ -13,6 +13,10 @@ export interface CuratedProvider {
   trustScore: number;
   distanceKm?: number;
   maxRadiusKm?: number;
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  area?: string;
   lenses?: PlatformLens[];
   services?: string[];
   introVideoUrl?: string | null;
@@ -36,6 +40,10 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     trustScore: 99,
     distanceKm: 2.4,
     maxRadiusKm: 25,
+    latitude: 12.9784,
+    longitude: 77.6408,
+    city: 'Bengaluru',
+    area: 'Indiranagar',
     lenses: ['wellness', 'companions'],
     services: ['Tennis Coaching (1-on-1)', 'Art Gallery Curator Walk'],
     introVideoUrl: 'https://youtube.com',
@@ -57,6 +65,10 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     trustScore: 98,
     distanceKm: 3.8,
     maxRadiusKm: 30,
+    latitude: 19.0596,
+    longitude: 72.8295,
+    city: 'Mumbai',
+    area: 'Bandra West',
     lenses: ['pro_work', 'companions'],
     services: ['Portrait Photoshoot Package', 'Street Food Crawl Host'],
     introVideoUrl: null,
@@ -78,6 +90,10 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     trustScore: 97,
     distanceKm: 1.9,
     maxRadiusKm: 20,
+    latitude: 28.5494,
+    longitude: 77.2001,
+    city: 'Delhi-NCR',
+    area: 'South Delhi (Hauz Khas)',
     lenses: ['wellness', 'companions'],
     services: ['Violin Performance / Lesson'],
     introVideoUrl: null,
@@ -99,6 +115,10 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     trustScore: 96,
     distanceKm: 4.5,
     maxRadiusKm: 35,
+    latitude: 17.4435,
+    longitude: 78.3772,
+    city: 'Hyderabad',
+    area: 'Hitec City',
     lenses: ['pro_work', 'companions'],
     services: ['Salsa Coaching', 'Wedding Plus-One'],
     introVideoUrl: null,
@@ -120,6 +140,10 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     trustScore: 99,
     distanceKm: 2.1,
     maxRadiusKm: 25,
+    latitude: 12.9352,
+    longitude: 77.6245,
+    city: 'Bengaluru',
+    area: 'Koramangala',
     lenses: ['pro_work', 'companions'],
     services: ['System Design Mentorship'],
     introVideoUrl: null,
@@ -141,6 +165,10 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     trustScore: 98,
     distanceKm: 5.2,
     maxRadiusKm: 30,
+    latitude: 18.5362,
+    longitude: 73.8940,
+    city: 'Pune',
+    area: 'Koregaon Park',
     lenses: ['wellness', 'companions'],
     services: ['Curated Wine Tasting Session', 'Strength Training (1-on-1)'],
     introVideoUrl: null,
@@ -203,6 +231,10 @@ export interface ResolvedProviderInfo {
   bio?: string;
   maxRadiusKm?: number;
   distanceKm?: number;
+  latitude?: number;
+  longitude?: number;
+  city?: string;
+  area?: string;
   services?: string[];
 }
 
@@ -238,6 +270,10 @@ export function resolveProviderInfo(
       bio: sample.bio,
       maxRadiusKm: sample.maxRadiusKm,
       distanceKm: sample.distanceKm,
+      latitude: sample.latitude,
+      longitude: sample.longitude,
+      city: sample.city,
+      area: sample.area,
       services: sample.services,
     };
   }
@@ -262,6 +298,8 @@ export function resolveProviderInfo(
         bio: found.bio,
         maxRadiusKm: found.maxRadiusKm,
         distanceKm: found.distanceKm,
+        latitude: found.latitude,
+        longitude: found.longitude,
         services: found.services,
       };
     }

@@ -6,6 +6,7 @@ import { useCreateBookingMutation } from '../store/bookingApi';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { formatINR, formatRate } from '../utils/currency';
+import { resolveNearestHub } from '../utils/location';
 import type { RootState } from '../store';
 import {
   StarIcon,
@@ -36,6 +37,8 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     bio: 'Hi, I am Elena! I am a semi-professional tennis player and contemporary art curator based in the city. Whether you want to hit the courts for a friendly, competitive rally, improve your backhand, or spend a relaxing Saturday exploring modern art galleries with lively discussion, I would love to accompany you. I value authenticity, positive energy, and great sportsmanship.',
     specialties: ['Tennis', 'Yoga', 'Art', 'Fitness'],
     maxRadiusKm: 25,
+    latitude: 12.9784,
+    longitude: 77.6408,
     introVideoUrl: 'https://youtube.com',
     averageRating: 4.98,
     isVerified: true,
@@ -54,6 +57,8 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     bio: 'Former restaurant sous-chef and active urban photographer. I specialize in culinary walks, private handmade pasta sessions, and exploring bustling farmers markets. I believe great food and shared conversation create the warmest human connections.',
     specialties: ['Cooking', 'Photography', 'Reading'],
     maxRadiusKm: 30,
+    latitude: 19.0596,
+    longitude: 72.8295,
     introVideoUrl: null,
     averageRating: 4.95,
     isVerified: true,
@@ -72,6 +77,8 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. Available for trail hikes and music sessions.',
     specialties: ['Hiking', 'Music', 'Photography', 'Wellness'],
     maxRadiusKm: 40,
+    latitude: 28.5494,
+    longitude: 77.2001,
     introVideoUrl: null,
     averageRating: 4.92,
     isVerified: true,
@@ -91,6 +98,8 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     bio: 'Certified salsa dancer and architectural history guide. Available for private dance sessions, wedding plus-one, and city heritage tours.',
     specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
     maxRadiusKm: 35,
+    latitude: 17.4435,
+    longitude: 78.3772,
     introVideoUrl: null,
     averageRating: 4.88,
     isVerified: true,
@@ -110,6 +119,8 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     bio: 'Principal Software Architect & yoga practitioner. Available for system design deep-dives, career mentorship, or mindful yoga morning flows.',
     specialties: ['Yoga Partner', 'Coding Mentorship', 'Reading', 'Career Coaching'],
     maxRadiusKm: 25,
+    latitude: 12.9352,
+    longitude: 77.6245,
     introVideoUrl: null,
     averageRating: 4.97,
     isVerified: true,
@@ -129,6 +140,8 @@ const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
     bio: 'Sommelier and certified fitness trainer. Available to host wine tasting dinners, curated culinary tours, or 1-on-1 strength training sessions.',
     specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife', 'Cooking'],
     maxRadiusKm: 30,
+    latitude: 18.5362,
+    longitude: 73.8940,
     introVideoUrl: null,
     averageRating: 4.94,
     isVerified: true,
@@ -232,6 +245,15 @@ const ProviderDetail: React.FC = () => {
       upcomingSlots: generateDemoSlots(),
     };
   }, [apiProvider, userId]);
+
+  const baseHub = useMemo(() => {
+    const lat = provider.latitude;
+    const lon = provider.longitude;
+    if (lat != null && lon != null) {
+      return resolveNearestHub(lat, lon);
+    }
+    return null;
+  }, [provider.latitude, provider.longitude]);
 
   if (isLoading) {
     return (
@@ -351,8 +373,8 @@ const ProviderDetail: React.FC = () => {
                     </div>
                     <span>•</span>
                     <div className="flex items-center gap-1">
-                      <MapPinIcon className="w-4 h-4" />
-                      <span>Within {provider.maxRadiusKm} km</span>
+                      <MapPinIcon className="w-4 h-4 text-accent" />
+                      <span>{baseHub ? `${baseHub.hubName} • ` : ''}Within {provider.maxRadiusKm} km</span>
                     </div>
                   </div>
                 </div>

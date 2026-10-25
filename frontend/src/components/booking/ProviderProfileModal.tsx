@@ -11,6 +11,7 @@ import {
   PhotoIcon,
 } from '@heroicons/react/24/outline';
 import { formatRate } from '../../utils/currency';
+import { resolveNearestHub } from '../../utils/location';
 import { resolveProviderInfo, type ResolvedProviderInfo } from '../../utils/providerData';
 import { useGetProviderQuery } from '../../store/discoveryApi';
 
@@ -62,6 +63,15 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
   const specialties = apiProvider?.specialties || provider.specialties || (provider.specialty ? [provider.specialty] : ['Companionship']);
   const maxRadiusKm = apiProvider?.maxRadiusKm ?? provider.maxRadiusKm ?? 25;
 
+  const lat = apiProvider?.latitude ?? provider.latitude;
+  const lon = apiProvider?.longitude ?? provider.longitude;
+  const baseHub =
+    lat != null && lon != null
+      ? resolveNearestHub(lat, lon)
+      : provider.area
+      ? { hubName: `${provider.area}, ${provider.city || 'India'}` }
+      : null;
+
   // Reset photo index when modal opens for a new provider
   useEffect(() => {
     setActivePhotoIndex(0);
@@ -99,24 +109,24 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
       >
         {/* Modal Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border/80 bg-card/90">
-          <div className="flex items-center gap-2">
-            <span className="w-8 h-8 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
-              <SparklesIcon className="w-4 h-4" />
+          <div className="flex items-center gap-3">
+            <span className="w-9 h-9 rounded-xl bg-accent/15 text-accent flex items-center justify-center">
+              <SparklesIcon className="w-5 h-5" />
             </span>
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-wider text-accent block">
-                Companion Preview
-              </span>
-              <h2 id="provider-modal-title" className="text-sm font-bold text-foreground">
+              <h2 id="provider-modal-title" className="text-base font-bold text-foreground">
                 {displayName}
               </h2>
+              <span className="text-xs text-muted-foreground block">
+                Companion Profile Details
+              </span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            className="w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
             aria-label="Close companion preview"
           >
             <XMarkIcon className="w-5 h-5" />
@@ -168,7 +178,8 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
                     key={idx}
                     type="button"
                     onClick={() => setActivePhotoIndex(idx)}
-                    className={`relative w-8 h-8 rounded-lg overflow-hidden transition-all cursor-pointer ${
+                    aria-label={`View photo ${idx + 1}`}
+                    className={`relative w-8 h-8 rounded-lg overflow-hidden transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                       activePhotoIndex === idx
                         ? 'ring-2 ring-accent scale-110'
                         : 'opacity-60 hover:opacity-100'
@@ -199,8 +210,10 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
                 </span>
                 <span>•</span>
                 <span className="flex items-center gap-1">
-                  <MapPinIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>Within {maxRadiusKm} km radius</span>
+                  <MapPinIcon className="w-3.5 h-3.5 text-accent" />
+                  <span>
+                    {baseHub ? `${baseHub.hubName} • ` : ''}Travels within {maxRadiusKm} km
+                  </span>
                 </span>
               </div>
             </div>

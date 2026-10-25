@@ -175,10 +175,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         {/* Candidate / Companion Profile Section (Clickable to view full details) */}
         <div
           onClick={handleViewProfile}
-          className={`flex items-center gap-3.5 p-3 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/70 hover:border-accent/40 transition-all duration-200 mb-3 group/profile ${
+          className={`flex items-center gap-3.5 p-3 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/70 hover:border-accent/40 transition-all duration-200 mb-3 group/profile focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
             roleMode === 'client' && booking.providerId ? 'cursor-pointer' : ''
           }`}
-          title={roleMode === 'client' && booking.providerId ? 'Click to view full companion profile details' : undefined}
+          title={roleMode === 'client' && booking.providerId ? 'Click to preview companion profile details' : undefined}
           role={roleMode === 'client' && booking.providerId ? 'button' : undefined}
           tabIndex={roleMode === 'client' && booking.providerId ? 0 : undefined}
           onKeyDown={(e) => {
@@ -194,6 +194,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               <img
                 src={photoUrl}
                 alt={displayName}
+                loading="lazy"
                 className="w-13 h-13 rounded-xl object-cover ring-2 ring-border/80 group-hover/profile:ring-accent group-hover/profile:scale-105 transition-all shadow-2xs"
               />
             ) : (
@@ -246,12 +247,12 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         <div className="space-y-2 py-3 border-y border-border/60 text-xs">
           <div className="flex items-center gap-2 text-foreground font-semibold">
             <CalendarDaysIcon className="w-4 h-4 text-accent flex-shrink-0" />
-            <span>{formatBookingTime(booking.startTime)}</span>
+            <span className="tabular-nums">{formatBookingTime(booking.startTime)}</span>
           </div>
 
           <div className="flex items-center gap-2 text-foreground/80">
             <ClockIcon className="w-4 h-4 text-foreground/60 flex-shrink-0" />
-            <span>{formatTimeWindow(booking.startTime, booking.endTime)}</span>
+            <span className="tabular-nums">{formatTimeWindow(booking.startTime, booking.endTime)}</span>
           </div>
 
           {booking.meetingAddress && (
@@ -263,7 +264,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
           {booking.requirements?.activityName && (
             <div className="flex items-center gap-2 text-accent font-medium">
-              <span>🎯 Activity: {booking.requirements.activityName}</span>
+              <span>Activity: {booking.requirements.activityName}</span>
             </div>
           )}
         </div>
@@ -314,7 +315,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       <div className="flex items-center justify-between gap-3 pt-1">
         <div>
           <span className="text-[11px] text-muted-foreground block">Total Escrow</span>
-          <span className="text-lg font-bold font-mono text-foreground">
+          <span className="text-lg font-bold font-mono tabular-nums text-foreground">
             {formatINR(booking.totalAmount)}
           </span>
         </div>
@@ -327,7 +328,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 e.stopPropagation();
                 onPay(booking);
               }}
-              className="px-3.5 py-2 rounded-xl bg-accent text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center gap-1.5 hover:opacity-95 cursor-pointer"
+              className="px-3.5 py-2 min-h-[36px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center gap-1.5 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <CreditCardIcon className="w-4 h-4" />
               <span>Pay & Secure</span>
@@ -341,7 +342,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 e.stopPropagation();
                 onCheckIn(booking);
               }}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 min-h-[36px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
             >
               <ShieldCheckIcon className="w-4 h-4" />
               <span>Check In</span>
@@ -355,7 +356,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 e.stopPropagation();
                 onComplete(booking.orderId);
               }}
-              className="px-3.5 py-2 rounded-xl bg-accent hover:opacity-95 text-accent-foreground font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
+              className="px-3.5 py-2 min-h-[36px] rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <CheckCircleIcon className="w-4 h-4" />
               <span>Complete Session</span>
@@ -368,7 +369,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 e.stopPropagation();
                 onCancel(booking.orderId);
               }}
-              className="px-3 py-2 rounded-xl border border-border hover:border-destructive/40 text-muted-foreground hover:text-destructive text-xs font-semibold transition-colors cursor-pointer"
+              className="px-3 py-2 min-h-[36px] rounded-xl border border-border hover:border-destructive/40 text-muted-foreground hover:text-destructive text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50 cursor-pointer"
             >
               Cancel
             </button>
@@ -376,7 +377,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
           <button
             onClick={handleOpenChat}
-            className="px-3.5 py-2 rounded-xl border border-border hover:bg-muted text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer"
+            className="px-3.5 py-2 min-h-[36px] rounded-xl border border-border hover:bg-muted text-foreground font-semibold text-xs transition-all flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
           >
             <ChatBubbleLeftRightIcon className="w-4 h-4" />
             <span>Chat</span>

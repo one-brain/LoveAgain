@@ -10,6 +10,11 @@ import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal
 import { formatRate } from '../utils/currency';
 import { SAMPLE_PROVIDERS_LIST } from '../utils/providerData';
 import {
+  calculateHaversineDistance,
+  resolveNearestHub,
+  getCurrentCoordinates,
+} from '../utils/location';
+import {
   MagnifyingGlassIcon,
   StarIcon,
   MapPinIcon,
@@ -20,6 +25,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   PhotoIcon,
+  ArrowPathIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
 
@@ -28,6 +34,17 @@ interface SpecialtyOption {
   icon: string;
   lens: PlatformLens | 'all';
 }
+
+const CITY_OPTIONS: DropdownOption[] = [
+  { value: 'all', label: 'All India', icon: '🇮🇳', description: 'Show companions nationwide' },
+  { value: 'blr', label: 'Bengaluru', icon: '📍', description: 'Indiranagar, Koramangala, Whitefield' },
+  { value: 'mum', label: 'Mumbai', icon: '📍', description: 'Bandra, BKC, Colaba, Andheri' },
+  { value: 'del', label: 'Delhi-NCR', icon: '📍', description: 'Connaught Place, Gurgaon, Noida' },
+  { value: 'hyd', label: 'Hyderabad', icon: '📍', description: 'Hitec City, Jubilee Hills, Gachibowli' },
+  { value: 'pun', label: 'Pune', icon: '📍', description: 'Koregaon Park, Kalyani Nagar, Baner' },
+  { value: 'chn', label: 'Chennai', icon: '📍', description: 'Nungambakkam, Adyar' },
+  { value: 'kol', label: 'Kolkata', icon: '📍', description: 'Park Street, Salt Lake' },
+];
 
 const LENS_DROPDOWN_OPTIONS: DropdownOption<PlatformLens | 'all'>[] = [
   { value: 'all', label: 'All Companions', icon: '✨', description: 'Show all verified companions & activities' },
@@ -100,7 +117,12 @@ const Discovery: React.FC = () => {
   const [radiusKm, setRadiusKm] = useState('50');
   const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [userLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  // Dynamic Seeker Location State
+  const [selectedCity, setSelectedCity] = useState<string>('all');
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; label: string } | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   // Track active photo index per provider card for interactive 3-photo browsing
   const [activePhotoIndexByProvider, setActivePhotoIndexByProvider] = useState<Record<string, number>>({});
@@ -146,6 +168,12 @@ const Discovery: React.FC = () => {
           : item.photoUrl
           ? [item.photoUrl]
           : ['https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'];
+
+      const hub =
+        item.latitude != null && item.longitude != null
+          ? resolveNearestHub(item.latitude, item.longitude)
+          : null;
+
       return {
         providerId: item.providerId as string,
         displayName: (item.displayName || 'Verified Companion') as string,
@@ -157,7 +185,11 @@ const Discovery: React.FC = () => {
         averageRating: Number(item.averageRating || 5.0),
         isVerified: Boolean(item.isVerified),
         trustScore: Number(item.trustScore || 99),
-        distanceKm: Number(item.distanceKm ?? 2.0),
+        distanceKm: item.distanceKm != null ? Number(item.distanceKm) : null,
+        latitude: item.latitude != null ? Number(item.latitude) : null,
+        longitude: item.longitude != null ? Number(item.longitude) : null,
+        city: hub?.city || 'Bengaluru',
+        area: hub?.area || 'Indiranagar',
         lenses: ['companions', 'wellness', 'pro_work'] as PlatformLens[],
         services: [] as string[],
       };
@@ -165,6 +197,28 @@ const Discovery: React.FC = () => {
 
     const existingIds = new Set(liveItems.map((i: any) => i.providerId));
     let list = [...liveItems, ...CURATED_SAMPLE_PROVIDERS.filter((s) => !existingIds.has(s.providerId))];
+
+    // Calculate dynamic distance & filter by radius if Seeker location is active
+    if (userLocation) {
+      const maxR = Number(radiusKm) || 50;
+      list = list
+        .map((p) => {
+          let dist = p.distanceKm;
+          if (p.latitude != null && p.longitude != null) {
+            dist = calculateHaversineDistance(
+              userLocation.latitude,
+              userLocation.longitude,
+              p.latitude,
+              p.longitude
+            );
+          }
+          return {
+            ...p,
+            distanceKm: dist,
+          };
+        })
+        .filter((p) => p.distanceKm == null || p.distanceKm <= maxR);
+    }
 
     // Filter by Active Lens
     if (activeLens !== 'all') {
@@ -201,13 +255,13 @@ const Discovery: React.FC = () => {
     if (sortBy === 'price') {
       list.sort((a, b) => a.hourlyRate - b.hourlyRate);
     } else if (sortBy === 'distance') {
-      list.sort((a, b) => (a.distanceKm ?? 99) - (b.distanceKm ?? 99));
+      list.sort((a, b) => (a.distanceKm ?? 999) - (b.distanceKm ?? 999));
     } else {
       list.sort((a, b) => b.averageRating - a.averageRating);
     }
 
     return list;
-  }, [backendData, activeLens, q, specialty, minRate, maxRate, verifiedOnly, sortBy]);
+  }, [backendData, userLocation, radiusKm, activeLens, q, specialty, minRate, maxRate, verifiedOnly, sortBy]);
 
   const handleSelectPhoto = (providerId: string, idx: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -258,6 +312,53 @@ const Discovery: React.FC = () => {
     });
   };
 
+  const handleNearMeGps = async () => {
+    setIsLocating(true);
+    setLocationError(null);
+    try {
+      const coords = await getCurrentCoordinates();
+      const nearest = resolveNearestHub(coords.latitude, coords.longitude);
+      setUserLocation({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        label: `Near ${nearest.area}`,
+      });
+      setSelectedCity('gps');
+      setSortBy('distance');
+    } catch (err: any) {
+      setLocationError(err?.message || 'Location permission denied');
+    } finally {
+      setIsLocating(false);
+    }
+  };
+
+  const handleCityChange = (cityKey: string) => {
+    setSelectedCity(cityKey);
+    setLocationError(null);
+    if (cityKey === 'all') {
+      setUserLocation(null);
+      return;
+    }
+    const cityMap: Record<string, { lat: number; lon: number; name: string }> = {
+      blr: { lat: 12.9716, lon: 77.5946, name: 'Bengaluru' },
+      mum: { lat: 19.0596, lon: 72.8295, name: 'Mumbai' },
+      del: { lat: 28.6315, lon: 77.2167, name: 'Delhi-NCR' },
+      hyd: { lat: 17.4435, lon: 78.3772, name: 'Hyderabad' },
+      pun: { lat: 18.5362, lon: 73.8940, name: 'Pune' },
+      chn: { lat: 13.0569, lon: 80.2425, name: 'Chennai' },
+      kol: { lat: 22.5510, lon: 88.3524, name: 'Kolkata' },
+    };
+    const c = cityMap[cityKey];
+    if (c) {
+      setUserLocation({
+        latitude: c.lat,
+        longitude: c.lon,
+        label: c.name,
+      });
+      setSortBy('distance');
+    }
+  };
+
   const handleClearFilters = () => {
     setActiveLens('all');
     setQ('');
@@ -266,6 +367,9 @@ const Discovery: React.FC = () => {
     setMaxRate('');
     setVerifiedOnly(false);
     setSortBy('rating');
+    setSelectedCity('all');
+    setUserLocation(null);
+    setLocationError(null);
     setSearchParams(new URLSearchParams());
   };
 
@@ -284,7 +388,7 @@ const Discovery: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* 3-Lens Dropdown Selector */}
-            <div className="w-full md:w-64">
+            <div className="w-full md:w-56">
               <SelectDropdown
                 options={LENS_DROPDOWN_OPTIONS}
                 value={activeLens}
@@ -294,9 +398,41 @@ const Discovery: React.FC = () => {
               />
             </div>
 
-            {/* Search Input Bar */}
-            <div className="flex items-center gap-2">
-              <div className="relative flex-1 sm:w-80">
+            {/* City & Near-Me Location Hub Bar */}
+            <div className="flex items-center gap-2 w-full md:w-auto">
+              <div className="w-40 sm:w-44">
+                <SelectDropdown
+                  options={CITY_OPTIONS}
+                  value={selectedCity === 'gps' ? 'all' : selectedCity}
+                  onChange={(val) => handleCityChange(val)}
+                  className="w-full text-xs font-medium"
+                  triggerClassName="w-full bg-muted/70 hover:bg-muted border border-border/80 px-2.5 py-2 rounded-xl text-xs"
+                />
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNearMeGps}
+                disabled={isLocating}
+                title="Use Current Device Location (GPS)"
+                className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                  selectedCity === 'gps'
+                    ? 'bg-accent text-accent-foreground border-accent shadow-xs'
+                    : 'bg-card border-border hover:border-accent text-foreground'
+                }`}
+              >
+                {isLocating ? (
+                  <ArrowPathIcon className="w-3.5 h-3.5 animate-spin text-accent" />
+                ) : (
+                  <MapPinIcon className="w-3.5 h-3.5 text-accent" />
+                )}
+                <span className="hidden sm:inline">Near Me</span>
+              </button>
+            </div>
+
+            {/* Search Input Bar & Filter Toggle */}
+            <div className="flex items-center gap-2 flex-1 md:justify-end">
+              <div className="relative flex-1 sm:max-w-xs">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <input
                   type="text"
@@ -304,12 +440,12 @@ const Discovery: React.FC = () => {
                   onChange={(e) => setQ(e.target.value)}
                   placeholder={
                     activeLens === 'pro_work'
-                      ? 'Search display name or skills (e.g. Photography, Tennis)...'
+                      ? 'Search skills or name...'
                       : activeLens === 'wellness'
-                      ? 'Search tennis, hiking, yoga, fitness buddies...'
-                      : 'Search display name, activities, companions...'
+                      ? 'Search fitness buddies...'
+                      : 'Search companions...'
                   }
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted/60 border border-border text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
                 />
               </div>
 
@@ -327,6 +463,33 @@ const Discovery: React.FC = () => {
               </button>
             </div>
           </div>
+
+          {/* Active Location Indicator Pill */}
+          {userLocation && (
+            <div className="mt-2.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs">
+              <div className="flex items-center gap-1.5 text-accent font-medium">
+                <MapPinIcon className="w-3.5 h-3.5" />
+                <span>
+                  Filtering companions within <strong>{radiusKm} km</strong> of <strong>{userLocation.label}</strong>
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  setUserLocation(null);
+                  setSelectedCity('all');
+                }}
+                className="text-[11px] font-semibold text-muted-foreground hover:text-foreground underline ml-2"
+              >
+                Clear Location
+              </button>
+            </div>
+          )}
+
+          {locationError && (
+            <div className="mt-2 text-xs text-rose-500 font-medium">
+              ⚠️ {locationError}
+            </div>
+          )}
 
           {/* Contextual Chips Bar */}
           <div className="flex items-center gap-2 overflow-x-auto pt-3 pb-1 text-xs scrollbar-none border-t border-border/50 mt-3">
@@ -620,9 +783,16 @@ const Discovery: React.FC = () => {
                     </div>
 
                     <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <MapPinIcon className="w-3.5 h-3.5" />
-                        {provider.distanceKm} km away
+                      <span className="flex items-center gap-1.5 truncate max-w-[58%]">
+                        <MapPinIcon className="w-3.5 h-3.5 shrink-0 text-accent" />
+                        <span className="truncate">
+                          {provider.distanceKm != null ? (
+                            <strong className="text-foreground font-semibold tabular-nums">
+                              {provider.distanceKm} km away
+                            </strong>
+                          ) : null}
+                          {provider.area ? ` • ${provider.area}` : provider.city ? ` • ${provider.city}` : ''}
+                        </span>
                       </span>
                       <button
                         type="button"

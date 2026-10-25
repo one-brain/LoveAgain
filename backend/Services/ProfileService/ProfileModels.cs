@@ -46,6 +46,12 @@ public sealed record CompanionApplicationRequest(
     IReadOnlyCollection<string>? ProfileImages = null
 );
 
+public sealed record UpdateProviderLocationRequest(
+    double Latitude,
+    double Longitude,
+    decimal? MaxRadiusKm = null
+);
+
 public sealed record ProviderProfileResponse(
     Guid Id,
     Guid UserId,
@@ -65,7 +71,9 @@ public sealed record ProviderProfileResponse(
     DateTime? DeletedAt,
     bool IsDeleted,
     string? DisplayName = null,
-    IReadOnlyCollection<string>? ProfileImages = null
+    IReadOnlyCollection<string>? ProfileImages = null,
+    double? Latitude = null,
+    double? Longitude = null
 );
 
 public sealed record AdminVerificationItemResponse(

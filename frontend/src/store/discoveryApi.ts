@@ -19,6 +19,8 @@ export const discoveryApi = createApi({
         trustScore: number;
         distanceKm: number | null;
         profileImages?: string[];
+        latitude?: number | null;
+        longitude?: number | null;
       }>,
       {
         q?: string;
@@ -63,10 +65,22 @@ export const discoveryApi = createApi({
         trustScore: number;
         upcomingSlots: Array<{ slotId: string; startTime: string; endTime: string; isBooked: boolean }>;
         profileImages?: string[];
+        latitude?: number | null;
+        longitude?: number | null;
+        distanceKm?: number | null;
       },
-      string
+      string | { userId: string; latitude?: number; longitude?: number }
     >({
-      query: (userId) => `/discovery/providers/${userId}`,
+      query: (arg) => {
+        if (typeof arg === 'string') {
+          return `/discovery/providers/${arg}`;
+        }
+        const search = new URLSearchParams();
+        if (arg.latitude != null) search.set('latitude', String(arg.latitude));
+        if (arg.longitude != null) search.set('longitude', String(arg.longitude));
+        const qs = search.toString();
+        return `/discovery/providers/${arg.userId}${qs ? `?${qs}` : ''}`;
+      },
     }),
   }),
 });

@@ -22,6 +22,7 @@ import {
   ChevronRightIcon,
   SparklesIcon,
   ClockIcon,
+  ArrowUpRightIcon,
 } from '@heroicons/react/24/outline';
 
 const DEMO_BOOKINGS: BookingSummary[] = [
@@ -60,18 +61,18 @@ const DEMO_BOOKINGS: BookingSummary[] = [
 ];
 
 const SORT_BOOKING_OPTIONS: DropdownOption[] = [
-  { value: 'date-asc', label: 'Soonest First', icon: '📅' },
-  { value: 'date-desc', label: 'Latest First', icon: '🗓️' },
-  { value: 'price-desc', label: 'Highest Amount', icon: '💰' },
+  { value: 'date-asc', label: 'Soonest First' },
+  { value: 'date-desc', label: 'Latest First' },
+  { value: 'price-desc', label: 'Highest Amount' },
 ];
 
 const STATUS_FILTER_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All Statuses', icon: '📋' },
-  { value: 'Confirmed', label: 'Confirmed', icon: '🟢', description: 'Active & ready' },
-  { value: 'PendingPayment', label: 'Pending Escrow', icon: '⏳', description: 'Awaiting payment' },
-  { value: 'InProgress', label: 'In Progress', icon: '⚡', description: 'Active right now' },
-  { value: 'Completed', label: 'Completed', icon: '✓', description: 'Finished sessions' },
-  { value: 'Cancelled', label: 'Cancelled', icon: '✕', description: 'Terminated sessions' },
+  { value: 'all', label: 'All Statuses' },
+  { value: 'Confirmed', label: 'Confirmed', description: 'Active & ready' },
+  { value: 'PendingPayment', label: 'Pending Escrow', description: 'Awaiting payment' },
+  { value: 'InProgress', label: 'In Progress', description: 'Active right now' },
+  { value: 'Completed', label: 'Completed', description: 'Finished sessions' },
+  { value: 'Cancelled', label: 'Cancelled', description: 'Terminated sessions' },
 ];
 
 function sortAndFilterBookings(
@@ -334,12 +335,9 @@ const Bookings: React.FC = () => {
         </div>
       )}
 
-      {/* Page Title & Stats */}
+      {/* Page Title & Context */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
-            {roleMode === 'companion' ? 'Companion Desk' : 'Client Mode'}
-          </span>
           <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
             {roleMode === 'companion' ? 'Incoming Client Requests' : 'My Experience Bookings'}
           </h1>
@@ -423,9 +421,33 @@ const Bookings: React.FC = () => {
 
       {/* Content Area */}
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center justify-center gap-3">
-          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Retrieving booking status...</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="rounded-2xl border border-border bg-card p-5 sm:p-6 space-y-4 shadow-xs"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-24 h-4 bg-muted rounded-md" />
+                <div className="w-20 h-5 bg-muted rounded-full" />
+              </div>
+              <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40">
+                <div className="w-13 h-13 rounded-xl bg-muted shrink-0" />
+                <div className="space-y-2 flex-1">
+                  <div className="w-28 h-4 bg-muted rounded" />
+                  <div className="w-20 h-3 bg-muted rounded" />
+                </div>
+              </div>
+              <div className="space-y-2 py-3 border-y border-border/60">
+                <div className="w-32 h-3.5 bg-muted rounded" />
+                <div className="w-40 h-3.5 bg-muted rounded" />
+              </div>
+              <div className="flex items-center justify-between pt-1">
+                <div className="w-16 h-5 bg-muted rounded" />
+                <div className="w-24 h-8 bg-muted rounded-xl" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <>
@@ -473,8 +495,27 @@ const Bookings: React.FC = () => {
           {activeTab === 'history' && (
             <div className="space-y-6">
               {pastBookings.length === 0 ? (
-                <div className="py-16 text-center rounded-3xl bg-card border border-border p-12">
-                  <p className="text-sm text-muted-foreground">No completed bookings yet.</p>
+                <div className="py-16 text-center rounded-3xl bg-card border border-border p-8 sm:p-12 space-y-4 max-w-lg mx-auto shadow-xs">
+                  <div className="w-14 h-14 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
+                    <ClockIcon className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">No Past Outings Yet</h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      {roleMode === 'companion'
+                        ? 'Completed client sessions and settled escrow payout receipts will be archived here.'
+                        : 'Your completed companion experiences and escrow receipts will appear here after sessions conclude.'}
+                    </p>
+                  </div>
+                  {roleMode === 'client' && (
+                    <Link
+                      to="/discovery"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
+                    >
+                      <span>Explore Verified Companions</span>
+                      <ArrowUpRightIcon className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -540,7 +581,7 @@ const Bookings: React.FC = () => {
                     <button
                       key={day.toISOString()}
                       onClick={() => setSelectedDate(day)}
-                      className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-between min-h-[90px] ${
+                      className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-between min-h-[90px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                         isSelected
                           ? 'border-accent bg-accent/15 text-foreground ring-1 ring-accent'
                           : 'border-border bg-background hover:border-accent/40 text-foreground'

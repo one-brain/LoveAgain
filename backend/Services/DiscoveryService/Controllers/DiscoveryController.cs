@@ -18,7 +18,9 @@ public sealed record ProviderCardResponse(
     bool IsVerified,
     int TrustScore,
     double? DistanceKm,
-    IReadOnlyCollection<string>? ProfileImages = null);
+    IReadOnlyCollection<string>? ProfileImages = null,
+    double? Latitude = null,
+    double? Longitude = null);
 
 public sealed record ProviderDetailResponse(
     Guid ProviderId,
@@ -33,7 +35,10 @@ public sealed record ProviderDetailResponse(
     bool IsVerified,
     int TrustScore,
     IReadOnlyCollection<AvailabilitySlotResponse> UpcomingSlots,
-    IReadOnlyCollection<string>? ProfileImages = null);
+    IReadOnlyCollection<string>? ProfileImages = null,
+    double? Latitude = null,
+    double? Longitude = null,
+    double? DistanceKm = null);
 
 public sealed record AvailabilitySlotResponse(
     Guid SlotId,
@@ -172,7 +177,9 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                     p.user.IsVerified,
                     p.user.TrustScore,
                     p.Distance != null ? Math.Round(p.Distance.Value, 1) : null,
-                    p.profile.ProfileImages);
+                    p.profile.ProfileImages,
+                    p.profile.Latitude,
+                    p.profile.Longitude);
             })
             .ToList();
 
@@ -184,6 +191,8 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProviderDetailResponse>> GetProvider(
         Guid userId,
+        [FromQuery] double? latitude = null,
+        [FromQuery] double? longitude = null,
         CancellationToken cancellationToken = default)
     {
         var result = await dbContext.ProviderProfiles
@@ -211,14 +220,37 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                     join.user.IsVerified,
                     join.user.TrustScore,
                     new List<AvailabilitySlotResponse>(),
-                    join.profile.ProfileImages),
-                UserId = join.profile.UserId
+                    join.profile.ProfileImages,
+                    join.profile.Latitude,
+                    join.profile.Longitude,
+                    null),
+                UserId = join.profile.UserId,
+                join.profile.Latitude,
+                join.profile.Longitude
             })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (result == null)
         {
             return NotFound(new { error = "Provider not found or not available." });
+        }
+
+        double? distanceKm = null;
+        if (latitude.HasValue && longitude.HasValue && result.Latitude.HasValue && result.Longitude.HasValue)
+        {
+            var lat1 = latitude.Value * Math.PI / 180;
+            var lon1 = longitude.Value * Math.PI / 180;
+            var lat2 = result.Latitude.Value * Math.PI / 180;
+            var lon2 = result.Longitude.Value * Math.PI / 180;
+            var d = Math.Acos(
+                Math.Sin(lat1) * Math.Sin(lat2) +
+                Math.Cos(lat1) * Math.Cos(lat2) * Math.Cos(lon1 - lon2)
+            ) * 6371;
+
+            if (!double.IsNaN(d))
+            {
+                distanceKm = Math.Round(d, 1);
+            }
         }
 
         // Fetch upcoming available slots (not booked, in the future)
@@ -236,7 +268,11 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                 slot.IsBooked))
             .ToListAsync(cancellationToken);
 
-        var response = result.Provider with { UpcomingSlots = upcomingSlots };
+        var response = result.Provider with
+        {
+            UpcomingSlots = upcomingSlots,
+            DistanceKm = distanceKm
+        };
 
         return Ok(response);
     }

@@ -17,10 +17,18 @@ export interface ProviderProfile {
   rejectionReason?: string;
   averageRating: number;
   introVideoUrl?: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export interface ProviderProfileResponse {
   profile: ProviderProfile;
+}
+
+export interface UpdateProviderLocationRequest {
+  latitude: number;
+  longitude: number;
+  maxRadiusKm?: number;
 }
 
 export interface SeekerProfile {
@@ -179,6 +187,14 @@ export const profileApi = createApi({
       }),
       invalidatesTags: ['Profile'],
     }),
+    updateProviderLocation: builder.mutation<ProviderProfileResponse, UpdateProviderLocationRequest>({
+      query: (body) => ({
+        url: `/profiles/provider/location`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
   }),
 });
 
@@ -192,4 +208,5 @@ export const {
   useUpdateProviderProfileMutation,
   useDeleteProviderProfileMutation,
   useActivateProfileMutation,
+  useUpdateProviderLocationMutation,
 } = profileApi;
