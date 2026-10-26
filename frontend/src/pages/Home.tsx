@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
+import { RateBadge } from '../components/ui/RateBadge';
 import {
   MagnifyingGlassIcon,
   ShieldCheckIcon,
@@ -14,7 +17,6 @@ import {
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
-import { formatRate } from '../utils/currency';
 
 interface LensCard {
   id: PlatformLens;
@@ -107,6 +109,7 @@ const FEATURED_PROFILES = [
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [selectedLens, setSelectedLens] = useState<PlatformLens>('companions');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -281,8 +284,13 @@ const Home: React.FC = () => {
                     alt={comp.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
-                  <div className="absolute top-3 right-3 bg-card/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-foreground border border-border shadow-xs">
-                    {formatRate(comp.rate)}
+                  <div className="absolute top-3 right-3 z-10">
+                    <RateBadge
+                      variant="card-badge"
+                      rate={comp.rate}
+                      isAuthenticated={isAuthenticated}
+                      onAuthPrompt={() => navigate('/login?redirect=/discovery')}
+                    />
                   </div>
                   <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white flex items-center gap-1 shadow-xs">
                     <CheckBadgeIcon className="w-3.5 h-3.5" />
@@ -321,7 +329,7 @@ const Home: React.FC = () => {
                       {comp.distance}
                     </span>
                     <span className="font-semibold text-accent group-hover:translate-x-1 transition-transform">
-                      Book with Escrow &rarr;
+                      {isAuthenticated ? 'Book with Escrow \u2192' : 'Login to Book \u2192'}
                     </span>
                   </div>
                 </div>

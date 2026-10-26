@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store';
+import { RateBadge } from '../ui/RateBadge';
 import {
   XMarkIcon,
   CheckBadgeIcon,
@@ -29,6 +32,7 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
   liveProviders,
 }) => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
 
   // If real backend provider (not starting with sample-), fetch fresh details
@@ -164,10 +168,16 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
               </span>
             </div>
 
-            <div className="absolute top-3 right-3">
-              <span className="px-3 py-1 rounded-full bg-accent text-accent-foreground text-xs font-bold shadow-md">
-                {formatRate(hourlyRate)}
-              </span>
+            <div className="absolute top-3 right-3 z-10">
+              <RateBadge
+                variant="card-badge"
+                rate={hourlyRate}
+                isAuthenticated={isAuthenticated}
+                onAuthPrompt={() => {
+                  onClose();
+                  navigate('/login?redirect=/discovery');
+                }}
+              />
             </div>
 
             {/* 3-Photo Interactive Thumbnails Strip */}
@@ -220,9 +230,21 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
 
             <div className="text-right">
               <span className="text-[11px] text-muted-foreground block">Hourly Rate</span>
-              <span className="text-xl font-bold font-mono text-foreground">
-                {formatRate(hourlyRate)}
-              </span>
+              {isAuthenticated ? (
+                <span className="text-xl font-bold font-mono text-foreground">
+                  {formatRate(hourlyRate)}
+                </span>
+              ) : (
+                <RateBadge
+                  variant="row-item"
+                  rate={hourlyRate}
+                  isAuthenticated={false}
+                  onAuthPrompt={() => {
+                    onClose();
+                    navigate('/login?redirect=/discovery');
+                  }}
+                />
+              )}
             </div>
           </div>
 

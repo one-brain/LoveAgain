@@ -5,6 +5,7 @@ import { useGetProviderQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
+import { RateBadge } from '../components/ui/RateBadge';
 import { formatINR, formatRate } from '../utils/currency';
 import { resolveNearestHub } from '../utils/location';
 import type { RootState } from '../store';
@@ -20,6 +21,7 @@ import {
   VideoCameraIcon,
   CheckCircleIcon,
   PhotoIcon,
+  LockClosedIcon,
 } from '@heroicons/react/24/outline';
 
 // Fallback provider data lookup with Display Name and 3 Profile Images
@@ -396,12 +398,12 @@ const ProviderDetail: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="bg-card/90 backdrop-blur-md px-4 py-2 rounded-2xl border border-border/80 shadow-md text-foreground">
-                  <div className="text-2xl font-bold font-serif text-foreground">
-                    {formatINR(provider.hourlyRate)}
-                    <span className="text-xs font-normal text-muted-foreground">/hr</span>
-                  </div>
-                </div>
+                <RateBadge
+                  variant="detail-header"
+                  rate={provider.hourlyRate}
+                  isAuthenticated={isAuthenticated}
+                  onAuthPrompt={() => setAuthPromptModal(true)}
+                />
               </div>
             </div>
 
@@ -539,11 +541,27 @@ const ProviderDetail: React.FC = () => {
             <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2.5 text-xs">
               <div className="flex justify-between items-center text-foreground">
                 <span className="text-muted-foreground">Companion Rate:</span>
-                <span className="text-base font-bold font-serif text-accent">{formatRate(provider.hourlyRate)}</span>
+                {isAuthenticated ? (
+                  <span className="text-base font-bold font-serif text-accent">{formatRate(provider.hourlyRate)}</span>
+                ) : (
+                  <RateBadge
+                    variant="row-item"
+                    rate={provider.hourlyRate}
+                    isAuthenticated={false}
+                    onAuthPrompt={() => setAuthPromptModal(true)}
+                  />
+                )}
               </div>
               <div className="flex justify-between items-center text-foreground">
                 <span className="text-muted-foreground">Estimated Deposit ({durationHours || 2} hrs):</span>
-                <span className="font-mono font-semibold text-foreground">{formatINR(provider.hourlyRate * (durationHours || 2))}</span>
+                {isAuthenticated ? (
+                  <span className="font-mono font-semibold text-foreground">{formatINR(provider.hourlyRate * (durationHours || 2))}</span>
+                ) : (
+                  <span className="font-mono font-semibold text-muted-foreground flex items-center gap-1">
+                    <LockClosedIcon className="w-3.5 h-3.5 text-accent" />
+                    <span>₹••••</span>
+                  </span>
+                )}
               </div>
               <div className="pt-2 border-t border-border/60 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
                 <ShieldCheckIcon className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -661,7 +679,7 @@ const ProviderDetail: React.FC = () => {
                   className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all cursor-pointer hover:scale-[1.01] flex items-center justify-center gap-2"
                 >
                   <ShieldCheckIcon className="w-5 h-5" />
-                  <span>Book with Escrow &rarr;</span>
+                  <span>{isAuthenticated ? 'Book with Escrow \u2192' : 'Sign In to Book with Escrow \u2192'}</span>
                 </button>
                 <p className="text-[11px] text-muted-foreground text-center mt-2">
                   🔒 Protected by Cue Escrow Vault until activity completion.
@@ -711,10 +729,10 @@ const ProviderDetail: React.FC = () => {
               <SparklesIcon className="w-9 h-9" />
             </div>
             <h3 className="text-2xl font-bold font-serif text-foreground">
-              Sign In to Reserve
+              Sign In to Unlock Pricing & Reserve
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              To guarantee community safety and escrow payment protection, an authenticated account is required to book a companion.
+              To guarantee companion privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
             </p>
             <div className="pt-2 flex flex-col gap-2">
               <Link
