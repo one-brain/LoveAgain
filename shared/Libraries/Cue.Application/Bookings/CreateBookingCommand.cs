@@ -39,8 +39,23 @@ public sealed class CreateBookingCommandHandler(
 {
     public async Task<CreateBookingResult> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
     {
-        var slot = await bookingRepository.GetAvailableSlotAsync(command.ProviderId, command.StartTime, cancellationToken)
-            ?? throw new InvalidOperationException("The requested availability slot is no longer available.");
+        var slot = await bookingRepository.GetAvailableSlotAsync(command.ProviderId, command.StartTime, cancellationToken);
+        if (slot is null)
+        {
+            var isOverlapping = await bookingRepository.HasOverlappingSlotAsync(
+                command.ProviderId,
+                command.StartTime,
+                command.EndTime,
+                cancellationToken);
+
+            if (isOverlapping)
+            {
+                throw new InvalidOperationException("The companion has another confirmed booking during this time window.");
+            }
+
+            slot = new AvailabilitySlot(command.ProviderId, command.StartTime, command.EndTime);
+            await bookingRepository.AddSlotAsync(slot, cancellationToken);
+        }
 
         var totalAmount = decimal.Round(command.HourlyRate * command.DurationHours, 2);
         var platformFee = decimal.Round(totalAmount * 0.15m, 2);

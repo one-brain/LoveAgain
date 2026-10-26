@@ -66,6 +66,20 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   const hasSufficientBalance = availableBalance >= totalAmount;
   const shortage = Math.max(0, totalAmount - availableBalance);
 
+  const extractError = (err: any, fallback: string) => {
+    if (err?.data?.error) return err.data.error;
+    if (err?.data?.message) return err.data.message;
+    if (err?.data?.title) return err.data.title;
+    if (err?.data?.errors && typeof err.data.errors === 'object') {
+      const firstKey = Object.keys(err.data.errors)[0];
+      if (firstKey && Array.isArray(err.data.errors[firstKey])) {
+        return err.data.errors[firstKey][0];
+      }
+    }
+    if (typeof err?.data === 'string') return err.data;
+    return fallback;
+  };
+
   const handleWalletPayment = async () => {
     setErrorMessage(null);
     try {
@@ -76,7 +90,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
         onClose();
       }, 1500);
     } catch (err: any) {
-      setErrorMessage(err?.data?.error || 'Failed to complete wallet payment. Please try again.');
+      setErrorMessage(extractError(err, 'Failed to complete wallet payment. Please try again.'));
     }
   };
 
@@ -105,7 +119,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
         onClose();
       }, 1500);
     } catch (verifyErr: any) {
-      setErrorMessage(verifyErr?.data?.error || 'Payment verification failed.');
+      setErrorMessage(extractError(verifyErr, 'Payment verification failed.'));
       setSandboxOrderData(null);
     }
   };

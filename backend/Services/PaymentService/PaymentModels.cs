@@ -153,27 +153,27 @@ public sealed record VerifyTopUpRequest(
     string RazorpaySignature,
     decimal Amount);
 
-public sealed record DirectBookingOrderRequest(Guid OrderId);
+public sealed record DirectBookingOrderRequest(string OrderId);
 
 public sealed record DirectBookingOrderResponse(
     string OrderId,
     decimal Amount,
     string Currency,
     string KeyId,
-    Guid BookingId,
+    string BookingId,
     bool IsSandbox);
 
 public sealed record DirectBookingVerifyRequest(
-    Guid BookingId,
+    string BookingId,
     string RazorpayOrderId,
     string RazorpayPaymentId,
     string RazorpaySignature);
 
-public sealed record WalletCheckoutRequest(Guid OrderId);
+public sealed record WalletCheckoutRequest(string OrderId);
 
 public sealed record WalletCheckoutResponse(
-    Guid OrderId,
-    Guid EscrowHoldId,
+    string OrderId,
+    string EscrowHoldId,
     decimal GrossAmount,
     decimal PlatformFee,
     decimal ProviderEarnings,

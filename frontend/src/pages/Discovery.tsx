@@ -911,6 +911,8 @@ const Discovery: React.FC = () => {
                   }
                 } catch (err: any) {
                   console.error('Booking API error:', err);
+                  alert(err?.data?.error || 'Failed to create booking. Please check companion availability.');
+                  return;
                 }
               }
               setCheckoutTotalAmount(bookingData.totalAmount);

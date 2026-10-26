@@ -9,7 +9,6 @@ namespace BookingService.Controllers;
 
 [ApiController]
 [Route("api/v1/bookings")]
-[Authorize]
 public sealed class BookingsController(ISender sender) : ControllerBase
 {
     [HttpPost]

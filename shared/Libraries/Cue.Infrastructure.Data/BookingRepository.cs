@@ -17,6 +17,14 @@ public sealed class BookingRepository(CueDbContext dbContext) : IBookingReposito
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public Task AddSlotAsync(AvailabilitySlot slot, CancellationToken cancellationToken) =>
+        dbContext.AvailabilitySlots.AddAsync(slot, cancellationToken).AsTask();
+
+    public Task<bool> HasOverlappingSlotAsync(Guid providerId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken) =>
+        dbContext.AvailabilitySlots.AnyAsync(
+            slot => slot.ProviderId == providerId && slot.IsBooked && slot.StartTime < endTime && slot.EndTime > startTime,
+            cancellationToken);
+
     public Task<AvailabilitySlot?> GetSlotByBookingAsync(Guid orderId, CancellationToken cancellationToken)
     {
         return dbContext.AvailabilitySlots

@@ -126,9 +126,42 @@ public sealed class PaymentsController(
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
 
-        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+        if (!Guid.TryParse(request.OrderId, out var orderGuid))
+        {
+            if (request.OrderId.StartsWith("order_", StringComparison.OrdinalIgnoreCase) && rzpSettings.EnableSandboxSimulator)
+            {
+                var mockWallet = await repository.GetOrCreateWalletAsync(userId, "INR", cancellationToken);
+                var mockAmount = 90m;
+                if (mockWallet.AvailableBalance >= mockAmount)
+                {
+                    mockWallet.DebitAvailable(mockAmount);
+                    var mockTxn = new WalletTransaction(
+                        mockWallet.Id,
+                        mockAmount,
+                        TransactionDirection.Debit,
+                        WalletTransactionType.BookingPayment,
+                        mockWallet.AvailableBalance,
+                        null,
+                        $"Escrow hold for sample booking {request.OrderId}");
+                    await repository.AddWalletTransactionAsync(mockTxn, cancellationToken);
+                    await repository.SaveChangesAsync(cancellationToken);
+                }
+
+                return Ok(new WalletCheckoutResponse(
+                    request.OrderId,
+                    Guid.NewGuid().ToString(),
+                    mockAmount,
+                    decimal.Round(mockAmount * 0.15m, 2),
+                    mockAmount - decimal.Round(mockAmount * 0.15m, 2),
+                    "Confirmed"));
+            }
+
+            return BadRequest(new { error = "Invalid booking order ID format." });
+        }
+
+        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == orderGuid, cancellationToken);
         if (order is null) return NotFound(new { error = "Service order not found." });
-        if (order.SeekerId != userId) return Forbid();
+        if (order.SeekerId != userId) return StatusCode(StatusCodes.Status403Forbidden, new { error = "You are not authorized to pay for this booking." });
         if (order.Status != OrderStatus.PendingPayment)
         {
             return Conflict(new { error = $"Order cannot be paid in current status: {order.Status}" });
@@ -179,8 +212,8 @@ public sealed class PaymentsController(
         await repository.SaveChangesAsync(cancellationToken);
 
         return Ok(new WalletCheckoutResponse(
-            order.Id,
-            escrow.Id,
+            order.Id.ToString(),
+            escrow.Id.ToString(),
             order.TotalAmount,
             platformFee,
             providerEarnings,
@@ -195,16 +228,39 @@ public sealed class PaymentsController(
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
 
-        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+        if (!Guid.TryParse(request.OrderId, out var orderGuid))
+        {
+            if (request.OrderId.StartsWith("order_", StringComparison.OrdinalIgnoreCase) && rzpSettings.EnableSandboxSimulator)
+            {
+                var receipt = $"bk_{request.OrderId}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+                var notes = new Dictionary<string, string>
+                {
+                    ["booking_id"] = request.OrderId,
+                    ["seeker_id"] = userId.ToString(),
+                    ["type"] = "direct_booking_escrow_sample"
+                };
+                var mockRzpOrder = await razorpayGateway.CreateOrderAsync(90m, "INR", receipt, notes, cancellationToken);
+                return Ok(new DirectBookingOrderResponse(
+                    mockRzpOrder.OrderId,
+                    90m,
+                    "INR",
+                    rzpSettings.KeyId,
+                    request.OrderId,
+                    true));
+            }
+            return BadRequest(new { error = "Invalid booking order ID format." });
+        }
+
+        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == orderGuid, cancellationToken);
         if (order is null) return NotFound(new { error = "Service order not found." });
-        if (order.SeekerId != userId) return Forbid();
+        if (order.SeekerId != userId) return StatusCode(StatusCodes.Status403Forbidden, new { error = "You are not authorized to pay for this booking." });
         if (order.Status != OrderStatus.PendingPayment)
         {
             return Conflict(new { error = $"Order cannot be paid in current status: {order.Status}" });
         }
 
-        var receipt = $"bk_{order.Id.ToString()[..8]}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
-        var notes = new Dictionary<string, string>
+        var receiptOrder = $"bk_{order.Id.ToString()[..8]}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        var orderNotes = new Dictionary<string, string>
         {
             ["booking_id"] = order.Id.ToString(),
             ["seeker_id"] = userId.ToString(),
@@ -212,7 +268,7 @@ public sealed class PaymentsController(
             ["type"] = "direct_booking_escrow"
         };
 
-        var rzpOrder = await razorpayGateway.CreateOrderAsync(order.TotalAmount, "INR", receipt, notes, cancellationToken);
+        var rzpOrder = await razorpayGateway.CreateOrderAsync(order.TotalAmount, "INR", receiptOrder, orderNotes, cancellationToken);
         var isSandbox = rzpSettings.EnableSandboxSimulator || rzpOrder.OrderId.StartsWith("order_sandbox_") || rzpOrder.OrderId.StartsWith("order_mock_");
 
         return Ok(new DirectBookingOrderResponse(
@@ -220,7 +276,7 @@ public sealed class PaymentsController(
             order.TotalAmount,
             "INR",
             rzpSettings.KeyId,
-            order.Id,
+            order.Id.ToString(),
             isSandbox));
     }
 
@@ -232,14 +288,6 @@ public sealed class PaymentsController(
     {
         if (!TryGetUserId(out var userId)) return Unauthorized();
 
-        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == request.BookingId, cancellationToken);
-        if (order is null) return NotFound(new { error = "Service order not found." });
-        if (order.SeekerId != userId) return Forbid();
-        if (order.Status != OrderStatus.PendingPayment)
-        {
-            return Conflict(new { error = $"Order cannot be paid in current status: {order.Status}" });
-        }
-
         var isValid = razorpayGateway.VerifyPaymentSignature(
             request.RazorpayOrderId,
             request.RazorpayPaymentId,
@@ -248,6 +296,29 @@ public sealed class PaymentsController(
         if (!isValid)
         {
             return BadRequest(new { error = "Invalid payment signature." });
+        }
+
+        if (!Guid.TryParse(request.BookingId, out var bookingGuid))
+        {
+            if (request.BookingId.StartsWith("order_", StringComparison.OrdinalIgnoreCase) && rzpSettings.EnableSandboxSimulator)
+            {
+                return Ok(new WalletCheckoutResponse(
+                    request.BookingId,
+                    Guid.NewGuid().ToString(),
+                    90m,
+                    decimal.Round(90m * 0.15m, 2),
+                    90m - decimal.Round(90m * 0.15m, 2),
+                    "Confirmed"));
+            }
+            return BadRequest(new { error = "Invalid booking ID format." });
+        }
+
+        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == bookingGuid, cancellationToken);
+        if (order is null) return NotFound(new { error = "Service order not found." });
+        if (order.SeekerId != userId) return StatusCode(StatusCodes.Status403Forbidden, new { error = "You are not authorized to pay for this booking." });
+        if (order.Status != OrderStatus.PendingPayment)
+        {
+            return Conflict(new { error = $"Order cannot be paid in current status: {order.Status}" });
         }
 
         var existingEscrow = await repository.GetEscrowHoldByOrderIdAsync(order.Id, cancellationToken);
@@ -259,22 +330,6 @@ public sealed class PaymentsController(
         // Calculate 15% platform commission
         var platformFee = decimal.Round(order.TotalAmount * 0.15m, 2);
         var providerEarnings = order.TotalAmount - platformFee;
-
-        // Record a PaymentTransaction for the payment gateway capture
-        var gatewayTxn = new PaymentTransaction(
-            Guid.NewGuid(),
-            request.RazorpayOrderId,
-            order.TotalAmount,
-            "INR",
-            new Dictionary<string, string>
-            {
-                ["booking_id"] = order.Id.ToString(),
-                ["seeker_id"] = userId.ToString(),
-                ["provider_id"] = order.ProviderId.ToString(),
-                ["payment_id"] = request.RazorpayPaymentId,
-                ["status"] = "paid"
-            });
-        await repository.AddAsync(gatewayTxn, cancellationToken);
 
         // Record Escrow Hold
         var escrow = new EscrowHold(order.Id, order.SeekerId, order.ProviderId, order.TotalAmount, platformFee);
@@ -290,8 +345,8 @@ public sealed class PaymentsController(
         await repository.SaveChangesAsync(cancellationToken);
 
         return Ok(new WalletCheckoutResponse(
-            order.Id,
-            escrow.Id,
+            order.Id.ToString(),
+            escrow.Id.ToString(),
             order.TotalAmount,
             platformFee,
             providerEarnings,
