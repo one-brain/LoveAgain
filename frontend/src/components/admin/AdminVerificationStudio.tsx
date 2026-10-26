@@ -44,9 +44,19 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
   const [rejectReason, setRejectReason] = useState('');
   const [activeImagePreview, setActiveImagePreview] = useState<{ url: string; label: string } | null>(null);
 
+  const normalizeStatus = (status: any): 'Draft' | 'PendingReview' | 'Approved' | 'Rejected' | 'Suspended' => {
+    if (status === 1 || status === '1' || status === 'Draft') return 'Draft';
+    if (status === 2 || status === '2' || status === 'PendingReview') return 'PendingReview';
+    if (status === 3 || status === '3' || status === 'Approved') return 'Approved';
+    if (status === 4 || status === '4' || status === 'Rejected') return 'Rejected';
+    if (status === 5 || status === '5' || status === 'Suspended') return 'Suspended';
+    return (status as any) || 'PendingReview';
+  };
+
   // Filter & Search
   const filteredItems = verifications.filter((item) => {
-    const matchesFilter = filter === 'All' ? true : item.status === filter;
+    const itemStatus = normalizeStatus(item.status);
+    const matchesFilter = filter === 'All' ? true : itemStatus === filter;
     const q = search.trim().toLowerCase();
     const matchesSearch =
       !q ||
@@ -57,7 +67,9 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
     return matchesFilter && matchesSearch;
   });
 
-  const pendingCount = verifications.filter((v) => v.status === 'PendingReview').length;
+  const pendingCount = verifications.filter((v) => normalizeStatus(v.status) === 'PendingReview').length;
+  const approvedCount = verifications.filter((v) => normalizeStatus(v.status) === 'Approved').length;
+  const rejectedCount = verifications.filter((v) => normalizeStatus(v.status) === 'Rejected').length;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -101,8 +113,8 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           {[
             { key: 'PendingReview', label: 'Pending Review', count: pendingCount },
-            { key: 'Approved', label: 'Approved' },
-            { key: 'Rejected', label: 'Rejected' },
+            { key: 'Approved', label: 'Approved', count: approvedCount },
+            { key: 'Rejected', label: 'Rejected', count: rejectedCount },
             { key: 'All', label: 'All Applications', count: verifications.length },
           ].map((pill) => {
             const isActive = filter === pill.key;
@@ -190,6 +202,8 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
               item.selfieVerificationUrl ||
               'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200';
 
+            const itemStatus = normalizeStatus(item.status);
+
             return (
               <div
                 key={item.profileId}
@@ -221,16 +235,24 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
 
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                        item.status === 'Approved'
+                        itemStatus === 'Approved'
                           ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-                          : item.status === 'Rejected'
+                          : itemStatus === 'Rejected'
                           ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                           : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20 animate-pulse'
                       }`}
                     >
-                      {item.status === 'PendingReview' ? 'Pending Review' : item.status}
+                      {itemStatus === 'PendingReview' ? 'Pending Review' : itemStatus}
                     </span>
                   </div>
+
+                  {/* Rejection Reason Callout on Card */}
+                  {itemStatus === 'Rejected' && item.rejectionReason && (
+                    <div className="mb-3 p-2 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-700 dark:text-rose-300">
+                      <span className="font-semibold block text-[10px] uppercase tracking-wider text-rose-600 dark:text-rose-400">Rejection Reason</span>
+                      <p className="italic leading-snug mt-0.5">{item.rejectionReason}</p>
+                    </div>
+                  )}
 
                   {/* 3-Photo Browse Profile Strip */}
                   <div className="mb-3">
@@ -313,28 +335,41 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                     <span>Inspect KYC</span>
                   </button>
 
-                  {item.status !== 'Approved' && (
+                  {itemStatus === 'Rejected' ? (
                     <button
                       type="button"
                       onClick={() => onApprove(item.profileId)}
                       disabled={isApproving}
                       className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all disabled:opacity-50 flex items-center gap-1"
+                      title="Re-approve and publish to Discovery"
                     >
                       <CheckCircleIcon className="w-3.5 h-3.5" />
-                      <span>Approve</span>
+                      <span>Re-Approve</span>
                     </button>
-                  )}
+                  ) : (
+                    <>
+                      {itemStatus !== 'Approved' && (
+                        <button
+                          type="button"
+                          onClick={() => onApprove(item.profileId)}
+                          disabled={isApproving}
+                          className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-2xs transition-all disabled:opacity-50 flex items-center gap-1"
+                        >
+                          <CheckCircleIcon className="w-3.5 h-3.5" />
+                          <span>Approve</span>
+                        </button>
+                      )}
 
-                  {item.status !== 'Rejected' && (
-                    <button
-                      type="button"
-                      onClick={() => handleOpenReject(item)}
-                      disabled={isRejecting}
-                      className="px-2.5 py-1.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-semibold text-xs transition-all flex items-center gap-1"
-                    >
-                      <XCircleIcon className="w-3.5 h-3.5" />
-                      <span>Reject</span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => handleOpenReject(item)}
+                        disabled={isRejecting}
+                        className="px-2.5 py-1.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-semibold text-xs transition-all flex items-center gap-1"
+                      >
+                        <XCircleIcon className="w-3.5 h-3.5" />
+                        <span>Reject</span>
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -535,13 +570,23 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
 
             {/* Modal Actions */}
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-border/80">
-              <button
-                type="button"
-                onClick={() => handleOpenReject(selectedItem)}
-                className="px-4 py-2.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-semibold text-xs transition-all"
-              >
-                Reject with Feedback
-              </button>
+              {normalizeStatus(selectedItem.status) !== 'Rejected' ? (
+                <button
+                  type="button"
+                  onClick={() => handleOpenReject(selectedItem)}
+                  className="px-4 py-2.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-semibold text-xs transition-all"
+                >
+                  Reject with Feedback
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleOpenReject(selectedItem)}
+                  className="px-4 py-2.5 rounded-xl border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-semibold text-xs transition-all"
+                >
+                  Update Rejection Reason
+                </button>
+              )}
 
               <button
                 type="button"
@@ -553,7 +598,11 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition-all disabled:opacity-50 flex items-center gap-1.5"
               >
                 <CheckCircleIcon className="w-4 h-4" />
-                <span>Approve & Publish to Discovery</span>
+                <span>
+                  {normalizeStatus(selectedItem.status) === 'Rejected'
+                    ? 'Re-Approve & Publish to Discovery'
+                    : 'Approve & Publish to Discovery'}
+                </span>
               </button>
             </div>
           </div>

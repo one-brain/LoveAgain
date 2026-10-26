@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { discoveryApi } from './discoveryApi';
 
 export interface CompanionApplicationRequest {
   hourlyRate: number;
@@ -144,11 +145,29 @@ export const adminApi = createApi({
       invalidatesTags: ['Profile', 'Verifications'],
     }),
 
-    getAdminVerifications: builder.query<AdminVerificationItem[], { status?: string }>({
+    getAdminVerifications: builder.query<AdminVerificationItem[], { status?: string } | void>({
       query: (params) => ({
         url: '/admin/verifications',
-        params,
+        params: params || undefined,
       }),
+      transformResponse: (response: any[]) => {
+        const STATUS_MAP: Record<string, AdminVerificationItem['status']> = {
+          '1': 'Draft',
+          '2': 'PendingReview',
+          '3': 'Approved',
+          '4': 'Rejected',
+          '5': 'Suspended',
+          Draft: 'Draft',
+          PendingReview: 'PendingReview',
+          Approved: 'Approved',
+          Rejected: 'Rejected',
+          Suspended: 'Suspended',
+        };
+        return (response || []).map((item) => ({
+          ...item,
+          status: STATUS_MAP[String(item.status)] || (item.status as any) || 'PendingReview',
+        }));
+      },
       providesTags: ['Verifications'],
     }),
 
@@ -158,6 +177,19 @@ export const adminApi = createApi({
         method: 'POST',
       }),
       invalidatesTags: ['Verifications', 'AdminUsers', 'AdminMis'],
+      async onQueryStarted(profileId, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          try {
+            const raw = localStorage.getItem('cue_rejected_provider_ids');
+            if (raw) {
+              const rejected = JSON.parse(raw).filter((id: string) => id !== profileId);
+              localStorage.setItem('cue_rejected_provider_ids', JSON.stringify(rejected));
+            }
+          } catch {}
+          dispatch(discoveryApi.util.resetApiState());
+        } catch {}
+      },
     }),
 
     rejectVerification: builder.mutation<{ message: string }, { profileId: string; reason: string }>({
@@ -167,6 +199,20 @@ export const adminApi = createApi({
         body: { reason },
       }),
       invalidatesTags: ['Verifications', 'AdminUsers'],
+      async onQueryStarted({ profileId }, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          try {
+            const raw = localStorage.getItem('cue_rejected_provider_ids');
+            const rejected = raw ? JSON.parse(raw) : [];
+            if (!rejected.includes(profileId)) {
+              rejected.push(profileId);
+              localStorage.setItem('cue_rejected_provider_ids', JSON.stringify(rejected));
+            }
+          } catch {}
+          dispatch(discoveryApi.util.resetApiState());
+        } catch {}
+      },
     }),
 
     getAdminUsers: builder.query<AdminUserItem[], { search?: string }>({

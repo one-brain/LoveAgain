@@ -108,10 +108,27 @@ export const profileApi = createApi({
       query: () => `/profiles/provider`,
       providesTags: ['Profile'],
       transformResponse: (response: any) => {
-        if (response && !response.profile) {
-          return { profile: response };
-        }
-        return response;
+        const STATUS_MAP: Record<string, any> = {
+          '1': 'Draft',
+          '2': 'PendingReview',
+          '3': 'Approved',
+          '4': 'Rejected',
+          '5': 'Suspended',
+          Draft: 'Draft',
+          PendingReview: 'PendingReview',
+          Approved: 'Approved',
+          Rejected: 'Rejected',
+          Suspended: 'Suspended',
+        };
+        const prof = response?.profile ?? response;
+        if (!prof) return { profile: null as any };
+        const mappedStatus = STATUS_MAP[String(prof.status)] || prof.status || 'Draft';
+        return {
+          profile: {
+            ...prof,
+            status: mappedStatus,
+          },
+        };
       },
     }),
     getSeekerProfile: builder.query<SeekerProfileResponse, void>({

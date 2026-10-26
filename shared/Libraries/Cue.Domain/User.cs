@@ -185,4 +185,10 @@ public sealed class User
         IsVerified = true;
         UpdatedAt = DateTime.UtcNow;
     }
+
+    public void RevokeCompanionRole()
+    {
+        roles.Remove(UserRole.Provider);
+        UpdatedAt = DateTime.UtcNow;
+    }
 }

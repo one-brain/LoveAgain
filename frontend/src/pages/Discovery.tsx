@@ -213,6 +213,15 @@ const Discovery: React.FC = () => {
     const existingIds = new Set(liveItems.map((i: any) => i.providerId));
     let list = [...liveItems, ...CURATED_SAMPLE_PROVIDERS.filter((s) => !existingIds.has(s.providerId))];
 
+    // Exclude any provider explicitly rejected by platform administration
+    try {
+      const rawRejected = localStorage.getItem('cue_rejected_provider_ids');
+      if (rawRejected) {
+        const rejectedIds = new Set(JSON.parse(rawRejected));
+        list = list.filter((p: any) => !rejectedIds.has(p.providerId) && !rejectedIds.has(p.userId));
+      }
+    } catch {}
+
     // Calculate dynamic distance & filter by radius if Seeker location is active
     if (userLocation) {
       const maxR = Number(radiusKm) || 50;

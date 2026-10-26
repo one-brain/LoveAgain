@@ -5,6 +5,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 export const discoveryApi = createApi({
   reducerPath: 'discoveryApi',
   baseQuery: fetchBaseQuery({ baseUrl: `${API_BASE_URL}/api/v1` }),
+  tagTypes: ['DiscoveryProviders'],
   endpoints: (builder) => ({
     listProviders: builder.query<
       Array<{
@@ -49,6 +50,7 @@ export const discoveryApi = createApi({
         if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
         return { url: `/discovery/providers?${searchParams.toString()}` };
       },
+      providesTags: ['DiscoveryProviders'],
     }),
     getProvider: builder.query<
       {

@@ -144,6 +144,13 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         if (profile == null) return NotFound(new { error = "Companion profile not found." });
 
         profile.Reject(adminId, request.Reason);
+
+        var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == profile.UserId, cancellationToken);
+        if (user != null)
+        {
+            user.RevokeCompanionRole();
+        }
+
         await dbContext.SaveChangesAsync(cancellationToken);
         return Ok(new { message = "Companion application rejected.", reason = request.Reason, status = "Rejected" });
     }
