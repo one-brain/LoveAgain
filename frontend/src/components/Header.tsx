@@ -825,10 +825,10 @@ const Header: React.FC = () => {
                           </div>
                         </div>
 
-                        {/* Marketplace Observation Section */}
+                        {/* Marketplace Section */}
                         <div className="border-t border-border/60 pt-1.5 mt-2">
                           <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                            Marketplace Auditing
+                            Public Marketplace
                           </div>
                           <Link
                             to="/discovery"
@@ -841,7 +841,7 @@ const Header: React.FC = () => {
                             <div className="truncate">
                               <p className="truncate leading-tight">Browse Public Profiles</p>
                               <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                Audit public companion directory
+                                Explore companion directory
                               </p>
                             </div>
                           </Link>
@@ -1071,7 +1071,7 @@ const Header: React.FC = () => {
 
               <div className="border-t border-border/60 pt-2 mt-2">
                 <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                  Marketplace Auditing
+                  Public Marketplace
                 </div>
                 <Link
                   to="/discovery"
