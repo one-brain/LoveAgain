@@ -27,7 +27,6 @@ import {
   PhotoIcon,
   ArrowPathIcon,
   LockClosedIcon,
-  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
 
@@ -386,45 +385,6 @@ const Discovery: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
-      {/* Admin Marketplace Audit Banner */}
-      {isAdmin && (
-        <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2.5 sm:px-6">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold">
-              <ShieldCheckIcon className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>🛡️ Administrative Marketplace Audit Mode — Platform administrators maintain operational neutrality and inspect public companion listings in read-only mode.</span>
-            </div>
-            <Link
-              to="/admin/verifications"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 font-bold transition-colors w-fit shrink-0"
-            >
-              <span>Manage Verifications Studio</span>
-              <span>&rarr;</span>
-            </Link>
-          </div>
-        </div>
-      )}
-
-      {/* Guest Explorer Banner */}
-      {!isAuthenticated && (
-        <div className="bg-accent/10 border-b border-accent/20 px-4 py-2.5 sm:px-6">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-foreground/90 font-medium">
-              <SparklesIcon className="w-4 h-4 text-accent shrink-0" />
-              <span>Browsing as Guest — Explore verified companion profiles & activities. Sign in or register to inspect exact hourly rates and book escrow-protected meetups.</span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Link
-                to="/login?redirect=/discovery"
-                className="px-3 py-1 rounded-lg bg-accent text-accent-foreground font-bold text-xs hover:bg-accent-hover transition-all shadow-2xs"
-              >
-                Sign In to Unlock Rates
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Top Header & Lens Selector */}
       <section className="bg-card border-b border-border sticky top-16 z-20 backdrop-blur-md bg-card/95 transition-all">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
