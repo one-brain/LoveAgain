@@ -123,25 +123,6 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-16 sm:space-y-24 pb-20">
-      {/* Admin Preview Mode Banner */}
-      {isAdmin && (
-        <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2.5 sm:px-6 -mt-4 mb-2">
-          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold">
-              <ShieldCheckIcon className="w-4 h-4 text-amber-500 shrink-0" />
-              <span>Administrator Marketplace Preview Mode — Platform operations neutrality active.</span>
-            </div>
-            <Link
-              to="/admin/verifications"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 font-bold transition-colors w-fit"
-            >
-              <span>Back-Office Operations Portal</span>
-              <span>&rarr;</span>
-            </Link>
-          </div>
-        </div>
-      )}
-
       {/* Authenticated Seeker Welcome & Quick Hub Shortcuts */}
       {isAuthenticated && !isAdmin && (
         <div className="max-w-5xl mx-auto px-4 sm:px-6 -mb-8 pt-4">

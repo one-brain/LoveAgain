@@ -34,8 +34,9 @@ const Header: React.FC = () => {
   const location = useLocation();
 
   const isAdmin = Boolean(
-    user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local'
+    isAuthenticated && (user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local')
   );
+  const isInAdminPortal = Boolean(isAdmin && location.pathname.startsWith('/admin'));
 
   const { data: walletData } = useGetWalletBalanceQuery(undefined, { skip: !isAuthenticated || isAdmin });
 
@@ -203,23 +204,23 @@ const Header: React.FC = () => {
         <div className="flex h-18 items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <Link to={isAdmin ? "/admin" : "/"} className="flex items-center gap-3 group">
-              <div className={`w-10 h-10 rounded-xl ${isAdmin ? 'bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 shadow-amber-500/20' : 'bg-gradient-to-br from-accent via-accent-hover to-accent/90'} flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:scale-105 transition-transform duration-200`}>
-                {isAdmin ? <ShieldCheckIcon className="w-6 h-6" /> : <SparklesIcon className="w-6 h-6" />}
+            <Link to={isInAdminPortal ? "/admin/verifications" : "/"} className="flex items-center gap-3 group">
+              <div className={`w-10 h-10 rounded-xl ${isInAdminPortal ? 'bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 shadow-amber-500/20' : 'bg-gradient-to-br from-accent via-accent-hover to-accent/90'} flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:scale-105 transition-transform duration-200`}>
+                {isInAdminPortal ? <ShieldCheckIcon className="w-6 h-6" /> : <SparklesIcon className="w-6 h-6" />}
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold tracking-tight text-foreground group-hover:text-accent transition-colors font-serif flex items-center gap-1.5">
-                  Cue {isAdmin && <span className="text-[11px] font-sans font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">Admin</span>}
+                  Cue {isInAdminPortal && <span className="text-[11px] font-sans font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">Admin</span>}
                 </span>
                 <span className="text-[11px] font-medium tracking-wide uppercase text-muted-foreground -mt-1 hidden sm:inline">
-                  {isAdmin ? 'Back-Office Portal' : 'Companion Experiences'}
+                  {isInAdminPortal ? 'Back-Office Portal' : 'Companion Experiences'}
                 </span>
               </div>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          {isAdmin ? (
+          {isInAdminPortal ? (
             <nav className="hidden md:flex items-center gap-2">
               {/* Operations Dropdown Switcher */}
               <div className="relative" ref={opsDropdownRef}>
@@ -379,7 +380,7 @@ const Header: React.FC = () => {
                 Browse Profiles
               </Link>
             </nav>
-          ) : isAuthenticated ? (
+          ) : isAuthenticated && !isAdmin ? (
             /* Authenticated Seeker Desktop Navigation */
             <nav className="hidden md:flex items-center gap-1">
               <Link
@@ -414,7 +415,7 @@ const Header: React.FC = () => {
               </Link>
             </nav>
           ) : (
-            /* Public Guest Desktop Navigation */
+            /* Public Guest & Admin Marketplace Desktop Navigation */
             <nav className="hidden md:flex items-center gap-1">
               <Link
                 to="/discovery"
@@ -436,21 +437,35 @@ const Header: React.FC = () => {
               >
                 How It Works
               </Link>
-              <Link
-                to="/apply-companion"
-                className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isActive('/apply-companion')
-                    ? 'bg-accent/15 text-accent font-semibold shadow-xs'
-                    : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
-                }`}
-              >
-                Become a Companion
-              </Link>
+              {!isAdmin && (
+                <Link
+                  to="/apply-companion"
+                  className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isActive('/apply-companion')
+                      ? 'bg-accent/15 text-accent font-semibold shadow-xs'
+                      : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
+                  }`}
+                >
+                  Become a Companion
+                </Link>
+              )}
             </nav>
           )}
 
           {/* Right Action Area */}
           <div className="hidden md:flex items-center gap-3">
+            {/* Admin Quick Shortcut back to Operations when browsing public marketplace */}
+            {isAdmin && !isInAdminPortal && (
+              <Link
+                to="/admin/verifications"
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-xs font-bold text-amber-600 dark:text-amber-400 transition-all shadow-2xs hover:scale-[1.02]"
+                title="Return to Back-Office Operations Portal"
+              >
+                <ShieldCheckIcon className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span>Back-Office Portal &rarr;</span>
+              </Link>
+            )}
+
             {/* Seeker Quick Wallet Balance Pill */}
             {isAuthenticated && !isAdmin && (
               <Link
@@ -947,7 +962,7 @@ const Header: React.FC = () => {
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border/80 bg-card px-4 pt-4 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-150">
-          {isAdmin ? (
+          {isInAdminPortal ? (
             <>
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
                 Back-Office Operations
@@ -1080,59 +1095,92 @@ const Header: React.FC = () => {
             </>
           ) : (
             <>
+              {isAdmin && (
+                <div className="pb-2">
+                  <Link
+                    to="/admin/verifications"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
+                  >
+                    <div className="flex items-center gap-2">
+                      <ShieldCheckIcon className="w-5 h-5 text-amber-500 shrink-0" />
+                      <span>Back-Office Portal</span>
+                    </div>
+                    <span className="text-xs font-mono">&rarr;</span>
+                  </Link>
+                </div>
+              )}
+
               <Link
                 to="/discovery"
+                onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
               >
                 Discover Companions
               </Link>
               <Link
                 to="/how-it-works"
+                onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
               >
                 How It Works
               </Link>
               {isAuthenticated ? (
-                <>
-                  <Link
-                    to="/bookings"
-                    className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-                  >
-                    My Bookings
-                  </Link>
-                  <Link
-                    to="/provider"
-                    className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-                  >
-                    Companion Hub
-                  </Link>
-                  <Link
-                    to="/wallet"
-                    className="flex items-center justify-between px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-                  >
-                    <div className="flex items-center gap-2">
-                      <BanknotesIcon className="w-5 h-5 text-accent" />
-                      <span>Cue Wallet</span>
-                    </div>
-                    <span className="font-mono text-sm font-bold text-accent">
-                      ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
-                    </span>
-                  </Link>
-                  <Link
-                    to="/profile"
-                    className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-                  >
-                    Profile Settings
-                  </Link>
+                isAdmin ? (
                   <div className="border-t border-border/60 pt-3">
                     <button
                       onClick={handleLogout}
                       className="w-full text-left px-3 py-2.5 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10"
                     >
-                      Log Out
+                      Sign Out
                     </button>
                   </div>
-                </>
+                ) : (
+                  <>
+                    <Link
+                      to="/bookings"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                    >
+                      My Bookings
+                    </Link>
+                    <Link
+                      to="/provider"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                    >
+                      Companion Hub
+                    </Link>
+                    <Link
+                      to="/wallet"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center justify-between px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                    >
+                      <div className="flex items-center gap-2">
+                        <BanknotesIcon className="w-5 h-5 text-accent" />
+                        <span>Cue Wallet</span>
+                      </div>
+                      <span className="font-mono text-sm font-bold text-accent">
+                        ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
+                      </span>
+                    </Link>
+                    <Link
+                      to="/profile"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
+                    >
+                      Profile Settings
+                    </Link>
+                    <div className="border-t border-border/60 pt-3">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-3 py-2.5 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10"
+                      >
+                        Log Out
+                      </button>
+                    </div>
+                  </>
+                )
               ) : (
                 <div className="pt-2 flex flex-col gap-2">
                   <Link
