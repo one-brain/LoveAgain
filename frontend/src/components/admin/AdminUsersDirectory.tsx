@@ -14,6 +14,15 @@ interface AdminUsersDirectoryProps {
   isTogglingSuspend: boolean;
 }
 
+const isUserCompanion = (u: AdminUserItem) =>
+  Boolean(u.hasCompanionProfile || u.roles?.includes('Companion') || u.roles?.includes('Provider'));
+const isUserAdmin = (u: AdminUserItem) =>
+  Boolean(u.roles?.includes('Admin') || u.email?.toLowerCase() === 'admin@cue.local');
+const isUserSeeker = (u: AdminUserItem) =>
+  !isUserCompanion(u) && !isUserAdmin(u);
+const isUserSuspended = (u: AdminUserItem) =>
+  u.trustScore < 0;
+
 export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   users,
   isLoading,
@@ -25,19 +34,19 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   const [actionUserId, setActionUserId] = useState<string | null>(null);
 
   const filteredUsers = users.filter((user) => {
-    const isSuspended = user.trustScore < 0;
-    const isCompanion = user.hasCompanionProfile || user.roles?.includes('Companion') || user.roles?.includes('Provider');
-    const isSeeker = !isCompanion && !user.roles?.includes('Admin');
+    const suspended = isUserSuspended(user);
+    const companion = isUserCompanion(user);
+    const seeker = isUserSeeker(user);
 
     const matchesRole =
       roleFilter === 'All'
         ? true
         : roleFilter === 'Companions'
-        ? isCompanion
+        ? companion
         : roleFilter === 'Seekers'
-        ? isSeeker
+        ? seeker
         : roleFilter === 'Suspended'
-        ? isSuspended
+        ? suspended
         : true;
 
     const q = search.trim().toLowerCase();
@@ -69,19 +78,17 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
             {
               key: 'Companions',
               label: 'Companions',
-              count: users.filter((u) => u.hasCompanionProfile || u.roles?.includes('Companion')).length,
+              count: users.filter(isUserCompanion).length,
             },
             {
               key: 'Seekers',
               label: 'Seekers',
-              count: users.filter(
-                (u) => !u.hasCompanionProfile && !u.roles?.includes('Companion') && !u.roles?.includes('Admin')
-              ).length,
+              count: users.filter(isUserSeeker).length,
             },
             {
               key: 'Suspended',
               label: 'Suspended',
-              count: users.filter((u) => u.trustScore < 0).length,
+              count: users.filter(isUserSuspended).length,
             },
           ].map((pill) => {
             const isActive = roleFilter === pill.key;
@@ -223,12 +230,18 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                             className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
                               user.companionStatus === 'Approved'
                                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                : user.companionStatus === 'Rejected' || user.companionStatus === 'Suspended'
+                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20'
                                 : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20'
                             }`}
                           >
                             <span
                               className={`w-1 h-1 rounded-full ${
-                                user.companionStatus === 'Approved' ? 'bg-emerald-500' : 'bg-amber-500'
+                                user.companionStatus === 'Approved'
+                                  ? 'bg-emerald-500'
+                                  : user.companionStatus === 'Rejected' || user.companionStatus === 'Suspended'
+                                  ? 'bg-rose-500'
+                                  : 'bg-amber-500'
                               }`}
                             />
                             <span>{user.companionStatus}</span>
@@ -245,13 +258,13 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                           <span
                             className={`px-2 py-0.5 rounded-md text-xs font-mono font-bold tabular-nums ${
                               isSuspended
-                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                                 : user.trustScore >= 80
                                 ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                                 : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
                             }`}
                           >
-                            {user.trustScore}/100
+                            {isSuspended ? 'Suspended' : `${user.trustScore}/100`}
                           </span>
                           {!isSuspended && (
                             <div className="w-12 bg-muted rounded-full h-1.5 overflow-hidden hidden sm:block">

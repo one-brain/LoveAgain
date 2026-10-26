@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   BanknotesIcon,
   CheckCircleIcon,
@@ -28,6 +28,23 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
   const [selectedPayout, setSelectedPayout] = useState<AdminPayoutItem | null>(null);
   const [payoutUtr, setPayoutUtr] = useState('');
   const [copiedVpa, setCopiedVpa] = useState<string | null>(null);
+  const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedPayout) {
+        setSelectedPayout(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedPayout]);
+
+  const handleCopyUtr = (utr: string) => {
+    navigator.clipboard.writeText(utr);
+    setCopiedUtr(utr);
+    setTimeout(() => setCopiedUtr(null), 2000);
+  };
 
   const filteredPayouts = payouts.filter((p) => {
     if (filter === 'All') return true;
@@ -234,10 +251,29 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
                             Disburse UPI
                           </button>
                         ) : (
-                          <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold inline-flex items-center gap-1">
-                            <CheckCircleIcon className="w-3.5 h-3.5" />
-                            <span>Settled</span>
-                          </span>
+                          <div className="inline-flex flex-col items-end gap-1">
+                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold inline-flex items-center gap-1">
+                              <CheckCircleIcon className="w-3.5 h-3.5" />
+                              <span>Settled</span>
+                            </span>
+                            {payout.razorpayPayoutId && (
+                              <div className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/60">
+                                <span>UTR: {payout.razorpayPayoutId}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyUtr(payout.razorpayPayoutId!)}
+                                  title="Copy UTR Reference"
+                                  className="text-muted-foreground hover:text-foreground"
+                                >
+                                  {copiedUtr === payout.razorpayPayoutId ? (
+                                    <CheckIcon className="w-2.5 h-2.5 text-emerald-500" />
+                                  ) : (
+                                    <ClipboardDocumentIcon className="w-2.5 h-2.5" />
+                                  )}
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         )}
                       </td>
                     </tr>

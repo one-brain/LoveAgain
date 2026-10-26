@@ -69,7 +69,7 @@ export const AdminMisAnalytics: React.FC<AdminMisAnalyticsProps> = ({
             ) : (
               <div className="space-y-3.5">
                 {misData.dailyTrends.map((d) => {
-                  const percentage = Math.min(100, Math.max(12, (d.gmv / maxTrendGmv) * 100));
+                  const percentage = d.gmv > 0 ? Math.min(100, Math.max(6, (d.gmv / maxTrendGmv) * 100)) : 0;
 
                   return (
                     <div key={d.date} className="text-xs">

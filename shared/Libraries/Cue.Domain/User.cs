@@ -126,6 +126,18 @@ public sealed class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Suspend()
+    {
+        TrustScore = -1;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void Reinstate(int score = 50)
+    {
+        TrustScore = Math.Clamp(score, 1, 100);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetRoles(IEnumerable<UserRole> newRoles)
     {
         roles.Clear();

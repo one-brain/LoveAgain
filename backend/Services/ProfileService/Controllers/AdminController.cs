@@ -51,7 +51,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminVerificationItemResponse>>> GetVerifications(
         [FromQuery] VerificationStatus? status,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
+        [FromQuery] int pageSize = 200,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
@@ -70,8 +70,8 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
 
         var items = await query
             .OrderByDescending(x => x.p.CreatedAt)
-            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 100))
-            .Take(Math.Clamp(pageSize, 1, 100))
+            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
+            .Take(Math.Clamp(pageSize, 1, 500))
             .Select(x => new AdminVerificationItemResponse(
                 x.p.Id,
                 x.u.Id,
@@ -153,7 +153,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminUserItemResponse>>> GetUsers(
         [FromQuery] string? search,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
+        [FromQuery] int pageSize = 200,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
@@ -168,8 +168,8 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
 
         var users = await query
             .OrderByDescending(u => u.CreatedAt)
-            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 100))
-            .Take(Math.Clamp(pageSize, 1, 100))
+            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
+            .Take(Math.Clamp(pageSize, 1, 500))
             .ToListAsync(cancellationToken);
 
         var userIds = users.Select(u => u.Id).ToList();
@@ -245,7 +245,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     public async Task<ActionResult<IReadOnlyList<AdminBookingLedgerItemResponse>>> GetBookings(
         [FromQuery] string? status,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 50,
+        [FromQuery] int pageSize = 200,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
@@ -258,8 +258,8 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
 
         var orders = await query
             .OrderByDescending(o => o.CreatedAt)
-            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 100))
-            .Take(Math.Clamp(pageSize, 1, 100))
+            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
+            .Take(Math.Clamp(pageSize, 1, 500))
             .ToListAsync(cancellationToken);
 
         var userIds = orders.Select(o => o.SeekerId).Concat(orders.Select(o => o.ProviderId)).Distinct().ToList();
@@ -290,6 +290,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
 
     [HttpPost("users/{userId:guid}/toggle-suspend")]
     [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ToggleUserSuspend(
         Guid userId,
@@ -300,16 +301,31 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         var user = await dbContext.Users.IgnoreQueryFilters().SingleOrDefaultAsync(u => u.Id == userId, cancellationToken);
         if (user == null) return NotFound(new { error = "User not found." });
 
+        if (user.Roles.Contains(UserRole.Admin) || string.Equals(user.Email, "admin@cue.local", StringComparison.OrdinalIgnoreCase))
+        {
+            return BadRequest(new { error = "Administrative superuser accounts cannot be suspended." });
+        }
+
+        bool isNowSuspended;
         if (user.TrustScore < 0)
         {
-            user.ApplyTrustDelta(100);
+            user.Reinstate(50);
+            isNowSuspended = false;
         }
         else
         {
-            user.ApplyTrustDelta(-1000);
+            user.Suspend();
+            isNowSuspended = true;
+
+            // Also deactivate companion profile if exists and active so they do not show in discovery
+            var profile = await dbContext.ProviderProfiles.SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            if (profile != null && profile.IsActive)
+            {
+                profile.Deactivate();
+            }
         }
 
         await dbContext.SaveChangesAsync(cancellationToken);
-        return Ok(new { message = "User status updated.", isSuspended = user.TrustScore < 0, trustScore = user.TrustScore });
+        return Ok(new { message = isNowSuspended ? "User account suspended." : "User account reinstated.", isSuspended = isNowSuspended, trustScore = user.TrustScore });
     }
 }

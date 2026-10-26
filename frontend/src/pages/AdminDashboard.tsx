@@ -140,8 +140,31 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleExportCsv = () => {
-    window.open('/api/v1/payments/admin/mis/export', '_blank');
+  const handleExportCsv = async () => {
+    try {
+      const token =
+        localStorage.getItem('accessToken') ||
+        localStorage.getItem('cue_token') ||
+        sessionStorage.getItem('cue_token');
+      const response = await fetch('/api/v1/payments/admin/mis/export', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) {
+        throw new Error(`Export failed with status ${response.status}`);
+      }
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cue_mis_ledger_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showToast('MIS Ledger exported successfully.');
+    } catch {
+      showToast('Failed to export MIS report.', 'error');
+    }
   };
 
   const handleRefreshAll = async () => {
@@ -176,8 +199,8 @@ export const AdminDashboard: React.FC = () => {
       key: 'verifications',
       label: 'Companion Verifications',
       icon: ShieldCheckIcon,
-      count: pendingVerificationsCount > 0 ? pendingVerificationsCount : verificationsData?.length,
-      badgeTone: pendingVerificationsCount > 0 ? 'amber' : 'accent',
+      count: pendingVerificationsCount > 0 ? pendingVerificationsCount : undefined,
+      badgeTone: 'amber',
     },
     {
       key: 'bookings',

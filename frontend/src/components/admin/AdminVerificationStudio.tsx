@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ShieldCheckIcon,
   PhotoIcon,
@@ -59,6 +59,22 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
 
   const pendingCount = verifications.filter((v) => v.status === 'PendingReview').length;
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (activeImagePreview) {
+          setActiveImagePreview(null);
+        } else if (showRejectModal) {
+          setShowRejectModal(false);
+        } else if (selectedItem) {
+          setSelectedItem(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeImagePreview, showRejectModal, selectedItem]);
+
   const handleOpenReject = (item: AdminVerificationItem) => {
     setSelectedItem(item);
     setRejectReason('');
@@ -67,10 +83,14 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
 
   const handleConfirmReject = async () => {
     if (!selectedItem || !rejectReason.trim()) return;
-    await onReject(selectedItem.profileId, rejectReason.trim());
-    setShowRejectModal(false);
-    setSelectedItem(null);
-    setRejectReason('');
+    try {
+      await onReject(selectedItem.profileId, rejectReason.trim());
+      setShowRejectModal(false);
+      setSelectedItem(null);
+      setRejectReason('');
+    } catch {
+      // Keep rejection modal open to preserve user feedback on network failure
+    }
   };
 
   return (

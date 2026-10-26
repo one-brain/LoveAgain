@@ -26,12 +26,19 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
+  const isEscrowStatus = (status: string) => {
+    const s = status.toLowerCase();
+    return s === 'confirmed' || s === 'inprogress' || s === 'inescrow' || s === 'pending' || s === 'pendingpayment';
+  };
+
   const filteredBookings = bookings.filter((b) => {
     const matchesFilter =
       statusFilter === 'All'
         ? true
         : statusFilter === 'InEscrow'
-        ? b.status === 'Confirmed' || b.status === 'InEscrow' || b.status === 'Pending'
+        ? isEscrowStatus(b.status)
+        : statusFilter === 'Disputed'
+        ? b.status.toLowerCase() === 'disputed'
         : b.status.toLowerCase() === statusFilter.toLowerCase();
 
     const q = search.trim().toLowerCase();
@@ -61,9 +68,14 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           {[
             { key: 'All', label: 'All Bookings', count: bookings.length },
-            { key: 'InEscrow', label: 'In Escrow / Active' },
-            { key: 'Completed', label: 'Completed' },
-            { key: 'Cancelled', label: 'Cancelled' },
+            { key: 'InEscrow', label: 'In Escrow / Active', count: bookings.filter((b) => isEscrowStatus(b.status)).length },
+            { key: 'Completed', label: 'Completed', count: bookings.filter((b) => b.status === 'Completed').length },
+            { key: 'Cancelled', label: 'Cancelled', count: bookings.filter((b) => b.status === 'Cancelled').length },
+            {
+              key: 'Disputed',
+              label: 'Disputed',
+              count: bookings.filter((b) => b.status === 'Disputed').length,
+            },
           ].map((pill) => {
             const isActive = statusFilter === pill.key;
             return (
@@ -190,7 +202,8 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
                 {filteredBookings.map((b) => {
                   const isCompleted = b.status === 'Completed';
                   const isCancelled = b.status === 'Cancelled';
-                  const isInEscrow = b.status === 'Confirmed' || b.status === 'InEscrow' || b.status === 'Pending';
+                  const isDisputed = b.status === 'Disputed';
+                  const isInEscrow = isEscrowStatus(b.status);
 
                   return (
                     <tr key={b.bookingId} className="hover:bg-muted/30 transition-colors">
@@ -248,6 +261,8 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
                               ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                               : isCancelled
                               ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20'
+                              : isDisputed
+                              ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40 ring-1 ring-rose-500/20 font-extrabold'
                               : isInEscrow
                               ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20'
                               : 'bg-muted text-muted-foreground border-border'
@@ -259,6 +274,8 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
                                 ? 'bg-emerald-500'
                                 : isCancelled
                                 ? 'bg-rose-500'
+                                : isDisputed
+                                ? 'bg-rose-600 animate-ping'
                                 : isInEscrow
                                 ? 'bg-amber-500 animate-pulse'
                                 : 'bg-muted-foreground'
