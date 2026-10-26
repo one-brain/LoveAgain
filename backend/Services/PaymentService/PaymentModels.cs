@@ -15,6 +15,7 @@ public sealed class RazorpayOptions
     public string WebhookSecret { get; init; } = "rzp_webhook_secret_placeholder";
     public string ApiBaseUrl { get; init; } = "https://api.razorpay.com/v1";
     public bool AllowMockBypass { get; init; } = true;
+    public bool EnableSandboxSimulator { get; init; } = true;
 }
 
 public sealed record RazorpayOrderResult(string OrderId, decimal Amount, string Currency, string Status);
@@ -73,7 +74,7 @@ public sealed class RazorpayPaymentGateway(HttpClient httpClient, IOptions<Razor
             // Fallback for local dev/testing if Razorpay credentials are test placeholders
         }
 
-        var mockOrderId = $"order_mock_{Guid.NewGuid():N}";
+        var mockOrderId = $"order_sandbox_{Guid.NewGuid():N}";
         return new RazorpayOrderResult(mockOrderId, amountInRupees, currency, "created");
     }
 
@@ -84,8 +85,14 @@ public sealed class RazorpayPaymentGateway(HttpClient httpClient, IOptions<Razor
             return false;
         }
 
-        // Allow mock bypass only if explicitly enabled via configuration (for local dev/sandbox testing)
-        if (settings.AllowMockBypass && orderId.StartsWith("order_mock_"))
+        // Allow sandbox/mock bypass if enabled via configuration (for local dev/sandbox testing)
+        if (settings.AllowMockBypass &&
+            (orderId.StartsWith("order_mock_") ||
+             orderId.StartsWith("order_sandbox_") ||
+             paymentId.StartsWith("pay_sandbox_") ||
+             paymentId.StartsWith("pay_mock_") ||
+             signature.StartsWith("sig_sandbox_") ||
+             signature.StartsWith("sig_mock_")))
         {
             return true;
         }
@@ -145,6 +152,22 @@ public sealed record VerifyTopUpRequest(
     string RazorpayPaymentId,
     string RazorpaySignature,
     decimal Amount);
+
+public sealed record DirectBookingOrderRequest(Guid OrderId);
+
+public sealed record DirectBookingOrderResponse(
+    string OrderId,
+    decimal Amount,
+    string Currency,
+    string KeyId,
+    Guid BookingId,
+    bool IsSandbox);
+
+public sealed record DirectBookingVerifyRequest(
+    Guid BookingId,
+    string RazorpayOrderId,
+    string RazorpayPaymentId,
+    string RazorpaySignature);
 
 public sealed record WalletCheckoutRequest(Guid OrderId);
 

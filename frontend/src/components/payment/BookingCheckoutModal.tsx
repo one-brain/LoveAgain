@@ -16,6 +16,7 @@ import {
 } from '../../store/paymentApi';
 import { loadRazorpayScript } from '../../utils/razorpay';
 import { formatINR } from '../../utils/currency';
+import { RazorpaySandboxModal, type RazorpaySandboxPaymentResult } from './RazorpaySandboxModal';
 
 interface BookingCheckoutModalProps {
   orderId: string;
@@ -41,6 +42,10 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [sandboxOrderData, setSandboxOrderData] = useState<{
+    orderId: string;
+    amount: number;
+  } | null>(null);
 
   React.useEffect(() => {
     if (!isOpen) return;
@@ -75,63 +80,92 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
     }
   };
 
+  const processVerificationAndEscrow = async (
+    razorpayOrderId: string,
+    razorpayPaymentId: string,
+    razorpaySignature: string,
+    amount: number
+  ) => {
+    try {
+      await verifyTopUp({
+        razorpayOrderId,
+        razorpayPaymentId,
+        razorpaySignature,
+        amount,
+      }).unwrap();
+
+      await refetchWallet();
+
+      // Automatically proceed to wallet escrow checkout
+      await checkoutWithWallet({ orderId }).unwrap();
+      setSandboxOrderData(null);
+      setIsSuccess(true);
+      setTimeout(() => {
+        onSuccess();
+        onClose();
+      }, 1500);
+    } catch (verifyErr: any) {
+      setErrorMessage(verifyErr?.data?.error || 'Payment verification failed.');
+      setSandboxOrderData(null);
+    }
+  };
+
   const handleTopUpAndPay = async () => {
     setErrorMessage(null);
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      setErrorMessage('Razorpay SDK failed to load. Please check your internet connection.');
-      return;
-    }
-
     try {
       // Top up exactly the shortage amount or round up to nearest ₹100
       const topUpAmount = Math.ceil(shortage / 100) * 100 || shortage;
       const order = await createTopUpOrder({ amount: topUpAmount, currency: 'INR' }).unwrap();
 
-      const options = {
-        key: order.keyId,
-        amount: order.amount * 100,
-        currency: order.currency,
-        name: 'Cue Companion Platform',
-        description: `Wallet Top-Up for Booking #${orderId.slice(0, 8)}`,
-        order_id: order.orderId,
-        prefill: {
-          name: 'Seeker',
-        },
-        theme: {
-          color: '#E11D48',
-        },
-        handler: async (response: any) => {
-          try {
-            await verifyTopUp({
-              razorpayOrderId: response.razorpay_order_id || order.orderId,
-              razorpayPaymentId: response.razorpay_payment_id || 'pay_mock_' + Date.now(),
-              razorpaySignature: response.razorpay_signature || 'sig_mock',
-              amount: topUpAmount,
-            }).unwrap();
+      // Check if real live Razorpay test key is provided (not placeholder)
+      const isPlaceholder =
+        !order.keyId ||
+        order.keyId === 'rzp_test_placeholder' ||
+        order.orderId.startsWith('order_sandbox_') ||
+        order.orderId.startsWith('order_mock_');
 
-            await refetchWallet();
+      if (!isPlaceholder) {
+        const scriptLoaded = await loadRazorpayScript();
+        if (scriptLoaded && window.Razorpay) {
+          const options = {
+            key: order.keyId,
+            amount: order.amount * 100,
+            currency: order.currency,
+            name: 'Cue Companion Platform',
+            description: `Escrow Hold for Booking #${orderId.slice(0, 8)}`,
+            order_id: order.orderId,
+            prefill: {
+              name: 'Seeker',
+            },
+            theme: {
+              color: '#E11D48',
+            },
+            handler: async (response: any) => {
+              await processVerificationAndEscrow(
+                response.razorpay_order_id || order.orderId,
+                response.razorpay_payment_id || `pay_${Date.now()}`,
+                response.razorpay_signature || 'sig_valid',
+                topUpAmount
+              );
+            },
+            modal: {
+              ondismiss: () => {
+                // User closed Razorpay modal
+              },
+            },
+          };
 
-            // Automatically proceed to wallet escrow checkout
-            await checkoutWithWallet({ orderId }).unwrap();
-            setIsSuccess(true);
-            setTimeout(() => {
-              onSuccess();
-              onClose();
-            }, 1500);
-          } catch (verifyErr: any) {
-            setErrorMessage(verifyErr?.data?.error || 'Payment verification failed.');
-          }
-        },
-        modal: {
-          ondismiss: () => {
-            // User closed Razorpay modal
-          },
-        },
-      };
+          const razorpayInstance = new window.Razorpay(options);
+          razorpayInstance.open();
+          return;
+        }
+      }
 
-      const razorpayInstance = new window.Razorpay(options);
-      razorpayInstance.open();
+      // Default or Sandbox Simulator mode
+      setSandboxOrderData({
+        orderId: order.orderId,
+        amount: topUpAmount,
+      });
     } catch (err: any) {
       setErrorMessage(err?.data?.error || 'Failed to initiate payment. Please try again.');
     }
@@ -284,6 +318,29 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
           </>
         )}
       </div>
+
+      {sandboxOrderData && (
+        <RazorpaySandboxModal
+          isOpen={Boolean(sandboxOrderData)}
+          orderId={sandboxOrderData.orderId}
+          amount={sandboxOrderData.amount}
+          title={`Escrow Checkout • ${providerName}`}
+          description={`Lock funds safely for Booking #${orderId.slice(0, 8)}`}
+          onSuccess={(result: RazorpaySandboxPaymentResult) => {
+            processVerificationAndEscrow(
+              result.razorpayOrderId,
+              result.razorpayPaymentId,
+              result.razorpaySignature,
+              result.amount
+            );
+          }}
+          onError={(err: string) => {
+            setErrorMessage(err);
+            setSandboxOrderData(null);
+          }}
+          onClose={() => setSandboxOrderData(null)}
+        />
+      )}
     </div>
   );
 };

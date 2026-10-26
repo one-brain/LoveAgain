@@ -67,6 +67,26 @@ export interface RequestPayoutRequest {
   destination: string;
 }
 
+export interface DirectBookingOrderRequest {
+  orderId: string;
+}
+
+export interface DirectBookingOrderResponse {
+  orderId: string;
+  amount: number;
+  currency: string;
+  keyId: string;
+  bookingId: string;
+  isSandbox: boolean;
+}
+
+export interface DirectBookingVerifyRequest {
+  bookingId: string;
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+}
+
 export interface PayoutResponse {
   payoutId: string;
   amount: number;
@@ -84,6 +104,18 @@ export const paymentApi = createApi({
       const token = localStorage.getItem('accessToken');
       if (token) {
         headers.set('Authorization', `Bearer ${token}`);
+      }
+      const userId = localStorage.getItem('userId');
+      if (userId) {
+        headers.set('X-User-Id', userId);
+      }
+      const rawUser = localStorage.getItem('user');
+      if (rawUser) {
+        try {
+          const parsed = JSON.parse(rawUser);
+          if (parsed?.id) headers.set('X-User-Id', String(parsed.id));
+          if (parsed?.email) headers.set('X-User-Email', String(parsed.email));
+        } catch {}
       }
       return headers;
     },
@@ -116,6 +148,21 @@ export const paymentApi = createApi({
     checkoutWithWallet: builder.mutation<WalletCheckoutResponse, WalletCheckoutRequest>({
       query: (body) => ({
         url: `/checkout/wallet`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Wallet', 'Transactions', 'Earnings'],
+    }),
+    createDirectBookingOrder: builder.mutation<DirectBookingOrderResponse, DirectBookingOrderRequest>({
+      query: (body) => ({
+        url: `/checkout/direct/order`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    verifyDirectBooking: builder.mutation<WalletCheckoutResponse, DirectBookingVerifyRequest>({
+      query: (body) => ({
+        url: `/checkout/direct/verify`,
         method: 'POST',
         body,
       }),
@@ -154,6 +201,8 @@ export const {
   useCreateTopUpOrderMutation,
   useVerifyTopUpMutation,
   useCheckoutWithWalletMutation,
+  useCreateDirectBookingOrderMutation,
+  useVerifyDirectBookingMutation,
   useReleaseEscrowMutation,
   useGetProviderEarningsQuery,
   useRequestPayoutMutation,

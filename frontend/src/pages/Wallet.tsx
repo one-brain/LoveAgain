@@ -16,6 +16,7 @@ import {
   useVerifyTopUpMutation,
 } from '../store/paymentApi';
 import { loadRazorpayScript } from '../utils/razorpay';
+import { RazorpaySandboxModal, type RazorpaySandboxPaymentResult } from '../components/payment/RazorpaySandboxModal';
 
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000];
 
@@ -29,11 +30,42 @@ export const WalletPage: React.FC = () => {
   const [customAmount, setCustomAmount] = useState<string>('');
   const [activeFilter, setActiveFilter] = useState<'All' | 'TopUp' | 'BookingPayment' | 'Payout'>('All');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [sandboxOrderData, setSandboxOrderData] = useState<{
+    orderId: string;
+    amount: number;
+  } | null>(null);
 
   const availableBalance = balanceData?.availableBalance ?? 0;
   const pendingBalance = balanceData?.pendingBalance ?? 0;
 
   const currentAmount = customAmount ? parseFloat(customAmount) || 0 : selectedAmount;
+
+  const processTopUpVerification = async (
+    razorpayOrderId: string,
+    razorpayPaymentId: string,
+    razorpaySignature: string,
+    amount: number
+  ) => {
+    try {
+      await verifyTopUp({
+        razorpayOrderId,
+        razorpayPaymentId,
+        razorpaySignature,
+        amount,
+      }).unwrap();
+
+      setStatusMessage({
+        type: 'success',
+        text: `₹${amount.toLocaleString('en-IN')} added to your wallet successfully!`,
+      });
+      setCustomAmount('');
+      setSandboxOrderData(null);
+      await Promise.all([refetchBalance(), refetchTxns()]);
+    } catch (err: any) {
+      setStatusMessage({ type: 'error', text: err?.data?.error || 'Verification failed.' });
+      setSandboxOrderData(null);
+    }
+  };
 
   const handleTopUp = async () => {
     setStatusMessage(null);
@@ -42,51 +74,52 @@ export const WalletPage: React.FC = () => {
       return;
     }
 
-    const scriptLoaded = await loadRazorpayScript();
-    if (!scriptLoaded) {
-      setStatusMessage({ type: 'error', text: 'Failed to load Razorpay payment gateway. Please check your network.' });
-      return;
-    }
-
     try {
       const order = await createTopUpOrder({ amount: currentAmount, currency: 'INR' }).unwrap();
 
-      const options = {
-        key: order.keyId,
-        amount: order.amount * 100,
-        currency: order.currency,
-        name: 'Cue Companion Platform',
-        description: 'Wallet Balance Top-Up',
-        order_id: order.orderId,
-        prefill: {
-          name: 'Seeker',
-        },
-        theme: {
-          color: '#E11D48',
-        },
-        handler: async (response: any) => {
-          try {
-            await verifyTopUp({
-              razorpayOrderId: response.razorpay_order_id || order.orderId,
-              razorpayPaymentId: response.razorpay_payment_id || `pay_mock_${Date.now()}`,
-              razorpaySignature: response.razorpay_signature || 'sig_mock',
-              amount: currentAmount,
-            }).unwrap();
+      const isPlaceholder =
+        !order.keyId ||
+        order.keyId === 'rzp_test_placeholder' ||
+        order.orderId.startsWith('order_sandbox_') ||
+        order.orderId.startsWith('order_mock_');
 
-            setStatusMessage({
-              type: 'success',
-              text: `₹${currentAmount.toLocaleString('en-IN')} added to your wallet successfully!`,
-            });
-            setCustomAmount('');
-            await Promise.all([refetchBalance(), refetchTxns()]);
-          } catch (err: any) {
-            setStatusMessage({ type: 'error', text: err?.data?.error || 'Verification failed.' });
-          }
-        },
-      };
+      if (!isPlaceholder) {
+        const scriptLoaded = await loadRazorpayScript();
+        if (scriptLoaded && window.Razorpay) {
+          const options = {
+            key: order.keyId,
+            amount: order.amount * 100,
+            currency: order.currency,
+            name: 'Cue Companion Platform',
+            description: 'Wallet Balance Top-Up',
+            order_id: order.orderId,
+            prefill: {
+              name: 'Seeker',
+            },
+            theme: {
+              color: '#E11D48',
+            },
+            handler: async (response: any) => {
+              await processTopUpVerification(
+                response.razorpay_order_id || order.orderId,
+                response.razorpay_payment_id || `pay_${Date.now()}`,
+                response.razorpay_signature || 'sig_valid',
+                currentAmount
+              );
+            },
+          };
 
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+          return;
+        }
+      }
+
+      // Default or Sandbox Simulator mode
+      setSandboxOrderData({
+        orderId: order.orderId,
+        amount: currentAmount,
+      });
     } catch (err: any) {
       setStatusMessage({ type: 'error', text: err?.data?.error || 'Failed to initialize payment.' });
     }
@@ -347,6 +380,29 @@ export const WalletPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {sandboxOrderData && (
+        <RazorpaySandboxModal
+          isOpen={Boolean(sandboxOrderData)}
+          orderId={sandboxOrderData.orderId}
+          amount={sandboxOrderData.amount}
+          title="Cue Wallet Balance Top-Up"
+          description="Add INR funds to your platform balance"
+          onSuccess={(result: RazorpaySandboxPaymentResult) => {
+            processTopUpVerification(
+              result.razorpayOrderId,
+              result.razorpayPaymentId,
+              result.razorpaySignature,
+              result.amount
+            );
+          }}
+          onError={(err: string) => {
+            setStatusMessage({ type: 'error', text: err });
+            setSandboxOrderData(null);
+          }}
+          onClose={() => setSandboxOrderData(null)}
+        />
+      )}
     </div>
   );
 };

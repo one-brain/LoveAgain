@@ -13,4 +13,6 @@ data:
   RabbitMq__Username: "admin"
   RabbitMq__Password: "localsecret"
   REDIS__ConnectionString: {{ .Values.backend.env.REDIS__ConnectionString | default "cue-infra-cue-infrastructure-redis.cue.svc.cluster.local:6379" | quote }}
+  Razorpay__AllowMockBypass: "true"
+  Razorpay__EnableSandboxSimulator: "true"
   OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.backend.env.OTEL_EXPORTER_OTLP_ENDPOINT | default "http://jaeger-service:4317" | quote }}

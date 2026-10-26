@@ -14,6 +14,7 @@ import { CheckInModal } from '../components/CheckInModal';
 import { OutingSosModal } from '../components/OutingSosModal';
 import { ProviderProfileModal } from '../components/booking/ProviderProfileModal';
 import { useCompleteBookingMutation } from '../store/bookingApi';
+import { useReleaseEscrowMutation } from '../store/paymentApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
@@ -128,6 +129,7 @@ const Bookings: React.FC = () => {
   const [bookingSort, setBookingSort] = useState('date-asc');
   const [checkoutBooking, setCheckoutBooking] = useState<BookingSummary | null>(null);
   const [completeBooking] = useCompleteBookingMutation();
+  const [releaseEscrow] = useReleaseEscrowMutation();
   const [checkInBooking, setCheckInBooking] = useState<BookingSummary | null>(null);
   const [sosBooking, setSosBooking] = useState<BookingSummary | null>(null);
   const [previewProviderId, setPreviewProviderId] = useState<string | null>(null);
@@ -140,6 +142,11 @@ const Bookings: React.FC = () => {
     if (window.confirm('Confirm that this outing experience has completed safely? This will finalize the session and release escrow funds.')) {
       try {
         await completeBooking(orderId).unwrap();
+        try {
+          await releaseEscrow({ orderId }).unwrap();
+        } catch {
+          // Ignore if escrow was already processed
+        }
         refetchProviderBookings();
         refetchSeekerBookings();
       } catch (err: any) {

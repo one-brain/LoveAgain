@@ -207,6 +207,119 @@ public sealed class PaymentsController(
             order.Status.ToString()));
     }
 
+    [HttpPost("checkout/direct/order")]
+    [Authorize]
+    [ProducesResponseType(typeof(DirectBookingOrderResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<DirectBookingOrderResponse>> CreateDirectBookingOrder(
+        [FromBody] DirectBookingOrderRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+
+        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == request.OrderId, cancellationToken);
+        if (order is null) return NotFound(new { error = "Service order not found." });
+        if (order.SeekerId != userId) return Forbid();
+        if (order.Status != OrderStatus.PendingPayment)
+        {
+            return Conflict(new { error = $"Order cannot be paid in current status: {order.Status}" });
+        }
+
+        var receipt = $"bk_{order.Id.ToString()[..8]}_{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        var notes = new Dictionary<string, string>
+        {
+            ["booking_id"] = order.Id.ToString(),
+            ["seeker_id"] = userId.ToString(),
+            ["provider_id"] = order.ProviderId.ToString(),
+            ["type"] = "direct_booking_escrow"
+        };
+
+        var rzpOrder = await razorpayGateway.CreateOrderAsync(order.TotalAmount, "INR", receipt, notes, cancellationToken);
+        var isSandbox = rzpSettings.EnableSandboxSimulator || rzpOrder.OrderId.StartsWith("order_sandbox_") || rzpOrder.OrderId.StartsWith("order_mock_");
+
+        return Ok(new DirectBookingOrderResponse(
+            rzpOrder.OrderId,
+            order.TotalAmount,
+            "INR",
+            rzpSettings.KeyId,
+            order.Id,
+            isSandbox));
+    }
+
+    [HttpPost("checkout/direct/verify")]
+    [Authorize]
+    [ProducesResponseType(typeof(WalletCheckoutResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<WalletCheckoutResponse>> VerifyDirectBookingPayment(
+        [FromBody] DirectBookingVerifyRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+
+        var order = await dbContext.ServiceOrders.SingleOrDefaultAsync(o => o.Id == request.BookingId, cancellationToken);
+        if (order is null) return NotFound(new { error = "Service order not found." });
+        if (order.SeekerId != userId) return Forbid();
+        if (order.Status != OrderStatus.PendingPayment)
+        {
+            return Conflict(new { error = $"Order cannot be paid in current status: {order.Status}" });
+        }
+
+        var isValid = razorpayGateway.VerifyPaymentSignature(
+            request.RazorpayOrderId,
+            request.RazorpayPaymentId,
+            request.RazorpaySignature);
+
+        if (!isValid)
+        {
+            return BadRequest(new { error = "Invalid payment signature." });
+        }
+
+        var existingEscrow = await repository.GetEscrowHoldByOrderIdAsync(order.Id, cancellationToken);
+        if (existingEscrow is not null)
+        {
+            return Conflict(new { error = "Escrow hold already exists for this booking." });
+        }
+
+        // Calculate 15% platform commission
+        var platformFee = decimal.Round(order.TotalAmount * 0.15m, 2);
+        var providerEarnings = order.TotalAmount - platformFee;
+
+        // Record a PaymentTransaction for the payment gateway capture
+        var gatewayTxn = new PaymentTransaction(
+            Guid.NewGuid(),
+            request.RazorpayOrderId,
+            order.TotalAmount,
+            "INR",
+            new Dictionary<string, string>
+            {
+                ["booking_id"] = order.Id.ToString(),
+                ["seeker_id"] = userId.ToString(),
+                ["provider_id"] = order.ProviderId.ToString(),
+                ["payment_id"] = request.RazorpayPaymentId,
+                ["status"] = "paid"
+            });
+        await repository.AddAsync(gatewayTxn, cancellationToken);
+
+        // Record Escrow Hold
+        var escrow = new EscrowHold(order.Id, order.SeekerId, order.ProviderId, order.TotalAmount, platformFee);
+        await repository.AddEscrowHoldAsync(escrow, cancellationToken);
+
+        // Credit provider pending balance (cleared upon session completion)
+        var providerWallet = await repository.GetOrCreateWalletAsync(order.ProviderId, "INR", cancellationToken);
+        providerWallet.CreditPending(providerEarnings);
+
+        // Confirm order
+        order.Confirm();
+
+        await repository.SaveChangesAsync(cancellationToken);
+
+        return Ok(new WalletCheckoutResponse(
+            order.Id,
+            escrow.Id,
+            order.TotalAmount,
+            platformFee,
+            providerEarnings,
+            order.Status.ToString()));
+    }
+
     [HttpPost("escrow/release")]
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
