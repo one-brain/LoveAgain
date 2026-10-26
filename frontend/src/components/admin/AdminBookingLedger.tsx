@@ -26,27 +26,33 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const isEscrowStatus = (status: string) => {
+  const isEscrowStatus = (status?: string) => {
+    if (!status) return false;
     const s = status.toLowerCase();
     return s === 'confirmed' || s === 'inprogress' || s === 'inescrow' || s === 'pending' || s === 'pendingpayment';
   };
 
   const filteredBookings = bookings.filter((b) => {
+    const rawId = b.bookingId || b.id || '';
+    const status = (b.status || '').toLowerCase();
+    const seeker = (b.seekerName || '').toLowerCase();
+    const provider = (b.providerName || '').toLowerCase();
+
     const matchesFilter =
       statusFilter === 'All'
         ? true
         : statusFilter === 'InEscrow'
         ? isEscrowStatus(b.status)
         : statusFilter === 'Disputed'
-        ? b.status.toLowerCase() === 'disputed'
-        : b.status.toLowerCase() === statusFilter.toLowerCase();
+        ? status === 'disputed'
+        : status === statusFilter.toLowerCase();
 
     const q = search.trim().toLowerCase();
     const matchesSearch =
       !q ||
-      b.bookingId.toLowerCase().includes(q) ||
-      b.seekerName.toLowerCase().includes(q) ||
-      b.providerName.toLowerCase().includes(q);
+      rawId.toLowerCase().includes(q) ||
+      seeker.includes(q) ||
+      provider.includes(q);
 
     return matchesFilter && matchesSearch;
   });
@@ -200,23 +206,24 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
               </thead>
               <tbody className="divide-y divide-border/60">
                 {filteredBookings.map((b) => {
+                  const displayId = b.bookingId || b.id || 'N/A';
                   const isCompleted = b.status === 'Completed';
                   const isCancelled = b.status === 'Cancelled';
                   const isDisputed = b.status === 'Disputed';
                   const isInEscrow = isEscrowStatus(b.status);
 
                   return (
-                    <tr key={b.bookingId} className="hover:bg-muted/30 transition-colors">
+                    <tr key={displayId} className="hover:bg-muted/30 transition-colors">
                       <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground">
                         <div className="flex items-center gap-1.5">
-                          <span>{b.bookingId.slice(0, 8)}...</span>
+                          <span>{displayId.length > 8 ? `${displayId.slice(0, 8)}...` : displayId}</span>
                           <button
                             type="button"
-                            onClick={() => handleCopy(b.bookingId)}
+                            onClick={() => handleCopy(displayId)}
                             title="Copy full Booking ID"
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground"
+                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
                           >
-                            {copiedId === b.bookingId ? (
+                            {copiedId === displayId ? (
                               <CheckIcon className="w-3 h-3 text-emerald-500" />
                             ) : (
                               <ClipboardDocumentIcon className="w-3 h-3" />

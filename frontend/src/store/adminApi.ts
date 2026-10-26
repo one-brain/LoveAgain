@@ -32,7 +32,8 @@ export interface AdminVerificationItem {
 }
 
 export interface AdminBookingLedgerItem {
-  bookingId: string;
+  id?: string;
+  bookingId?: string;
   seekerId: string;
   seekerName: string;
   providerId: string;
@@ -203,11 +204,20 @@ export const adminApi = createApi({
       invalidatesTags: ['AdminPayouts', 'AdminMis'],
     }),
 
-    getAdminBookings: builder.query<AdminBookingLedgerItem[], { status?: string }>({
+    getAdminBookings: builder.query<AdminBookingLedgerItem[], { status?: string } | void>({
       query: (params) => ({
         url: '/admin/bookings',
-        params,
+        params: params || {},
       }),
+      transformResponse: (response: (AdminBookingLedgerItem & { id?: string })[]) => {
+        return (response || []).map((item) => ({
+          ...item,
+          bookingId: item.bookingId || item.id || '',
+          status: item.status || 'Pending',
+          seekerName: item.seekerName || 'Seeker',
+          providerName: item.providerName || 'Companion',
+        }));
+      },
       providesTags: ['AdminBookings'],
     }),
 

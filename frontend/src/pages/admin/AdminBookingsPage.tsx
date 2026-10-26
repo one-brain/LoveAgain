@@ -21,6 +21,7 @@ export const AdminBookingsPage: React.FC = () => {
   const {
     data: bookingsData,
     isLoading: isLoadingBookings,
+    isError: isBookingsError,
     refetch: refetchBookings,
     isFetching,
   } = useGetAdminBookingsQuery({});
@@ -53,7 +54,7 @@ export const AdminBookingsPage: React.FC = () => {
   };
 
   const totalBookings = bookingsData?.length ?? 0;
-  const disputedCount = bookingsData?.filter((b) => b.status.toLowerCase() === 'disputed').length ?? 0;
+  const disputedCount = bookingsData?.filter((b) => (b.status || '').toLowerCase() === 'disputed').length ?? 0;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
@@ -116,6 +117,29 @@ export const AdminBookingsPage: React.FC = () => {
           </>
         }
       />
+
+      {/* Error state if API call failed */}
+      {isBookingsError && !isLoadingBookings && (
+        <div className="mb-6 p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
+              <ExclamationTriangleIcon className="w-6 h-6" />
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-foreground">Unable to load booking transactions</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">There was a problem communicating with the ledger service. Please verify your connection or privileges.</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => refetchBookings()}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-bold shadow-xs hover:bg-rose-600 active:scale-95 transition-all shrink-0 cursor-pointer"
+          >
+            <ArrowPathIcon className="w-3.5 h-3.5" />
+            Retry Connection
+          </button>
+        </div>
+      )}
 
       {/* Full-Bleed Ledger View */}
       <main>
