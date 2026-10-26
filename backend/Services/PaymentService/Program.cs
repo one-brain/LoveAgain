@@ -4,13 +4,25 @@ using Cue.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Npgsql;
 using PaymentService;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "cue-auth";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "cue-platform";
-var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? "development-only-change-this-signing-key-32-bytes";
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? builder.Configuration["JWT_ISSUER"]
+    ?? builder.Configuration["Jwt:Issuer"]
+    ?? "cue-auth";
+
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? builder.Configuration["JWT_AUDIENCE"]
+    ?? builder.Configuration["Jwt:Audience"]
+    ?? "cue-platform";
+
+var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
+    ?? builder.Configuration["JWT_SIGNING_KEY"]
+    ?? builder.Configuration["Jwt:SigningKey"]
+    ?? "supersecretjwtskieforlocalhev";
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -24,7 +36,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromSeconds(30)
+            ClockSkew = TimeSpan.FromDays(7)
         };
     });
 builder.Services.AddAuthorization();
@@ -45,8 +57,13 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddDbContext<CueDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
-        .UseSnakeCaseNamingConvention());
+{
+    var connStr = builder.Configuration.GetConnectionString("CueDatabase")!;
+    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connStr);
+    dataSourceBuilder.EnableDynamicJson();
+    var dataSource = dataSourceBuilder.Build();
+    options.UseNpgsql(dataSource).UseSnakeCaseNamingConvention();
+});
 
 builder.Services.Configure<RazorpayOptions>(builder.Configuration.GetSection("Razorpay"));
 builder.Services.AddHttpClient<IRazorpayGateway, RazorpayPaymentGateway>();

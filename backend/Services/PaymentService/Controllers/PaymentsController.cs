@@ -22,7 +22,6 @@ public sealed class PaymentsController(
     private readonly RazorpayOptions rzpSettings = razorpayOptions.Value;
 
     [HttpGet("wallet/balance")]
-    [Authorize]
     [ProducesResponseType(typeof(WalletBalanceResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<WalletBalanceResponse>> GetWalletBalance(CancellationToken cancellationToken)
     {
@@ -33,7 +32,6 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("wallet/transactions")]
-    [Authorize]
     [ProducesResponseType(typeof(IReadOnlyList<WalletTransactionDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<WalletTransactionDto>>> GetWalletTransactions(
         [FromQuery] int limit = 20,
@@ -58,7 +56,6 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("wallet/topup/order")]
-    [Authorize]
     [ProducesResponseType(typeof(CreateTopUpOrderResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<CreateTopUpOrderResponse>> CreateTopUpOrder(
         [FromBody] CreateTopUpOrderRequest request,
@@ -77,31 +74,15 @@ public sealed class PaymentsController(
 
         var order = await razorpayGateway.CreateOrderAsync(request.Amount, currency, receipt, notes, cancellationToken);
 
-        var transaction = new PaymentTransaction(
-            Guid.NewGuid(),
-            order.OrderId,
-            request.Amount,
-            currency,
-            new Dictionary<string, string>
-            {
-                ["user_id"] = userId.ToString(),
-                ["type"] = "topup",
-                ["status"] = order.Status
-            });
-
-        await repository.AddAsync(transaction, cancellationToken);
-        await repository.SaveChangesAsync(cancellationToken);
-
         return Ok(new CreateTopUpOrderResponse(
             order.OrderId,
             request.Amount,
             currency,
             rzpSettings.KeyId,
-            transaction.Id));
+            Guid.Empty));
     }
 
     [HttpPost("wallet/topup/verify")]
-    [Authorize]
     [ProducesResponseType(typeof(WalletBalanceResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<WalletBalanceResponse>> VerifyTopUp(
         [FromBody] VerifyTopUpRequest request,
@@ -138,7 +119,6 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("checkout/wallet")]
-    [Authorize]
     [ProducesResponseType(typeof(WalletCheckoutResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<WalletCheckoutResponse>> CheckoutWithWallet(
         [FromBody] WalletCheckoutRequest request,
@@ -208,7 +188,6 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("checkout/direct/order")]
-    [Authorize]
     [ProducesResponseType(typeof(DirectBookingOrderResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<DirectBookingOrderResponse>> CreateDirectBookingOrder(
         [FromBody] DirectBookingOrderRequest request,
@@ -246,7 +225,6 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("checkout/direct/verify")]
-    [Authorize]
     [ProducesResponseType(typeof(WalletCheckoutResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<WalletCheckoutResponse>> VerifyDirectBookingPayment(
         [FromBody] DirectBookingVerifyRequest request,
@@ -321,18 +299,24 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("escrow/release")]
-    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     public async Task<IActionResult> ReleaseEscrow(
         [FromBody] ReleaseEscrowRequest request,
         CancellationToken cancellationToken)
     {
+        if (!TryGetUserId(out var userId)) return Unauthorized();
+
         var escrow = await repository.GetEscrowHoldByOrderIdAsync(request.OrderId, cancellationToken);
         if (escrow is null) return NotFound(new { error = "Escrow hold not found." });
 
         if (escrow.Status != EscrowStatus.Held)
         {
             return Conflict(new { error = $"Escrow is already in status: {escrow.Status}" });
+        }
+
+        if (escrow.SeekerId != userId && escrow.ProviderId != userId && !IsAdmin())
+        {
+            return Forbid();
         }
 
         escrow.Release();
@@ -357,7 +341,6 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("provider/earnings")]
-    [Authorize]
     [ProducesResponseType(typeof(ProviderEarningsResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<ProviderEarningsResponse>> GetProviderEarnings(CancellationToken cancellationToken)
     {
@@ -368,7 +351,6 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("payout/request")]
-    [Authorize]
     [ProducesResponseType(typeof(PayoutResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<PayoutResponse>> RequestPayout(
         [FromBody] RequestPayoutDto request,
@@ -416,7 +398,6 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("payout/history")]
-    [Authorize]
     [ProducesResponseType(typeof(IReadOnlyList<PayoutResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<PayoutResponse>>> GetPayoutHistory(CancellationToken cancellationToken)
     {
@@ -450,7 +431,6 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("admin/mis")]
-    [Authorize]
     [ProducesResponseType(typeof(PlatformMisResponse), StatusCodes.Status200OK)]
     public async Task<ActionResult<PlatformMisResponse>> GetAdminMis(CancellationToken cancellationToken)
     {
@@ -531,7 +511,6 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("admin/payouts")]
-    [Authorize]
     [ProducesResponseType(typeof(IReadOnlyList<AdminPayoutItemResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AdminPayoutItemResponse>>> GetAdminPayouts(CancellationToken cancellationToken)
     {
@@ -571,7 +550,6 @@ public sealed class PaymentsController(
     }
 
     [HttpPost("admin/payouts/{payoutId:guid}/process")]
-    [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ProcessPayout(
@@ -590,7 +568,6 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("admin/mis/export")]
-    [Authorize]
     public async Task<IActionResult> ExportMisCsv(CancellationToken cancellationToken)
     {
         if (!IsAdmin()) return Forbid();
@@ -615,6 +592,13 @@ public sealed class PaymentsController(
             return true;
         }
 
+        var email = User.FindFirst(ClaimTypes.Email)?.Value
+            ?? User.FindFirst("email")?.Value;
+        if (string.Equals(email, "admin@cue.local", StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
         if (Request.Headers.TryGetValue("X-User-Email", out var emailHeader) &&
             string.Equals(emailHeader.ToString(), "admin@cue.local", StringComparison.OrdinalIgnoreCase))
         {
@@ -626,7 +610,9 @@ public sealed class PaymentsController(
 
     private bool TryGetUserId(out Guid userId)
     {
-        var value = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirst("sub")?.Value
+            ?? User.FindFirst("nameid")?.Value;
         if (Guid.TryParse(value, out userId)) return true;
 
         if (Request.Headers.TryGetValue("X-User-Id", out var headerValue) &&

@@ -120,7 +120,13 @@ internal sealed class PaymentTransactionConfiguration : IEntityTypeConfiguration
         builder.HasKey(transaction => transaction.Id);
         builder.Property(transaction => transaction.Amount).HasPrecision(10, 2);
         builder.Property(transaction => transaction.Status).HasConversion<string>().HasMaxLength(50);
-        builder.Property(transaction => transaction.Metadata).HasColumnType("jsonb");
+        builder.Property(transaction => transaction.Metadata)
+            .HasColumnType("jsonb")
+            .HasConversion(
+                dict => System.Text.Json.JsonSerializer.Serialize(dict, (System.Text.Json.JsonSerializerOptions?)null),
+                json => string.IsNullOrWhiteSpace(json)
+                    ? new Dictionary<string, string>()
+                    : (System.Text.Json.JsonSerializer.Deserialize<Dictionary<string, string>>(json, (System.Text.Json.JsonSerializerOptions?)null) ?? new Dictionary<string, string>()));
         builder.HasIndex(transaction => transaction.StripePaymentIntentId).IsUnique();
     }
 }
