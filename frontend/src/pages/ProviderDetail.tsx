@@ -337,7 +337,7 @@ const ProviderDetail: React.FC = () => {
             <span>Administrative Inspection Mode • You are viewing this companion profile with Platform Administrator clearance.</span>
           </div>
           <Link
-            to="/admin"
+            to="/admin/verifications"
             className="px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold text-[11px] self-start sm:self-auto transition-colors whitespace-nowrap"
           >
             &larr; Return to Admin Portal
@@ -640,7 +640,7 @@ const ProviderDetail: React.FC = () => {
                 </p>
                 <div className="pt-1">
                   <Link
-                    to="/admin"
+                    to="/admin/verifications"
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-600 dark:text-amber-400 font-semibold text-xs transition-colors"
                   >
                     <span>Manage in Admin Portal</span>

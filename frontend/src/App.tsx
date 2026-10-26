@@ -16,8 +16,16 @@ const Bookings = lazy(() => import('./pages/Bookings'));
 const Chat = lazy(() => import('./pages/Chat'));
 const WalletPage = lazy(() => import('./pages/Wallet'));
 const ApplyCompanion = lazy(() => import('./pages/ApplyCompanion'));
-const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
+
+// Admin Multi-Page Architecture (Zero-Tabs Dedicated Workspaces)
+const AdminIndexRedirect = lazy(() => import('./pages/admin/AdminIndexRedirect'));
+const AdminVerificationsPage = lazy(() => import('./pages/admin/AdminVerificationsPage'));
+const AdminBookingsPage = lazy(() => import('./pages/admin/AdminBookingsPage'));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
+const AdminPayoutsPage = lazy(() => import('./pages/admin/AdminPayoutsPage'));
+const AdminMisPage = lazy(() => import('./pages/admin/AdminMisPage'));
+const AdminProfilePage = lazy(() => import('./pages/admin/AdminProfilePage'));
 
 const RouteLoader: React.FC = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -34,7 +42,7 @@ const isUserAdmin = (user: any) =>
 const NonAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (isUserAdmin(user)) return <Navigate to="/admin?tab=profile" replace />;
+  if (isUserAdmin(user)) return <Navigate to="/admin/profile" replace />;
   return <>{children}</>;
 };
 
@@ -48,7 +56,7 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   if (isAuthenticated) {
-    return isUserAdmin(user) ? <Navigate to="/admin" replace /> : <Navigate to="/discovery" replace />;
+    return isUserAdmin(user) ? <Navigate to="/admin/verifications" replace /> : <Navigate to="/discovery" replace />;
   }
   return <>{children}</>;
 };
@@ -150,12 +158,73 @@ function App() {
               </Suspense>
             }
           />
+          {/* Admin Dedicated Full-Bleed Workspaces (Zero-Tabs Multi-Page Architecture) */}
           <Route
             path="admin"
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminDashboard />
+                  <AdminIndexRedirect />
+                </AdminRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="admin/verifications"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <AdminRoute>
+                  <AdminVerificationsPage />
+                </AdminRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="admin/bookings"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <AdminRoute>
+                  <AdminBookingsPage />
+                </AdminRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="admin/users"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <AdminRoute>
+                  <AdminUsersPage />
+                </AdminRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="admin/payouts"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <AdminRoute>
+                  <AdminPayoutsPage />
+                </AdminRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="admin/mis"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <AdminRoute>
+                  <AdminMisPage />
+                </AdminRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="admin/profile"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <AdminRoute>
+                  <AdminProfilePage />
                 </AdminRoute>
               </Suspense>
             }
