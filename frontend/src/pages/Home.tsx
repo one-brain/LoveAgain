@@ -394,7 +394,7 @@ const Home: React.FC = () => {
               </p>
               <div className="flex flex-wrap gap-3">
                 <Link
-                  to="/apply-companion"
+                  to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
                   className="px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-xs sm:text-sm shadow-md hover:bg-accent-hover transition-all"
                 >
                   Apply as a Provider / Companion

@@ -167,7 +167,7 @@ const Footer: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/apply-companion" className="text-foreground/80 hover:text-accent transition-colors">
+                    <Link to="/register?redirect=/apply-companion" className="text-foreground/80 hover:text-accent transition-colors">
                       Become a Companion
                     </Link>
                   </li>

@@ -439,9 +439,9 @@ const Header: React.FC = () => {
               </Link>
               {!isAdmin && (
                 <Link
-                  to="/apply-companion"
+                  to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
                   className={`px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive('/apply-companion')
+                    isActive('/apply-companion') || (location.pathname === '/register' && location.search.includes('apply-companion'))
                       ? 'bg-accent/15 text-accent font-semibold shadow-xs'
                       : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
                   }`}
@@ -1184,7 +1184,7 @@ const Header: React.FC = () => {
               ) : (
                 <div className="pt-2 flex flex-col gap-2">
                   <Link
-                    to="/apply-companion"
+                    to="/register?redirect=/apply-companion"
                     onClick={() => setMobileMenuOpen(false)}
                     className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
                   >

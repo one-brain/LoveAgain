@@ -111,10 +111,14 @@ const Register: React.FC = () => {
 
         <div className="space-y-6 max-w-lg">
           <h2 className="text-3xl sm:text-4xl font-bold font-serif leading-tight text-primary-foreground">
-            Share experiences. Learn new skills. Connect genuinely.
+            {rawRedirect?.includes('apply-companion')
+              ? 'Monetize your passions with guaranteed escrow earnings.'
+              : 'Share experiences. Learn new skills. Connect genuinely.'}
           </h2>
           <p className="text-sm sm:text-base text-primary-foreground/85 leading-relaxed">
-            Join thousands finding companions for activities, from tennis rallies to cooking workshops to museum strolls, with verified community trust.
+            {rawRedirect?.includes('apply-companion')
+              ? 'Set your own schedule, connect with clients for social outings, dining, city tours, or sports, and get paid securely with zero escrow payment defaults.'
+              : 'Join thousands finding companions for activities, from tennis rallies to cooking workshops to museum strolls, with verified community trust.'}
           </p>
         </div>
 
@@ -128,17 +132,40 @@ const Register: React.FC = () => {
       <div className="flex-1 flex items-center justify-center px-4 sm:px-8 py-12">
         <div className="w-full max-w-md space-y-6">
           <div>
+            {rawRedirect?.includes('apply-companion') && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 text-accent text-xs font-semibold mb-3 border border-accent/25">
+                <SparklesIcon className="w-3.5 h-3.5" />
+                <span>Companion Application &bull; Step 1 of 2</span>
+              </div>
+            )}
             <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
               Create your account
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
-              Already have an account?{' '}
-              <Link
-                to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
-                className="font-semibold text-accent hover:underline"
-              >
-                Sign in
-              </Link>
+              {rawRedirect?.includes('apply-companion') ? (
+                <>
+                  Join Cue as a companion.{' '}
+                  <span className="block mt-1">
+                    Already have an account?{' '}
+                    <Link
+                      to={`/login?redirect=${encodeURIComponent(rawRedirect)}`}
+                      className="font-semibold text-accent hover:underline"
+                    >
+                      Sign in to apply
+                    </Link>
+                  </span>
+                </>
+              ) : (
+                <>
+                  Already have an account?{' '}
+                  <Link
+                    to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
+                    className="font-semibold text-accent hover:underline"
+                  >
+                    Sign in
+                  </Link>
+                </>
+              )}
             </p>
           </div>
 

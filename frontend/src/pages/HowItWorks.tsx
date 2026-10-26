@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../store';
 import {
   ShieldCheckIcon,
   SparklesIcon,
@@ -56,6 +58,7 @@ const FAQS: FaqItem[] = [
 ];
 
 const HowItWorks: React.FC = () => {
+  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [activeTab, setActiveTab] = useState<TabMode>('clients');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
@@ -303,7 +306,7 @@ const HowItWorks: React.FC = () => {
 
             <div className="text-center pt-4">
               <Link
-                to="/apply-companion"
+                to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold hover:bg-accent-hover transition-all shadow-xs"
               >
                 <span>Apply to Become a Companion</span>
@@ -494,7 +497,7 @@ const HowItWorks: React.FC = () => {
               Discover Companions
             </Link>
             <Link
-              to="/apply-companion"
+              to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-sm transition-all"
             >
               Become a Companion

@@ -45,6 +45,10 @@ const NonAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
   if (!isAuthenticated) {
     const redirectParam = encodeURIComponent(location.pathname + location.search);
+    // When an unauthenticated visitor shifts to become a companion, direct them to "Create your account" by default
+    if (location.pathname.startsWith('/apply-companion')) {
+      return <Navigate to={`/register?redirect=${redirectParam}`} replace />;
+    }
     return <Navigate to={`/login?redirect=${redirectParam}`} replace />;
   }
 
