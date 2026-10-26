@@ -16,9 +16,16 @@ import {
   ArrowRightOnRectangleIcon,
   BanknotesIcon,
   ShieldCheckIcon,
+  UsersIcon,
+  CurrencyRupeeIcon,
+  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/20/solid';
 import { useGetWalletBalanceQuery } from '../store/paymentApi';
+import {
+  useGetAdminVerificationsQuery,
+  useGetAdminPayoutsQuery,
+} from '../store/adminApi';
 
 const Header: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -41,6 +48,19 @@ const Header: React.FC = () => {
   // Sync profile data from REST API whenever authenticated
   const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated });
   const { data: myProfileData } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated || isAdmin });
+
+  // Admin telemetry for badge counters
+  const { data: adminVerificationsData } = useGetAdminVerificationsQuery({}, { skip: !isAuthenticated || !isAdmin });
+  const { data: adminPayoutsData } = useGetAdminPayoutsQuery(undefined, { skip: !isAuthenticated || !isAdmin });
+
+  const pendingAdminVerificationsCount = adminVerificationsData?.filter((v) => v.status === 'PendingReview').length ?? 0;
+  const pendingAdminPayoutsCount = adminPayoutsData?.filter((p) => p.status === 'Pending').length ?? 0;
+
+  const adminCurrentTab = useMemo(() => {
+    if (!location.pathname.startsWith('/admin')) return null;
+    const params = new URLSearchParams(location.search);
+    return params.get('tab') || 'verifications';
+  }, [location.pathname, location.search]);
 
   const companionStatus = myProfileData?.profile?.status;
 
@@ -119,7 +139,7 @@ const Header: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click or Escape key
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -129,8 +149,19 @@ const Header: React.FC = () => {
         setThemeDropdownOpen(false);
       }
     };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setUserDropdownOpen(false);
+        setThemeDropdownOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   // Close menus on route change
@@ -138,7 +169,7 @@ const Header: React.FC = () => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
     setThemeDropdownOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   const cycleTheme = () => {
     const themes: ('light' | 'dark' | 'romantic')[] = ['light', 'dark', 'romantic'];
@@ -391,49 +422,228 @@ const Header: React.FC = () => {
                 </button>
 
                 {userDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-popover/95 text-popover-foreground border border-border/90 shadow-2xl backdrop-blur-md p-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
-                    <div className="p-3 bg-muted/50 rounded-xl mb-1.5 border border-border/40">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-bold text-foreground truncate">
-                          {userDisplayName}
-                        </p>
-                        <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-success/20 text-success uppercase tracking-wider flex-shrink-0">
-                          {user?.isVerified !== false ? 'Verified' : 'Member'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-muted-foreground truncate mt-0.5">{user?.email}</p>
-                    </div>
+                  <div
+                    className={`absolute right-0 mt-2 ${
+                      isAdmin ? 'w-80 sm:w-[22rem]' : 'w-64'
+                    } rounded-2xl bg-popover/95 text-popover-foreground border border-border/90 shadow-2xl backdrop-blur-md p-2 z-50 animate-in fade-in-0 zoom-in-95 duration-150`}
+                  >
+                    {isAdmin ? (
+                      <div>
+                        {/* Admin Identity Card */}
+                        <div className="p-3 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-xl mb-2 border border-amber-500/25">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 border border-amber-500/30 font-bold flex items-center justify-center text-xs tracking-wider shrink-0 font-sans">
+                              {userInitials}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs font-bold text-foreground truncate leading-tight">
+                                {userDisplayName}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                                {user?.email}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-amber-500/15">
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
+                              <ShieldCheckIcon className="w-3 h-3 text-amber-500" />
+                              Super Admin
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">
+                              • Back-Office Operations Hub
+                            </span>
+                          </div>
+                        </div>
 
-                    <div className="space-y-0.5">
-                      {isAdmin ? (
-                        <>
-                          <Link
-                            to="/admin"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
-                          >
-                            <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
-                            <span>Admin Portal</span>
-                          </Link>
-                          <Link
-                            to="/admin?tab=profile"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 transition-colors font-bold"
-                          >
-                            <UserCircleIcon className="w-4 h-4 text-amber-500" />
-                            <span>Admin Profile & Security</span>
-                          </Link>
+                        {/* Back-Office Operations Group */}
+                        <div>
+                          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
+                            Back-Office Operations
+                          </div>
+                          <div className="space-y-0.5 mt-0.5">
+                            <Link
+                              to="/admin"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
+                                adminCurrentTab === 'verifications'
+                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
+                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                                  <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="truncate">
+                                  <p className="truncate leading-tight">Companion Verifications</p>
+                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                    KYC review & credential approval
+                                  </p>
+                                </div>
+                              </div>
+                              {pendingAdminVerificationsCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 tabular-nums">
+                                  {pendingAdminVerificationsCount}
+                                </span>
+                              )}
+                            </Link>
+
+                            <Link
+                              to="/admin?tab=bookings"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
+                                adminCurrentTab === 'bookings'
+                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
+                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                                  <BanknotesIcon className="w-4 h-4 text-emerald-500" />
+                                </div>
+                                <div className="truncate">
+                                  <p className="truncate leading-tight">Bookings & Escrow Ledger</p>
+                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                    Escrow vault release & audit trail
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+
+                            <Link
+                              to="/admin?tab=users"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
+                                adminCurrentTab === 'users'
+                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
+                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                                  <UsersIcon className="w-4 h-4 text-blue-500" />
+                                </div>
+                                <div className="truncate">
+                                  <p className="truncate leading-tight">Users Directory</p>
+                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                    Trust scoring & account moderation
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+
+                            <Link
+                              to="/admin?tab=payouts"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
+                                adminCurrentTab === 'payouts'
+                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
+                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                                  <CurrencyRupeeIcon className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="truncate">
+                                  <p className="truncate leading-tight">UPI Payout Settlements</p>
+                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                    Companion banking disbursements
+                                  </p>
+                                </div>
+                              </div>
+                              {pendingAdminPayoutsCount > 0 && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 tabular-nums">
+                                  {pendingAdminPayoutsCount}
+                                </span>
+                              )}
+                            </Link>
+
+                            <Link
+                              to="/admin?tab=mis"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
+                                adminCurrentTab === 'mis'
+                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
+                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                                  <ChartBarIcon className="w-4 h-4 text-purple-500" />
+                                </div>
+                                <div className="truncate">
+                                  <p className="truncate leading-tight">MIS Trajectory & Analytics</p>
+                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                    GMV & platform revenue telemetry
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+
+                            <Link
+                              to="/admin?tab=profile"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
+                                adminCurrentTab === 'profile'
+                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
+                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                                  <UserCircleIcon className="w-4 h-4 text-amber-500" />
+                                </div>
+                                <div className="truncate">
+                                  <p className="truncate leading-tight">Admin Identity & Security</p>
+                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                    Credentials, password & session
+                                  </p>
+                                </div>
+                              </div>
+                            </Link>
+                          </div>
+                        </div>
+
+                        {/* Marketplace Observation Section */}
+                        <div className="border-t border-border/60 pt-1.5 mt-2">
+                          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
+                            Marketplace Auditing
+                          </div>
                           <Link
                             to="/discovery"
                             onClick={() => setUserDropdownOpen(false)}
-                            className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium group"
                           >
-                            <SparklesIcon className="w-4 h-4 text-accent" />
-                            <span>Browse Profiles</span>
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                              <SparklesIcon className="w-4 h-4 text-accent" />
+                            </div>
+                            <div className="truncate">
+                              <p className="truncate leading-tight">Browse Public Profiles</p>
+                              <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                Audit public companion directory
+                              </p>
+                            </div>
                           </Link>
-                        </>
-                      ) : (
-                        <>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="p-3 bg-muted/50 rounded-xl mb-1.5 border border-border/40">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs font-bold text-foreground truncate">
+                              {userDisplayName}
+                            </p>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-success/20 text-success uppercase tracking-wider flex-shrink-0">
+                              {user?.isVerified !== false ? 'Verified' : 'Member'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground truncate mt-0.5">
+                            {user?.email}
+                          </p>
+                        </div>
+
+                        <div className="space-y-0.5">
                           <Link
                             to="/profile"
                             onClick={() => setUserDropdownOpen(false)}
@@ -471,9 +681,9 @@ const Header: React.FC = () => {
                               ₹{walletData?.availableBalance?.toLocaleString('en-IN') ?? '0'}
                             </span>
                           </Link>
-                        </>
-                      )}
-                    </div>
+                        </div>
+                      </>
+                    )}
 
                     <div className="border-t border-border/60 pt-1 mt-1.5">
                       <button
@@ -534,33 +744,132 @@ const Header: React.FC = () => {
         <div className="md:hidden border-t border-border/80 bg-card px-4 pt-4 pb-6 space-y-3 animate-in slide-in-from-top-2 duration-150">
           {isAdmin ? (
             <>
-              <Link
-                to="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2.5 rounded-xl text-base font-semibold text-amber-500 hover:bg-amber-500/10"
-              >
-                Admin Back-Office Portal
-              </Link>
-              <Link
-                to="/admin?tab=profile"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-              >
-                Admin Profile & Security
-              </Link>
-              <Link
-                to="/discovery"
-                onClick={() => setMobileMenuOpen(false)}
-                className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
-              >
-                Browse Profiles
-              </Link>
+              <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
+                Back-Office Operations
+              </div>
+              <div className="space-y-1">
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    adminCurrentTab === 'verifications'
+                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold'
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ShieldCheckIcon className="w-5 h-5 text-amber-500 shrink-0" />
+                    <span>Companion Verifications</span>
+                  </div>
+                  {pendingAdminVerificationsCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                      {pendingAdminVerificationsCount}
+                    </span>
+                  )}
+                </Link>
+
+                <Link
+                  to="/admin?tab=bookings"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    adminCurrentTab === 'bookings'
+                      ? 'bg-accent/15 text-accent font-bold'
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <BanknotesIcon className="w-5 h-5 text-emerald-500 shrink-0" />
+                    <span>Bookings & Escrow Ledger</span>
+                  </div>
+                </Link>
+
+                <Link
+                  to="/admin?tab=users"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    adminCurrentTab === 'users'
+                      ? 'bg-accent/15 text-accent font-bold'
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <UsersIcon className="w-5 h-5 text-blue-500 shrink-0" />
+                    <span>Users Directory</span>
+                  </div>
+                </Link>
+
+                <Link
+                  to="/admin?tab=payouts"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    adminCurrentTab === 'payouts'
+                      ? 'bg-accent/15 text-accent font-bold'
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <CurrencyRupeeIcon className="w-5 h-5 text-amber-500 shrink-0" />
+                    <span>UPI Payout Settlements</span>
+                  </div>
+                  {pendingAdminPayoutsCount > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                      {pendingAdminPayoutsCount}
+                    </span>
+                  )}
+                </Link>
+
+                <Link
+                  to="/admin?tab=mis"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    adminCurrentTab === 'mis'
+                      ? 'bg-accent/15 text-accent font-bold'
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <ChartBarIcon className="w-5 h-5 text-purple-500 shrink-0" />
+                    <span>MIS Trajectory & Analytics</span>
+                  </div>
+                </Link>
+
+                <Link
+                  to="/admin?tab=profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
+                    adminCurrentTab === 'profile'
+                      ? 'bg-accent/15 text-accent font-bold'
+                      : 'text-foreground hover:bg-muted'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <UserCircleIcon className="w-5 h-5 text-amber-500 shrink-0" />
+                    <span>Admin Identity & Security</span>
+                  </div>
+                </Link>
+              </div>
+
+              <div className="border-t border-border/60 pt-2 mt-2">
+                <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
+                  Marketplace Auditing
+                </div>
+                <Link
+                  to="/discovery"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
+                >
+                  <SparklesIcon className="w-5 h-5 text-accent shrink-0" />
+                  <span>Browse Public Profiles</span>
+                </Link>
+              </div>
+
               <div className="border-t border-border/60 pt-3">
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left px-3 py-2.5 rounded-xl text-base font-medium text-destructive hover:bg-destructive/10"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold text-destructive hover:bg-destructive/10"
                 >
-                  Log Out
+                  <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                  <span>Sign Out</span>
                 </button>
               </div>
             </>
