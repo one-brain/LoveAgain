@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { useRegisterMutation } from '../store/authApi';
 import { loginSuccess } from '../store/slices/authSlice';
@@ -22,6 +22,9 @@ const Register: React.FC = () => {
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawRedirect = searchParams.get('redirect');
+  const redirectTarget = rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
   const dispatch = useDispatch();
   const [register, { isLoading }] = useRegisterMutation();
 
@@ -88,7 +91,7 @@ const Register: React.FC = () => {
           },
         })
       );
-      navigate('/discovery', { replace: true });
+      navigate(redirectTarget, { replace: true });
     } catch (err: any) {
       const msg = err?.data?.message || err?.data?.detail || err?.data?.error || 'Registration failed. Please check your credentials or try a different email.';
       setErrors({ email: msg });
@@ -130,7 +133,10 @@ const Register: React.FC = () => {
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
               Already have an account?{' '}
-              <Link to="/login" className="font-semibold text-accent hover:underline">
+              <Link
+                to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
+                className="font-semibold text-accent hover:underline"
+              >
                 Sign in
               </Link>
             </p>

@@ -1,5 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import MainLayout from './layout/MainLayout';
 import Home from './pages/Home';
@@ -41,23 +41,59 @@ const isUserAdmin = (user: any) =>
 
 const NonAdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (isUserAdmin(user)) return <Navigate to="/admin/profile" replace />;
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    const redirectParam = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect=${redirectParam}`} replace />;
+  }
+
+  if (isUserAdmin(user)) {
+    // Intelligent Admin Redirection matching destination intent
+    if (location.pathname.startsWith('/bookings')) {
+      return <Navigate to="/admin/bookings" replace />;
+    }
+    if (location.pathname.startsWith('/wallet')) {
+      return <Navigate to="/admin/payouts" replace />;
+    }
+    if (location.pathname.startsWith('/profile')) {
+      return <Navigate to="/admin/profile" replace />;
+    }
+    return <Navigate to="/admin/verifications" replace />;
+  }
+
   return <>{children}</>;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
-  if (!isAuthenticated) return <Navigate to="/login" replace />;
-  if (!isUserAdmin(user)) return <Navigate to="/discovery" replace />;
+  const location = useLocation();
+
+  if (!isAuthenticated) {
+    const redirectParam = encodeURIComponent(location.pathname + location.search);
+    return <Navigate to={`/login?redirect=${redirectParam}`} replace />;
+  }
+
+  if (!isUserAdmin(user)) {
+    return <Navigate to="/discovery" replace />;
+  }
+
   return <>{children}</>;
 };
 
 const UnauthenticatedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const location = useLocation();
+
   if (isAuthenticated) {
+    const searchParams = new URLSearchParams(location.search);
+    const redirectUrl = searchParams.get('redirect');
+    if (redirectUrl && !redirectUrl.startsWith('/admin') && !isUserAdmin(user)) {
+      return <Navigate to={redirectUrl} replace />;
+    }
     return isUserAdmin(user) ? <Navigate to="/admin/verifications" replace /> : <Navigate to="/discovery" replace />;
   }
+
   return <>{children}</>;
 };
 

@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { ShieldCheckIcon, SparklesIcon, HeartIcon } from '@heroicons/react/24/outline';
+import type { RootState } from '../store';
 
 const Footer: React.FC = () => {
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = Boolean(user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local');
   return (
     <footer className="bg-card border-t border-border/80 text-foreground transition-colors duration-200 mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -88,37 +92,97 @@ const Footer: React.FC = () => {
             </ul>
           </div>
 
-          {/* Quick Links */}
+          {/* Role-Differentiated Quick Links */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-4">
-              Platform
+              {isAdmin ? 'Admin Portals' : 'Platform'}
             </h4>
             <ul className="space-y-2.5 text-sm">
-              <li>
-                <Link to="/how-it-works" className="text-foreground/80 hover:text-accent transition-colors font-medium">
-                  How It Works
-                </Link>
-              </li>
-              <li>
-                <Link to="/discovery" className="text-foreground/80 hover:text-accent transition-colors">
-                  Find Companions
-                </Link>
-              </li>
-              <li>
-                <Link to="/provider" className="text-foreground/80 hover:text-accent transition-colors">
-                  Become a Provider
-                </Link>
-              </li>
-              <li>
-                <Link to="/register" className="text-foreground/80 hover:text-accent transition-colors">
-                  Create Account
-                </Link>
-              </li>
-              <li>
-                <Link to="/login" className="text-foreground/80 hover:text-accent transition-colors">
-                  Sign In
-                </Link>
-              </li>
+              {isAdmin ? (
+                <>
+                  <li>
+                    <Link to="/admin/verifications" className="text-foreground/80 hover:text-accent transition-colors font-medium">
+                      KYC Verifications
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/admin/bookings" className="text-foreground/80 hover:text-accent transition-colors">
+                      Escrow Audit Ledger
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/admin/users" className="text-foreground/80 hover:text-accent transition-colors">
+                      Users Directory
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/admin/payouts" className="text-foreground/80 hover:text-accent transition-colors">
+                      UPI Settlements
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/admin/mis" className="text-foreground/80 hover:text-accent transition-colors">
+                      MIS Analytics
+                    </Link>
+                  </li>
+                </>
+              ) : isAuthenticated ? (
+                <>
+                  <li>
+                    <Link to="/discovery" className="text-foreground/80 hover:text-accent transition-colors font-medium">
+                      Discover Companions
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/bookings" className="text-foreground/80 hover:text-accent transition-colors">
+                      My Bookings
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/wallet" className="text-foreground/80 hover:text-accent transition-colors">
+                      Cue Wallet & Escrow
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/profile" className="text-foreground/80 hover:text-accent transition-colors">
+                      Account Settings
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/how-it-works" className="text-foreground/80 hover:text-accent transition-colors">
+                      How It Works
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link to="/discovery" className="text-foreground/80 hover:text-accent transition-colors font-medium">
+                      Discover Companions
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/how-it-works" className="text-foreground/80 hover:text-accent transition-colors">
+                      How It Works
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/apply-companion" className="text-foreground/80 hover:text-accent transition-colors">
+                      Become a Companion
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/register" className="text-foreground/80 hover:text-accent transition-colors">
+                      Create Account
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/login" className="text-foreground/80 hover:text-accent transition-colors">
+                      Sign In
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
         </div>

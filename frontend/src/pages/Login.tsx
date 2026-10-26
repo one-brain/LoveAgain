@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { loginSuccess } from '../store/slices/authSlice';
 import { useLoginMutation } from '../store/authApi';
 import { useGetSeekerProfileQuery } from '../store/api';
@@ -17,6 +17,10 @@ const Login: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const rawRedirect = searchParams.get('redirect');
+  const redirectTarget = rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
+
   const [login, { isLoading }] = useLoginMutation();
   const { refetch: refetchSeeker } = useGetSeekerProfileQuery(undefined, { skip: true });
 
@@ -45,7 +49,7 @@ const Login: React.FC = () => {
             },
           })
         );
-        navigate('/admin', { replace: true });
+        navigate(rawRedirect && rawRedirect.startsWith('/admin') ? rawRedirect : '/admin', { replace: true });
         return;
       }
 
@@ -91,7 +95,7 @@ const Login: React.FC = () => {
         // Already logged in with validated user info from auth service
       }
 
-      navigate('/discovery', { replace: true });
+      navigate(redirectTarget, { replace: true });
     } catch {
       setError('Invalid email or password.');
     }
@@ -132,7 +136,7 @@ const Login: React.FC = () => {
             },
           })
         );
-        navigate('/admin', { replace: true });
+        navigate(rawRedirect && rawRedirect.startsWith('/admin') ? rawRedirect : '/admin', { replace: true });
         return;
       }
 
@@ -152,7 +156,7 @@ const Login: React.FC = () => {
           },
         })
       );
-      navigate(role === 'Provider' ? '/provider' : '/discovery', { replace: true });
+      navigate(role === 'Provider' ? '/provider' : redirectTarget, { replace: true });
     } catch {
       // Fallback only if REST service is offline
       if (role === 'Admin') {
@@ -171,7 +175,7 @@ const Login: React.FC = () => {
             },
           })
         );
-        navigate('/admin', { replace: true });
+        navigate(rawRedirect && rawRedirect.startsWith('/admin') ? rawRedirect : '/admin', { replace: true });
         return;
       }
 
@@ -188,7 +192,7 @@ const Login: React.FC = () => {
           },
         })
       );
-      navigate(role === 'Provider' ? '/provider' : '/discovery', { replace: true });
+      navigate(role === 'Provider' ? '/provider' : redirectTarget, { replace: true });
     }
   };
 
@@ -233,7 +237,10 @@ const Login: React.FC = () => {
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
               New to Cue?{' '}
-              <Link to="/register" className="font-semibold text-accent hover:underline">
+              <Link
+                to={rawRedirect ? `/register?redirect=${encodeURIComponent(rawRedirect)}` : '/register'}
+                className="font-semibold text-accent hover:underline"
+              >
                 Create an account
               </Link>
             </p>

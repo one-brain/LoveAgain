@@ -109,7 +109,9 @@ const FEATURED_PROFILES = [
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = Boolean(user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local');
+  const seekerFirstName = user?.firstName || 'Seeker';
   const [selectedLens, setSelectedLens] = useState<PlatformLens>('companions');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -121,6 +123,61 @@ const Home: React.FC = () => {
 
   return (
     <div className="space-y-16 sm:space-y-24 pb-20">
+      {/* Admin Preview Mode Banner */}
+      {isAdmin && (
+        <div className="bg-amber-500/10 border-b border-amber-500/25 px-4 py-2.5 sm:px-6 -mt-4 mb-2">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-semibold">
+              <ShieldCheckIcon className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>Administrator Marketplace Preview Mode — Platform operations neutrality active.</span>
+            </div>
+            <Link
+              to="/admin/verifications"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-700 dark:text-amber-300 font-bold transition-colors w-fit"
+            >
+              <span>Back-Office Operations Portal</span>
+              <span>&rarr;</span>
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Authenticated Seeker Welcome & Quick Hub Shortcuts */}
+      {isAuthenticated && !isAdmin && (
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 -mb-8 pt-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border/80 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-bold text-foreground">
+                  Welcome back, {seekerFirstName}! 👋
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-success/15 text-success border border-success/20">
+                  Verified Seeker
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Explore companions for upcoming outings or review your active reservation timeline.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <Link
+                to="/bookings"
+                className="px-3.5 py-2 rounded-xl bg-muted/80 hover:bg-muted text-foreground text-xs font-semibold border border-border/80 transition-all shadow-2xs hover:shadow-xs flex items-center gap-1.5"
+              >
+                <ClockIcon className="w-3.5 h-3.5 text-accent" />
+                <span>My Bookings</span>
+              </Link>
+              <Link
+                to="/discovery"
+                className="px-4 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-bold shadow-xs hover:bg-accent-hover transition-all"
+              >
+                <span>Find Companions &rarr;</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Section */}
       <section className="relative overflow-hidden pt-12 pb-14 sm:pt-20 sm:pb-20">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent blur-3xl pointer-events-none -z-10" />

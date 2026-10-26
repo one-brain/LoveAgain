@@ -602,7 +602,13 @@ const ProviderDetail: React.FC = () => {
                       <button
                         key={slot.slotId}
                         type="button"
-                        onClick={() => setSelectedSlot(isSelected ? null : slot.slotId)}
+                        onClick={() => {
+                          if (!isAuthenticated) {
+                            setAuthPromptModal(true);
+                            return;
+                          }
+                          setSelectedSlot(isSelected ? null : slot.slotId);
+                        }}
                         className={`w-full p-3 rounded-xl border text-left transition-all text-xs flex items-center justify-between shadow-2xs cursor-pointer ${
                           isSelected
                             ? 'border-accent bg-accent/15 text-foreground ring-1 ring-accent'
