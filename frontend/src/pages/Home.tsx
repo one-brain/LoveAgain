@@ -15,6 +15,7 @@ import {
   BriefcaseIcon,
   UserGroupIcon,
   CheckCircleIcon,
+  HomeModernIcon,
 } from '@heroicons/react/24/outline';
 import type { PlatformLens } from '../types/platform';
 
@@ -60,6 +61,16 @@ const PILLAR_CARDS: LensCard[] = [
     bgGradient: 'from-sky-500/10 via-sky-500/5 to-transparent',
     popularItems: ['Photography Walk', 'Language Practice', 'Cooking Sessions', 'Coding Mentorship'],
   },
+  {
+    id: 'lifestyle',
+    name: 'Cue Domestic & Lifestyle',
+    tagline: 'Connect with regional homestyle cooks, festival decor companions, senior escorts, and bazaar guides.',
+    badge: 'Ghar Ka Khana & Sanskaar',
+    icon: HomeModernIcon,
+    accentColor: 'text-rose-500',
+    bgGradient: 'from-rose-500/10 via-rose-500/5 to-transparent',
+    popularItems: ['Homestyle Cooking', 'Festival & Pooja Prep', 'Senior Companion', 'Mandi Guide', 'Saree Styling'],
+  },
 ];
 
 const FEATURED_PROFILES = [
@@ -104,6 +115,34 @@ const FEATURED_PROFILES = [
     distance: '1.9 km away',
     image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80',
     trustScore: 97,
+  },
+  {
+    id: 'p7',
+    name: 'Ananya Sharma',
+    headline: 'Regional Homestyle Cook & Festive Floral Artist',
+    activeLenses: ['lifestyle', 'companions'],
+    tags: ['Regional Homestyle Cook', 'Festival & Pooja Decor', 'Balcony Tulsi & Gardening'],
+    rate: 1200,
+    rateType: 'hr',
+    rating: 4.96,
+    reviews: 58,
+    distance: '3.1 km away',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
+    trustScore: 99,
+  },
+  {
+    id: 'p8',
+    name: 'Col. Rajeshwar Rao (Retd.)',
+    headline: 'Senior Companion, Temple Escort & Carrom Partner',
+    activeLenses: ['lifestyle', 'wellness'],
+    tags: ['Senior Companion & Temple Escort', 'Carrom & Society Sports', 'Evening Chai & Gupshup'],
+    rate: 1000,
+    rateType: 'hr',
+    rating: 4.99,
+    reviews: 73,
+    distance: '2.8 km away',
+    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=600&q=80',
+    trustScore: 100,
   },
 ];
 
@@ -202,8 +241,8 @@ const Home: React.FC = () => {
             </button>
           </form>
 
-          {/* 3 Interactive Visual Pillar Cards */}
-          <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+          {/* 4 Interactive Visual Pillar Cards */}
+          <div className="mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
             {PILLAR_CARDS.map((card) => {
               const Icon = card.icon;
               const isSelected = selectedLens === card.id;

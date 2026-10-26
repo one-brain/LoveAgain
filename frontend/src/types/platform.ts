@@ -1,6 +1,5 @@
-// Core 3-Pillar Companionship Platform Types
-
-export type PlatformLens = 'companions' | 'wellness' | 'pro_work';
+// Core Companionship Platform Types
+export type PlatformLens = 'companions' | 'wellness' | 'pro_work' | 'lifestyle';
 
 export interface SkilledServiceOffering {
   id: string;

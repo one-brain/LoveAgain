@@ -37,6 +37,26 @@ const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2.5 text-sm">
               <li>
+                <Link to="/discovery?lens=lifestyle" className="text-foreground/80 hover:text-accent transition-colors font-medium text-accent">
+                  🏡 Indian Domestic & Lifestyle
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?specialty=Regional+Homestyle+Cook" className="text-foreground/80 hover:text-accent transition-colors">
+                  Homestyle Cooking (Ghar Ka Khana)
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?specialty=Festival+%26+Pooja+Decor" className="text-foreground/80 hover:text-accent transition-colors">
+                  Festival & Pooja Decor
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?specialty=Senior+Companion+%26+Temple+Escort" className="text-foreground/80 hover:text-accent transition-colors">
+                  Senior Companion (Buzurg Saath)
+                </Link>
+              </li>
+              <li>
                 <Link to="/discovery?specialty=Tennis" className="text-foreground/80 hover:text-accent transition-colors">
                   Sports & Fitness
                 </Link>

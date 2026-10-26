@@ -49,9 +49,23 @@ const CITY_OPTIONS: DropdownOption[] = [
 
 const LENS_DROPDOWN_OPTIONS: DropdownOption<PlatformLens | 'all'>[] = [
   { value: 'all', label: 'All Companions', icon: '✨', description: 'Show all verified companions & activities' },
+  { value: 'lifestyle', label: '🏡 Domestic & Indian Lifestyle', icon: '🏡', description: 'Homestyle cooking, festival decor, senior companions, mandi tours & saree styling' },
   { value: 'companions', label: '🤝 Social & Events', icon: '🤝', description: 'Platonic outings, city tours, dining & concerts' },
   { value: 'wellness', label: '🏃 Active & Wellness', icon: '🏃', description: 'Tennis partners, hiking, yoga & gym buddies' },
   { value: 'pro_work', label: '🎨 Skills & Mentorship', icon: '🎨', description: 'Photography walks, language practice & creative craft' },
+];
+
+const LIFESTYLE_CHIPS: SpecialtyOption[] = [
+  { label: 'All Lifestyle', icon: '🏡', lens: 'lifestyle' },
+  { label: 'Regional Homestyle Cook', icon: '🍛', lens: 'lifestyle' },
+  { label: 'Festival & Pooja Decor', icon: '🪔', lens: 'lifestyle' },
+  { label: 'Senior Companion & Temple Escort', icon: '👵', lens: 'lifestyle' },
+  { label: 'Sabzi Mandi & Bazaar Guide', icon: '🛒', lens: 'lifestyle' },
+  { label: 'Ethnic Styling & Saree Draping', icon: '👗', lens: 'lifestyle' },
+  { label: 'Balcony Tulsi & Gardening', icon: '🌿', lens: 'lifestyle' },
+  { label: 'Carrom & Society Sports', icon: '🎯', lens: 'lifestyle' },
+  { label: 'Evening Chai & Gupshup', icon: '☕', lens: 'lifestyle' },
+  { label: 'Pantry & Dabba Organization', icon: '📦', lens: 'lifestyle' },
 ];
 
 const COMPANION_CHIPS: SpecialtyOption[] = [
@@ -192,7 +206,7 @@ const Discovery: React.FC = () => {
         longitude: item.longitude != null ? Number(item.longitude) : null,
         city: hub?.city || 'Bengaluru',
         area: hub?.area || 'Indiranagar',
-        lenses: ['companions', 'wellness', 'pro_work'] as PlatformLens[],
+        lenses: ['companions', 'wellness', 'pro_work', 'lifestyle'] as PlatformLens[],
         services: [] as string[],
       };
     });
@@ -377,10 +391,16 @@ const Discovery: React.FC = () => {
 
   // Determine active chip options based on selected lens
   const activeChips = useMemo(() => {
+    if (activeLens === 'lifestyle') return LIFESTYLE_CHIPS;
     if (activeLens === 'pro_work') return PRO_CHIPS;
     if (activeLens === 'companions') return COMPANION_CHIPS;
     if (activeLens === 'wellness') return WELLNESS_CHIPS;
-    return [...PRO_CHIPS.slice(0, 4), ...COMPANION_CHIPS.slice(1, 4), ...WELLNESS_CHIPS.slice(1, 3)];
+    return [
+      ...LIFESTYLE_CHIPS.slice(0, 4),
+      ...COMPANION_CHIPS.slice(1, 4),
+      ...WELLNESS_CHIPS.slice(1, 3),
+      ...PRO_CHIPS.slice(1, 3),
+    ];
   }, [activeLens]);
 
   return (

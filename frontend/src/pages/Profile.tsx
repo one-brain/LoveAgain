@@ -29,6 +29,15 @@ import {
 } from '@heroicons/react/24/outline';
 
 const PRESET_SPECIALTIES = [
+  'Regional Homestyle Cook',
+  'Festival & Pooja Decor',
+  'Senior Companion & Temple Escort',
+  'Sabzi Mandi & Bazaar Guide',
+  'Ethnic Styling & Saree Draping',
+  'Balcony Tulsi & Gardening',
+  'Carrom & Society Sports',
+  'Evening Chai & Gupshup',
+  'Pantry & Dabba Organization',
   'Photography & Video',
   'Fitness & Sports Coaching',
   'Yoga & Mindfulness',
