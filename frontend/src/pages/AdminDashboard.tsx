@@ -240,7 +240,7 @@ export const AdminDashboard: React.FC = () => {
     },
     {
       key: 'mis',
-      label: 'MIS Trajectory & Analytics',
+      label: 'Platform Performance & Analytics',
       shortLabel: 'Analytics',
       description: 'Gross Merchandise Value (GMV), 15% platform take, volume trends and specialty performance',
       icon: ChartBarIcon,

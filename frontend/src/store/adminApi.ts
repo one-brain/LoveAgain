@@ -1,4 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReauth } from './baseQueryWithReauth';
 import { discoveryApi } from './discoveryApi';
 
 export interface CompanionApplicationRequest {
@@ -103,37 +104,7 @@ export interface AdminPayoutItem {
 
 export const adminApi = createApi({
   reducerPath: 'adminApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: '/api/v1',
-    prepareHeaders: (headers) => {
-      const token =
-        localStorage.getItem('accessToken') ||
-        localStorage.getItem('cue_token') ||
-        sessionStorage.getItem('cue_token');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      const userId = localStorage.getItem('userId');
-      if (userId) {
-        headers.set('X-User-Id', userId);
-      }
-      const userStr =
-        localStorage.getItem('user') ||
-        sessionStorage.getItem('user') ||
-        localStorage.getItem('cue_user') ||
-        sessionStorage.getItem('cue_user');
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          if (user?.id) headers.set('X-User-Id', String(user.id));
-          if (user?.email) headers.set('X-User-Email', String(user.email));
-        } catch {
-          // ignore parsing error
-        }
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Verifications', 'AdminUsers', 'AdminMis', 'AdminPayouts', 'AdminBookings', 'Profile'],
   endpoints: (builder) => ({
     applyCompanion: builder.mutation<any, CompanionApplicationRequest>({

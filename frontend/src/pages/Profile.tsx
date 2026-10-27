@@ -13,6 +13,7 @@ import {
 } from '../store/api';
 import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
 import { DiscoveryVisibilityCard } from '../components/profile/DiscoveryVisibilityCard';
+import { SpecialtySearchPicker } from '../components/profile/SpecialtySearchPicker';
 import {
   BriefcaseIcon,
   CheckBadgeIcon,
@@ -168,10 +169,7 @@ const Profile: React.FC = () => {
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
   const [hourlyRate, setHourlyRate] = useState('1500');
   const [bio, setBio] = useState('');
-  const [specialties, setSpecialties] = useState<string[]>(['Dinner Date & Foodie', 'City Guide & Tours']);
-  const [availableSpecialties, setAvailableSpecialties] = useState<string[]>(PRESET_SPECIALTIES);
-  const [customSpecialty, setCustomSpecialty] = useState('');
-  const [specialtyFeedback, setSpecialtyFeedback] = useState('');
+  const [specialties, setSpecialties] = useState<string[]>([]);
   const [maxRadiusKm, setMaxRadiusKm] = useState('25');
   const [providerSuccess, setProviderSuccess] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
@@ -218,15 +216,6 @@ const Profile: React.FC = () => {
 
       if (providerProfile.specialties && providerProfile.specialties.length > 0) {
         setSpecialties(providerProfile.specialties);
-        setAvailableSpecialties((prev) => {
-          const combined = [...prev];
-          for (const s of providerProfile.specialties) {
-            if (!combined.some((item) => item.toLowerCase() === s.toLowerCase())) {
-              combined.push(s);
-            }
-          }
-          return combined;
-        });
       }
     } else if (user && !displayName) {
       setDisplayName(`${user.firstName || ''} ${user.lastName || ''}`.trim());
@@ -345,36 +334,6 @@ const Profile: React.FC = () => {
     }
   };
 
-  const handleToggleSpecialty = (spec: string) => {
-    setSpecialtyFeedback('');
-    setSpecialties((prev) =>
-      prev.includes(spec) ? prev.filter((s) => s !== spec) : [...prev, spec]
-    );
-  };
-
-  const handleAddCustomSpecialty = (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    const query = customSpecialty.trim();
-    if (!query) return;
-
-    const matched = availableSpecialties.find(
-      (s) => s.trim().toLowerCase() === query.toLowerCase()
-    );
-
-    if (matched) {
-      if (!specialties.includes(matched)) {
-        setSpecialties((prev) => [...prev, matched]);
-      }
-      setSpecialtyFeedback(`Selected existing: "${matched}"`);
-    } else {
-      const capitalized = query.replace(/\b\w/g, (c) => c.toUpperCase());
-      setAvailableSpecialties((prev) => [...prev, capitalized]);
-      setSpecialties((prev) => [...prev, capitalized]);
-      setSpecialtyFeedback(`Added new custom specialty: "${capitalized}"`);
-    }
-    setCustomSpecialty('');
-  };
-
   const handleUpdateProvider = async (e: React.FormEvent) => {
     e.preventDefault();
     setProviderError(null);
@@ -475,7 +434,7 @@ const Profile: React.FC = () => {
           <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-muted text-xs font-medium text-foreground">
               <ShieldCheckIcon className="w-4 h-4 text-emerald-500" />
-              <span>Trust Score: 99%</span>
+              <span>Trust Score: {user?.trustScore ?? 50}%</span>
             </span>
             <Link
               to="/bookings"
@@ -526,7 +485,7 @@ const Profile: React.FC = () => {
           }`}
         >
           <ShieldCheckIcon className="w-4 h-4" />
-          <span>3. Identity & KYC</span>
+          <span>3. Identity Verification</span>
         </button>
       </div>
 
@@ -840,7 +799,7 @@ const Profile: React.FC = () => {
                 />
               </div>
               <span className="text-[11px] text-muted-foreground mt-1 block">
-                Recommended: ₹800 – ₹3,000/hr. You receive <strong>₹{netRate}/hr</strong> (85% net take-home via Escrow Vault).
+                Recommended: ₹800 – ₹3,000/hr. You receive <strong>₹{netRate}/hr</strong> (85% take-home earnings with safe payment protection).
               </span>
             </div>
 
@@ -869,58 +828,11 @@ const Profile: React.FC = () => {
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-2">
-                Offered Specialties & Activities ({specialties.length} selected)
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {availableSpecialties.map((spec) => {
-                  const isSelected = specialties.includes(spec);
-                  return (
-                    <button
-                      key={spec}
-                      type="button"
-                      onClick={() => handleToggleSpecialty(spec)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all border flex items-center gap-1.5 ${
-                        isSelected
-                          ? 'bg-accent text-accent-foreground border-accent shadow-xs'
-                          : 'bg-muted/40 text-foreground border-border hover:bg-muted'
-                      }`}
-                    >
-                      <span>{isSelected ? '✓' : '+'}</span>
-                      <span>{spec}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Add Custom Specialty with Deduplication */}
-              <div className="mt-3 p-3 rounded-2xl bg-muted/40 border border-border flex flex-col sm:flex-row gap-2 items-center">
-                <input
-                  type="text"
-                  value={customSpecialty}
-                  onChange={(e) => setCustomSpecialty(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleAddCustomSpecialty();
-                    }
-                  }}
-                  placeholder="Can't find an activity? Add custom (e.g. Squash, Wine Tasting)..."
-                  className="flex-1 w-full px-3 py-2 rounded-xl border border-border bg-background text-foreground text-xs"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleAddCustomSpecialty()}
-                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors whitespace-nowrap"
-                >
-                  + Add Specialty
-                </button>
-              </div>
-              {specialtyFeedback && (
-                <p className="text-[11px] font-medium text-accent mt-1.5">{specialtyFeedback}</p>
-              )}
-            </div>
+            <SpecialtySearchPicker
+              selectedSpecialties={specialties}
+              onChange={setSpecialties}
+              availablePresets={PRESET_SPECIALTIES}
+            />
 
             <div className="pt-4 border-t border-border flex justify-end">
               <button
@@ -950,14 +862,14 @@ const Profile: React.FC = () => {
               <ShieldCheckIcon className="w-8 h-8 text-emerald-500 mx-auto" />
               <div className="text-xs font-bold text-foreground">Government ID</div>
               <div className="text-[11px] text-muted-foreground">
-                {companionStatus === 'Approved' ? 'Verified by Admin' : 'Submitted for review'}
+                {companionStatus === 'Approved' ? 'Verified by Admin' : companionStatus === 'PendingReview' ? 'Submitted for review' : 'Not Submitted'}
               </div>
             </div>
 
             <div className="p-4 rounded-2xl bg-muted/40 border border-border text-center space-y-1">
               <SparklesIcon className="w-8 h-8 text-accent mx-auto" />
               <div className="text-xs font-bold text-foreground">Trust Score</div>
-              <div className="text-sm font-bold text-accent">99%</div>
+              <div className="text-sm font-bold text-accent">{user?.trustScore ?? 50}%</div>
             </div>
 
             <div className="p-4 rounded-2xl bg-muted/40 border border-border text-center space-y-1">

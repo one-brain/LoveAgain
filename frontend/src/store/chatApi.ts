@@ -1,6 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createBaseQueryWithReauth } from './baseQueryWithReauth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 
 export interface ChatMessageDto {
   id: string;
@@ -14,16 +15,7 @@ export interface ChatMessageDto {
 
 export const chatApi = createApi({
   reducerPath: 'chatApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_BASE_URL}/api/v1/chat`,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: createBaseQueryWithReauth('/api/v1/chat'),
   tagTypes: ['ChatMessages'],
   endpoints: (builder) => ({
     getOrderMessages: builder.query<ChatMessageDto[], { orderId: string; limit?: number; offset?: number }>({

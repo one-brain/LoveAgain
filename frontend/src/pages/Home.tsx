@@ -157,7 +157,7 @@ const Home: React.FC = () => {
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const query = searchQuery.trim();
-    navigate(`/discovery?lens=${selectedLens}${query ? `&q=${encodeURIComponent(query)}` : ''}`);
+    navigate(`/discovery${query ? `?q=${encodeURIComponent(query)}` : ''}`);
   };
 
   return (
@@ -252,7 +252,7 @@ const Home: React.FC = () => {
                   key={card.id}
                   onClick={() => {
                     setSelectedLens(card.id);
-                    navigate(`/discovery?lens=${card.id}`);
+                    navigate(`/discovery?q=${encodeURIComponent(card.name)}`);
                   }}
                   className={`relative p-6 sm:p-7 rounded-3xl border bg-card/80 backdrop-blur-md transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl ${
                     isSelected
@@ -307,11 +307,11 @@ const Home: React.FC = () => {
           <div className="mt-12 pt-8 border-t border-border/60 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-2xl sm:text-3xl font-bold text-foreground">100%</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Govt ID KYC Verified</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Verified Government ID</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground">Escrow Vault</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Zero Payment Defaults</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">Safe Escrow</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Protected Payments</div>
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-bold text-foreground">Instant Booking</div>
@@ -337,7 +337,7 @@ const Home: React.FC = () => {
                 Featured Verified Profiles
               </h2>
               <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-                Every member is KYC verified with government ID and protected by 100% Escrow holds.
+                Every companion is verified with government ID and protected by platform safe payments.
               </p>
             </div>
             <Link
@@ -352,7 +352,7 @@ const Home: React.FC = () => {
             {FEATURED_PROFILES.map((comp) => (
               <div
                 key={comp.id}
-                onClick={() => navigate(`/discovery?lens=${comp.activeLenses[0]}`)}
+                onClick={() => navigate(`/discovery?q=${encodeURIComponent(comp.name)}`)}
                 className="rounded-3xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col group"
               >
                 <div className="relative h-64 overflow-hidden bg-muted">
@@ -451,7 +451,7 @@ const Home: React.FC = () => {
               <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 flex items-center gap-3">
                 <CheckCircleIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-xs sm:text-sm text-white">100% Escrow Vault Security</h4>
+                  <h4 className="font-semibold text-xs sm:text-sm text-white">100% Protected Payment Guarantee</h4>
                   <p className="text-[11px] sm:text-xs text-white/80">Clients deposit funds before the session begins. Guaranteed payout upon completion.</p>
                 </div>
               </div>

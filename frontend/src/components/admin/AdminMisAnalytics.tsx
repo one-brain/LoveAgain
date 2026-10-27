@@ -22,16 +22,16 @@ export const AdminMisAnalytics: React.FC<AdminMisAnalyticsProps> = ({
   const maxTrendGmv = Math.max(...(misData?.dailyTrends?.map((d) => d.gmv) || [50000]), 10000);
 
   return (
-    <section aria-label="MIS Reports and Trajectory" className="space-y-6">
+    <section aria-label="Platform Performance Reports" className="space-y-6">
       {/* Header with Quick Actions */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/80 p-4 rounded-2xl shadow-2xs">
         <div>
           <h2 className="text-sm font-bold text-foreground flex items-center gap-1.5">
             <ArrowTrendingUpIcon className="w-4 h-4 text-accent" />
-            <span>Marketplace Growth & Financial Trajectory</span>
+            <span>Platform Growth & Daily Trends</span>
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Daily demand distribution, category volume analytics, and platform fee yield.
+            Daily booking volume, popular categories, and platform service fee earnings.
           </p>
         </div>
 
@@ -41,7 +41,7 @@ export const AdminMisAnalytics: React.FC<AdminMisAnalyticsProps> = ({
           className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-semibold text-foreground transition-all shadow-2xs hover:shadow-xs"
         >
           <ArrowDownTrayIcon className="w-3.5 h-3.5 text-accent" />
-          <span>Export MIS Report (CSV)</span>
+          <span>Export Platform Report (CSV)</span>
         </button>
       </div>
 
@@ -57,7 +57,7 @@ export const AdminMisAnalytics: React.FC<AdminMisAnalyticsProps> = ({
             <div className="flex items-center justify-between mb-4">
               <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
                 <ChartBarIcon className="w-4 h-4 text-accent" />
-                <span>Daily Booking Volume & Revenue Trajectory</span>
+                <span>Daily Booking Volume & Revenue</span>
               </h3>
               <span className="text-[11px] text-muted-foreground font-mono">Last 7 Days</span>
             </div>

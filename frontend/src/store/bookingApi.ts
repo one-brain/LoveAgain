@@ -1,6 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReauth } from './baseQueryWithReauth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 
 export interface CreateBookingRequest {
   providerId: string;
@@ -57,16 +58,7 @@ export interface SeekerOutgoingBookingsResponse {
 
 export const bookingApi = createApi({
   reducerPath: 'bookingApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_BASE_URL}/api/v1`,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Bookings', 'Profile'],
   endpoints: (builder) => ({
     createBooking: builder.mutation<CreateBookingResponse, CreateBookingRequest>({

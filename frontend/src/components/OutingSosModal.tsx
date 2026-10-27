@@ -51,7 +51,7 @@ export const OutingSosModal: React.FC<OutingSosModalProps> = ({
               <ShieldExclamationIcon className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-foreground">Outing Safety & SOS Shield</h2>
+              <h2 className="text-lg font-bold text-foreground">Safety Alert & Emergency Support (SOS)</h2>
               <p className="text-xs text-muted-foreground">24/7 Rapid Emergency Response Desk</p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export const OutingSosModal: React.FC<OutingSosModalProps> = ({
           <div className="p-4 rounded-2xl bg-muted/60 border border-border/80 space-y-1">
             <div className="flex items-center gap-2 text-xs font-bold text-foreground">
               <MapPinIcon className="w-4 h-4 text-accent" />
-              <span>Current Outing Venue</span>
+              <span>Current Meetup Location</span>
             </div>
             <p className="text-xs text-muted-foreground truncate">
               {meetingAddress || 'Venue on record for this session'}
@@ -118,7 +118,7 @@ export const OutingSosModal: React.FC<OutingSosModalProps> = ({
 
         <div className="pt-2 text-center">
           <p className="text-[11px] text-muted-foreground">
-            Session #{orderId.slice(0, 8)} is backed by 100% Escrow Vault protection and physical safety logging.
+            Meetup #{orderId.slice(0, 8)} is backed by platform protected payments and 24/7 safety assistance.
           </p>
         </div>
       </div>

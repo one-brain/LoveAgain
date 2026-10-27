@@ -28,13 +28,6 @@ import {
   ArrowPathIcon,
   LockClosedIcon,
 } from '@heroicons/react/24/outline';
-import type { PlatformLens } from '../types/platform';
-
-interface SpecialtyOption {
-  label: string;
-  icon: string;
-  lens: PlatformLens | 'all';
-}
 
 const CITY_OPTIONS: DropdownOption[] = [
   { value: 'all', label: 'All India', icon: '🇮🇳', description: 'Show companions nationwide' },
@@ -47,53 +40,11 @@ const CITY_OPTIONS: DropdownOption[] = [
   { value: 'kol', label: 'Kolkata', icon: '📍', description: 'Park Street, Salt Lake' },
 ];
 
-const LENS_DROPDOWN_OPTIONS: DropdownOption<PlatformLens | 'all'>[] = [
-  { value: 'all', label: 'All Companions', icon: '✨', description: 'Show all verified companions & activities' },
-  { value: 'lifestyle', label: '🏡 Domestic & Indian Lifestyle', icon: '🏡', description: 'Homestyle cooking, festival decor, senior companions, mandi tours & saree styling' },
-  { value: 'companions', label: '🤝 Social & Events', icon: '🤝', description: 'Platonic outings, city tours, dining & concerts' },
-  { value: 'wellness', label: '🏃 Active & Wellness', icon: '🏃', description: 'Tennis partners, hiking, yoga & gym buddies' },
-  { value: 'pro_work', label: '🎨 Skills & Mentorship', icon: '🎨', description: 'Photography walks, language practice & creative craft' },
-];
-
-const LIFESTYLE_CHIPS: SpecialtyOption[] = [
-  { label: 'All Lifestyle', icon: '🏡', lens: 'lifestyle' },
-  { label: 'Regional Homestyle Cook', icon: '🍛', lens: 'lifestyle' },
-  { label: 'Festival & Pooja Decor', icon: '🪔', lens: 'lifestyle' },
-  { label: 'Senior Companion & Temple Escort', icon: '👵', lens: 'lifestyle' },
-  { label: 'Sabzi Mandi & Bazaar Guide', icon: '🛒', lens: 'lifestyle' },
-  { label: 'Ethnic Styling & Saree Draping', icon: '👗', lens: 'lifestyle' },
-  { label: 'Balcony Tulsi & Gardening', icon: '🌿', lens: 'lifestyle' },
-  { label: 'Carrom & Society Sports', icon: '🎯', lens: 'lifestyle' },
-  { label: 'Evening Chai & Gupshup', icon: '☕', lens: 'lifestyle' },
-  { label: 'Pantry & Dabba Organization', icon: '📦', lens: 'lifestyle' },
-];
-
-const COMPANION_CHIPS: SpecialtyOption[] = [
-  { label: 'All Activities', icon: '✨', lens: 'companions' },
-  { label: 'City Tour', icon: '🗺️', lens: 'companions' },
-  { label: 'Fine Dining', icon: '🍷', lens: 'companions' },
-  { label: 'Concert Buddy', icon: '🎸', lens: 'companions' },
-  { label: 'Plus-One', icon: '🥂', lens: 'companions' },
-  { label: 'Museum Walk', icon: '🎨', lens: 'companions' },
-  { label: 'Cafe & Chat', icon: '☕', lens: 'companions' },
-];
-
-const WELLNESS_CHIPS: SpecialtyOption[] = [
-  { label: 'All Wellness', icon: '🏃', lens: 'wellness' },
-  { label: 'Tennis', icon: '🎾', lens: 'wellness' },
-  { label: 'Hiking', icon: '🥾', lens: 'wellness' },
-  { label: 'Yoga Partner', icon: '🧘', lens: 'wellness' },
-  { label: 'Gym Spotter', icon: '🏋️', lens: 'wellness' },
-  { label: 'Running Buddy', icon: '👟', lens: 'wellness' },
-];
-
-const PRO_CHIPS: SpecialtyOption[] = [
-  { label: 'All Mentorship', icon: '🎨', lens: 'pro_work' },
-  { label: 'Photography', icon: '📸', lens: 'pro_work' },
-  { label: 'Language Practice', icon: '📚', lens: 'pro_work' },
-  { label: 'Cooking & Baking', icon: '🍳', lens: 'pro_work' },
-  { label: 'Music & DJing', icon: '🎵', lens: 'pro_work' },
-  { label: 'Coding Mentorship', icon: '💻', lens: 'pro_work' },
+const GENDER_OPTIONS: DropdownOption[] = [
+  { value: 'all', label: 'All Genders', icon: '👥', description: 'Show all companions' },
+  { value: 'female', label: 'Women', icon: '👩', description: 'Female companions' },
+  { value: 'male', label: 'Men', icon: '👨', description: 'Male companions' },
+  { value: 'non-binary', label: 'Non-Binary', icon: '⚧', description: 'Non-binary companions' },
 ];
 
 const SORT_OPTIONS: DropdownOption[] = [
@@ -110,7 +61,6 @@ const RADIUS_OPTIONS: DropdownOption[] = [
   { value: '100', label: 'Within 100 km', description: 'Extended regional area' },
 ];
 
-// Rich Universal Profiles showcasing Display Name and 3 Profile Images
 const CURATED_SAMPLE_PROVIDERS = SAMPLE_PROVIDERS_LIST;
 
 const Discovery: React.FC = () => {
@@ -119,21 +69,20 @@ const Discovery: React.FC = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [createBooking] = useCreateBookingMutation();
 
-  const initialLens = (searchParams.get('lens') as PlatformLens | 'all') || 'all';
   const initialQ = searchParams.get('q') || '';
-  const initialSpecialty = searchParams.get('specialty') || 'All';
+  const initialGender = (searchParams.get('gender') as any) || 'all';
 
-  const [activeLens, setActiveLens] = useState<PlatformLens | 'all'>(initialLens);
   const [q, setQ] = useState(initialQ);
-  const [specialty, setSpecialty] = useState(initialSpecialty);
+  const [genderFilter, setGenderFilter] = useState<'all' | 'female' | 'male' | 'non-binary'>(
+    ['all', 'female', 'male', 'non-binary'].includes(initialGender) ? initialGender : 'all'
+  );
   const [minRate, setMinRate] = useState('');
   const [maxRate, setMaxRate] = useState('');
   const [sortBy, setSortBy] = useState('rating');
   const [radiusKm, setRadiusKm] = useState('50');
-  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  // Dynamic Seeker Location State
+  // Dynamic Location State
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; label: string } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
@@ -150,18 +99,32 @@ const Discovery: React.FC = () => {
   const [checkoutProviderName, setCheckoutProviderName] = useState<string>('Companion');
 
   useEffect(() => {
-    const paramLens = searchParams.get('lens') as PlatformLens | 'all';
+    const paramLens = searchParams.get('lens');
     const paramQ = searchParams.get('q');
     const paramSpec = searchParams.get('specialty');
-    if (paramLens) setActiveLens(paramLens);
-    if (paramQ !== null) setQ(paramQ);
-    if (paramSpec !== null) setSpecialty(paramSpec);
+    const paramGender = searchParams.get('gender');
+
+    if (paramGender && ['all', 'female', 'male', 'non-binary'].includes(paramGender.toLowerCase())) {
+      setGenderFilter(paramGender.toLowerCase() as any);
+    }
+    if (paramQ !== null) {
+      setQ(paramQ);
+    } else if (paramLens && paramLens !== 'all') {
+      const lensMap: Record<string, string> = {
+        lifestyle: 'Lifestyle',
+        wellness: 'Wellness',
+        companions: 'Social',
+        pro_work: 'Mentorship',
+      };
+      setQ(lensMap[paramLens] || paramLens);
+    } else if (paramSpec !== null && paramSpec !== 'All') {
+      setQ(paramSpec);
+    }
   }, [searchParams]);
 
   // Query live backend providers
   const { data: backendData } = useListProvidersQuery({
     q: q.trim() || undefined,
-    specialty: specialty !== 'All' ? specialty : undefined,
     minRate: minRate ? Number(minRate) : undefined,
     maxRate: maxRate ? Number(maxRate) : undefined,
     sortBy,
@@ -190,13 +153,14 @@ const Discovery: React.FC = () => {
           : null;
 
       return {
-        providerId: item.providerId as string,
-        displayName: (item.displayName || 'Verified Companion') as string,
+        providerId: String(item.providerId),
+        displayName: String(item.displayName || 'Verified Companion'),
         photoUrl: imgs[0],
         profileImages: imgs,
+        gender: String(item.gender || 'Female'),
         hourlyRate: Number(item.hourlyRate || 1500),
-        bio: (item.bio || '') as string,
-        specialties: (item.specialties || []) as string[],
+        bio: String(item.bio || ''),
+        specialties: Array.isArray(item.specialties) ? item.specialties : [],
         averageRating: Number(item.averageRating || 5.0),
         isVerified: Boolean(item.isVerified),
         trustScore: Number(item.trustScore || 99),
@@ -205,13 +169,13 @@ const Discovery: React.FC = () => {
         longitude: item.longitude != null ? Number(item.longitude) : null,
         city: hub?.city || 'Bengaluru',
         area: hub?.area || 'Indiranagar',
-        lenses: ['companions', 'wellness', 'pro_work', 'lifestyle'] as PlatformLens[],
-        services: [] as string[],
+        services: Array.isArray(item.services) ? item.services : [],
+        lenses: Array.isArray(item.lenses) ? item.lenses : ['companions'],
       };
     });
 
     const existingIds = new Set(liveItems.map((i: any) => i.providerId));
-    let list = [...liveItems, ...CURATED_SAMPLE_PROVIDERS.filter((s) => !existingIds.has(s.providerId))];
+    let list: any[] = [...liveItems, ...CURATED_SAMPLE_PROVIDERS.filter((s) => !existingIds.has(s.providerId))];
 
     // Exclude any provider explicitly rejected by platform administration
     try {
@@ -222,7 +186,7 @@ const Discovery: React.FC = () => {
       }
     } catch {}
 
-    // Calculate dynamic distance & filter by radius if Seeker location is active
+    // Calculate dynamic distance & filter by radius if location is active
     if (userLocation) {
       const maxR = Number(radiusKm) || 50;
       list = list
@@ -244,26 +208,29 @@ const Discovery: React.FC = () => {
         .filter((p) => p.distanceKm == null || p.distanceKm <= maxR);
     }
 
-    // Filter by Active Lens
-    if (activeLens !== 'all') {
-      list = list.filter((p) => p.lenses.includes(activeLens));
+    // Filter by Gender
+    if (genderFilter !== 'all') {
+      list = list.filter((p) => {
+        const g = (p.gender || '').toLowerCase();
+        if (genderFilter === 'female') return g === 'female' || g === 'woman';
+        if (genderFilter === 'male') return g === 'male' || g === 'man';
+        if (genderFilter === 'non-binary') return g === 'non-binary' || g === 'other';
+        return true;
+      });
     }
 
+    // Unified Search across name, specialties, bio, city, area, and services
     if (q.trim()) {
-      const lower = q.toLowerCase();
-      list = list.filter(
-        (p) =>
-          p.displayName.toLowerCase().includes(lower) ||
-          p.bio.toLowerCase().includes(lower) ||
-          p.specialties.some((s: string) => s.toLowerCase().includes(lower))
-      );
-    }
-
-    if (specialty !== 'All') {
-      list = list.filter(
-        (p) =>
-          p.specialties.some((s: string) => s.toLowerCase().includes(specialty.toLowerCase()))
-      );
+      const lower = q.trim().toLowerCase();
+      list = list.filter((p) => {
+        const nameMatch = (p.displayName || '').toLowerCase().includes(lower);
+        const bioMatch = (p.bio || '').toLowerCase().includes(lower);
+        const cityMatch = (p.city || '').toLowerCase().includes(lower);
+        const areaMatch = (p.area || '').toLowerCase().includes(lower);
+        const specMatch = Array.isArray(p.specialties) && p.specialties.some((s: string) => (s || '').toLowerCase().includes(lower));
+        const svcMatch = Array.isArray(p.services) && p.services.some((s: string) => (s || '').toLowerCase().includes(lower));
+        return nameMatch || bioMatch || cityMatch || areaMatch || specMatch || svcMatch;
+      });
     }
 
     if (minRate) {
@@ -271,9 +238,6 @@ const Discovery: React.FC = () => {
     }
     if (maxRate) {
       list = list.filter((p) => p.hourlyRate <= Number(maxRate));
-    }
-    if (verifiedOnly) {
-      list = list.filter((p) => p.isVerified);
     }
 
     if (sortBy === 'price') {
@@ -285,7 +249,7 @@ const Discovery: React.FC = () => {
     }
 
     return list;
-  }, [backendData, userLocation, radiusKm, activeLens, q, specialty, minRate, maxRate, verifiedOnly, sortBy]);
+  }, [backendData, userLocation, radiusKm, genderFilter, q, minRate, maxRate, sortBy]);
 
   const handleSelectPhoto = (providerId: string, idx: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -304,35 +268,6 @@ const Discovery: React.FC = () => {
         ...prev,
         [providerId]: next,
       };
-    });
-  };
-
-  const handleLensChange = (lens: PlatformLens | 'all') => {
-    setActiveLens(lens);
-    setSpecialty('All');
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (lens === 'all') {
-        next.delete('lens');
-      } else {
-        next.set('lens', lens);
-      }
-      next.delete('specialty');
-      return next;
-    });
-  };
-
-  const handleSpecialtySelect = (spec: string) => {
-    const cleanSpec = spec.replace(/^[^\w\s]+/, '').trim();
-    setSpecialty(cleanSpec);
-    setSearchParams((prev) => {
-      const next = new URLSearchParams(prev);
-      if (cleanSpec === 'All' || cleanSpec.startsWith('All')) {
-        next.delete('specialty');
-      } else {
-        next.set('specialty', cleanSpec);
-      }
-      return next;
     });
   };
 
@@ -384,71 +319,95 @@ const Discovery: React.FC = () => {
   };
 
   const handleClearFilters = () => {
-    setActiveLens('all');
     setQ('');
-    setSpecialty('All');
+    setGenderFilter('all');
     setMinRate('');
     setMaxRate('');
-    setVerifiedOnly(false);
     setSortBy('rating');
     setSelectedCity('all');
     setUserLocation(null);
     setLocationError(null);
+    setRadiusKm('50');
     setSearchParams(new URLSearchParams());
   };
 
-  // Determine active chip options based on selected lens
-  const activeChips = useMemo(() => {
-    if (activeLens === 'lifestyle') return LIFESTYLE_CHIPS;
-    if (activeLens === 'pro_work') return PRO_CHIPS;
-    if (activeLens === 'companions') return COMPANION_CHIPS;
-    if (activeLens === 'wellness') return WELLNESS_CHIPS;
-    return [
-      ...LIFESTYLE_CHIPS.slice(0, 4),
-      ...COMPANION_CHIPS.slice(1, 4),
-      ...WELLNESS_CHIPS.slice(1, 3),
-      ...PRO_CHIPS.slice(1, 3),
-    ];
-  }, [activeLens]);
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (genderFilter !== 'all') count++;
+    if (selectedCity !== 'all' || userLocation !== null) count++;
+    if (minRate || maxRate) count++;
+    if (sortBy !== 'rating') count++;
+    return count;
+  }, [genderFilter, selectedCity, userLocation, minRate, maxRate, sortBy]);
 
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
-      {/* Top Header & Lens Selector */}
-      <section className="bg-card border-b border-border sticky top-16 z-20 backdrop-blur-md bg-card/95 transition-all">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            {/* 3-Lens Dropdown Selector */}
-            <div className="w-full md:w-56">
-              <SelectDropdown
-                options={LENS_DROPDOWN_OPTIONS}
-                value={activeLens}
-                onChange={(val) => handleLensChange(val)}
-                className="w-full text-xs font-semibold"
-                triggerClassName="w-full bg-muted/70 hover:bg-muted border border-border/80 px-3 py-2 rounded-xl text-xs"
+      {/* Top Header & Search Bar */}
+      <section className="bg-card border-b border-border sticky top-16 z-20 backdrop-blur-md bg-card/95 transition-all shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
+          {/* Main Controls Row */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            {/* Primary Unified Search Bar */}
+            <div className="relative flex-1">
+              <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={q}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setQ(val);
+                  setSearchParams((prev) => {
+                    const next = new URLSearchParams(prev);
+                    if (val.trim()) next.set('q', val.trim());
+                    else next.delete('q');
+                    return next;
+                  });
+                }}
+                placeholder="Search by activity, category, or companion name (e.g. Cooking, Yoga, Saree, Tennis, Elena)..."
+                className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-muted/50 border border-border/80 text-xs sm:text-sm placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all shadow-2xs"
               />
+              {q && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setQ('');
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      next.delete('q');
+                      return next;
+                    });
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+                  aria-label="Clear search"
+                >
+                  <XMarkIcon className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
-            {/* City & Near-Me Location Hub Bar */}
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <div className="w-40 sm:w-44">
+            {/* Quick Filter Strip: City, GPS, Gender, and Filters Drawer Toggle */}
+            <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+              {/* City Dropdown */}
+              <div className="w-36 sm:w-40 shrink-0">
                 <SelectDropdown
                   options={CITY_OPTIONS}
                   value={selectedCity === 'gps' ? 'all' : selectedCity}
                   onChange={(val) => handleCityChange(val)}
                   className="w-full text-xs font-medium"
-                  triggerClassName="w-full bg-muted/70 hover:bg-muted border border-border/80 px-2.5 py-2 rounded-xl text-xs"
+                  triggerClassName="w-full bg-muted/60 hover:bg-muted border border-border/80 px-2.5 py-2 rounded-xl text-xs"
                 />
               </div>
 
+              {/* GPS Near Me Button */}
               <button
                 type="button"
                 onClick={handleNearMeGps}
                 disabled={isLocating}
                 title="Use Current Device Location (GPS)"
-                className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
                   selectedCity === 'gps'
                     ? 'bg-accent text-accent-foreground border-accent shadow-xs'
-                    : 'bg-card border-border hover:border-accent text-foreground'
+                    : 'bg-card border-border/80 hover:border-accent text-foreground'
                 }`}
               >
                 {isLocating ? (
@@ -456,47 +415,86 @@ const Discovery: React.FC = () => {
                 ) : (
                   <MapPinIcon className="w-3.5 h-3.5 text-accent" />
                 )}
-                <span className="hidden sm:inline">Near Me</span>
+                <span>Near Me</span>
               </button>
-            </div>
 
-            {/* Search Input Bar & Filter Toggle */}
-            <div className="flex items-center gap-2 flex-1 md:justify-end">
-              <div className="relative flex-1 sm:max-w-xs">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder={
-                    activeLens === 'pro_work'
-                      ? 'Search skills or name...'
-                      : activeLens === 'wellness'
-                      ? 'Search fitness buddies...'
-                      : 'Search companions...'
-                  }
-                  className="w-full pl-9 pr-4 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-accent/40"
+              {/* Gender Dropdown */}
+              <div className="w-32 sm:w-36 shrink-0">
+                <SelectDropdown
+                  options={GENDER_OPTIONS}
+                  value={genderFilter}
+                  onChange={(val) => {
+                    setGenderFilter(val as any);
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      if (val === 'all') next.delete('gender');
+                      else next.set('gender', val);
+                      return next;
+                    });
+                  }}
+                  className="w-full text-xs font-medium"
+                  triggerClassName="w-full bg-muted/60 hover:bg-muted border border-border/80 px-2.5 py-2 rounded-xl text-xs"
                 />
               </div>
 
+              {/* Advanced Filters Button */}
               <button
+                type="button"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`p-2.5 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-semibold ${
-                  showFilters
-                    ? 'bg-accent text-accent-foreground border-accent'
-                    : 'bg-card border-border hover:border-accent text-muted-foreground'
+                className={`px-3 py-2 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer ${
+                  showFilters || activeFilterCount > 0
+                    ? 'bg-accent text-accent-foreground border-accent shadow-xs'
+                    : 'bg-card border-border/80 hover:border-accent text-foreground'
                 }`}
-                title="Filters"
+                title="More Filters"
               >
-                <AdjustmentsHorizontalIcon className="w-4 h-4" />
-                <span className="hidden sm:inline">Filters</span>
+                <AdjustmentsHorizontalIcon className="w-3.5 h-3.5" />
+                <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span className="w-4 h-4 rounded-full bg-accent-foreground text-accent text-[10px] font-bold flex items-center justify-center font-mono ml-0.5">
+                    {activeFilterCount}
+                  </span>
+                )}
               </button>
             </div>
           </div>
 
+          {/* Quick Popular Search Tags */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
+            <span className="text-[11px] text-muted-foreground font-medium shrink-0">Popular:</span>
+            {[
+              { label: '🍛 Homestyle Cooking', query: 'Cooking' },
+              { label: '🎾 Tennis', query: 'Tennis' },
+              { label: '🪔 Festival & Pooja', query: 'Pooja' },
+              { label: '📸 Photography', query: 'Photography' },
+              { label: '👵 Senior Companion', query: 'Senior Companion' },
+              { label: '🧘 Yoga', query: 'Yoga' },
+            ].map((tag) => (
+              <button
+                key={tag.query}
+                type="button"
+                onClick={() => {
+                  setQ(tag.query);
+                  setSearchParams((prev) => {
+                    const next = new URLSearchParams(prev);
+                    next.set('q', tag.query);
+                    return next;
+                  });
+                }}
+                className={`px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
+                  q.toLowerCase() === tag.query.toLowerCase()
+                    ? 'bg-accent text-accent-foreground border-accent shadow-2xs'
+                    : 'bg-muted/40 hover:bg-muted text-foreground/80 border-border/70 hover:border-accent/40'
+                }`}
+              >
+                {tag.label}
+              </button>
+            ))}
+          </div>
+
           {/* Active Location Indicator Pill */}
           {userLocation && (
-            <div className="mt-2.5 flex items-center justify-between px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs">
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs">
               <div className="flex items-center gap-1.5 text-accent font-medium">
                 <MapPinIcon className="w-3.5 h-3.5" />
                 <span>
@@ -504,11 +502,12 @@ const Discovery: React.FC = () => {
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => {
                   setUserLocation(null);
                   setSelectedCity('all');
                 }}
-                className="text-[11px] font-semibold text-muted-foreground hover:text-foreground underline ml-2"
+                className="text-[11px] font-semibold text-muted-foreground hover:text-foreground underline ml-2 cursor-pointer"
               >
                 Clear Location
               </button>
@@ -516,43 +515,18 @@ const Discovery: React.FC = () => {
           )}
 
           {locationError && (
-            <div className="mt-2 text-xs text-rose-500 font-medium">
+            <div className="text-xs text-rose-500 font-medium">
               ⚠️ {locationError}
             </div>
           )}
-
-          {/* Contextual Chips Bar */}
-          <div className="flex items-center gap-2 overflow-x-auto pt-3 pb-1 text-xs scrollbar-none border-t border-border/50 mt-3">
-            {activeChips.map((chip) => {
-              const clean = chip.label.replace(/^[^\w\s]+/, '').trim();
-              const isSelected =
-                specialty.toLowerCase() === clean.toLowerCase() ||
-                (specialty === 'All' && (clean === 'All Gigs' || clean === 'All Activities' || clean === 'All Matches'));
-
-              return (
-                <button
-                  key={chip.label}
-                  onClick={() => handleSpecialtySelect(chip.label)}
-                  className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all flex items-center gap-1.5 font-medium ${
-                    isSelected
-                      ? 'bg-accent/15 border border-accent text-accent font-semibold'
-                      : 'bg-muted/40 border border-border/70 text-muted-foreground hover:text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <span>{chip.icon}</span>
-                  <span>{chip.label}</span>
-                </button>
-              );
-            })}
-          </div>
         </div>
       </section>
 
-      {/* Filter Drawer / Accordion */}
+      {/* Filter Drawer */}
       {showFilters && (
-        <section className="bg-card border-b border-border py-4 animate-in fade-in slide-in-from-top-2">
+        <section className="bg-card border-b border-border py-4 animate-in fade-in slide-in-from-top-2 duration-150">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Sort Results</label>
                 <SelectDropdown
@@ -586,18 +560,18 @@ const Discovery: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <input
                       type="number"
-                      placeholder="Min ₹ (e.g. 500)"
+                      placeholder="Min ₹"
                       value={minRate}
                       onChange={(e) => setMinRate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                      className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-accent"
                     />
                     <span className="text-muted-foreground text-xs">-</span>
                     <input
                       type="number"
-                      placeholder="Max ₹ (e.g. 3000)"
+                      placeholder="Max ₹"
                       value={maxRate}
                       onChange={(e) => setMaxRate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                      className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-accent"
                     />
                   </div>
                 ) : (
@@ -615,22 +589,14 @@ const Discovery: React.FC = () => {
                 )}
               </div>
 
-              <div className="flex items-end justify-between gap-2">
-                <label className="flex items-center gap-2 cursor-pointer pb-2 text-xs font-medium text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={verifiedOnly}
-                    onChange={(e) => setVerifiedOnly(e.target.checked)}
-                    className="rounded text-accent focus:ring-accent"
-                  />
-                  <span>ID Verified Only</span>
-                </label>
+              <div className="flex justify-end pb-1">
                 <button
+                  type="button"
                   onClick={handleClearFilters}
-                  className="px-3 py-2 rounded-xl text-xs font-medium text-accent hover:underline flex items-center gap-1"
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-accent hover:bg-accent/10 border border-accent/30 flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <XMarkIcon className="w-3.5 h-3.5" />
-                  <span>Reset All</span>
+                  <span>Reset All Filters</span>
                 </button>
               </div>
             </div>
@@ -643,10 +609,16 @@ const Discovery: React.FC = () => {
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-muted-foreground">
             Showing <span className="font-semibold text-foreground">{displayProviders.length}</span> verified profiles
-            {activeLens !== 'all' && (
+            {q && (
               <>
                 {' '}
-                in <span className="font-medium text-accent">{LENS_DROPDOWN_OPTIONS.find((t) => t.value === activeLens)?.label}</span>
+                for <span className="font-medium text-accent">"{q}"</span>
+              </>
+            )}
+            {genderFilter !== 'all' && (
+              <>
+                {' '}
+                • <span className="font-medium text-foreground">{GENDER_OPTIONS.find((g) => g.value === genderFilter)?.label || genderFilter}</span>
               </>
             )}
           </p>
@@ -657,7 +629,7 @@ const Discovery: React.FC = () => {
             <SparklesIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">No matching profiles found</h3>
             <p className="text-sm text-muted-foreground mb-6">
-              Try adjusting your lens, search terms, or resetting active filters.
+              Try adjusting your search terms, gender filter, or resetting active filters.
             </p>
             <button
               onClick={handleClearFilters}
@@ -689,7 +661,7 @@ const Discovery: React.FC = () => {
                       navigate(`/provider/${provider.providerId}`);
                     }
                   }}
-                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group focus:outline-none focus:ring-2 focus:ring-accent/50"
+                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group focus:outline-hidden focus:ring-2 focus:ring-accent/50"
                 >
                   {/* Interactive 3-Photo Carousel & Top Badges */}
                   <div className="relative h-64 overflow-hidden bg-muted">
@@ -736,7 +708,7 @@ const Discovery: React.FC = () => {
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, -1, e)}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-none"
+                          className="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-hidden"
                           aria-label={`Previous photo of ${provider.displayName}`}
                         >
                           <ChevronLeftIcon className="w-5 h-5" />
@@ -744,7 +716,7 @@ const Discovery: React.FC = () => {
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, 1, e)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-none"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-hidden"
                           aria-label={`Next photo of ${provider.displayName}`}
                         >
                           <ChevronRightIcon className="w-5 h-5" />
@@ -752,22 +724,27 @@ const Discovery: React.FC = () => {
                       </>
                     )}
 
-                    {/* Bottom Bar: Lens Badges (Left) & 3-Photo Thumbnail Switcher (Right) */}
+                    {/* Bottom Bar: Category Badges (Left) & 3-Photo Thumbnail Switcher (Right) */}
                     <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
                       <div className="flex flex-wrap gap-1">
-                        {provider.lenses.includes('pro_work') && (
+                        {provider.lenses?.includes('pro_work') && (
                           <span className="px-2 py-0.5 rounded-md bg-sky-900/80 backdrop-blur-md text-[10px] font-semibold text-sky-200 border border-sky-400/30">
                             💼 Skilled Pro
                           </span>
                         )}
-                        {provider.lenses.includes('wellness') && (
+                        {provider.lenses?.includes('wellness') && (
                           <span className="px-2 py-0.5 rounded-md bg-teal-900/80 backdrop-blur-md text-[10px] font-semibold text-teal-200 border border-teal-400/30">
                             🏃 Active & Wellness
                           </span>
                         )}
-                        {provider.lenses.includes('companions') && (
+                        {provider.lenses?.includes('companions') && (
                           <span className="px-2 py-0.5 rounded-md bg-emerald-900/80 backdrop-blur-md text-[10px] font-semibold text-emerald-200 border border-emerald-400/30">
                             🤝 Companion
+                          </span>
+                        )}
+                        {provider.lenses?.includes('lifestyle') && (
+                          <span className="px-2 py-0.5 rounded-md bg-rose-900/80 backdrop-blur-md text-[10px] font-semibold text-rose-200 border border-rose-400/30">
+                            🏡 Lifestyle
                           </span>
                         )}
                       </div>
@@ -837,7 +814,7 @@ const Discovery: React.FC = () => {
 
                       {/* Specialty / Activity Tags */}
                       <div className="flex flex-wrap gap-1.5 mb-4">
-                        {provider.specialties.map((spec: string) => (
+                        {(provider.specialties || []).map((spec: string) => (
                           <span
                             key={spec}
                             className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-muted-foreground"

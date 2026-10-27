@@ -120,7 +120,7 @@ export const ApplyCompanion: React.FC = () => {
               Your Companion Verification is In Progress
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed mb-8">
-              Our Trust & Safety team is reviewing your KYC documents and payout details. Turnaround time is typically under <strong>24 hours</strong>.
+              Our safety team is reviewing your verification documents and payout details. Turnaround time is typically under <strong>24 hours</strong>.
             </p>
 
             <div className="w-full bg-muted/40 border border-border/60 rounded-2xl p-6 text-left mb-8 space-y-4">
@@ -225,7 +225,7 @@ export const ApplyCompanion: React.FC = () => {
           Verify Identity & Payouts
         </h1>
         <p className="text-muted-foreground text-sm mt-2">
-          Your rates and activities are automatically synced from your Companion Settings. Complete KYC and payout setup below to go live.
+          Your rates and activities are automatically synced from your Companion Settings. Complete identity verification and payout setup below to go live.
         </p>
       </div>
 
@@ -297,7 +297,7 @@ export const ApplyCompanion: React.FC = () => {
             <div>
               <h2 className="text-base font-bold text-foreground">1. Government ID & Selfie Verification</h2>
               <p className="text-xs text-muted-foreground">
-                Tokenized verification under DPDP compliance — never shared publicly.
+                Encrypted and private — never shared publicly.
               </p>
             </div>
           </div>
@@ -375,16 +375,16 @@ export const ApplyCompanion: React.FC = () => {
           <div className="flex items-center gap-2.5 border-b border-border pb-3">
             <BanknotesIcon className="w-5 h-5 text-emerald-500" />
             <div>
-              <h2 className="text-base font-bold text-foreground">2. Escrow Payout Destination</h2>
+              <h2 className="text-base font-bold text-foreground">2. Earnings Withdrawal Details (UPI)</h2>
               <p className="text-xs text-muted-foreground">
-                85% of every completed booking is released directly to your wallet & UPI.
+                85% of every completed meetup is transferred directly to your wallet & UPI.
               </p>
             </div>
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-              Verified UPI ID for Instant Payouts
+              UPI ID for Receiving Earnings
             </label>
             <input
               type="text"
@@ -400,7 +400,15 @@ export const ApplyCompanion: React.FC = () => {
         {/* Submit Footer */}
         <div className="pt-4 border-t border-border/60 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            By submitting, you agree to the Cue Strictly Platonic & Anti-Solicitation Safety Charter.
+            By submitting, you agree to the Cue{' '}
+            <Link to="/community-guidelines#platonic-charter" className="text-accent underline font-semibold hover:text-accent-hover">
+              Strictly Platonic & Anti-Solicitation Safety Charter
+            </Link>
+            {' '}and{' '}
+            <Link to="/terms" className="text-accent underline font-semibold hover:text-accent-hover">
+              Terms of Service
+            </Link>
+            .
           </p>
           <button
             type="submit"

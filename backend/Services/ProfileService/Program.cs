@@ -41,9 +41,22 @@ builder.Services.AddHealthChecks()
     .AddNpgSql(builder.Configuration.GetConnectionString("CueDatabase")!);
 
 // JWT Authentication
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "cue-auth";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "cue-platform";
-var jwtSigningKey = builder.Configuration["Jwt:SigningKey"] ?? string.Empty;
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? builder.Configuration["JWT_ISSUER"]
+    ?? builder.Configuration["Jwt:Issuer"]
+    ?? "cue-auth";
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? builder.Configuration["JWT_AUDIENCE"]
+    ?? builder.Configuration["Jwt:Audience"]
+    ?? "cue-platform";
+var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
+    ?? builder.Configuration["JWT_SIGNING_KEY"]
+    ?? builder.Configuration["Jwt:SigningKey"]
+    ?? "development-only-change-this-signing-key-32-bytes";
+if (jwtSigningKey.Length < 32)
+{
+    jwtSigningKey = jwtSigningKey.PadRight(32, '0');
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

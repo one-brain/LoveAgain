@@ -332,7 +332,7 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                     className="flex-1 px-3 py-1.5 rounded-xl bg-muted/70 hover:bg-muted text-foreground font-semibold text-xs flex items-center justify-center gap-1.5 transition-all shadow-2xs hover:shadow-xs focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
                   >
                     <EyeIcon className="w-3.5 h-3.5 text-accent" />
-                    <span>Inspect KYC</span>
+                    <span>Review Details</span>
                   </button>
 
                   {itemStatus === 'Rejected' ? (
@@ -395,7 +395,7 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                 </div>
                 <div>
                   <h3 id="kyc-modal-title" className="text-base sm:text-lg font-bold text-foreground">
-                    Companion Application & KYC Inspection
+                    Companion Application & ID Verification
                   </h3>
                   <p className="text-xs text-muted-foreground">
                     {selectedItem.displayName ? `${selectedItem.displayName} • Legal: ` : ''}

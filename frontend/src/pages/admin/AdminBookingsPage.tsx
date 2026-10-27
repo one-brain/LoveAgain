@@ -47,7 +47,7 @@ export const AdminBookingsPage: React.FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      showToast('Booking and escrow ledger exported successfully.');
+      showToast('Bookings report exported successfully.');
     } catch {
       showToast('Failed to export ledger report.', 'error');
     }
@@ -80,8 +80,8 @@ export const AdminBookingsPage: React.FC = () => {
 
       {/* Page Header */}
       <AdminPageHeader
-        title="Bookings & Escrow Audit Ledger"
-        description="Monitor end-to-end platform reservation lifecycles, active escrow liquidity locked in vaults, dispute alerts, and 85/15 fund settlement transitions."
+        title="Platform Bookings & Payments"
+        description="Monitor all platform bookings, protected payments, meeting statuses, and 85/15 fee splits."
         badge={
           disputedCount > 0 ? (
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/30">

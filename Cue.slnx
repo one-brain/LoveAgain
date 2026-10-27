@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/backend/" />
   <Folder Name="/backend/Services/">
+    <Project Path="backend/Services/APIGateway/APIGateway.csproj" />
     <Project Path="backend/Services/AuthService/AuthService.csproj" />
+    <Project Path="backend/Services/BookingService/BookingService.csproj" />
     <Project Path="backend/Services/ChatService/ChatService.csproj" />
     <Project Path="backend/Services/DiscoveryService.Tests/DiscoveryService.Tests.csproj" />
     <Project Path="backend/Services/DiscoveryService/DiscoveryService.csproj" />

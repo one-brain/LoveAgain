@@ -66,8 +66,8 @@ export const AdminUsersPage: React.FC = () => {
 
       {/* Page Header */}
       <AdminPageHeader
-        title="Users Directory & Trust Moderation"
-        description="Comprehensive directory of registered seekers, companions, and platform administrators. Inspect identity credentials, monitor trust scores, and manage disciplinary account suspensions."
+        title="User Directory"
+        description="View registered clients, companions, and platform administrators. Check verification status, trust ratings, and manage account access."
         badge={
           suspendedCount > 0 ? (
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/30">

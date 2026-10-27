@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { RootState } from '../store';
-import { logout, setUser } from '../store/slices/authSlice';
+import { setUser } from '../store/slices/authSlice';
+import { performFullLogout } from '../utils/sessionManager';
 import { useGetSeekerProfileQuery, useGetMyProfileQuery } from '../store/api';
+import { useResendVerificationMutation } from '../store/authApi';
 import {
   SunIcon,
   MoonIcon,
@@ -73,24 +75,29 @@ const Header: React.FC = () => {
   const companionStatus = myProfileData?.profile?.status;
 
   useEffect(() => {
-    if (seekerProfileData?.profile?.firstName) {
+    if (seekerProfileData?.profile?.firstName && user?.id) {
       const p = seekerProfileData.profile;
+      // Guard: strictly ensure the loaded profile matches the currently logged-in user id
+      if (p.userId && p.userId !== user.id) {
+        return;
+      }
       if (
         p.firstName !== user?.firstName ||
         p.lastName !== user?.lastName ||
         p.isVerified !== user?.isVerified ||
-        p.photoUrl !== user?.photoUrl
+        p.photoUrl !== user?.photoUrl ||
+        (p.trustScore !== undefined && p.trustScore !== user?.trustScore)
       ) {
         dispatch(
           setUser({
-            id: p.userId || user?.id || '',
-            email: p.email || user?.email || '',
-            firstName: p.firstName,
-            lastName: p.lastName || '',
-            photoUrl: p.photoUrl || null,
-            isVerified: p.isVerified ?? true,
-            trustScore: p.trustScore ?? 99,
-            roles: user?.roles || (isAdmin ? ['Admin'] : ['Seeker', 'Provider']),
+            id: user.id,
+            email: p.email || user.email || '',
+            firstName: p.firstName || user.firstName,
+            lastName: p.lastName ?? user.lastName ?? '',
+            photoUrl: p.photoUrl || user.photoUrl || null,
+            isVerified: p.isVerified ?? user.isVerified ?? false,
+            trustScore: p.trustScore ?? user.trustScore ?? 50,
+            roles: user.roles || (isAdmin ? ['Admin'] : ['Seeker', 'Provider']),
           })
         );
       }
@@ -191,15 +198,56 @@ const Header: React.FC = () => {
     setTheme(themes[nextIndex]);
   };
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate('/', { replace: true });
+  const [resendVerification, { isLoading: isResendingVerification }] = useResendVerificationMutation();
+  const [resendStatus, setResendStatus] = useState<string | null>(null);
+
+  const handleResendVerification = async () => {
+    try {
+      await resendVerification().unwrap();
+      setResendStatus('Verification link sent! Check your inbox.');
+      setTimeout(() => setResendStatus(null), 6000);
+    } catch {
+      setResendStatus('Failed to send verification link. Please try again later.');
+      setTimeout(() => setResendStatus(null), 6000);
+    }
+  };
+
+  const handleLogout = async () => {
+    setUserDropdownOpen(false);
+    setMobileMenuOpen(false);
+    await performFullLogout(dispatch, navigate);
   };
 
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-50 glass border-b border-border/80 transition-colors duration-200">
+    <>
+      {isAuthenticated && !isAdmin && user?.isVerified === false && !user?.email?.endsWith('@cue.local') && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-2 text-xs text-amber-700 dark:text-amber-400">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span className="flex items-center gap-1.5 font-medium">
+              <span>⚠️ Your email is not verified yet. Confirm your email address to unlock full escrow booking features.</span>
+            </span>
+            <div className="flex items-center gap-2 shrink-0">
+              {resendStatus ? (
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400 animate-in fade-in">
+                  {resendStatus}
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResendVerification}
+                  disabled={isResendingVerification}
+                  className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-800 dark:text-amber-300 font-semibold text-[11px] border border-amber-500/30 transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isResendingVerification ? 'Sending...' : 'Resend Verification Email'}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      <header className="sticky top-0 z-50 glass border-b border-border/80 transition-colors duration-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-18 items-center justify-between">
           {/* Logo & Brand */}
@@ -344,7 +392,7 @@ const Header: React.FC = () => {
                           <div className="w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
                             <ChartBarIcon className="w-3.5 h-3.5 text-purple-500" />
                           </div>
-                          <span className="truncate">MIS Trajectory & Analytics</span>
+                          <span className="truncate">Platform Performance</span>
                         </div>
                       </Link>
 
@@ -793,9 +841,9 @@ const Header: React.FC = () => {
                                   <ChartBarIcon className="w-4 h-4 text-purple-500" />
                                 </div>
                                 <div className="truncate">
-                                  <p className="truncate leading-tight">MIS Trajectory & Analytics</p>
+                                  <p className="truncate leading-tight">Platform Performance</p>
                                   <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    GMV & platform revenue telemetry
+                                    Revenue & booking performance trends
                                   </p>
                                 </div>
                               </div>
@@ -1049,7 +1097,7 @@ const Header: React.FC = () => {
                 >
                   <div className="flex items-center gap-2.5">
                     <ChartBarIcon className="w-5 h-5 text-purple-500 shrink-0" />
-                    <span>MIS Trajectory & Analytics</span>
+                    <span>Platform Performance</span>
                   </div>
                 </Link>
 
@@ -1213,6 +1261,7 @@ const Header: React.FC = () => {
         </div>
       )}
     </header>
+    </>
   );
 };
 

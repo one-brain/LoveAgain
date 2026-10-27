@@ -512,13 +512,13 @@ const ProviderDetail: React.FC = () => {
           <div className="sticky top-24 bg-card rounded-3xl border border-border p-6 shadow-md space-y-6">
             <div>
               <span className="text-xs font-bold uppercase tracking-wider text-accent block mb-1">
-                Escrow-Protected Experience
+                Protected Experience
               </span>
               <h2 className="text-2xl font-bold font-serif text-foreground">
-                Book with Escrow
+                Book a Meetup
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                100% of your funds are secured in the Escrow Vault and only released after your companion meetup concludes safely.
+                100% of your payment is held safely by the platform and released only after your meetup concludes safely.
               </p>
             </div>
 
@@ -651,10 +651,10 @@ const ProviderDetail: React.FC = () => {
                 className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all cursor-pointer hover:scale-[1.01] flex items-center justify-center gap-2"
               >
                 <ShieldCheckIcon className="w-5 h-5" />
-                <span>{isAuthenticated ? 'Book with Escrow \u2192' : 'Sign In to Book with Escrow \u2192'}</span>
+                <span>{isAuthenticated ? 'Book a Meetup \u2192' : 'Sign In to Book a Meetup \u2192'}</span>
               </button>
               <p className="text-[11px] text-muted-foreground text-center mt-2">
-                🔒 Protected by Cue Escrow Vault until activity completion.
+                🔒 Protected Payment: Released only after your meetup concludes safely.
               </p>
             </div>
           </div>

@@ -65,13 +65,13 @@ export const AdminPayoutsPage: React.FC = () => {
 
       {/* Page Header */}
       <AdminPageHeader
-        title="UPI Payout Disbursements & Settlement Hub"
-        description="Reconcile and disburse completed companion earnings via Razorpay UPI and IMPS direct bank settlement rails with automated UTR confirmation."
+        title="Companion Earnings Withdrawals"
+        description="Process and track companion withdrawal requests to bank accounts and UPI IDs with automated UTR verification."
         badge={
           pendingCount > 0 ? (
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/30">
               <CurrencyRupeeIcon className="w-3.5 h-3.5 text-amber-500" />
-              <span>{pendingCount} Settlements Pending</span>
+              <span>{pendingCount} Pending Withdrawals</span>
             </div>
           ) : undefined
         }

@@ -24,42 +24,8 @@ import {
   SparklesIcon,
   ClockIcon,
   ArrowUpRightIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-
-const DEMO_BOOKINGS: BookingSummary[] = [
-  {
-    orderId: 'c8f921ab-3e2a',
-    providerId: 'sample-1',
-    seekerId: 'user-self',
-    startTime: new Date(Date.now() + 86400000).toISOString(),
-    endTime: new Date(Date.now() + 86400000 + 7200000).toISOString(),
-    status: 'Confirmed',
-    totalAmount: 3000,
-    providerName: 'Elena Rostova',
-    providerPhoto: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    averageRating: 4.98,
-    specialty: 'Tennis & Art Gallery',
-    isVerified: true,
-    meetingAddress: 'Central Tennis Club, Court 4',
-    activity: 'Tennis Coaching',
-  },
-  {
-    orderId: 'a12b45cd-7f89',
-    providerId: 'sample-2',
-    seekerId: 'user-self',
-    startTime: new Date(Date.now() - 172800000).toISOString(),
-    endTime: new Date(Date.now() - 172800000 + 7200000).toISOString(),
-    status: 'Completed',
-    totalAmount: 3600,
-    providerName: 'Marcus Vance',
-    providerPhoto: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-    averageRating: 4.95,
-    specialty: 'Photography & Culinary',
-    isVerified: true,
-    meetingAddress: 'Little Italy Market Stroll',
-    activity: 'Street Food Crawl',
-  },
-];
 
 const SORT_BOOKING_OPTIONS: DropdownOption[] = [
   { value: 'date-asc', label: 'Soonest First' },
@@ -70,7 +36,7 @@ const SORT_BOOKING_OPTIONS: DropdownOption[] = [
 const STATUS_FILTER_OPTIONS: DropdownOption[] = [
   { value: 'all', label: 'All Statuses' },
   { value: 'Confirmed', label: 'Confirmed', description: 'Active & ready' },
-  { value: 'PendingPayment', label: 'Pending Escrow', description: 'Awaiting payment' },
+  { value: 'PendingPayment', label: 'Pending Payment', description: 'Awaiting payment' },
   { value: 'InProgress', label: 'In Progress', description: 'Active right now' },
   { value: 'Completed', label: 'Completed', description: 'Finished sessions' },
   { value: 'Cancelled', label: 'Cancelled', description: 'Terminated sessions' },
@@ -169,7 +135,7 @@ const Bookings: React.FC = () => {
   const [roleMode, setRoleMode] = useState<'client' | 'companion'>('client');
   const companionStatus = profileData?.profile?.status;
 
-  // Use live data if fetched; fallback to showcase demo bookings only before initial fetch
+  // Use live data if fetched; default to empty list for clean account state
   const bookings: BookingSummary[] = useMemo(() => {
     if (roleMode === 'companion') {
       if (!isLoadingProvider && providerBookingsData !== undefined) {
@@ -180,7 +146,7 @@ const Bookings: React.FC = () => {
       if (!isLoadingSeeker && seekerBookingsData !== undefined) {
         return seekerBookingsData?.bookings || [];
       }
-      return DEMO_BOOKINGS;
+      return [];
     }
   }, [providerBookingsData, seekerBookingsData, roleMode, isLoadingProvider, isLoadingSeeker]);
 
@@ -212,9 +178,9 @@ const Bookings: React.FC = () => {
   );
 
   const handleCancel = async (orderId: string) => {
-    if (window.confirm('Are you sure you want to cancel this booking? Escrow funds will be refunded according to cancellation policy.')) {
+    if (window.confirm('Are you sure you want to cancel this booking? Payment will be refunded according to the cancellation policy.')) {
       try {
-        await cancelBooking({ orderId, reason: 'Seeker requested cancellation' }).unwrap();
+        await cancelBooking({ orderId, reason: 'Client requested cancellation' }).unwrap();
       } catch (err) {
         console.warn('Cancel API warning:', err);
       }
@@ -287,7 +253,7 @@ const Bookings: React.FC = () => {
           >
             <span>My Bookings (Client)</span>
             <span className="px-1.5 py-0.5 rounded-full bg-accent/15 text-accent text-[11px] font-mono">
-              {seekerBookingsData?.bookings?.length ?? DEMO_BOOKINGS.length}
+              {seekerBookingsData?.bookings?.length ?? 0}
             </span>
           </button>
 
@@ -330,7 +296,7 @@ const Bookings: React.FC = () => {
             <p className="text-xs text-muted-foreground mt-0.5">
               {companionStatus === 'PendingReview'
                 ? 'Your profile & ID verification are being reviewed by the Cue safety team. Turnaround is ~24 hours.'
-                : 'Complete your companion application with hourly rates, specialties, and KYC to receive incoming bookings.'}
+                : 'Complete your companion application with hourly rates, activities, and identity verification to receive incoming bookings.'}
             </p>
           </div>
           <Link
@@ -426,6 +392,17 @@ const Bookings: React.FC = () => {
         )}
       </div>
 
+      {/* Escrow Protection & Cancellation Policy Bar */}
+      <div className="mb-6 px-4 py-2.5 rounded-xl bg-card border border-border/80 flex items-center justify-between gap-3 text-xs text-muted-foreground shadow-2xs">
+        <div className="flex items-center gap-2">
+          <ShieldCheckIcon className="w-4 h-4 text-emerald-500 shrink-0" />
+          <span>All bookings are held safely under 100% Escrow Protection. Payments are released only after meetup completion.</span>
+        </div>
+        <Link to="/cancellation-policy" className="text-accent underline font-medium hover:text-accent-hover shrink-0">
+          Cancellation Policy
+        </Link>
+      </div>
+
       {/* Content Area */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
@@ -507,11 +484,11 @@ const Bookings: React.FC = () => {
                     <ClockIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">No Past Outings Yet</h3>
+                    <h3 className="text-lg font-bold text-foreground">No Past Meetups Yet</h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {roleMode === 'companion'
-                        ? 'Completed client sessions and settled escrow payout receipts will be archived here.'
-                        : 'Your completed companion experiences and escrow receipts will appear here after sessions conclude.'}
+                        ? 'Completed client meetups and payment receipts will be listed here.'
+                        : 'Your completed meetups and payment receipts will appear here after sessions conclude.'}
                     </p>
                   </div>
                   {roleMode === 'client' && (

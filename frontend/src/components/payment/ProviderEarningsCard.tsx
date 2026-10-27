@@ -77,13 +77,13 @@ export const ProviderEarningsCard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-accent mb-0.5 block">
-            Financial Settlement
+            Earnings & Payouts
           </span>
           <h2 className="text-xl font-bold font-serif text-foreground">
-            Earnings & Razorpay UPI Payouts
+            Earnings & Withdrawals
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Your earnings from verified companion bookings with 15% platform commission automatically settled.
+            Your take-home earnings (85%) from completed meetups with transparent 15% platform service fees.
           </p>
         </div>
 
@@ -94,7 +94,7 @@ export const ProviderEarningsCard: React.FC = () => {
           className="px-5 py-2.5 rounded-2xl bg-accent text-accent-foreground font-semibold text-xs transition-all shadow-sm flex items-center gap-2 hover:opacity-95 disabled:opacity-50 cursor-pointer self-start sm:self-auto"
         >
           <ArrowUpRightIcon className="w-4 h-4" />
-          <span>Withdraw to UPI ({formatINR(clearedBalance)})</span>
+          <span>Withdraw Earnings ({formatINR(clearedBalance)})</span>
         </button>
       </div>
 
@@ -136,12 +136,12 @@ export const ProviderEarningsCard: React.FC = () => {
         {/* Platform Commission */}
         <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 space-y-1">
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-            Platform Take-Rate (15%)
+            Platform Service Fee (15%)
           </span>
           <p className="text-2xl font-extrabold font-mono text-foreground">
             {isLoading ? '...' : `₹${platformCommission.toLocaleString('en-IN')}`}
           </p>
-          <p className="text-[10px] text-muted-foreground">Platform hosting & trust fee</p>
+          <p className="text-[10px] text-muted-foreground">Platform safety & 24/7 support fee</p>
         </div>
       </div>
 
@@ -215,7 +215,7 @@ export const ProviderEarningsCard: React.FC = () => {
             <form onSubmit={handleWithdraw} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground uppercase mb-1">
-                  Payout Method
+                  Withdrawal Method
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   <button

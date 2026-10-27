@@ -46,9 +46,9 @@ export const AdminMisPage: React.FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      showToast('MIS Ledger exported successfully.');
+      showToast('Platform report exported successfully.');
     } catch {
-      showToast('Failed to export MIS report.', 'error');
+      showToast('Failed to export report.', 'error');
     }
   };
 
@@ -76,8 +76,8 @@ export const AdminMisPage: React.FC = () => {
 
       {/* Page Header */}
       <AdminPageHeader
-        title="MIS Trajectory & Revenue Analytics"
-        description="Executive business intelligence telemetry: Gross Merchandise Value (GMV), 15% platform commission take, active escrow reserves, and companion specialty demand analysis."
+        title="Platform Performance & Analytics"
+        description="Key business metrics: Total booking volume, 15% platform service fees, protected payment reserves, and popular activities."
         actions={
           <>
             <button
@@ -87,7 +87,7 @@ export const AdminMisPage: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-semibold text-foreground transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50"
             >
               <ArrowPathIcon className={`w-3.5 h-3.5 text-muted-foreground ${isFetching ? 'animate-spin text-accent' : ''}`} />
-              <span>{isFetching ? 'Refreshing...' : 'Sync Telemetry'}</span>
+              <span>{isFetching ? 'Refreshing...' : 'Refresh Metrics'}</span>
             </button>
             <button
               type="button"
@@ -95,7 +95,7 @@ export const AdminMisPage: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 text-xs font-bold transition-all shadow-xs hover:shadow-md active:scale-95"
             >
               <ArrowDownTrayIcon className="w-3.5 h-3.5" />
-              <span>Export MIS CSV</span>
+              <span>Export Report (CSV)</span>
             </button>
           </>
         }

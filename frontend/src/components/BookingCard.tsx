@@ -59,7 +59,7 @@ const STATUS_CONFIG: Record<
   { label: string; badgeClass: string; icon: React.ReactNode }
 > = {
   PendingPayment: {
-    label: 'Pending Escrow',
+    label: 'Pending Payment',
     badgeClass: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30',
     icon: <ClockIcon className="w-3.5 h-3.5 inline mr-1" />,
   },
@@ -269,30 +269,30 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           )}
         </div>
 
-        {/* 2-Way Handshake PIN Display (Client Mode when Confirmed) */}
+        {/* Meeting PIN Display (Client Mode when Confirmed) */}
         {isConfirmed && roleMode === 'client' && (
           <div className="mt-3 p-3 rounded-2xl bg-accent/10 border border-accent/25 flex items-center justify-between">
             <div>
               <span className="text-[10px] font-bold uppercase tracking-wider text-accent block">
-                Meeting Handshake PIN
+                Meeting PIN
               </span>
               <span className="text-xl font-mono font-black tracking-widest text-foreground">
                 {booking.checkInPin || '849201'}
               </span>
             </div>
-            <div className="text-right max-w-[150px]">
-              <span className="text-[11px] font-semibold text-foreground block">Share at Venue</span>
-              <span className="text-[10px] text-muted-foreground">Cryptographic presence proof</span>
+            <div className="text-right max-w-[170px]">
+              <span className="text-[11px] font-semibold text-foreground block">Share at Meetup</span>
+              <span className="text-[10px] text-muted-foreground">Share with companion to start session</span>
             </div>
           </div>
         )}
 
-        {/* Active Outing Indicator & SOS Trigger */}
+        {/* Active Meetup Indicator & SOS Trigger */}
         {isInProgress && (
           <div className="mt-3 p-3 rounded-2xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-ping" />
-              <span className="text-xs font-bold text-sky-600 dark:text-sky-400">Outing Active Now</span>
+              <span className="text-xs font-bold text-sky-600 dark:text-sky-400">Meetup in Progress</span>
             </div>
             {onOpenSos && (
               <button
@@ -304,7 +304,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 className="px-2.5 py-1 rounded-lg bg-destructive/15 text-destructive hover:bg-destructive/25 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
               >
                 <ShieldExclamationIcon className="w-3.5 h-3.5" />
-                <span>SOS Shield</span>
+                <span>Safety SOS</span>
               </button>
             )}
           </div>
@@ -314,7 +314,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       {/* Footer: Price & Actions */}
       <div className="flex items-center justify-between gap-3 pt-1">
         <div>
-          <span className="text-[11px] text-muted-foreground block">Total Escrow</span>
+          <span className="text-[11px] text-muted-foreground block">Total (Safe Escrow)</span>
           <span className="text-lg font-bold font-mono tabular-nums text-foreground">
             {formatINR(booking.totalAmount)}
           </span>
@@ -331,7 +331,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               className="px-3.5 py-2 min-h-[36px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center gap-1.5 hover:bg-accent-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <CreditCardIcon className="w-4 h-4" />
-              <span>Pay & Secure</span>
+              <span>Pay Securely</span>
             </button>
           )}
 
@@ -345,7 +345,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               className="px-3.5 py-2 min-h-[36px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
             >
               <ShieldCheckIcon className="w-4 h-4" />
-              <span>Check In</span>
+              <span>Enter PIN</span>
             </button>
           )}
 
@@ -359,7 +359,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               className="px-3.5 py-2 min-h-[36px] rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <CheckCircleIcon className="w-4 h-4" />
-              <span>Complete Session</span>
+              <span>End Meetup</span>
             </button>
           )}
 

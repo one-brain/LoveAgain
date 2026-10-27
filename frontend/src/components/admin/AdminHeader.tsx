@@ -23,20 +23,20 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
         <div className="flex flex-wrap items-center gap-2 mb-2">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold tracking-tight">
             <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
-            <span>Cue Back-Office Command Center</span>
+            <span>Cue Admin Workspace</span>
           </div>
 
           <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
             <SignalIcon className="w-3 h-3 text-emerald-500 animate-pulse" />
-            <span>Gateway Online • Live Telemetry</span>
+            <span>System Active • Real-time Updates</span>
           </div>
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground font-serif">
-          Operations, KYC & Revenue Studio
+          Platform Management & Operations
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed">
-          Real-time companion credential inspection, escrow booking settlement, user trust moderation, and financial ledger control.
+          Manage companion approvals, platform bookings, payouts, and user accounts in one place.
         </p>
       </div>
 

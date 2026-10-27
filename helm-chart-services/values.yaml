@@ -81,7 +81,7 @@ secret:
   STRIPE_SECRET_KEY: sk_test_421ffVAem5k5Ea8 # placeholder
 
   # JWT signing key for authentication tokens
-  JWT_SIGNING_KEY: supersecretjwtskieforlocal # placeholder
+  JWT_SIGNING_KEY: development-only-change-this-signing-key-32-bytes
 
   # Auth Service specific secrets
   JWT_ACCESS_TOKEN_MINUTES: "15"

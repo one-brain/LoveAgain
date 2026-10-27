@@ -41,7 +41,7 @@ export const DiscoveryVisibilityCard: React.FC<DiscoveryVisibilityCardProps> = (
       setFeedback({
         type: 'success',
         text: nextState
-          ? 'Profile is now Live and visible to seekers in Discovery.'
+          ? 'Profile is now Live and visible to clients in Discovery.'
           : 'Profile is now Paused and hidden from Discovery searches.',
       });
       onToggleSuccess?.(nextState);

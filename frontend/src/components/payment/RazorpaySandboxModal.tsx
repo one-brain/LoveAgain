@@ -59,7 +59,7 @@ export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
   orderId,
   amount,
   currency: _currency = 'INR',
-  title = 'Cue Escrow Vault Payment',
+  title = 'Safe Payment',
   description = 'Protected Companion Session Checkout',
   onSuccess,
   onError,

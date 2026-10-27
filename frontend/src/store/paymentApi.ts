@@ -1,6 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createBaseQueryWithReauth } from './baseQueryWithReauth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 
 export interface WalletBalanceResponse {
   userId: string;
@@ -98,28 +99,7 @@ export interface PayoutResponse {
 
 export const paymentApi = createApi({
   reducerPath: 'paymentApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_BASE_URL}/api/v1/payments`,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      const userId = localStorage.getItem('userId');
-      if (userId) {
-        headers.set('X-User-Id', userId);
-      }
-      const rawUser = localStorage.getItem('user');
-      if (rawUser) {
-        try {
-          const parsed = JSON.parse(rawUser);
-          if (parsed?.id) headers.set('X-User-Id', String(parsed.id));
-          if (parsed?.email) headers.set('X-User-Email', String(parsed.email));
-        } catch {}
-      }
-      return headers;
-    },
-  }),
+  baseQuery: createBaseQueryWithReauth('/api/v1/payments'),
   tagTypes: ['Wallet', 'Transactions', 'Earnings', 'Payouts'],
   endpoints: (builder) => ({
     getWalletBalance: builder.query<WalletBalanceResponse, void>({

@@ -22,7 +22,11 @@ var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
 var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
     ?? builder.Configuration["JWT_SIGNING_KEY"]
     ?? builder.Configuration["Jwt:SigningKey"]
-    ?? "supersecretjwtskieforlocalhev";
+    ?? "development-only-change-this-signing-key-32-bytes";
+if (jwtSigningKey.Length < 32)
+{
+    jwtSigningKey = jwtSigningKey.PadRight(32, '0');
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>

@@ -77,8 +77,8 @@ export const AdminVerificationsPage: React.FC = () => {
 
       {/* Page Header */}
       <AdminPageHeader
-        title="Companion Verifications & KYC Studio"
-        description="Review incoming companion credentials, inspect government identity proofs and liveness selfie captures, and publish approved profiles to the public discovery gallery."
+        title="Companion Approvals"
+        description="Review companion applications, verify identity documents and photos, and approve profiles to go live on discovery."
         badge={
           pendingCount > 0 ? (
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/30">

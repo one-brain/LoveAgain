@@ -170,7 +170,7 @@ export const WalletPage: React.FC = () => {
         {/* Escrow / Pending Balance */}
         <div className="p-6 rounded-3xl bg-card border border-border/80 shadow-md flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">In Escrow Vault</span>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Protected for Meetups</span>
             <div className="p-2 rounded-xl bg-sky-500/15 text-sky-600">
               <ShieldCheckIcon className="w-5 h-5" />
             </div>
@@ -179,10 +179,10 @@ export const WalletPage: React.FC = () => {
             <p className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground">
               {isBalanceLoading ? '...' : `₹${pendingBalance.toLocaleString('en-IN')}`}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Held during active bookings</p>
+            <p className="text-xs text-muted-foreground mt-1">Held safely until meetups are complete</p>
           </div>
           <div className="text-[11px] text-sky-600 font-semibold flex items-center gap-1">
-            <span>● Released upon completion</span>
+            <span>● Safe Escrow Guarantee</span>
           </div>
         </div>
 
@@ -196,10 +196,10 @@ export const WalletPage: React.FC = () => {
           </div>
           <div className="my-4">
             <p className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground">15%</p>
-            <p className="text-xs text-muted-foreground mt-1">Transparent platform commission</p>
+            <p className="text-xs text-muted-foreground mt-1">Transparent platform service fee</p>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            85% goes directly to the companion upon service verification.
+            85% goes directly to the companion upon meetup completion.
           </p>
         </div>
       </div>
@@ -207,7 +207,7 @@ export const WalletPage: React.FC = () => {
       {/* Top-Up Section */}
       <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border/80 shadow-md space-y-6">
         <div>
-          <h2 className="text-lg font-bold text-foreground">Top-Up Wallet</h2>
+          <h2 className="text-lg font-bold text-foreground">Add Money to Wallet</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
             Add funds using Google Pay, PhonePe, Paytm, UPI QR, Netbanking, or Debit/Credit Cards.
           </p>

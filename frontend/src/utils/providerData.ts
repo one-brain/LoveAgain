@@ -20,12 +20,14 @@ export interface CuratedProvider {
   lenses?: PlatformLens[];
   services?: string[];
   introVideoUrl?: string | null;
+  gender?: 'Female' | 'Male' | 'Non-Binary' | string;
 }
 
 export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-1',
     displayName: 'Elena Rostova',
+    gender: 'Female',
     photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
@@ -51,6 +53,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-2',
     displayName: 'Marcus Vance',
+    gender: 'Male',
     photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
@@ -76,6 +79,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-3',
     displayName: 'Dr. Sophia Chen',
+    gender: 'Female',
     photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
@@ -101,6 +105,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-4',
     displayName: 'Julian Alvarez',
+    gender: 'Male',
     photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
@@ -126,6 +131,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-5',
     displayName: 'Aria Thorne',
+    gender: 'Female',
     photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
@@ -151,6 +157,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-6',
     displayName: 'David Morales',
+    gender: 'Male',
     photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
@@ -176,6 +183,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-7',
     displayName: 'Ananya Sharma',
+    gender: 'Female',
     photoUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80',
@@ -201,6 +209,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-8',
     displayName: 'Col. Rajeshwar Rao (Retd.)',
+    gender: 'Male',
     photoUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
@@ -226,6 +235,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   {
     providerId: 'sample-9',
     displayName: 'Pooja Iyer',
+    gender: 'Female',
     photoUrl: 'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',
     profileImages: [
       'https://images.unsplash.com/photo-1617627143750-d86bc21e42bb?auto=format&fit=crop&w=800&q=80',

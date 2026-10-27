@@ -151,14 +151,14 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
           </p>
         </div>
         <div>
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">Filtered Gross GMV</span>
+          <span className="text-[10px] uppercase font-bold text-muted-foreground">Total Booking Amount</span>
           <p className="font-mono font-bold text-sm text-foreground mt-0.5 tabular-nums">
             {formatINR(totalGmv)}
           </p>
         </div>
         <div>
           <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
-            Platform Take (15%)
+            Platform Fee (15%)
           </span>
           <p className="font-mono font-bold text-sm text-amber-600 dark:text-amber-400 mt-0.5 tabular-nums">
             {formatINR(totalPlatformFee)}
@@ -166,7 +166,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
         </div>
         <div>
           <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
-            Companion Net (85%)
+            Companion Earnings (85%)
           </span>
           <p className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
             {formatINR(totalProviderNet)}
@@ -179,7 +179,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
         {isLoading ? (
           <div className="py-24 flex flex-col items-center justify-center">
             <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs text-muted-foreground font-medium">Fetching escrow ledger transactions...</p>
+            <p className="text-xs text-muted-foreground font-medium">Loading platform bookings...</p>
           </div>
         ) : filteredBookings.length === 0 ? (
           <div className="text-center py-16 p-8">
@@ -194,13 +194,13 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="px-5 py-3.5">Booking / Order ID</th>
-                  <th className="px-4 py-3.5">Seeker</th>
+                  <th className="px-5 py-3.5">Booking ID</th>
+                  <th className="px-4 py-3.5">Client</th>
                   <th className="px-4 py-3.5">Companion</th>
-                  <th className="px-4 py-3.5 text-right">Gross GMV</th>
-                  <th className="px-4 py-3.5 text-right">Cue Take (15%)</th>
-                  <th className="px-4 py-3.5 text-right">Companion Net (85%)</th>
-                  <th className="px-4 py-3.5">Escrow State</th>
+                  <th className="px-4 py-3.5 text-right">Total Amount</th>
+                  <th className="px-4 py-3.5 text-right">Platform Fee (15%)</th>
+                  <th className="px-4 py-3.5 text-right">Companion Earnings (85%)</th>
+                  <th className="px-4 py-3.5">Status</th>
                   <th className="px-5 py-3.5">Created At</th>
                 </tr>
               </thead>

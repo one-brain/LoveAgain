@@ -33,7 +33,7 @@ const FAQS: FaqItem[] = [
   {
     question: 'How does the 100% Escrow Protection guarantee work?',
     answer:
-      'When a client books a session, the total amount is locked into our secure Cue Escrow Vault via Razorpay. The companion is never paid upfront. The funds are held safely until the session finishes. Once both parties confirm completion, 85% of the fee is released to the companion wallet.',
+      'When a client books a session, the total amount is held safely in our protected escrow system. The companion is never paid upfront. The funds are held safely until the session finishes. Once both parties confirm completion, 85% of the fee is released to the companion wallet.',
   },
   {
     question: 'What happens if a companion cancels or fails to show up?',
@@ -48,12 +48,12 @@ const FAQS: FaqItem[] = [
   {
     question: 'What are the platform fees and payment options?',
     answer:
-      'Companions set their own transparent hourly rates in Indian Rupees (₹). Cue takes a transparent 15% platform take-rate that funds banking gateways, ID verification, customer support, and dispute mediation. Clients pay via UPI (GPay, PhonePe, Paytm), NetBanking, or Credit/Debit Cards.',
+      'Companions set their own transparent hourly rates in Indian Rupees (₹). Cue takes a transparent 15% platform service fee that funds banking gateways, ID verification, customer support, and dispute mediation. Clients pay via UPI (GPay, PhonePe, Paytm), NetBanking, or Credit/Debit Cards.',
   },
   {
     question: 'Can any registered user become a companion?',
     answer:
-      'Yes! Cue uses a unified account model. Every registered user starts as a client. If you want to host experiences, you can apply by submitting your specialties, rates, and KYC verification documents for admin vetting.',
+      'Yes! Cue uses a unified account model. Every registered user starts as a client. If you want to host experiences, you can apply by submitting your activities, hourly rates, and identity verification documents for review.',
   },
 ];
 
@@ -83,7 +83,7 @@ const HowItWorks: React.FC = () => {
           </h1>
           <p className="mt-4 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Discover verified people for sports, culture, dining, and city adventures.
-            Protected by automated escrow, KYC checks, and community trust.
+            Protected by safe payments, identity verification, and community trust.
           </p>
 
           {/* Perspective Switcher */}
@@ -152,7 +152,7 @@ const HowItWorks: React.FC = () => {
                 </div>
                 <div className="mt-6 pt-4 border-t border-border/60 text-xs text-accent font-semibold flex items-center gap-1.5">
                   <CheckCircleIcon className="w-4 h-4" />
-                  <span>Only KYC-approved listings</span>
+                  <span>Only verified profiles</span>
                 </div>
               </div>
 
@@ -162,7 +162,7 @@ const HowItWorks: React.FC = () => {
                   <div className="w-12 h-12 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold text-xl mb-5">
                     2
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">Lock in Escrow</h3>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Pay Safely with Escrow</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                     Pick a duration and time slot. Pay via UPI or Card. Your money is held in escrow and never paid upfront.
                   </p>
@@ -258,7 +258,7 @@ const HowItWorks: React.FC = () => {
                   <div className="w-12 h-12 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold text-xl mb-5">
                     2
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">Admin KYC Vetting</h3>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Identity & Safety Verification</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                     Upload your Government ID proof and snap a live selfie. Our compliance team verifies your identity within 24 hours.
                   </p>
@@ -336,7 +336,7 @@ const HowItWorks: React.FC = () => {
                   <LockClosedIcon className="w-6 h-6" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">100% Escrow Vault Guarantee</h3>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Protected Payment Guarantee</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                     Funds are held securely by Cue until the experience concludes. Neither clients nor companions risk losing money to no-shows or cancellations.
                   </p>
@@ -407,7 +407,7 @@ const HowItWorks: React.FC = () => {
               <tbody className="divide-y divide-border/40">
                 <tr>
                   <td className="py-3.5 px-4 font-medium text-foreground">Payment Protection</td>
-                  <td className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400 font-semibold">100% Escrow Vault until done</td>
+                  <td className="py-3.5 px-4 text-emerald-600 dark:text-emerald-400 font-semibold">Protected until meetup is complete</td>
                   <td className="py-3.5 px-4 text-rose-600 dark:text-rose-400">Upfront payment risk / scams</td>
                 </tr>
                 <tr>

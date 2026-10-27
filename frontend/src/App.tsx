@@ -8,6 +8,9 @@ import type { RootState } from './store';
 // Route-level code-splitting (React.lazy) to minimize initial bundle size and optimize FCP
 const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
 const Discovery = lazy(() => import('./pages/Discovery'));
 const ProfilePage = lazy(() => import('./pages/Profile'));
 const ProviderDashboard = lazy(() => import('./pages/ProviderDashboard'));
@@ -17,6 +20,13 @@ const Chat = lazy(() => import('./pages/Chat'));
 const WalletPage = lazy(() => import('./pages/Wallet'));
 const ApplyCompanion = lazy(() => import('./pages/ApplyCompanion'));
 const HowItWorks = lazy(() => import('./pages/HowItWorks'));
+
+// Legal, Trust & Safety Suite
+const PrivacyPolicy = lazy(() => import('./pages/legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/legal/TermsOfService'));
+const CommunityGuidelines = lazy(() => import('./pages/legal/CommunityGuidelines'));
+const CancellationPolicy = lazy(() => import('./pages/legal/CancellationPolicy'));
+const SupportContact = lazy(() => import('./pages/legal/SupportContact'));
 
 // Admin Multi-Page Architecture (Zero-Tabs Dedicated Workspaces)
 const AdminIndexRedirect = lazy(() => import('./pages/admin/AdminIndexRedirect'));
@@ -130,6 +140,34 @@ function App() {
               </Suspense>
             }
           />
+          <Route
+            path="forgot-password"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <UnauthenticatedRoute>
+                  <ForgotPassword />
+                </UnauthenticatedRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="reset-password"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <UnauthenticatedRoute>
+                  <ResetPassword />
+                </UnauthenticatedRoute>
+              </Suspense>
+            }
+          />
+          <Route
+            path="verify-email"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <VerifyEmail />
+              </Suspense>
+            }
+          />
 
           {/* Discovery, How It Works, & Provider Detail */}
           <Route
@@ -148,6 +186,54 @@ function App() {
               </Suspense>
             }
           />
+
+          {/* Legal, Safety, & Compliance Suite */}
+          <Route
+            path="privacy"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <PrivacyPolicy />
+              </Suspense>
+            }
+          />
+          <Route path="privacy-policy" element={<Navigate to="/privacy" replace />} />
+          <Route
+            path="terms"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <TermsOfService />
+              </Suspense>
+            }
+          />
+          <Route path="terms-of-service" element={<Navigate to="/terms" replace />} />
+          <Route
+            path="community-guidelines"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <CommunityGuidelines />
+              </Suspense>
+            }
+          />
+          <Route path="safety" element={<Navigate to="/community-guidelines" replace />} />
+          <Route
+            path="cancellation-policy"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <CancellationPolicy />
+              </Suspense>
+            }
+          />
+          <Route path="refund-policy" element={<Navigate to="/cancellation-policy" replace />} />
+          <Route
+            path="support"
+            element={
+              <Suspense fallback={<RouteLoader />}>
+                <SupportContact />
+              </Suspense>
+            }
+          />
+          <Route path="contact" element={<Navigate to="/support" replace />} />
+          <Route path="help" element={<Navigate to="/support" replace />} />
           <Route
             path="provider/:userId"
             element={

@@ -150,7 +150,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     }
 
     if (!agreedToPlatonicPolicy) {
-      setErrorMsg('Please confirm agreement with the safety guidelines and Escrow Vault deposit.');
+      setErrorMsg('Please confirm agreement with the safety guidelines and protected payment terms.');
       return;
     }
 
@@ -326,7 +326,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
               <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/80 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
                   <ShieldCheckIcon className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                  <span className="text-muted-foreground">100% Protected in Escrow Vault</span>
+                  <span className="text-muted-foreground">Protected Payment (Safe Escrow)</span>
                 </div>
                 <span className="text-sm font-bold text-foreground">{formatINR(totalAmount)}</span>
               </div>
@@ -431,7 +431,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   required
                 />
                 <span>
-                  I understand this deposit of <strong>{formatINR(totalAmount)}</strong> is locked securely in the Escrow Vault and released only after the meetup completes.
+                  I understand this payment of <strong>{formatINR(totalAmount)}</strong> is held safely by the platform and released only after the meetup is complete.
                 </span>
               </label>
 
@@ -447,7 +447,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   type="submit"
                   className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-md hover:bg-accent-hover transition-all flex items-center gap-1.5"
                 >
-                  <span>Lock {formatINR(totalAmount)} in Escrow</span>
+                  <span>Continue to Safe Payment ({formatINR(totalAmount)})</span>
                   <CheckCircleIcon className="w-4 h-4" />
                 </button>
               </div>

@@ -1,17 +1,29 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { useRegisterMutation } from '../store/authApi';
+import {
+  useRegisterMutation,
+  useSendMobileOtpMutation,
+  useVerifyMobileOtpMutation,
+} from '../store/authApi';
 import { loginSuccess } from '../store/slices/authSlice';
+import { resetAllApiCaches } from '../utils/sessionManager';
 import {
   SparklesIcon,
   ShieldCheckIcon,
   LockClosedIcon,
   EnvelopeIcon,
   UserIcon,
+  PhoneIcon,
+  EyeIcon,
+  EyeSlashIcon,
+  CheckCircleIcon,
 } from '@heroicons/react/24/outline';
 
 const Register: React.FC = () => {
+  const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile');
+
+  // Email form state
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -20,15 +32,41 @@ const Register: React.FC = () => {
     lastName: '',
     roles: ['Seeker', 'Provider'] as string[],
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  // Mobile form state
+  const [countryCode, setCountryCode] = useState('+91');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [mobileFirstName, setMobileFirstName] = useState('');
+  const [mobileLastName, setMobileLastName] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [countdown, setCountdown] = useState(0);
+  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [infoMessage, setInfoMessage] = useState<string | null>(null);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const rawRedirect = searchParams.get('redirect');
   const redirectTarget = rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
   const dispatch = useDispatch();
-  const [register, { isLoading }] = useRegisterMutation();
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [register, { isLoading: isEmailLoading }] = useRegisterMutation();
+  const [sendMobileOtp, { isLoading: isSendingOtp }] = useSendMobileOtpMutation();
+  const [verifyMobileOtp, { isLoading: isVerifyingOtp }] = useVerifyMobileOtpMutation();
+
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const timer = setInterval(() => {
+      setCountdown((prev) => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [countdown]);
+
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
@@ -41,7 +79,80 @@ const Register: React.FC = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendMobileOtp = async () => {
+    setErrors({});
+    setInfoMessage(null);
+
+    if (!mobileFirstName.trim()) {
+      setErrors({ mobileFirstName: 'First name is required' });
+      return;
+    }
+    if (!phoneNumber.trim() || phoneNumber.trim().length < 8) {
+      setErrors({ phoneNumber: 'Please enter a valid mobile number' });
+      return;
+    }
+
+    try {
+      const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber.trim()}`;
+      const res = await sendMobileOtp({ phone: fullPhone, purpose: 'register' }).unwrap();
+      setOtpSent(true);
+      setCountdown(30);
+      setInfoMessage(res.message);
+      if (res.devOtp) {
+        setDevOtpHint(res.devOtp);
+      }
+    } catch (err: any) {
+      setErrors({ form: err?.data?.error || 'Failed to send verification code. Please check your number.' });
+    }
+  };
+
+  const handleMobileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber.trim()}`;
+    const cleanOtp = otp.trim();
+
+    if (!cleanOtp) {
+      setErrors({ otp: 'Please enter the 6-digit verification code' });
+      return;
+    }
+
+    try {
+      const res = await verifyMobileOtp({
+        phone: fullPhone,
+        otp: cleanOtp,
+        firstName: mobileFirstName.trim(),
+        lastName: mobileLastName.trim(),
+      }).unwrap();
+
+      if (res.tokenResponse) {
+        const tokenResp = res.tokenResponse;
+        const user = tokenResp.user;
+        resetAllApiCaches(dispatch);
+        dispatch(
+          loginSuccess({
+            accessToken: tokenResp.accessToken,
+            refreshToken: tokenResp.refreshToken,
+            user: {
+              id: user?.id || tokenResp.userId,
+              email: user?.email || '',
+              firstName: user?.firstName || mobileFirstName.trim(),
+              lastName: user?.lastName || mobileLastName.trim(),
+              isVerified: true,
+              trustScore: user?.trustScore ?? 50,
+              roles: ['Seeker', 'Provider'],
+            },
+          })
+        );
+        navigate(redirectTarget, { replace: true });
+      }
+    } catch (err: any) {
+      setErrors({ form: err?.data?.error || 'Invalid OTP code. Please try again.' });
+    }
+  };
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
@@ -76,6 +187,8 @@ const Register: React.FC = () => {
         roles: ['Seeker', 'Provider'],
       }).unwrap();
 
+      resetAllApiCaches(dispatch);
+
       dispatch(
         loginSuccess({
           accessToken: result.accessToken,
@@ -85,8 +198,8 @@ const Register: React.FC = () => {
             email: result.user?.email || formData.email,
             firstName: result.user?.firstName || formData.firstName,
             lastName: result.user?.lastName || formData.lastName,
-            isVerified: result.user?.isVerified ?? true,
-            trustScore: result.user?.trustScore ?? 99,
+            isVerified: result.user?.isVerified ?? false,
+            trustScore: result.user?.trustScore ?? 50,
             roles: result.user?.roles || ['Seeker', 'Provider'],
           },
         })
@@ -94,7 +207,7 @@ const Register: React.FC = () => {
       navigate(redirectTarget, { replace: true });
     } catch (err: any) {
       const msg = err?.data?.message || err?.data?.detail || err?.data?.error || 'Registration failed. Please check your credentials or try a different email.';
-      setErrors({ email: msg });
+      setErrors({ form: msg });
     }
   };
 
@@ -142,161 +255,362 @@ const Register: React.FC = () => {
               Create your account
             </h1>
             <p className="text-sm text-muted-foreground mt-2">
-              {rawRedirect?.includes('apply-companion') ? (
-                <>
-                  Join Cue as a companion.{' '}
-                  <span className="block mt-1">
-                    Already have an account?{' '}
-                    <Link
-                      to={`/login?redirect=${encodeURIComponent(rawRedirect)}`}
-                      className="font-semibold text-accent hover:underline"
-                    >
-                      Sign in to apply
-                    </Link>
-                  </span>
-                </>
-              ) : (
-                <>
-                  Already have an account?{' '}
-                  <Link
-                    to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
-                    className="font-semibold text-accent hover:underline"
-                  >
-                    Sign in
-                  </Link>
-                </>
-              )}
+              Already have an account?{' '}
+              <Link
+                to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
+                className="font-semibold text-accent hover:underline"
+              >
+                Sign in
+              </Link>
             </p>
           </div>
 
-          {errors.submit && (
-            <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold">
-              {errors.submit}
+          {/* Segmented Auth Method Switcher */}
+          <div className="grid grid-cols-2 p-1 rounded-2xl bg-muted/60 border border-border/80">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMethod('mobile');
+                setErrors({});
+              }}
+              className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                authMethod === 'mobile'
+                  ? 'bg-card text-foreground shadow-xs border border-border/60'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <PhoneIcon className="w-3.5 h-3.5 text-accent" />
+              <span>Mobile & OTP</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMethod('email');
+                setErrors({});
+              }}
+              className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
+                authMethod === 'email'
+                  ? 'bg-card text-foreground shadow-xs border border-border/60'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <EnvelopeIcon className="w-3.5 h-3.5 text-accent" />
+              <span>Email & Password</span>
+            </button>
+          </div>
+
+          {errors.form && (
+            <div className="p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold animate-in fade-in duration-150">
+              {errors.form}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+          {infoMessage && (
+            <div className="p-3.5 rounded-2xl bg-accent/10 border border-accent/20 text-accent text-xs font-medium flex items-center gap-2 animate-in fade-in duration-150">
+              <CheckCircleIcon className="w-4 h-4 shrink-0 text-accent" />
+              <span>{infoMessage}</span>
+            </div>
+          )}
+
+          {/* MOBILE & OTP REGISTRATION */}
+          {authMethod === 'mobile' ? (
+            <form onSubmit={handleMobileSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="mobileFirstName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    First name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      id="mobileFirstName"
+                      type="text"
+                      required
+                      value={mobileFirstName}
+                      onChange={(e) => setMobileFirstName(e.target.value)}
+                      placeholder="Alex"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  {errors.mobileFirstName && (
+                    <p className="mt-1 text-[11px] text-destructive">{errors.mobileFirstName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="mobileLastName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    Last name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      id="mobileLastName"
+                      type="text"
+                      value={mobileLastName}
+                      onChange={(e) => setMobileLastName(e.target.value)}
+                      placeholder="Rivera"
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                </div>
+              </div>
+
               <div>
-                <label htmlFor="firstName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  First name
+                <label htmlFor="phoneNumber" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Mobile Number
+                </label>
+                <div className="flex gap-2">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="w-24 px-2 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
+                  >
+                    <option value="+91">🇮🇳 +91</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+971">🇦🇪 +971</option>
+                    <option value="+65">🇸🇬 +65</option>
+                  </select>
+                  <div className="relative flex-1">
+                    <PhoneIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      id="phoneNumber"
+                      type="tel"
+                      required
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
+                      placeholder="98765 43210"
+                      maxLength={12}
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSendMobileOtp}
+                    disabled={isSendingOtp || (otpSent && countdown > 0)}
+                    className="px-3.5 py-2.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground font-semibold text-xs border border-border/80 transition-colors disabled:opacity-40 shrink-0 cursor-pointer"
+                  >
+                    {isSendingOtp ? (
+                      'Sending...'
+                    ) : otpSent && countdown > 0 ? (
+                      `Resend (${countdown}s)`
+                    ) : (
+                      otpSent ? 'Resend' : 'Get OTP'
+                    )}
+                  </button>
+                </div>
+                {errors.phoneNumber && (
+                  <p className="mt-1 text-[11px] text-destructive">{errors.phoneNumber}</p>
+                )}
+              </div>
+
+              {otpSent && (
+                <div className="space-y-4 animate-in fade-in duration-200">
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <label htmlFor="otp" className="text-xs font-semibold text-muted-foreground">
+                        6-Digit Verification Code
+                      </label>
+                      {devOtpHint && (
+                        <span className="text-[10px] text-accent font-mono font-semibold">
+                          Sandbox OTP: {devOtpHint}
+                        </span>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                      <input
+                        id="otp"
+                        type="text"
+                        required
+                        autoFocus
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="123456"
+                        maxLength={6}
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm tracking-widest font-mono focus:outline-none focus:ring-1 focus:ring-accent"
+                      />
+                    </div>
+                    {errors.otp && (
+                      <p className="mt-1 text-[11px] text-destructive">{errors.otp}</p>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isVerifyingOtp}
+                    className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 cursor-pointer"
+                  >
+                    {isVerifyingOtp ? 'Completing signup...' : 'Verify OTP & Create Account'}
+                  </button>
+                </div>
+              )}
+            </form>
+          ) : (
+            /* EMAIL & PASSWORD REGISTRATION */
+            <form onSubmit={handleEmailSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="firstName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    First name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      id="firstName"
+                      name="firstName"
+                      type="text"
+                      required
+                      value={formData.firstName}
+                      onChange={handleEmailChange}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  {errors.firstName && (
+                    <p className="mt-1 text-[11px] text-destructive">{errors.firstName}</p>
+                  )}
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                    Last name
+                  </label>
+                  <div className="relative">
+                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <input
+                      id="lastName"
+                      name="lastName"
+                      type="text"
+                      required
+                      value={formData.lastName}
+                      onChange={handleEmailChange}
+                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    />
+                  </div>
+                  {errors.lastName && (
+                    <p className="mt-1 text-[11px] text-destructive">{errors.lastName}</p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="email" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Email address
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <EnvelopeIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
-                    id="firstName"
-                    name="firstName"
-                    type="text"
+                    id="email"
+                    name="email"
+                    type="email"
                     required
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    value={formData.email}
+                    onChange={handleEmailChange}
+                    placeholder="you@example.com"
+                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
                   />
                 </div>
-                {errors.firstName && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.firstName}</p>
+                {errors.email && (
+                  <p className="mt-1 text-[11px] text-destructive">{errors.email}</p>
                 )}
               </div>
 
               <div>
-                <label htmlFor="lastName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Last name
+                <label htmlFor="password" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Password (min 8 chars)
                 </label>
                 <div className="relative">
-                  <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                   <input
-                    id="lastName"
-                    name="lastName"
-                    type="text"
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    value={formData.password}
+                    onChange={handleEmailChange}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showPassword ? (
+                      <EyeSlashIcon className="w-4 h-4" />
+                    ) : (
+                      <EyeIcon className="w-4 h-4" />
+                    )}
+                  </button>
                 </div>
-                {errors.lastName && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.lastName}</p>
+                {errors.password && (
+                  <p className="mt-1 text-[11px] text-destructive">{errors.password}</p>
                 )}
               </div>
-            </div>
 
-            <div>
-              <label htmlFor="email" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Email address
-              </label>
-              <div className="relative">
-                <EnvelopeIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  id="email"
-                  name="email"
-                  type="email"
-                  required
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="you@example.com"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                />
+              <div>
+                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleEmailChange}
+                    placeholder="••••••••"
+                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                  >
+                    {showConfirmPassword ? (
+                      <EyeSlashIcon className="w-4 h-4" />
+                    ) : (
+                      <EyeIcon className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
+                {errors.confirmPassword && (
+                  <p className="mt-1 text-[11px] text-destructive">{errors.confirmPassword}</p>
+                )}
               </div>
-              {errors.email && (
-                <p className="mt-1 text-[11px] text-destructive">{errors.email}</p>
-              )}
-            </div>
 
-            <div>
-              <label htmlFor="password" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Password (min 8 chars)
-              </label>
-              <div className="relative">
-                <LockClosedIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                />
-              </div>
-              {errors.password && (
-                <p className="mt-1 text-[11px] text-destructive">{errors.password}</p>
-              )}
-            </div>
+              <button
+                type="submit"
+                disabled={isEmailLoading}
+                className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 mt-2 cursor-pointer"
+              >
+                {isEmailLoading ? 'Creating account...' : 'Create Cue Account'}
+              </button>
+            </form>
+          )}
 
-            <div>
-              <label htmlFor="confirmPassword" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Confirm Password
-              </label>
-              <div className="relative">
-                <LockClosedIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                />
-              </div>
-              {errors.confirmPassword && (
-                <p className="mt-1 text-[11px] text-destructive">{errors.confirmPassword}</p>
-              )}
-            </div>
-
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 mt-2"
-            >
-              {isLoading ? 'Creating account...' : 'Create Cue Account'}
-            </button>
-          </form>
-
-          <p className="text-[11px] text-muted-foreground text-center">
-            By signing up, you agree to our Terms of Service, Escrow Safety Policy, and Community Code of Conduct.
+          <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+            By signing up, you agree to our{' '}
+            <Link to="/terms" className="text-accent underline font-medium hover:text-accent-hover">
+              Terms of Service
+            </Link>
+            ,{' '}
+            <Link to="/privacy" className="text-accent underline font-medium hover:text-accent-hover">
+              Privacy Policy
+            </Link>
+            ,{' '}
+            <Link to="/community-guidelines" className="text-accent underline font-medium hover:text-accent-hover">
+              Community Guidelines
+            </Link>
+            , and{' '}
+            <Link to="/cancellation-policy" className="text-accent underline font-medium hover:text-accent-hover">
+              Escrow Cancellation Policy
+            </Link>
+            .
           </p>
         </div>
       </div>

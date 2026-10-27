@@ -6,6 +6,10 @@
 **/.claude-omniroute
 .claude/settings.local.json
 .claude/skills/
+.claude/agents/
+.agent/
+.gemini/
+.impeccable/
 
 # Visual Studio Code
 .vscode/

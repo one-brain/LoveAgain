@@ -196,7 +196,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-border/60">
           <div>
-            <h3 id="checkout-modal-title" className="text-xl font-bold font-serif text-foreground">Secure Escrow Checkout</h3>
+            <h3 id="checkout-modal-title" className="text-xl font-bold font-serif text-foreground">Confirm & Pay for Meetup</h3>
             <p className="text-xs text-muted-foreground mt-0.5">Booking with {providerName}</p>
           </div>
           <button
@@ -211,9 +211,9 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
         {isSuccess ? (
           <div className="py-8 text-center space-y-3">
             <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto animate-in zoom-in-75 duration-300 ease-out" />
-            <h4 className="text-lg font-bold text-foreground">Payment Held in Escrow!</h4>
+            <h4 className="text-lg font-bold text-foreground">Payment Safely Protected!</h4>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              {formatINR(totalAmount)} is safely secured. Funds will only be released to {providerName} once your companionship session is completed.
+              {formatINR(totalAmount)} is held safely. Payment will only be released to {providerName} after your meetup is completed.
             </p>
           </div>
         ) : (
@@ -221,15 +221,15 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             {/* Price Breakdown */}
             <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Companionship Session Total:</span>
+                <span>Meetup Total:</span>
                 <span className="font-semibold text-foreground">{formatINR(totalAmount)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>15% Platform Commission:</span>
+                <span>Platform Service Fee (15%):</span>
                 <span>{formatINR(platformFee)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Net Companion Earnings:</span>
+                <span>Companion Earnings (85%):</span>
                 <span>{formatINR(companionEarnings)}</span>
               </div>
               <div className="pt-2 border-t border-border/40 flex justify-between font-bold text-foreground text-base">
@@ -268,9 +268,9 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-800 dark:text-sky-300">
               <ShieldCheckIcon className="w-5 h-5 flex-shrink-0 text-sky-600 dark:text-sky-400 mt-0.5" />
               <div>
-                <p className="font-bold">100% Buyer Protection Escrow</p>
+                <p className="font-bold">Protected Payment Guarantee</p>
                 <p className="mt-0.5 opacity-90 leading-relaxed">
-                  Your funds are kept in a protected escrow vault. The companion does not receive payment until the appointment has concluded safely.
+                  Your payment is held safely by the platform. The companion receives payment only after your meetup has ended successfully.
                 </p>
               </div>
             </div>
@@ -295,7 +295,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                   {isPayingWallet ? (
                     <>
                       <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                      <span>Locking Funds in Escrow...</span>
+                      <span>Processing Safe Payment...</span>
                     </>
                   ) : (
                     <>
@@ -314,12 +314,12 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                   {isCreatingTopUp || isVerifyingTopUp || isPayingWallet ? (
                     <>
                       <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                      <span>Processing UPI Payment...</span>
+                      <span>Processing Payment...</span>
                     </>
                   ) : (
                     <>
                       <CreditCardIcon className="w-5 h-5" />
-                      <span>Top-Up {formatINR(shortage)} & Pay via UPI</span>
+                      <span>Add {formatINR(shortage)} & Pay Securely</span>
                     </>
                   )}
                 </button>
@@ -338,8 +338,8 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
           isOpen={Boolean(sandboxOrderData)}
           orderId={sandboxOrderData.orderId}
           amount={sandboxOrderData.amount}
-          title={`Escrow Checkout • ${providerName}`}
-          description={`Lock funds safely for Booking #${orderId.slice(0, 8)}`}
+          title={`Safe Payment • ${providerName}`}
+          description={`Payment held safely for Meetup #${orderId.slice(0, 8)}`}
           onSuccess={(result: RazorpaySandboxPaymentResult) => {
             processVerificationAndEscrow(
               result.razorpayOrderId,

@@ -1,6 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { baseQueryWithReauth } from './baseQueryWithReauth';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 
 export interface ProviderProfile {
   userId: string;
@@ -19,6 +20,7 @@ export interface ProviderProfile {
   introVideoUrl?: string;
   latitude?: number | null;
   longitude?: number | null;
+  gender?: string;
 }
 
 export interface ProviderProfileResponse {
@@ -78,30 +80,7 @@ export interface AvailabilitySlot {
 
 export const profileApi = createApi({
   reducerPath: 'profileApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_BASE_URL}/api/v1`,
-    prepareHeaders: (headers) => {
-      const token = localStorage.getItem('accessToken');
-      if (token && token !== 'demo-jwt-token-12345') {
-        headers.set('Authorization', `Bearer ${token}`);
-      }
-      const userId = localStorage.getItem('userId');
-      if (userId) {
-        headers.set('X-User-Id', userId);
-      }
-      const rawUser = localStorage.getItem('user');
-      if (rawUser) {
-        try {
-          const parsed = JSON.parse(rawUser);
-          if (parsed?.id) headers.set('X-User-Id', String(parsed.id));
-          if (parsed?.email) headers.set('X-User-Email', String(parsed.email));
-        } catch {
-          // ignore JSON parse error
-        }
-      }
-      return headers;
-    },
-  }),
+  baseQuery: baseQueryWithReauth,
   tagTypes: ['Profile', 'Availability'],
   endpoints: (builder) => ({
     getMyProfile: builder.query<ProviderProfileResponse, void>({

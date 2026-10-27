@@ -18,7 +18,7 @@ const isUserCompanion = (u: AdminUserItem) =>
   Boolean(u.hasCompanionProfile || u.roles?.includes('Companion') || u.roles?.includes('Provider'));
 const isUserAdmin = (u: AdminUserItem) =>
   Boolean(u.roles?.includes('Admin') || u.email?.toLowerCase() === 'admin@cue.local');
-const isUserSeeker = (u: AdminUserItem) =>
+const isUserClient = (u: AdminUserItem) =>
   !isUserCompanion(u) && !isUserAdmin(u);
 const isUserSuspended = (u: AdminUserItem) =>
   u.trustScore < 0;
@@ -29,22 +29,22 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   onToggleSuspend,
   isTogglingSuspend,
 }) => {
-  const [roleFilter, setRoleFilter] = useState<'All' | 'Companions' | 'Seekers' | 'Suspended'>('All');
+  const [roleFilter, setRoleFilter] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
   const [search, setSearch] = useState('');
   const [actionUserId, setActionUserId] = useState<string | null>(null);
 
   const filteredUsers = users.filter((user) => {
     const suspended = isUserSuspended(user);
     const companion = isUserCompanion(user);
-    const seeker = isUserSeeker(user);
+    const client = isUserClient(user);
 
     const matchesRole =
       roleFilter === 'All'
         ? true
         : roleFilter === 'Companions'
         ? companion
-        : roleFilter === 'Seekers'
-        ? seeker
+        : roleFilter === 'Clients'
+        ? client
         : roleFilter === 'Suspended'
         ? suspended
         : true;
@@ -81,9 +81,9 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
               count: users.filter(isUserCompanion).length,
             },
             {
-              key: 'Seekers',
-              label: 'Seekers',
-              count: users.filter(isUserSeeker).length,
+              key: 'Clients',
+              label: 'Clients',
+              count: users.filter(isUserClient).length,
             },
             {
               key: 'Suspended',
@@ -248,7 +248,7 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                           </span>
                         ) : (
                           <span className="text-muted-foreground text-[11px]">
-                            {isUserAnAdmin ? 'Superuser Admin' : 'Seeker Only'}
+                            {isUserAnAdmin ? 'Superuser Admin' : 'Client Account'}
                           </span>
                         )}
                       </td>

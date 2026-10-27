@@ -16,10 +16,35 @@ builder.Services.AddSwaggerGen(c =>
 });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddControllers();
+builder.Services.AddMemoryCache();
 builder.Services.AddDbContext<CueDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
         .UseSnakeCaseNamingConvention());
-var jwtOptions = builder.Configuration.GetSection("Jwt").Get<JwtOptions>() ?? new JwtOptions();
+var signingKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
+    ?? builder.Configuration["JWT_SIGNING_KEY"]
+    ?? builder.Configuration["Jwt:SigningKey"]
+    ?? "development-only-change-this-signing-key-32-bytes";
+if (signingKey.Length < 32)
+{
+    signingKey = signingKey.PadRight(32, '0');
+}
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? builder.Configuration["JWT_ISSUER"]
+    ?? builder.Configuration["Jwt:Issuer"]
+    ?? "cue-auth";
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? builder.Configuration["JWT_AUDIENCE"]
+    ?? builder.Configuration["Jwt:Audience"]
+    ?? "cue-platform";
+
+var jwtOptions = new JwtOptions
+{
+    Issuer = jwtIssuer,
+    Audience = jwtAudience,
+    SigningKey = signingKey,
+    AccessTokenMinutes = int.TryParse(Environment.GetEnvironmentVariable("JWT_ACCESS_TOKEN_MINUTES"), out var m) ? m : 1440,
+    RefreshTokenDays = int.TryParse(Environment.GetEnvironmentVariable("JWT_REFRESH_TOKEN_DAYS"), out var d) ? d : 7
+};
 builder.Services.AddSingleton(jwtOptions);
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddSingleton<JwtTokenService>();
@@ -35,7 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey)),
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromSeconds(30)
+            ClockSkew = TimeSpan.FromDays(7)
         };
     });
 builder.Services.AddAuthorization();
@@ -44,7 +69,7 @@ builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:3000")
+        policy.WithOrigins("http://localhost:5173", "http://localhost:3000", "http://127.0.0.1:5173", "http://127.0.0.1:3000")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();

@@ -248,13 +248,13 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
                             onClick={() => handleOpenProcess(payout)}
                             className="px-3.5 py-1.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs hover:opacity-95 shadow-xs transition-all active:scale-95"
                           >
-                            Disburse UPI
+                            Transfer Funds
                           </button>
                         ) : (
                           <div className="inline-flex flex-col items-end gap-1">
                             <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold inline-flex items-center gap-1">
                               <CheckCircleIcon className="w-3.5 h-3.5" />
-                              <span>Settled</span>
+                              <span>Completed</span>
                             </span>
                             {payout.razorpayPayoutId && (
                               <div className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/60">
