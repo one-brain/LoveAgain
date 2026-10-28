@@ -34,6 +34,7 @@ builder.Services.AddDbContext<CueDbContext>(options =>
 
 builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<ChatRepository>();
+builder.Services.AddScoped<IBookingRepository, BookingRepository>();
 
 builder.Services.AddSignalR();
 

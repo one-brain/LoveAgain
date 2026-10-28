@@ -1,0 +1,232 @@
+{
+  "startedAt": "2026-10-28T17:37:18.086Z",
+  "passed": 45,
+  "failed": 0,
+  "tests": [
+    {
+      "name": "Auth: Seeker Login (demo@cue.local)",
+      "status": "PASS",
+      "durationMs": 2045
+    },
+    {
+      "name": "Auth: Companion Login (elena.provider@cue.com)",
+      "status": "PASS",
+      "durationMs": 283
+    },
+    {
+      "name": "Auth: Admin Login (admin@cue.local)",
+      "status": "PASS",
+      "durationMs": 117
+    },
+    {
+      "name": "Auth: Invalid Credentials Rejection (401)",
+      "status": "PASS",
+      "durationMs": 208
+    },
+    {
+      "name": "Auth: User Profile Me Endpoint (/profiles/me)",
+      "status": "PASS",
+      "durationMs": 1856
+    },
+    {
+      "name": "Discovery: Public Provider Catalog returns seeded companions",
+      "status": "PASS",
+      "durationMs": 1380
+    },
+    {
+      "name": "Discovery: City Filter (Bengaluru)",
+      "status": "PASS",
+      "durationMs": 96
+    },
+    {
+      "name": "Discovery: Gender Filter (Female)",
+      "status": "PASS",
+      "durationMs": 706
+    },
+    {
+      "name": "Discovery: Price Range Filter (1500 to 3000)",
+      "status": "PASS",
+      "durationMs": 192
+    },
+    {
+      "name": "Discovery: Keyword Search (q=tennis)",
+      "status": "PASS",
+      "durationMs": 61
+    },
+    {
+      "name": "Discovery: Get Provider Details by ID with Upcoming Slots",
+      "status": "PASS",
+      "durationMs": 147
+    },
+    {
+      "name": "Bookings: Companion Availability Slots (/profiles/provider/availability)",
+      "status": "PASS",
+      "durationMs": 313
+    },
+    {
+      "name": "Bookings: Create Booking as Seeker",
+      "status": "PASS",
+      "durationMs": 1967
+    },
+    {
+      "name": "Bookings: List Seeker Bookings",
+      "status": "PASS",
+      "durationMs": 506
+    },
+    {
+      "name": "Bookings: Cancel Booking (204 No Content)",
+      "status": "PASS",
+      "durationMs": 203
+    },
+    {
+      "name": "Payments: Seeker Wallet Balance (/payments/wallet/balance)",
+      "status": "PASS",
+      "durationMs": 2309
+    },
+    {
+      "name": "Payments: Seeker Wallet Transactions (/payments/wallet/transactions)",
+      "status": "PASS",
+      "durationMs": 509
+    },
+    {
+      "name": "Payments: Initiate Wallet Top-Up Order (/payments/wallet/topup/order)",
+      "status": "PASS",
+      "durationMs": 2487
+    },
+    {
+      "name": "Bookings: Identify Paid/Active Order for Chat Probe",
+      "status": "PASS",
+      "durationMs": 19
+    },
+    {
+      "name": "Chat: Order Messages Query (/chat/orders/{orderId}/messages)",
+      "status": "PASS",
+      "durationMs": 5605
+    },
+    {
+      "name": "Chat: Order Unread Count (/chat/orders/{orderId}/unread-count)",
+      "status": "PASS",
+      "durationMs": 415
+    },
+    {
+      "name": "Support: Ticket Submission Contract (/support/tickets)",
+      "status": "PASS",
+      "durationMs": 678
+    },
+    {
+      "name": "Support: Emergency Outing SOS Contract (/support/sos)",
+      "status": "PASS",
+      "durationMs": 84
+    },
+    {
+      "name": "Admin: Get Verifications List (Admin Token)",
+      "status": "PASS",
+      "durationMs": 323
+    },
+    {
+      "name": "Admin: RBAC Gate - Seeker forbidden from Admin Verifications (403)",
+      "status": "PASS",
+      "durationMs": 255
+    },
+    {
+      "name": "Admin: Directory of Users",
+      "status": "PASS",
+      "durationMs": 343
+    },
+    {
+      "name": "Admin: Platform MIS Analytics (/payments/admin/mis)",
+      "status": "PASS",
+      "durationMs": 722
+    },
+    {
+      "name": "Admin: Payout Requests Hub (/payments/admin/payouts)",
+      "status": "PASS",
+      "durationMs": 901
+    },
+    {
+      "name": "Frontend Route: /",
+      "status": "PASS",
+      "durationMs": 16
+    },
+    {
+      "name": "Frontend Route: /login",
+      "status": "PASS",
+      "durationMs": 18
+    },
+    {
+      "name": "Frontend Route: /register",
+      "status": "PASS",
+      "durationMs": 4
+    },
+    {
+      "name": "Frontend Route: /discovery",
+      "status": "PASS",
+      "durationMs": 4
+    },
+    {
+      "name": "Frontend Route: /bookings",
+      "status": "PASS",
+      "durationMs": 3
+    },
+    {
+      "name": "Frontend Route: /profile",
+      "status": "PASS",
+      "durationMs": 4
+    },
+    {
+      "name": "Frontend Route: /provider/dashboard",
+      "status": "PASS",
+      "durationMs": 3
+    },
+    {
+      "name": "Frontend Route: /admin",
+      "status": "PASS",
+      "durationMs": 4
+    },
+    {
+      "name": "Frontend Route: /admin/verifications",
+      "status": "PASS",
+      "durationMs": 3
+    },
+    {
+      "name": "Frontend Route: /admin/users",
+      "status": "PASS",
+      "durationMs": 3
+    },
+    {
+      "name": "Frontend Route: /admin/payouts",
+      "status": "PASS",
+      "durationMs": 4
+    },
+    {
+      "name": "Frontend Route: /admin/bookings",
+      "status": "PASS",
+      "durationMs": 3
+    },
+    {
+      "name": "Frontend Route: /admin/mis",
+      "status": "PASS",
+      "durationMs": 3
+    },
+    {
+      "name": "Frontend Route: /privacy",
+      "status": "PASS",
+      "durationMs": 4
+    },
+    {
+      "name": "Frontend Route: /terms",
+      "status": "PASS",
+      "durationMs": 4
+    },
+    {
+      "name": "Frontend Route: /cancellation",
+      "status": "PASS",
+      "durationMs": 3
+    },
+    {
+      "name": "Frontend Route: /guidelines",
+      "status": "PASS",
+      "durationMs": 3
+    }
+  ]
+}

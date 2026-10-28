@@ -39,11 +39,14 @@ public sealed class ChatRepository(CueDbContext dbContext) : IChatRepository
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
 
-    // NEW: Check if order has a captured payment
+    // Check if order has a captured payment, active escrow hold, or confirmed order status
     public async Task<bool> HasPaidAsync(Guid orderId, CancellationToken cancellationToken)
     {
-        return await dbContext.PaymentTransactions
-            .Where(pt => pt.OrderId == orderId && pt.Status == TransactionStatus.Captured)
-            .AnyAsync(cancellationToken);
+        var order = await dbContext.ServiceOrders.AsNoTracking().SingleOrDefaultAsync(o => o.Id == orderId, cancellationToken);
+        if (order == null) return false;
+
+        return order.Status != OrderStatus.PendingPayment ||
+            await dbContext.EscrowHolds.AnyAsync(e => e.OrderId == orderId && e.Status != EscrowStatus.Refunded, cancellationToken) ||
+            await dbContext.PaymentTransactions.AnyAsync(pt => pt.OrderId == orderId && pt.Status == TransactionStatus.Captured, cancellationToken);
     }
 }

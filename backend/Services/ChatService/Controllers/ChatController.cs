@@ -27,7 +27,7 @@ public sealed class ChatController(ISender sender, ChatRepository chatRepository
 
         if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
         {
-            return Forbid("Chat is only available for paid bookings.");
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Chat is only available for paid bookings." });
         }
 
         try
@@ -56,7 +56,7 @@ public sealed class ChatController(ISender sender, ChatRepository chatRepository
 
         if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
         {
-            return Forbid("Chat is only available for paid bookings.");
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Chat is only available for paid bookings." });
         }
 
         var count = await sender.Send(new GetUnreadCountQuery(userId, orderId), cancellationToken);
@@ -74,7 +74,7 @@ public sealed class ChatController(ISender sender, ChatRepository chatRepository
 
         if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
         {
-            return Forbid("Chat is only available for paid bookings.");
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Chat is only available for paid bookings." });
         }
 
         await sender.Send(new MarkMessagesAsReadCommand(orderId, userId), cancellationToken);
@@ -92,7 +92,7 @@ public sealed class ChatController(ISender sender, ChatRepository chatRepository
 
         if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
         {
-            return Forbid("Chat is only available for paid bookings.");
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Chat is only available for paid bookings." });
         }
 
         return Ok(true);
