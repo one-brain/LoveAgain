@@ -8,6 +8,7 @@ import {
 } from '../store/authApi';
 import { loginSuccess } from '../store/slices/authSlice';
 import { resetAllApiCaches } from '../utils/sessionManager';
+import { isLegalAge, getMaxLegalBirthdate } from '../utils/dateUtils';
 import {
   SparklesIcon,
   ShieldCheckIcon,
@@ -18,6 +19,7 @@ import {
   EyeIcon,
   EyeSlashIcon,
   CheckCircleIcon,
+  CalendarIcon,
 } from '@heroicons/react/24/outline';
 
 const Register: React.FC = () => {
@@ -30,6 +32,7 @@ const Register: React.FC = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
+    dateOfBirth: '',
     roles: ['Seeker', 'Provider'] as string[],
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -40,10 +43,13 @@ const Register: React.FC = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [mobileFirstName, setMobileFirstName] = useState('');
   const [mobileLastName, setMobileLastName] = useState('');
+  const [mobileDateOfBirth, setMobileDateOfBirth] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
+
+  const maxLegalDate = getMaxLegalBirthdate(18);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [infoMessage, setInfoMessage] = useState<string | null>(null);
@@ -87,6 +93,14 @@ const Register: React.FC = () => {
       setErrors({ mobileFirstName: 'First name is required' });
       return;
     }
+    if (!mobileDateOfBirth) {
+      setErrors({ mobileDateOfBirth: 'Date of birth is required to verify legal age' });
+      return;
+    }
+    if (!isLegalAge(mobileDateOfBirth)) {
+      setErrors({ mobileDateOfBirth: `You must be at least 18 years old to join LoveAgain (born on or before ${maxLegalDate})` });
+      return;
+    }
     if (!phoneNumber.trim() || phoneNumber.trim().length < 8) {
       setErrors({ phoneNumber: 'Please enter a valid mobile number' });
       return;
@@ -124,6 +138,7 @@ const Register: React.FC = () => {
         otp: cleanOtp,
         firstName: mobileFirstName.trim(),
         lastName: mobileLastName.trim(),
+        dateOfBirth: mobileDateOfBirth,
       }).unwrap();
 
       if (res.tokenResponse) {
@@ -148,7 +163,17 @@ const Register: React.FC = () => {
         navigate(redirectTarget, { replace: true });
       }
     } catch (err: any) {
-      setErrors({ form: err?.data?.error || 'Invalid OTP code. Please try again.' });
+      const rfcErrors = err?.data?.errors;
+      if (rfcErrors && typeof rfcErrors === 'object') {
+        const fieldErrors: Record<string, string> = {};
+        for (const [key, val] of Object.entries(rfcErrors)) {
+          const fieldKey = key.charAt(0).toLowerCase() + key.slice(1);
+          fieldErrors[fieldKey] = Array.isArray(val) ? val.join(' ') : String(val);
+        }
+        setErrors(fieldErrors);
+        return;
+      }
+      setErrors({ form: err?.data?.error || err?.data?.title || 'Invalid OTP code. Please try again.' });
     }
   };
 
@@ -159,6 +184,11 @@ const Register: React.FC = () => {
     const validationErrors: Record<string, string> = {};
     if (!formData.firstName.trim()) validationErrors.firstName = 'First name is required';
     if (!formData.lastName.trim()) validationErrors.lastName = 'Last name is required';
+    if (!formData.dateOfBirth) {
+      validationErrors.dateOfBirth = 'Date of birth is required to verify legal age';
+    } else if (!isLegalAge(formData.dateOfBirth)) {
+      validationErrors.dateOfBirth = `You must be at least 18 years old to join LoveAgain (born on or before ${maxLegalDate})`;
+    }
     if (!formData.email.trim()) {
       validationErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -184,6 +214,7 @@ const Register: React.FC = () => {
         password: formData.password,
         firstName: formData.firstName,
         lastName: formData.lastName,
+        dateOfBirth: formData.dateOfBirth,
         roles: ['Seeker', 'Provider'],
       }).unwrap();
 
@@ -206,7 +237,17 @@ const Register: React.FC = () => {
       );
       navigate(redirectTarget, { replace: true });
     } catch (err: any) {
-      const msg = err?.data?.message || err?.data?.detail || err?.data?.error || 'Registration failed. Please check your credentials or try a different email.';
+      const rfcErrors = err?.data?.errors;
+      if (rfcErrors && typeof rfcErrors === 'object') {
+        const fieldErrors: Record<string, string> = {};
+        for (const [key, val] of Object.entries(rfcErrors)) {
+          const fieldKey = key.charAt(0).toLowerCase() + key.slice(1);
+          fieldErrors[fieldKey] = Array.isArray(val) ? val.join(' ') : String(val);
+        }
+        setErrors(fieldErrors);
+        return;
+      }
+      const msg = err?.data?.message || err?.data?.detail || err?.data?.error || err?.data?.title || 'Registration failed. Please check your credentials or try a different email.';
       setErrors({ form: msg });
     }
   };
@@ -356,6 +397,39 @@ const Register: React.FC = () => {
               </div>
 
               <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="mobileDateOfBirth" className="block text-xs font-semibold text-muted-foreground">
+                    Date of birth <span className="text-muted-foreground/70 font-normal">(must be 18+)</span>
+                  </label>
+                  <span className="text-[10px] text-muted-foreground/80 font-medium">Born on or before {maxLegalDate}</span>
+                </div>
+                <div className="relative">
+                  <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <input
+                    id="mobileDateOfBirth"
+                    type="date"
+                    required
+                    max={maxLegalDate}
+                    value={mobileDateOfBirth}
+                    onChange={(e) => {
+                      setMobileDateOfBirth(e.target.value);
+                      if (errors.mobileDateOfBirth) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.mobileDateOfBirth;
+                          return next;
+                        });
+                      }
+                    }}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+                {errors.mobileDateOfBirth && (
+                  <p className="mt-1 text-[11px] text-destructive">{errors.mobileDateOfBirth}</p>
+                )}
+              </div>
+
+              <div>
                 <label htmlFor="phoneNumber" className="block text-xs font-semibold text-muted-foreground mb-1.5">
                   Mobile Number
                 </label>
@@ -491,6 +565,31 @@ const Register: React.FC = () => {
                     <p className="mt-1 text-[11px] text-destructive">{errors.lastName}</p>
                   )}
                 </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="dateOfBirth" className="block text-xs font-semibold text-muted-foreground">
+                    Date of birth <span className="text-muted-foreground/70 font-normal">(must be 18+)</span>
+                  </label>
+                  <span className="text-[10px] text-muted-foreground/80 font-medium">Born on or before {maxLegalDate}</span>
+                </div>
+                <div className="relative">
+                  <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
+                  <input
+                    id="dateOfBirth"
+                    name="dateOfBirth"
+                    type="date"
+                    required
+                    max={maxLegalDate}
+                    value={formData.dateOfBirth}
+                    onChange={handleEmailChange}
+                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+                {errors.dateOfBirth && (
+                  <p className="mt-1 text-[11px] text-destructive">{errors.dateOfBirth}</p>
+                )}
               </div>
 
               <div>

@@ -37,6 +37,20 @@ public sealed class AuthController(
             return Conflict(new { error = "An account with this email already exists." });
         }
 
+        if (request.DateOfBirth is null)
+        {
+            ModelState.AddModelError("dateOfBirth", "Date of birth is required to verify legal age.");
+            return ValidationProblem(ModelState);
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var minBirthdate = today.AddYears(-18);
+        if (request.DateOfBirth.Value > minBirthdate)
+        {
+            ModelState.AddModelError("dateOfBirth", $"You must be at least 18 years old to join LoveAgain (born on or before {minBirthdate:yyyy-MM-dd}).");
+            return ValidationProblem(ModelState);
+        }
+
         var roles = new List<UserRole> { UserRole.Seeker, UserRole.Provider };
         if (request.Roles != null && request.Roles.Length > 0)
         {
@@ -52,6 +66,7 @@ public sealed class AuthController(
         }
 
         var user = new User(request.Email, request.FirstName, request.LastName, roles);
+        user.SetDateOfBirth(request.DateOfBirth.Value);
         user.SetPasswordHash(passwords.Hash(request.Password));
         dbContext.Users.Add(user);
 
@@ -153,13 +168,21 @@ public sealed class AuthController(
 
         if (user is null)
         {
-            // If new user and name not yet provided, prompt client for name
-            if (string.IsNullOrWhiteSpace(request.FirstName))
+            // If new user and name or date of birth not yet provided, prompt client
+            if (string.IsNullOrWhiteSpace(request.FirstName) || request.DateOfBirth is null)
             {
                 return Ok(new VerifyMobileOtpResponse(
                     IsNewUser: true,
-                    Message: "Mobile verified. Please provide your first and last name to finish registration."
+                    Message: "Mobile verified. Please provide your name and date of birth (must be 18+) to finish registration."
                 ));
+            }
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var minBirthdate = today.AddYears(-18);
+            if (request.DateOfBirth.Value > minBirthdate)
+            {
+                ModelState.AddModelError("dateOfBirth", $"You must be at least 18 years old to join LoveAgain (born on or before {minBirthdate:yyyy-MM-dd}).");
+                return ValidationProblem(ModelState);
             }
 
             // Create new user
@@ -173,6 +196,7 @@ public sealed class AuthController(
             }
 
             user = new User(syntheticEmail, request.FirstName.Trim(), request.LastName?.Trim() ?? string.Empty, new[] { UserRole.Seeker, UserRole.Provider });
+            user.SetDateOfBirth(request.DateOfBirth.Value);
             user.UpdateContact(phone, request.FirstName.Trim(), request.LastName?.Trim());
             user.Verify(); // Phone-verified accounts are verified
 

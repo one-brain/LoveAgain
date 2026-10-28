@@ -51,7 +51,7 @@ This document defines the OpenAPI/Swagger contracts for all Cue platform microse
 
 #### POST /api/v1/auth/register
 
-Register a new user account.
+Register a new user account. Enforces legal adult age (18+).
 
 **Request:**
 
@@ -61,7 +61,8 @@ Register a new user account.
   "password": "SecurePassword123!",
   "firstName": "John",
   "lastName": "Doe",
-  "phoneNumber": "+1234567890"
+  "dateOfBirth": "2000-01-15",
+  "roles": ["Seeker", "Provider"]
 }
 ```
 
@@ -184,7 +185,8 @@ Send 2FA code via SMS.
 
 ```json
 {
-  "phoneNumber": "+1234567890"
+  "dateOfBirth": "2000-01-15",
+  "roles": ["Seeker", "Provider"]
 }
 ```
 
@@ -243,7 +245,8 @@ Get current authenticated user's profile.
     "email": "user@example.com",
     "firstName": "John",
     "lastName": "Doe",
-    "phoneNumber": "+1234567890",
+    "dateOfBirth": "2000-01-15",
+  "roles": ["Seeker", "Provider"],
     "profileImage": "https://...",
     "trustScore": 75,
     "isEmailVerified": true,

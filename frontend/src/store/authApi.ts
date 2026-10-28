@@ -65,7 +65,7 @@ export const authApi = createApi({
     },
   }),
   endpoints: (builder) => ({
-    register: builder.mutation<AuthTokenResponse, { email: string; password: string; firstName: string; lastName: string; roles: string[] }>({
+    register: builder.mutation<AuthTokenResponse, { email: string; password: string; firstName: string; lastName: string; dateOfBirth: string; roles: string[] }>({
       query: (body) => ({ url: '/auth/register', method: 'POST', body }),
       transformResponse: (response: { accessToken: string; expiresIn: number; tokenType: string; user?: any }, meta) => {
         const accessToken = response.accessToken;
@@ -118,7 +118,7 @@ export const authApi = createApi({
     }),
     verifyMobileOtp: builder.mutation<
       { isNewUser: boolean; message?: string; tokenResponse?: AuthTokenResponse },
-      { phone: string; otp: string; firstName?: string; lastName?: string }
+      { phone: string; otp: string; firstName?: string; lastName?: string; dateOfBirth?: string }
     >({
       query: (body) => ({ url: '/auth/mobile/verify-otp', method: 'POST', body }),
       transformResponse: (response: { isNewUser: boolean; message?: string; tokens?: any }, meta) => {

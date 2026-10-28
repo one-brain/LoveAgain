@@ -98,6 +98,27 @@ public sealed class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetDateOfBirth(DateOnly dateOfBirth)
+    {
+        DateOfBirth = dateOfBirth;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public int? CalculateAge(DateOnly? asOf = null)
+    {
+        if (DateOfBirth is null) return null;
+        var today = asOf ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var age = today.Year - DateOfBirth.Value.Year;
+        if (DateOfBirth.Value > today.AddYears(-age)) age--;
+        return age;
+    }
+
+    public bool IsLegalAge(DateOnly? asOf = null, int legalAge = 18)
+    {
+        var age = CalculateAge(asOf);
+        return age.HasValue && age.Value >= legalAge;
+    }
+
     /// <summary>
     /// Replaces the profile photo. Passing null removes it.
     /// </summary>

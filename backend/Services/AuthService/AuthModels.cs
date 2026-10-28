@@ -24,11 +24,11 @@ public sealed class AppOptions
     public string FrontendBaseUrl { get; init; } = "http://localhost:5173";
 }
 
-public sealed record RegisterRequest(string Email, string Password, string FirstName, string LastName, string[]? Roles = null);
+public sealed record RegisterRequest(string Email, string Password, string FirstName, string LastName, DateOnly? DateOfBirth = null, string[]? Roles = null);
 public sealed record LoginRequest(string Email, string Password);
 public sealed record SendMobileOtpRequest(string Phone, string? Purpose = "login");
 public sealed record SendMobileOtpResponse(string Message, int ExpiresInSeconds, string? DevOtp = null);
-public sealed record VerifyMobileOtpRequest(string Phone, string Otp, string? FirstName = null, string? LastName = null);
+public sealed record VerifyMobileOtpRequest(string Phone, string Otp, string? FirstName = null, string? LastName = null, DateOnly? DateOfBirth = null);
 public sealed record VerifyMobileOtpResponse(bool IsNewUser, string? Message = null, TokenResponse? Tokens = null);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);
@@ -36,7 +36,7 @@ public sealed record VerifyEmailRequest(string Token);
 public sealed record ChangePasswordRequest(string CurrentPassword, string NewPassword);
 public sealed record RefreshRequest(string? RefreshToken = null);
 public sealed record LogoutRequest(string? RefreshToken = null);
-public sealed record UserSummary(Guid Id, string Email, string FirstName, string LastName, bool IsVerified, int TrustScore, string[] Roles);
+public sealed record UserSummary(Guid Id, string Email, string FirstName, string LastName, bool IsVerified, int TrustScore, string[] Roles, DateOnly? DateOfBirth = null);
 public sealed record TokenResponse(string AccessToken, int ExpiresIn, string TokenType = "Bearer", UserSummary? User = null);
 
 public sealed class PasswordService
@@ -80,6 +80,10 @@ public sealed class JwtTokenService(JwtOptions options)
             new("trustScore", user.TrustScore.ToString()),
         };
         claims.AddRange(user.Roles.Select(role => new Claim(ClaimTypes.Role, role.ToString())));
+        if (user.DateOfBirth.HasValue)
+        {
+            claims.Add(new Claim("birthdate", user.DateOfBirth.Value.ToString("yyyy-MM-dd")));
+        }
         var expires = DateTime.UtcNow.AddMinutes(options.AccessTokenMinutes);
         var token = new JwtSecurityToken(options.Issuer, options.Audience, claims, expires: expires, signingCredentials: credentials);
         var userInfo = new UserSummary(
@@ -89,7 +93,8 @@ public sealed class JwtTokenService(JwtOptions options)
             user.LastName,
             user.IsVerified,
             user.TrustScore,
-            user.Roles.Select(r => r.ToString()).ToArray());
+            user.Roles.Select(r => r.ToString()).ToArray(),
+            user.DateOfBirth);
 
         return new TokenResponse(new JwtSecurityTokenHandler().WriteToken(token), (int)(expires - DateTime.UtcNow).TotalSeconds, "Bearer", userInfo);
     }
