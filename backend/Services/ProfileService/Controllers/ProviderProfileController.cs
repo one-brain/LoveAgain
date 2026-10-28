@@ -45,12 +45,23 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ProviderProfileResponse>> AddService(
-        [FromBody] string specialty,
+        [FromBody] System.Text.Json.JsonElement payload,
         CancellationToken cancellationToken)
     {
         if (!TryGetUserId(out var userId))
         {
             return Unauthorized(new { error = "Invalid user token." });
+        }
+
+        var specialty = payload.ValueKind == System.Text.Json.JsonValueKind.String
+            ? payload.GetString()
+            : (payload.ValueKind == System.Text.Json.JsonValueKind.Object && payload.TryGetProperty("specialty", out var prop)
+                ? prop.GetString()
+                : null);
+
+        if (string.IsNullOrWhiteSpace(specialty))
+        {
+            return BadRequest(new { error = "Specialty name is required." });
         }
 
         var command = new AddProviderSpecialtyCommand(userId, specialty);
@@ -370,9 +381,14 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
 
     private bool TryGetUserId(out Guid userId)
     {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            userId = Guid.Empty;
+            return false;
+        }
+
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value
-            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+            ?? User.FindFirst("sub")?.Value;
 
         if (!string.IsNullOrWhiteSpace(userIdClaim) && Guid.TryParse(userIdClaim, out userId))
         {
@@ -380,8 +396,7 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         }
 
         var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+            ?? User.FindFirst("email")?.Value;
 
         if (!string.IsNullOrWhiteSpace(emailClaim))
         {
@@ -438,14 +453,24 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         }
         else
         {
+            var resolvedDisplayName = !string.IsNullOrWhiteSpace(request.DisplayName)
+                ? request.DisplayName
+                : profile.DisplayName;
+            var resolvedProfileImages = request.ProfileImages is { Count: > 0 }
+                ? request.ProfileImages
+                : profile.ProfileImages;
+            var resolvedIntroVideo = !string.IsNullOrWhiteSpace(request.IntroVideoUrl)
+                ? request.IntroVideoUrl
+                : profile.IntroVideoUrl;
+
             profile.Update(
                 request.HourlyRate,
                 request.Bio,
                 request.Specialties,
-                request.MaxRadiusKm > 0 ? request.MaxRadiusKm : 50,
-                request.IntroVideoUrl,
-                request.DisplayName,
-                request.ProfileImages);
+                request.MaxRadiusKm > 0 ? request.MaxRadiusKm : (profile.MaxRadiusKm > 0 ? profile.MaxRadiusKm : 50),
+                resolvedIntroVideo,
+                resolvedDisplayName,
+                resolvedProfileImages);
             profile.SubmitForReview(request.IdProofUrl, request.SelfieVerificationUrl);
         }
 

@@ -33,6 +33,9 @@ internal sealed class ProviderProfileConfiguration : IEntityTypeConfiguration<Pr
         builder.Property(profile => profile.HourlyRate).HasPrecision(10, 2);
         builder.Property(profile => profile.MaxRadiusKm).HasPrecision(5, 2);
         builder.Property(profile => profile.DisplayName).HasColumnName("display_name").HasMaxLength(150);
+        builder.Property(profile => profile.Gender).HasColumnName("gender").HasMaxLength(30);
+        builder.Property(profile => profile.City).HasColumnName("city").HasMaxLength(100);
+        builder.Property(profile => profile.Area).HasColumnName("area").HasMaxLength(120);
         builder.Property(profile => profile.ProfileImages).HasColumnName("profile_images").HasColumnType("text[]");
         builder.Property(profile => profile.ProfileImages).HasConversion(
             images => images.ToArray(),
@@ -82,7 +85,14 @@ internal sealed class ServiceOrderConfiguration : IEntityTypeConfiguration<Servi
         builder.Property(order => order.PlatformFee).HasPrecision(10, 2);
         builder.Property(order => order.ProviderEarnings).HasPrecision(10, 2);
         builder.Property(order => order.CheckInPin).HasMaxLength(10);
-        builder.Ignore(order => order.Requirements);
+        builder.Property(order => order.Requirements)
+            .HasColumnName("requirements")
+            .HasColumnType("jsonb")
+            .HasConversion(
+                req => req == null ? null : System.Text.Json.JsonSerializer.Serialize(req, (System.Text.Json.JsonSerializerOptions?)null),
+                json => string.IsNullOrWhiteSpace(json)
+                    ? null
+                    : System.Text.Json.JsonSerializer.Deserialize<BookingRequirements>(json, (System.Text.Json.JsonSerializerOptions?)null));
         builder.HasIndex(order => new { order.SeekerId, order.Status });
         builder.HasIndex(order => new { order.ProviderId, order.Status });
         builder.HasIndex(order => new { order.StartTime, order.EndTime });

@@ -2,6 +2,7 @@ import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { updateTokens } from './slices/authSlice';
 import { executeClientLogout } from '../utils/sessionManager';
+import { logger } from '../utils/logger';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -140,6 +141,22 @@ export const createBaseQueryWithReauth = (
         if (freshToken) {
           result = await rawBaseQuery(args, api, extraOptions);
         }
+      }
+    }
+
+    if (result.error) {
+      const url = typeof args === 'string' ? args : args.url;
+      const status = result.error.status;
+      if (status === 'FETCH_ERROR' || (typeof status === 'number' && status >= 500)) {
+        logger.error(`API Failure: ${status} on ${url}`, 'baseQueryWithReauth', result.error, {
+          args,
+          status,
+        });
+      } else if (typeof status === 'number' && status >= 400 && status !== 401) {
+        logger.warn(`API Client Notice: ${status} on ${url}`, 'baseQueryWithReauth', {
+          args,
+          status,
+        });
       }
     }
 

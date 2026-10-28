@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import {
   CreditCardIcon,
   BanknotesIcon,
@@ -14,6 +15,7 @@ import {
   useCreateTopUpOrderMutation,
   useVerifyTopUpMutation,
 } from '../../store/paymentApi';
+import { bookingApi } from '../../store/bookingApi';
 import { loadRazorpayScript } from '../../utils/razorpay';
 import { formatINR } from '../../utils/currency';
 import { RazorpaySandboxModal, type RazorpaySandboxPaymentResult } from './RazorpaySandboxModal';
@@ -35,6 +37,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   onClose,
   onSuccess,
 }) => {
+  const dispatch = useDispatch();
   const { data: walletData, isLoading: walletLoading, refetch: refetchWallet } = useGetWalletBalanceQuery();
   const [checkoutWithWallet, { isLoading: isPayingWallet }] = useCheckoutWithWalletMutation();
   const [createTopUpOrder, { isLoading: isCreatingTopUp }] = useCreateTopUpOrderMutation();
@@ -84,6 +87,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
     setErrorMessage(null);
     try {
       await checkoutWithWallet({ orderId }).unwrap();
+      dispatch(bookingApi.util.invalidateTags(['Bookings']));
       setIsSuccess(true);
       setTimeout(() => {
         onSuccess();
@@ -112,6 +116,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
 
       // Automatically proceed to wallet escrow checkout
       await checkoutWithWallet({ orderId }).unwrap();
+      dispatch(bookingApi.util.invalidateTags(['Bookings']));
       setSandboxOrderData(null);
       setIsSuccess(true);
       setTimeout(() => {

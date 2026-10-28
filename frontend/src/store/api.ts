@@ -78,6 +78,39 @@ export interface AvailabilitySlot {
   bookingId?: string;
 }
 
+export interface SubmitSupportTicketRequest {
+  category?: string;
+  bookingId?: string;
+  subject: string;
+  message: string;
+  email?: string;
+}
+
+export interface SupportTicketResponse {
+  ticketId: string;
+  category: string;
+  subject: string;
+  status: string;
+  createdAt: string;
+}
+
+export interface TriggerEmergencySosRequest {
+  bookingId?: string;
+  companionName?: string;
+  locationAddress?: string;
+  latitude?: number;
+  longitude?: number;
+  reason?: string;
+}
+
+export interface EmergencySosResponse {
+  incidentId: string;
+  bookingId?: string;
+  status: string;
+  dispatchedAt: string;
+  message: string;
+}
+
 export const profileApi = createApi({
   reducerPath: 'profileApi',
   baseQuery: baseQueryWithReauth,
@@ -163,9 +196,45 @@ export const profileApi = createApi({
         body: formData,
       }),
     }),
-    getSlots: builder.query<AvailabilitySlot[], string>({
-      query: (providerId) => `/profiles/provider/slots/${providerId}`,
+    getSlots: builder.query<AvailabilitySlot[], string | void>({
+      query: () => `/profiles/provider/availability`,
       providesTags: ['Availability'],
+    }),
+    createSlot: builder.mutation<AvailabilitySlot, { startTime: string; endTime: string }>({
+      query: (body) => ({
+        url: `/profiles/provider/availability`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Availability'],
+    }),
+    deleteSlot: builder.mutation<void, string>({
+      query: (slotId) => ({
+        url: `/profiles/provider/availability/${slotId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Availability'],
+    }),
+    deleteMyAccount: builder.mutation<void, void>({
+      query: () => ({
+        url: `/profiles/me`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Profile'],
+    }),
+    submitSupportTicket: builder.mutation<SupportTicketResponse, SubmitSupportTicketRequest>({
+      query: (body) => ({
+        url: `/support/tickets`,
+        method: 'POST',
+        body,
+      }),
+    }),
+    triggerEmergencySos: builder.mutation<EmergencySosResponse, TriggerEmergencySosRequest>({
+      query: (body) => ({
+        url: `/support/sos`,
+        method: 'POST',
+        body,
+      }),
     }),
     updateProviderProfile: builder.mutation<ProviderProfileResponse, UpdateProviderProfileRequest>({
       query: (profileData) => ({
@@ -209,6 +278,11 @@ export const {
   useDeleteSeekerPhotoMutation,
   useUploadCompanionPhotoMutation,
   useGetSlotsQuery,
+  useCreateSlotMutation,
+  useDeleteSlotMutation,
+  useDeleteMyAccountMutation,
+  useSubmitSupportTicketMutation,
+  useTriggerEmergencySosMutation,
   useUpdateProviderProfileMutation,
   useDeleteProviderProfileMutation,
   useActivateProfileMutation,

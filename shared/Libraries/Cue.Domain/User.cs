@@ -138,6 +138,50 @@ public sealed class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void SetTrustScore(int score)
+    {
+        TrustScore = Math.Clamp(score, 0, 100);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public static User Seed(
+        Guid id,
+        string email,
+        string firstName,
+        string lastName,
+        string? phone,
+        string? photoUrl,
+        string passwordHash,
+        IEnumerable<UserRole> roles,
+        bool isVerified,
+        int trustScore,
+        DateOnly? dateOfBirth = null,
+        DateTime? createdAt = null)
+    {
+        var ts = createdAt ?? DateTime.UtcNow;
+        var u = new User
+        {
+            Id = id,
+            Email = email.Trim().ToLowerInvariant(),
+            FirstName = firstName.Trim(),
+            LastName = lastName.Trim(),
+            Phone = phone?.Trim(),
+            PhotoUrl = photoUrl?.Trim(),
+            PasswordHash = passwordHash,
+            IsVerified = isVerified,
+            // -1 is the suspended sentinel (see Suspend()); valid range is -1..100
+            TrustScore = Math.Clamp(trustScore, -1, 100),
+            DateOfBirth = dateOfBirth,
+            CreatedAt = ts,
+            UpdatedAt = ts
+        };
+        foreach (var r in roles)
+        {
+            u.roles.Add(r);
+        }
+        return u;
+    }
+
     public void SetRoles(IEnumerable<UserRole> newRoles)
     {
         roles.Clear();

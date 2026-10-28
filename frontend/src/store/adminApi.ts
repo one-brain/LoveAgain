@@ -1,6 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { baseQueryWithReauth } from './baseQueryWithReauth';
 import { discoveryApi } from './discoveryApi';
+import { profileApi } from './api';
 
 export interface CompanionApplicationRequest {
   hourlyRate: number;
@@ -11,6 +12,8 @@ export interface CompanionApplicationRequest {
   selfieVerificationUrl?: string;
   upiId?: string;
   introVideoUrl?: string;
+  displayName?: string;
+  profileImages?: string[];
 }
 
 export interface AdminVerificationItem {
@@ -114,6 +117,12 @@ export const adminApi = createApi({
         body,
       }),
       invalidatesTags: ['Profile', 'Verifications'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(profileApi.util.invalidateTags(['Profile']));
+        } catch {}
+      },
     }),
 
     getAdminVerifications: builder.query<AdminVerificationItem[], { status?: string } | void>({

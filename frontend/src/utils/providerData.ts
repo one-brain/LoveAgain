@@ -260,9 +260,28 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
   },
 ];
 
+/**
+ * Converts a curated sample ID (e.g. "sample-1") into a deterministic UUID
+ * so it can be persisted in PostgreSQL `bookings.service_orders` and `payments.escrow_holds`.
+ */
+export function toProviderGuid(providerId: string): string {
+  const trimmed = (providerId || '').trim();
+  if (trimmed === 'sample-1' || trimmed === 'p1') return '158b9ff7-19de-49ce-a57c-b37738591285';
+  if (trimmed === 'sample-2' || trimmed === 'p2') return '6d187ed5-aff0-4fa3-856c-9beb89264b15';
+  if (trimmed === 'sample-3' || trimmed === 'p3') return '010e1920-fdf6-4419-85c1-95d284c6730d';
+  const match = /^(?:sample-|p)(\d+)$/i.exec(trimmed);
+  if (match) {
+    const num = parseInt(match[1], 10);
+    const hex = num.toString(16).padStart(12, '0');
+    return `00000000-0000-0000-0000-${hex}`;
+  }
+  return trimmed;
+}
+
 export const SAMPLE_PROVIDERS_MAP: Record<string, CuratedProvider> = SAMPLE_PROVIDERS_LIST.reduce(
   (acc, provider) => {
     acc[provider.providerId] = provider;
+    acc[toProviderGuid(provider.providerId)] = provider;
     return acc;
   },
   {} as Record<string, CuratedProvider>

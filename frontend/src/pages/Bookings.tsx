@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   useGetProviderIncomingBookingsQuery,
   useGetSeekerOutgoingBookingsQuery,
@@ -42,13 +42,16 @@ const STATUS_FILTER_OPTIONS: DropdownOption[] = [
   { value: 'Cancelled', label: 'Cancelled', description: 'Terminated sessions' },
 ];
 
-function sortAndFilterBookings(
-  list: BookingSummary[],
+type ViewMode = 'all' | 'client' | 'companion';
+type PerspectiveBooking = BookingSummary & { perspective: 'client' | 'companion' };
+
+function sortAndFilterBookings<T extends BookingSummary>(
+  list: T[],
   allowedStatuses: string[],
   statusFilter: string,
   sortOrder: string,
   defaultDirection: 'asc' | 'desc'
-): BookingSummary[] {
+): T[] {
   let filtered = list.filter((b) => allowedStatuses.includes(b.status));
   if (statusFilter !== 'all') {
     filtered = filtered.filter((b) => b.status === statusFilter);
@@ -83,7 +86,7 @@ const Bookings: React.FC = () => {
   } = useGetSeekerOutgoingBookingsQuery(user?.id || '', { skip: !user?.id });
 
   // Query live backend providers to enrich candidate profiles
-  const { data: liveProviders } = useListProvidersQuery({});
+  const { data: liveProviders } = useListProvidersQuery({ pageSize: 120 });
 
   const [cancelBooking] = useCancelBookingMutation();
 
@@ -113,8 +116,9 @@ const Bookings: React.FC = () => {
         } catch {
           // Ignore if escrow was already processed
         }
-        refetchProviderBookings();
-        refetchSeekerBookings();
+        await Promise.all([refetchProviderBookings(), refetchSeekerBookings()]);
+        setStatusFilter('all');
+        setActiveTab('history');
       } catch (err: any) {
         alert(err?.data?.error || 'Failed to complete session');
       }
@@ -132,25 +136,54 @@ const Bookings: React.FC = () => {
     }
   }, [profileData, dispatch]);
 
-  const [roleMode, setRoleMode] = useState<'client' | 'companion'>('client');
+  // View mode is synced with ?view=all|client|incoming for deep linking
+  const [searchParams, setSearchParams] = useSearchParams();
+  const viewParam = searchParams.get('view');
+  const viewMode: ViewMode =
+    viewParam === 'incoming' ? 'companion' : viewParam === 'client' ? 'client' : 'all';
+  const roleMode: 'client' | 'companion' = viewMode === 'companion' ? 'companion' : 'client';
+
+  const setViewMode = (mode: ViewMode) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (mode === 'all') next.delete('view');
+        else next.set('view', mode === 'companion' ? 'incoming' : 'client');
+        return next;
+      },
+      { replace: true }
+    );
+  };
+
   const companionStatus = profileData?.profile?.status;
 
-  // Use live data if fetched; default to empty list for clean account state
-  const bookings: BookingSummary[] = useMemo(() => {
-    if (roleMode === 'companion') {
-      if (!isLoadingProvider && providerBookingsData !== undefined) {
-        return providerBookingsData?.bookings || [];
-      }
-      return [];
-    } else {
-      if (!isLoadingSeeker && seekerBookingsData !== undefined) {
-        return seekerBookingsData?.bookings || [];
-      }
-      return [];
-    }
-  }, [providerBookingsData, seekerBookingsData, roleMode, isLoadingProvider, isLoadingSeeker]);
+  const clientBookings: PerspectiveBooking[] = useMemo(
+    () => (seekerBookingsData?.bookings || []).map((b: BookingSummary) => ({ ...b, perspective: 'client' as const })),
+    [seekerBookingsData]
+  );
+  const companionBookings: PerspectiveBooking[] = useMemo(
+    () => (providerBookingsData?.bookings || []).map((b: BookingSummary) => ({ ...b, perspective: 'companion' as const })),
+    [providerBookingsData]
+  );
 
-  const isLoading = roleMode === 'companion' ? isLoadingProvider : isLoadingSeeker;
+  // Single source of truth for every booking the user is part of
+  const bookings: PerspectiveBooking[] = useMemo(() => {
+    if (viewMode === 'client') return clientBookings;
+    if (viewMode === 'companion') return companionBookings;
+    const seen = new Set<string>();
+    return [...companionBookings, ...clientBookings].filter((b) => {
+      if (seen.has(b.orderId)) return false;
+      seen.add(b.orderId);
+      return true;
+    });
+  }, [viewMode, clientBookings, companionBookings]);
+
+  const isLoading =
+    viewMode === 'companion'
+      ? isLoadingProvider
+      : viewMode === 'client'
+      ? isLoadingSeeker
+      : isLoadingProvider || isLoadingSeeker;
 
   // Segregate, filter and sort bookings
   const upcomingBookings = useMemo(
@@ -239,41 +272,48 @@ const Bookings: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Unified Dual-Mode Toggle */}
+      {/* Unified View Switcher: All | My Outings | Incoming Requests */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center p-1 rounded-2xl bg-muted/60 border border-border/80 max-w-md w-full">
-          <button
-            type="button"
-            onClick={() => setRoleMode('client')}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-              roleMode === 'client'
-                ? 'bg-card text-foreground shadow-sm border border-border/80'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <span>My Bookings (Client)</span>
-            <span className="px-1.5 py-0.5 rounded-full bg-accent/15 text-accent text-[11px] font-mono">
-              {seekerBookingsData?.bookings?.length ?? 0}
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setRoleMode('companion')}
-            className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 ${
-              roleMode === 'companion'
-                ? 'bg-card text-foreground shadow-sm border border-border/80'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <SparklesIcon className="w-3.5 h-3.5 text-accent" />
-            <span>Incoming Requests</span>
-            {providerBookingsData?.bookings?.length ? (
-              <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[11px] font-mono">
-                {providerBookingsData.bookings.length}
-              </span>
-            ) : null}
-          </button>
+        <div
+          role="tablist"
+          aria-label="Booking view"
+          className="flex items-center p-1 rounded-2xl bg-muted/60 border border-border/80 max-w-xl w-full"
+        >
+          {(
+            [
+              { mode: 'all', label: 'All Bookings', count: clientBookings.length + companionBookings.length },
+              { mode: 'client', label: 'My Outings', count: clientBookings.length },
+              { mode: 'companion', label: 'Incoming Requests', count: companionBookings.length },
+            ] as { mode: ViewMode; label: string; count: number }[]
+          ).map(({ mode, label, count }) => {
+            const active = viewMode === mode;
+            return (
+              <button
+                key={mode}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setViewMode(mode)}
+                className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
+                  active
+                    ? 'bg-card text-foreground shadow-sm border border-border/80'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {mode === 'companion' && <SparklesIcon className="w-3.5 h-3.5 text-accent" />}
+                <span>{label}</span>
+                <span
+                  className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono ${
+                    mode === 'companion'
+                      ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                      : 'bg-accent/15 text-accent'
+                  }`}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <Link
@@ -312,12 +352,14 @@ const Bookings: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
-            {roleMode === 'companion' ? 'Incoming Client Requests' : 'My Experience Bookings'}
+            My Experience Bookings
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            {roleMode === 'companion'
-              ? 'Review booking requests from clients, accept sessions, and monitor pending earnings.'
-              : 'Track active appointments, manage escrow payments, and coordinate with companions.'}
+            {viewMode === 'companion'
+              ? 'Requests clients have sent you. Accept sessions, verify Meeting PINs, and track pending earnings.'
+              : viewMode === 'client'
+              ? 'Outings you booked with companions. Pay, check in, and coordinate in chat.'
+              : 'Every booking you are part of, whether you booked a companion or a client booked you.'}
           </p>
         </div>
       </div>
@@ -460,7 +502,8 @@ const Bookings: React.FC = () => {
                     <BookingCard
                       key={b.orderId}
                       booking={b}
-                      roleMode={roleMode}
+                      roleMode={b.perspective}
+                      showRoleBadge={viewMode === 'all'}
                       liveProviders={liveProviders}
                       onCancel={handleCancel}
                       onPay={(bkg) => setCheckoutBooking(bkg)}
@@ -507,7 +550,8 @@ const Bookings: React.FC = () => {
                     <BookingCard
                       key={b.orderId}
                       booking={b}
-                      roleMode={roleMode}
+                      roleMode={b.perspective}
+                      showRoleBadge={viewMode === 'all'}
                       liveProviders={liveProviders}
                       onOpenSos={handleOpenSos}
                       onViewProfile={(id) => setPreviewProviderId(id)}
@@ -609,7 +653,8 @@ const Bookings: React.FC = () => {
                         <BookingCard
                           key={b.orderId}
                           booking={b}
-                          roleMode={roleMode}
+                          roleMode={b.perspective}
+                      showRoleBadge={viewMode === 'all'}
                           liveProviders={liveProviders}
                           onCancel={handleCancel}
                           onPay={(bkg) => setCheckoutBooking(bkg)}

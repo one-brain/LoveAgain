@@ -8,7 +8,8 @@ import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { RateBadge } from '../components/ui/RateBadge';
-import { SAMPLE_PROVIDERS_LIST } from '../utils/providerData';
+import { CompanionCardSkeleton } from '../components/ui/Skeleton';
+import { SAMPLE_PROVIDERS_LIST, toProviderGuid } from '../utils/providerData';
 import {
   calculateHaversineDistance,
   resolveNearestHub,
@@ -123,7 +124,7 @@ const Discovery: React.FC = () => {
   }, [searchParams]);
 
   // Query live backend providers
-  const { data: backendData } = useListProvidersQuery({
+  const { data: backendData, isLoading: isDiscoveryLoading } = useListProvidersQuery({
     q: q.trim() || undefined,
     minRate: minRate ? Number(minRate) : undefined,
     maxRate: maxRate ? Number(maxRate) : undefined,
@@ -131,6 +132,7 @@ const Discovery: React.FC = () => {
     latitude: userLocation?.latitude,
     longitude: userLocation?.longitude,
     radiusKm: Number(radiusKm) || 50,
+    pageSize: 120,
   });
 
   const displayProviders = useMemo(() => {
@@ -167,15 +169,22 @@ const Discovery: React.FC = () => {
         distanceKm: item.distanceKm != null ? Number(item.distanceKm) : null,
         latitude: item.latitude != null ? Number(item.latitude) : null,
         longitude: item.longitude != null ? Number(item.longitude) : null,
-        city: hub?.city || 'Bengaluru',
-        area: hub?.area || 'Indiranagar',
+        city: item.city || hub?.city || 'Bengaluru',
+        area: item.area || hub?.area || 'Indiranagar',
         services: Array.isArray(item.services) ? item.services : [],
         lenses: Array.isArray(item.lenses) ? item.lenses : ['companions'],
       };
     });
 
-    const existingIds = new Set(liveItems.map((i: any) => i.providerId));
-    let list: any[] = [...liveItems, ...CURATED_SAMPLE_PROVIDERS.filter((s) => !existingIds.has(s.providerId))];
+    const existingIds = new Set(liveItems.map((i: any) => String(i.providerId).toLowerCase()));
+    const existingNames = new Set(liveItems.map((i: any) => String(i.displayName || '').trim().toLowerCase()));
+    const fallbackSamples = CURATED_SAMPLE_PROVIDERS.filter(
+      (s) =>
+        !existingIds.has(s.providerId.toLowerCase()) &&
+        !existingIds.has(toProviderGuid(s.providerId).toLowerCase()) &&
+        !existingNames.has(s.displayName.trim().toLowerCase())
+    );
+    let list: any[] = [...liveItems, ...fallbackSamples];
 
     // Exclude any provider explicitly rejected by platform administration
     try {
@@ -624,7 +633,13 @@ const Discovery: React.FC = () => {
           </p>
         </div>
 
-        {displayProviders.length === 0 ? (
+        {isDiscoveryLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <CompanionCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : displayProviders.length === 0 ? (
           <div className="text-center py-20 bg-card rounded-3xl border border-border max-w-xl mx-auto p-8">
             <SparklesIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-foreground mb-2">No matching profiles found</h3>
@@ -871,17 +886,26 @@ const Discovery: React.FC = () => {
             provider={selectedProviderForBooking}
             onProceedToPayment={async (bookingData: BookingRequirementData) => {
               let generatedOrderId = `order_${Date.now()}`;
-              if (selectedProviderForBooking.providerId && !selectedProviderForBooking.providerId.startsWith('sample-')) {
+              if (selectedProviderForBooking.providerId) {
                 try {
-                  const startD = new Date(`${bookingData.startDate}T${bookingData.startTime}:00Z`);
+                  const startD = new Date(`${bookingData.startDate}T${bookingData.startTime}:00`);
                   const endD = new Date(startD.getTime() + bookingData.durationHours * 3600000);
                   const result = await createBooking({
-                    providerId: selectedProviderForBooking.providerId,
+                    providerId: toProviderGuid(selectedProviderForBooking.providerId),
                     startTime: startD.toISOString(),
                     endTime: endD.toISOString(),
                     hourlyRate: selectedProviderForBooking.hourlyRate,
                     durationHours: bookingData.durationHours,
                     meetingAddress: bookingData.meetingVenue,
+                    requirements: {
+                      activity: bookingData.activity,
+                      dressCode: bookingData.dressCode,
+                      transportMode: bookingData.transportMode,
+                      dietPreference: bookingData.dietPreference,
+                      equipmentGear: bookingData.equipmentGear,
+                      languagePreference: bookingData.languagePreference,
+                      specialNotes: bookingData.specialNotes,
+                    },
                   }).unwrap();
                   if (result?.orderId) {
                     generatedOrderId = result.orderId;

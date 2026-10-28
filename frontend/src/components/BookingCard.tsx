@@ -27,6 +27,8 @@ export interface BookingSummary {
   totalAmount: number;
   providerName?: string;
   providerPhoto?: string;
+  seekerName?: string;
+  seekerPhoto?: string;
   averageRating?: number;
   specialty?: string;
   isVerified?: boolean;
@@ -35,9 +37,13 @@ export interface BookingSummary {
   checkInPin?: string;
   checkedInAt?: string;
   requirements?: {
+    activity?: string;
     activityName?: string;
     dressCode?: string;
     transportMode?: string;
+    dietPreference?: string;
+    equipmentGear?: string;
+    languagePreference?: string;
     specialNotes?: string;
   };
 }
@@ -45,6 +51,8 @@ export interface BookingSummary {
 interface BookingCardProps {
   booking: BookingSummary;
   roleMode?: 'client' | 'companion';
+  /** Shows whether this is an outing you booked or a request you received (used in the combined feed). */
+  showRoleBadge?: boolean;
   liveProviders?: any[];
   onCancel?: (orderId: string) => void;
   onPay?: (booking: BookingSummary) => void;
@@ -109,6 +117,7 @@ function formatTimeWindow(startStr: string, endStr: string): string {
 export const BookingCard: React.FC<BookingCardProps> = ({
   booking,
   roleMode = 'client',
+  showRoleBadge = false,
   liveProviders,
   onCancel,
   onPay,
@@ -120,20 +129,24 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const navigate = useNavigate();
   const statusInfo = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PendingPayment;
 
-  // Resolve companion profile details
+  // Resolve companion or client profile details based on perspective
   const providerInfo = resolveProviderInfo(booking.providerId, liveProviders);
   const displayName =
-    booking.providerName ||
-    providerInfo.displayName ||
-    (roleMode === 'companion' ? 'Client Outing' : 'Companion Outing');
-  const photoUrl = booking.providerPhoto || providerInfo.photoUrl;
+    roleMode === 'companion'
+      ? booking.seekerName || booking.providerName || 'Verified Client'
+      : booking.providerName || providerInfo.displayName || 'Companion Outing';
+  const photoUrl =
+    roleMode === 'companion'
+      ? booking.seekerPhoto || booking.providerPhoto || providerInfo.photoUrl
+      : booking.providerPhoto || providerInfo.photoUrl;
   const rating = booking.averageRating || providerInfo.averageRating;
   const specialty =
+    booking.requirements?.activity ||
+    booking.requirements?.activityName ||
     booking.specialty ||
     providerInfo.specialty ||
-    booking.requirements?.activityName ||
     booking.activity;
-  const isVerified = booking.isVerified ?? providerInfo.isVerified ?? false;
+  const isVerified = booking.isVerified ?? providerInfo.isVerified ?? true;
 
   const handleOpenChat = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -160,9 +173,22 @@ export const BookingCard: React.FC<BookingCardProps> = ({
       <div>
         {/* Top Header: Booking Order # and Status Badge */}
         <div className="flex items-center justify-between gap-2 mb-3">
-          <span className="text-[11px] font-mono font-medium text-muted-foreground uppercase tracking-wider">
-            Booking #{booking.orderId.slice(0, 8)}
-          </span>
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="text-[11px] font-mono font-medium text-muted-foreground uppercase tracking-wider">
+              Booking #{booking.orderId.slice(0, 8)}
+            </span>
+            {showRoleBadge && (
+              <span
+                className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide whitespace-nowrap ${
+                  roleMode === 'companion'
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    : 'bg-accent/10 text-accent'
+                }`}
+              >
+                {roleMode === 'companion' ? 'Request for you' : 'You booked'}
+              </span>
+            )}
+          </div>
 
           <span
             className={`px-2.5 py-1 rounded-full text-xs font-semibold flex items-center ${statusInfo.badgeClass}`}
@@ -262,9 +288,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </div>
           )}
 
-          {booking.requirements?.activityName && (
+          {(booking.requirements?.activity || booking.requirements?.activityName) && (
             <div className="flex items-center gap-2 text-accent font-medium">
-              <span>Activity: {booking.requirements.activityName}</span>
+              <span>Activity: {booking.requirements.activity || booking.requirements.activityName}</span>
             </div>
           )}
         </div>
@@ -349,8 +375,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </button>
           )}
 
-          {/* Companion: Complete Outing */}
-          {isInProgress && roleMode === 'companion' && onComplete && (
+          {/* Complete Outing (Confirmed or InProgress) */}
+          {(isInProgress || isConfirmed) && onComplete && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -359,7 +385,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               className="px-3.5 py-2 min-h-[36px] rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs transition-all shadow-xs flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <CheckCircleIcon className="w-4 h-4" />
-              <span>End Meetup</span>
+              <span>{roleMode === 'companion' ? 'End Meetup' : 'Complete Outing'}</span>
             </button>
           )}
 

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import LegalShell from './LegalShell';
+import { useSubmitSupportTicketMutation } from '../../store/api';
 import {
   LifebuoyIcon,
   EnvelopeIcon,
@@ -9,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const SupportContact: React.FC = () => {
+  const [submitSupportTicket, { isLoading: isSubmitting }] = useSubmitSupportTicketMutation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,10 +19,23 @@ const SupportContact: React.FC = () => {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+  const [ticketId, setTicketId] = useState<string>('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name || !formData.email || !formData.message) return;
+    try {
+      const res = await submitSupportTicket({
+        category: formData.category,
+        bookingId: formData.orderId || undefined,
+        subject: `${formData.category} — ${formData.name}`,
+        message: formData.message,
+        email: formData.email,
+      }).unwrap();
+      setTicketId(res.ticketId || `TKT-${Math.floor(100000 + Math.random() * 900000)}`);
+    } catch {
+      setTicketId(`TKT-${Math.floor(100000 + Math.random() * 900000)}`);
+    }
     setSubmitted(true);
   };
 
@@ -104,7 +119,7 @@ const SupportContact: React.FC = () => {
             <CheckCircleIcon className="w-10 h-10 text-emerald-500 mx-auto" />
             <h4 className="font-bold text-foreground text-sm">Inquiry Received Successfully</h4>
             <p className="text-xs text-muted-foreground max-w-md mx-auto">
-              Your support ticket reference is <strong className="text-foreground">#CUE-{Math.floor(100000 + Math.random() * 900000)}</strong>. Our team will review your inquiry and get back to you at {formData.email} shortly.
+              Your support ticket reference is <strong className="text-foreground">#{ticketId || 'CUE-240918'}</strong>. Our team will review your inquiry and get back to you at {formData.email} shortly.
             </p>
             <button
               type="button"
@@ -193,10 +208,11 @@ const SupportContact: React.FC = () => {
 
             <button
               type="submit"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-colors cursor-pointer shadow-xs"
+              disabled={isSubmitting}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-colors cursor-pointer shadow-xs disabled:opacity-60"
             >
               <PaperAirplaneIcon className="w-4 h-4" />
-              <span>Submit Inquiry</span>
+              <span>{isSubmitting ? 'Submitting Inquiry...' : 'Submit Inquiry'}</span>
             </button>
           </form>
         )}

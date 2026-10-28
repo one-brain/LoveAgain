@@ -22,6 +22,9 @@ export const discoveryApi = createApi({
         profileImages?: string[];
         latitude?: number | null;
         longitude?: number | null;
+        gender?: string | null;
+        city?: string | null;
+        area?: string | null;
       }>,
       {
         q?: string;
@@ -34,6 +37,8 @@ export const discoveryApi = createApi({
         radiusKm?: number;
         page?: number;
         pageSize?: number;
+        gender?: string;
+        city?: string;
       }
     >({
       query: (params) => {
@@ -47,7 +52,9 @@ export const discoveryApi = createApi({
         if (params.longitude != null) searchParams.set('longitude', String(params.longitude));
         if (params.radiusKm != null) searchParams.set('radiusKm', String(params.radiusKm));
         if (params.page) searchParams.set('page', String(params.page));
-        if (params.pageSize) searchParams.set('pageSize', String(params.pageSize));
+        searchParams.set('pageSize', String(params.pageSize || 120));
+        if (params.gender && params.gender !== 'all') searchParams.set('gender', params.gender);
+        if (params.city && params.city !== 'all') searchParams.set('city', params.city);
         return { url: `/discovery/providers?${searchParams.toString()}` };
       },
       providesTags: ['DiscoveryProviders'],

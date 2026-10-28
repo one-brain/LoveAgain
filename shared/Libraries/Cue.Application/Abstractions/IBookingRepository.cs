@@ -17,4 +17,13 @@ public interface IBookingRepository
     // Provider incoming / seeker outgoing history queries
     Task<IReadOnlyList<ServiceOrder>> GetProviderIncomingAsync(Guid providerId, CancellationToken cancellationToken);
     Task<IReadOnlyList<ServiceOrder>> GetSeekerOutgoingAsync(Guid seekerId, CancellationToken cancellationToken);
+    Task<IReadOnlyDictionary<Guid, BookingParticipantInfo>> GetParticipantsMetadataAsync(IEnumerable<Guid> userIds, CancellationToken cancellationToken);
 }
+
+public sealed record BookingParticipantInfo(
+    Guid UserId,
+    string DisplayName,
+    string? PhotoUrl,
+    decimal? AverageRating,
+    string? PrimarySpecialty,
+    bool IsVerified);

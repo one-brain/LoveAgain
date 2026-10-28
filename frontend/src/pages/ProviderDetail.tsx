@@ -8,6 +8,7 @@ import { BookingRequestModal, type BookingRequirementData } from '../components/
 import { RateBadge } from '../components/ui/RateBadge';
 import { formatINR, formatRate } from '../utils/currency';
 import { resolveNearestHub } from '../utils/location';
+import { SAMPLE_PROVIDERS_MAP, toProviderGuid } from '../utils/providerData';
 import type { RootState } from '../store';
 import {
   StarIcon,
@@ -201,16 +202,17 @@ const ProviderDetail: React.FC = () => {
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
+  const resolvedUserId = userId ? toProviderGuid(userId) : '';
   // Fetch API data
   const { data: apiProvider, isLoading } = useGetProviderQuery(
-    userId || '',
-    { skip: !userId || userId.startsWith('sample-') }
+    resolvedUserId,
+    { skip: !resolvedUserId }
   );
 
   const [createBooking] = useCreateBookingMutation();
 
   // Resolve provider data
-  const provider = useMemo(() => {
+  const provider = useMemo<any>(() => {
     if (apiProvider) {
       const slots = apiProvider.upcomingSlots?.length
         ? apiProvider.upcomingSlots
@@ -220,9 +222,10 @@ const ProviderDetail: React.FC = () => {
         upcomingSlots: slots,
       };
     }
-    if (userId && FALLBACK_PROVIDERS_MAP[userId]) {
+    if (userId && (SAMPLE_PROVIDERS_MAP[userId] || FALLBACK_PROVIDERS_MAP[userId])) {
+      const sample = SAMPLE_PROVIDERS_MAP[userId] || FALLBACK_PROVIDERS_MAP[userId];
       return {
-        ...FALLBACK_PROVIDERS_MAP[userId],
+        ...sample,
         upcomingSlots: generateDemoSlots(),
       };
     }
@@ -291,17 +294,26 @@ const ProviderDetail: React.FC = () => {
 
   const handleProceedToPayment = async (bookingData: BookingRequirementData) => {
     let createdOrderId = `order_${Date.now()}`;
-    if (userId && !userId.startsWith('sample-')) {
+    if (userId) {
       try {
-        const startD = new Date(`${bookingData.startDate}T${bookingData.startTime}:00Z`);
+        const startD = new Date(`${bookingData.startDate}T${bookingData.startTime}:00`);
         const endD = new Date(startD.getTime() + bookingData.durationHours * 3600000);
         const result = await createBooking({
-          providerId: userId,
+          providerId: toProviderGuid(userId),
           startTime: startD.toISOString(),
           endTime: endD.toISOString(),
           hourlyRate: provider.hourlyRate,
           durationHours: bookingData.durationHours,
           meetingAddress: bookingData.meetingVenue,
+          requirements: {
+            activity: bookingData.activity,
+            dressCode: bookingData.dressCode,
+            transportMode: bookingData.transportMode,
+            dietPreference: bookingData.dietPreference,
+            equipmentGear: bookingData.equipmentGear,
+            languagePreference: bookingData.languagePreference,
+            specialNotes: bookingData.specialNotes,
+          },
         }).unwrap();
         if (result?.orderId) {
           createdOrderId = result.orderId;

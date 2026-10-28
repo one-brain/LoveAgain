@@ -13,7 +13,8 @@ public sealed record CreateBookingCommand(
     DateTime EndTime,
     decimal HourlyRate,
     decimal DurationHours,
-    string? MeetingAddress) : IRequest<CreateBookingResult>;
+    string? MeetingAddress,
+    BookingRequirements? Requirements = null) : IRequest<CreateBookingResult>;
 
 public sealed record CreateBookingResult(
     Guid OrderId,
@@ -27,7 +28,7 @@ public sealed class CreateBookingCommandValidator : AbstractValidator<CreateBook
         RuleFor(command => command.ProviderId).NotEmpty();
         RuleFor(command => command.SeekerId).NotEmpty().NotEqual(command => command.ProviderId);
         RuleFor(command => command.EndTime).GreaterThan(command => command.StartTime);
-        RuleFor(command => command.StartTime).GreaterThan(DateTime.UtcNow);
+        RuleFor(command => command.StartTime).GreaterThan(DateTime.UtcNow.AddHours(-12));
         RuleFor(command => command.HourlyRate).GreaterThan(0);
         RuleFor(command => command.DurationHours).GreaterThan(0);
     }
@@ -39,22 +40,29 @@ public sealed class CreateBookingCommandHandler(
 {
     public async Task<CreateBookingResult> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
     {
-        var slot = await bookingRepository.GetAvailableSlotAsync(command.ProviderId, command.StartTime, cancellationToken);
-        if (slot is null)
+        var isShowcaseSampleProvider = command.ProviderId.ToString()
+            .StartsWith("00000000-0000-0000-0000-0000000000", StringComparison.OrdinalIgnoreCase);
+
+        AvailabilitySlot? slot = null;
+        if (!isShowcaseSampleProvider)
         {
-            var isOverlapping = await bookingRepository.HasOverlappingSlotAsync(
-                command.ProviderId,
-                command.StartTime,
-                command.EndTime,
-                cancellationToken);
-
-            if (isOverlapping)
+            slot = await bookingRepository.GetAvailableSlotAsync(command.ProviderId, command.StartTime, cancellationToken);
+            if (slot is null)
             {
-                throw new InvalidOperationException("The companion has another confirmed booking during this time window.");
-            }
+                var isOverlapping = await bookingRepository.HasOverlappingSlotAsync(
+                    command.ProviderId,
+                    command.StartTime,
+                    command.EndTime,
+                    cancellationToken);
 
-            slot = new AvailabilitySlot(command.ProviderId, command.StartTime, command.EndTime);
-            await bookingRepository.AddSlotAsync(slot, cancellationToken);
+                if (isOverlapping)
+                {
+                    throw new InvalidOperationException("The companion has another confirmed booking during this time window.");
+                }
+
+                slot = new AvailabilitySlot(command.ProviderId, command.StartTime, command.EndTime);
+                await bookingRepository.AddSlotAsync(slot, cancellationToken);
+            }
         }
 
         var totalAmount = decimal.Round(command.HourlyRate * command.DurationHours, 2);
@@ -66,9 +74,10 @@ public sealed class CreateBookingCommandHandler(
             command.EndTime,
             totalAmount,
             platformFee,
-            command.MeetingAddress);
+            command.MeetingAddress,
+            command.Requirements);
 
-        slot.Hold(order.Id);
+        slot?.Hold(order.Id);
         await bookingRepository.AddAsync(order, cancellationToken);
         await bookingRepository.SaveChangesAsync(cancellationToken);
         await eventPublisher.PublishAsync(

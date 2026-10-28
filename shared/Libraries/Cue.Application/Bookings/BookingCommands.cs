@@ -26,9 +26,9 @@ public sealed class ConfirmBookingCommandHandler(
         var order = await repository.GetByIdAsync(command.OrderId, cancellationToken)
             ?? throw new KeyNotFoundException("Booking was not found.");
 
-        if (order.ProviderId != command.ProviderId)
+        if (order.ProviderId != command.ProviderId && order.SeekerId != command.ProviderId)
         {
-            throw new UnauthorizedAccessException("Only the provider can confirm a booking.");
+            throw new UnauthorizedAccessException("Only a booking participant can confirm a booking.");
         }
 
         order.Confirm();
@@ -164,12 +164,19 @@ public sealed class CompleteOrderCommandHandler(
         var order = await repository.GetByIdAsync(command.OrderId, cancellationToken)
             ?? throw new KeyNotFoundException("Booking was not found.");
 
-        if (order.ProviderId != command.ProviderId)
+        if (order.ProviderId != command.ProviderId && order.SeekerId != command.ProviderId)
         {
-            throw new UnauthorizedAccessException("Only the provider can complete a booking.");
+            throw new UnauthorizedAccessException("Only a booking participant can complete a booking.");
         }
 
         order.Complete();
+
+        var slot = await repository.GetSlotByBookingAsync(order.Id, cancellationToken);
+        if (slot is not null)
+        {
+            slot.Release(order.Id);
+        }
+
         await repository.SaveChangesAsync(cancellationToken);
         await eventPublisher.PublishAsync(new BookingCompletedEvent(order.Id, order.EndTime - order.StartTime), cancellationToken);
         return Unit.Value;

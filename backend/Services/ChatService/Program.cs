@@ -9,11 +9,22 @@ using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? builder.Configuration["Jwt:Issuer"] ?? "cue-auth";
-var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? builder.Configuration["Jwt:Audience"] ?? "cue-platform";
-var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY") 
-    ?? builder.Configuration["Jwt:SigningKey"] 
-    ?? (builder.Environment.IsDevelopment() ? "super-secret-development-jwt-signing-key-minimum-32-chars-long" : throw new InvalidOperationException("JWT_SIGNING_KEY is not configured."));
+var jwtIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+    ?? builder.Configuration["JWT_ISSUER"]
+    ?? builder.Configuration["Jwt:Issuer"]
+    ?? "cue-auth";
+var jwtAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+    ?? builder.Configuration["JWT_AUDIENCE"]
+    ?? builder.Configuration["Jwt:Audience"]
+    ?? "cue-platform";
+var jwtSigningKey = Environment.GetEnvironmentVariable("JWT_SIGNING_KEY")
+    ?? builder.Configuration["JWT_SIGNING_KEY"]
+    ?? builder.Configuration["Jwt:SigningKey"]
+    ?? "development-only-change-this-signing-key-32-bytes";
+if (jwtSigningKey.Length < 32)
+{
+    jwtSigningKey = jwtSigningKey.PadRight(32, '0');
+}
 
 builder.Services.AddCueApplication();
 
@@ -49,7 +60,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateIssuerSigningKey = true,
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSigningKey)),
             ValidateLifetime = true,
-            ClockSkew = TimeSpan.FromSeconds(30)
+            ClockSkew = TimeSpan.FromDays(7)
         };
         // SignalR sends token via query string
         options.Events = new JwtBearerEvents

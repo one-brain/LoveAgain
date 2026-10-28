@@ -21,10 +21,14 @@ public static class DatabaseInitializer
             Console.WriteLine($"Database migration notice: {ex.Message}");
         }
         await EnsureNewTablesAsync(dbContext, cancellationToken);
+        await SyntheticDataSeeder.SeedAsync(dbContext, cancellationToken);
     }
 
     private static async Task TryCreateSchemaAsync(CueDbContext dbContext, string schemaName, CancellationToken cancellationToken)
     {
+        if (!System.Text.RegularExpressions.Regex.IsMatch(schemaName, "^[a-zA-Z0-9_]+$"))
+            throw new ArgumentException("Invalid schema identifier.", nameof(schemaName));
+
         try
         {
             await dbContext.Database.ExecuteSqlRawAsync($"CREATE SCHEMA IF NOT EXISTS {schemaName};", cancellationToken);
@@ -151,11 +155,18 @@ public static class DatabaseInitializer
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS reviewed_by_admin_id uuid;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS is_deleted boolean DEFAULT false;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS display_name character varying(150) NULL;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS gender character varying(30) NULL;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS city character varying(100) NULL;",
+            "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS area character varying(120) NULL;",
             "ALTER TABLE profiles.provider_profiles ADD COLUMN IF NOT EXISTS profile_images text[] DEFAULT ARRAY[]::text[];",
             "UPDATE profiles.provider_profiles SET profile_images = ARRAY[]::text[] WHERE profile_images IS NULL;",
             "ALTER TABLE auth.users ALTER COLUMN phone TYPE character varying(50);",
             "ALTER TABLE bookings.service_orders ADD COLUMN IF NOT EXISTS check_in_pin character varying(10) NULL;",
             "ALTER TABLE bookings.service_orders ADD COLUMN IF NOT EXISTS checked_in_at timestamp with time zone NULL;",
+            "ALTER TABLE bookings.service_orders ADD COLUMN IF NOT EXISTS requirements jsonb NULL;",
+            // User.Suspend() stores -1 as the suspended sentinel; widen the legacy 0..100 check to allow it.
+            "ALTER TABLE auth.users DROP CONSTRAINT IF EXISTS users_trust_score_check;",
+            "ALTER TABLE auth.users ADD CONSTRAINT users_trust_score_check CHECK (trust_score >= -1 AND trust_score <= 100);",
             "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);"
         };
 
@@ -174,6 +185,9 @@ public static class DatabaseInitializer
 
     private static async Task TryCreateExtensionAsync(CueDbContext dbContext, string extensionName, CancellationToken cancellationToken)
     {
+        if (!System.Text.RegularExpressions.Regex.IsMatch(extensionName, "^[a-zA-Z0-9_]+$"))
+            throw new ArgumentException("Invalid extension identifier.", nameof(extensionName));
+
         try
         {
             await dbContext.Database.ExecuteSqlRawAsync($"CREATE EXTENSION IF NOT EXISTS {extensionName};", cancellationToken);

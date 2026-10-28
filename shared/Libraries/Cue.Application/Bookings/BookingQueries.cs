@@ -18,7 +18,14 @@ public sealed record BookingSummary(
     string? MeetingAddress = null,
     string? CheckInPin = null,
     DateTime? CheckedInAt = null,
-    BookingRequirements? Requirements = null);
+    BookingRequirements? Requirements = null,
+    string? ProviderName = null,
+    string? ProviderPhoto = null,
+    string? SeekerName = null,
+    string? SeekerPhoto = null,
+    decimal? AverageRating = null,
+    string? Specialty = null,
+    bool? IsVerified = null);
 
 public sealed record GetUserBookingsQuery(Guid UserId) : IRequest<IReadOnlyList<BookingSummary>>;
 
@@ -27,19 +34,35 @@ public sealed class GetUserBookingsQueryHandler(IBookingRepository repository) :
     public async Task<IReadOnlyList<BookingSummary>> Handle(GetUserBookingsQuery query, CancellationToken cancellationToken)
     {
         var orders = await repository.GetForUserAsync(query.UserId, cancellationToken);
-        return orders.Select(order => new BookingSummary(
-            order.Id,
-            order.ProviderId,
-            order.SeekerId,
-            order.StartTime,
-            order.EndTime,
-            order.Status,
-            order.TotalAmount,
-            order.MeetingAddress,
-            order.SeekerId == query.UserId ? order.CheckInPin : (order.Status is OrderStatus.InProgress or OrderStatus.Completed ? order.CheckInPin : null),
-            order.CheckedInAt,
-            order.Requirements
-        )).ToArray();
+        var meta = await repository.GetParticipantsMetadataAsync(
+            orders.SelectMany(o => new[] { o.ProviderId, o.SeekerId }),
+            cancellationToken);
+
+        return orders.Select(order =>
+        {
+            meta.TryGetValue(order.ProviderId, out var prov);
+            meta.TryGetValue(order.SeekerId, out var seek);
+            return new BookingSummary(
+                order.Id,
+                order.ProviderId,
+                order.SeekerId,
+                order.StartTime,
+                order.EndTime,
+                order.Status,
+                order.TotalAmount,
+                order.MeetingAddress,
+                order.SeekerId == query.UserId ? order.CheckInPin : (order.Status is OrderStatus.InProgress or OrderStatus.Completed ? order.CheckInPin : null),
+                order.CheckedInAt,
+                order.Requirements,
+                prov?.DisplayName,
+                prov?.PhotoUrl,
+                seek?.DisplayName,
+                seek?.PhotoUrl,
+                prov?.AverageRating,
+                order.Requirements?.Activity ?? prov?.PrimarySpecialty,
+                prov?.IsVerified
+            );
+        }).ToArray();
     }
 }
 
@@ -58,19 +81,35 @@ public sealed class GetProviderIncomingBookingsQueryHandler(IBookingRepository r
         }
 
         var orders = await repository.GetProviderIncomingAsync(query.ProviderId, cancellationToken);
-        return orders.Select(order => new BookingSummary(
-            order.Id,
-            order.ProviderId,
-            order.SeekerId,
-            order.StartTime,
-            order.EndTime,
-            order.Status,
-            order.TotalAmount,
-            order.MeetingAddress,
-            order.Status is OrderStatus.InProgress or OrderStatus.Completed ? order.CheckInPin : null,
-            order.CheckedInAt,
-            order.Requirements
-        )).ToArray();
+        var meta = await repository.GetParticipantsMetadataAsync(
+            orders.SelectMany(o => new[] { o.ProviderId, o.SeekerId }),
+            cancellationToken);
+
+        return orders.Select(order =>
+        {
+            meta.TryGetValue(order.ProviderId, out var prov);
+            meta.TryGetValue(order.SeekerId, out var seek);
+            return new BookingSummary(
+                order.Id,
+                order.ProviderId,
+                order.SeekerId,
+                order.StartTime,
+                order.EndTime,
+                order.Status,
+                order.TotalAmount,
+                order.MeetingAddress,
+                order.Status is OrderStatus.InProgress or OrderStatus.Completed ? order.CheckInPin : null,
+                order.CheckedInAt,
+                order.Requirements,
+                prov?.DisplayName,
+                prov?.PhotoUrl,
+                seek?.DisplayName,
+                seek?.PhotoUrl,
+                prov?.AverageRating,
+                order.Requirements?.Activity ?? prov?.PrimarySpecialty,
+                prov?.IsVerified
+            );
+        }).ToArray();
     }
 }
 
@@ -88,19 +127,35 @@ public sealed class GetSeekerOutgoingBookingsQueryHandler(IBookingRepository rep
         }
 
         var orders = await repository.GetSeekerOutgoingAsync(query.SeekerId, cancellationToken);
-        return orders.Select(order => new BookingSummary(
-            order.Id,
-            order.ProviderId,
-            order.SeekerId,
-            order.StartTime,
-            order.EndTime,
-            order.Status,
-            order.TotalAmount,
-            order.MeetingAddress,
-            order.CheckInPin,
-            order.CheckedInAt,
-            order.Requirements
-        )).ToArray();
+        var meta = await repository.GetParticipantsMetadataAsync(
+            orders.SelectMany(o => new[] { o.ProviderId, o.SeekerId }),
+            cancellationToken);
+
+        return orders.Select(order =>
+        {
+            meta.TryGetValue(order.ProviderId, out var prov);
+            meta.TryGetValue(order.SeekerId, out var seek);
+            return new BookingSummary(
+                order.Id,
+                order.ProviderId,
+                order.SeekerId,
+                order.StartTime,
+                order.EndTime,
+                order.Status,
+                order.TotalAmount,
+                order.MeetingAddress,
+                order.CheckInPin,
+                order.CheckedInAt,
+                order.Requirements,
+                prov?.DisplayName,
+                prov?.PhotoUrl,
+                seek?.DisplayName,
+                seek?.PhotoUrl,
+                prov?.AverageRating,
+                order.Requirements?.Activity ?? prov?.PrimarySpecialty,
+                prov?.IsVerified
+            );
+        }).ToArray();
     }
 }
 

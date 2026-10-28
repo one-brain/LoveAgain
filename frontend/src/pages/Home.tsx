@@ -75,7 +75,7 @@ const PILLAR_CARDS: LensCard[] = [
 
 const FEATURED_PROFILES = [
   {
-    id: 'p1',
+    id: '158b9ff7-19de-49ce-a57c-b37738591285',
     name: 'Elena Rostova',
     headline: 'Semi-Pro Tennis Coach & Event Plus-One',
     activeLenses: ['pro_work', 'companions'],
@@ -89,7 +89,7 @@ const FEATURED_PROFILES = [
     trustScore: 99,
   },
   {
-    id: 'p2',
+    id: '6d187ed5-aff0-4fa3-856c-9beb89264b15',
     name: 'Marcus Vance',
     headline: 'Commercial Photographer & Foodie Guide',
     activeLenses: ['pro_work', 'companions'],
@@ -103,7 +103,7 @@ const FEATURED_PROFILES = [
     trustScore: 98,
   },
   {
-    id: 'p3',
+    id: '010e1920-fdf6-4419-85c1-95d284c6730d',
     name: 'Dr. Sophia Chen',
     headline: 'Cardiologist · Classical Violinist & Trail Guide',
     activeLenses: ['wellness', 'companions'],
@@ -117,7 +117,7 @@ const FEATURED_PROFILES = [
     trustScore: 97,
   },
   {
-    id: 'p7',
+    id: '00000000-0000-0000-0000-000000000007',
     name: 'Ananya Sharma',
     headline: 'Regional Homestyle Cook & Festive Floral Artist',
     activeLenses: ['lifestyle', 'companions'],
@@ -131,7 +131,7 @@ const FEATURED_PROFILES = [
     trustScore: 99,
   },
   {
-    id: 'p8',
+    id: '00000000-0000-0000-0000-000000000008',
     name: 'Col. Rajeshwar Rao (Retd.)',
     headline: 'Senior Companion, Temple Escort & Carrom Partner',
     activeLenses: ['lifestyle', 'wellness'],

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { setUser } from '../store/slices/authSlice';
-import { useSearchParams, Link } from 'react-router-dom';
+import { setUser, logout } from '../store/slices/authSlice';
+import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import type { RootState } from '../store';
 import {
   useGetSeekerProfileQuery,
@@ -10,6 +10,7 @@ import {
   useGetMyProfileQuery,
   useUpdateProviderProfileMutation,
   useUploadCompanionPhotoMutation,
+  useDeleteMyAccountMutation,
 } from '../store/api';
 import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
 import { DiscoveryVisibilityCard } from '../components/profile/DiscoveryVisibilityCard';
@@ -116,6 +117,7 @@ async function compressImageFile(file: File, maxDim = 800, quality = 0.82): Prom
 
 const Profile: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user, accessToken } = useSelector((state: RootState) => state.auth);
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -153,6 +155,21 @@ const Profile: React.FC = () => {
   const [uploadSeekerPhoto, { isLoading: isUploadingAvatar }] = useUploadSeekerPhotoMutation();
   const [updateProvider, { isLoading: isUpdatingProvider }] = useUpdateProviderProfileMutation();
   const [uploadCompanionPhoto] = useUploadCompanionPhotoMutation();
+  const [deleteMyAccount, { isLoading: isDeletingAccount }] = useDeleteMyAccountMutation();
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteMyAccount().unwrap();
+      dispatch(logout());
+      navigate('/login');
+    } catch (err: any) {
+      setPersonalError(
+        err?.data?.error || 'Unable to delete account. Ensure you have no active upcoming bookings.'
+      );
+      setConfirmDeleteOpen(false);
+    }
+  };
 
   // Personal Form State
   const [firstName, setFirstName] = useState(user?.firstName || '');
@@ -581,6 +598,46 @@ const Profile: React.FC = () => {
               </button>
             </div>
           </form>
+
+          {/* Account Deactivation / Deletion (DELETE /api/v1/profiles/me) */}
+          <div className="pt-6 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                Account Privacy & Deactivation
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Permanently deactivate your account and revoke all active sessions (requires no active upcoming bookings).
+              </p>
+            </div>
+            {!confirmDeleteOpen ? (
+              <button
+                type="button"
+                onClick={() => setConfirmDeleteOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-destructive/30 text-destructive hover:bg-destructive/10 text-xs font-semibold transition-colors shrink-0 self-start sm:self-auto cursor-pointer"
+              >
+                <TrashIcon className="w-3.5 h-3.5" />
+                <span>Deactivate Account</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  disabled={isDeletingAccount}
+                  onClick={handleDeleteAccount}
+                  className="px-3.5 py-2 rounded-xl bg-destructive text-white hover:bg-destructive/90 text-xs font-bold transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  {isDeletingAccount ? 'Deactivating...' : 'Confirm Deactivation'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmDeleteOpen(false)}
+                  className="px-3 py-2 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -828,11 +885,25 @@ const Profile: React.FC = () => {
               />
             </div>
 
-            <SpecialtySearchPicker
-              selectedSpecialties={specialties}
-              onChange={setSpecialties}
-              availablePresets={PRESET_SPECIALTIES}
-            />
+            {/* Offered Specialties & Activities */}
+            <div id="offered-specialties" className="pt-2 border-t border-border/60">
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold text-foreground">
+                  Offered Specialties & Activities
+                </label>
+                <span className="text-[11px] font-semibold text-accent">
+                  {specialties.length} selected
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mb-3">
+                Select from popular categories or search and create custom activities you are available to accompany clients for.
+              </p>
+              <SpecialtySearchPicker
+                selectedSpecialties={specialties}
+                onChange={setSpecialties}
+                availablePresets={PRESET_SPECIALTIES}
+              />
+            </div>
 
             <div className="pt-4 border-t border-border flex justify-end">
               <button

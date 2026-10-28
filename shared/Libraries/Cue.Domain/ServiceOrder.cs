@@ -96,8 +96,12 @@ public sealed class ServiceOrder
 
     public void Complete()
     {
-        EnsureStatus(OrderStatus.InProgress);
+        if (Status is not (OrderStatus.Confirmed or OrderStatus.InProgress))
+        {
+            throw new InvalidOperationException($"Order must be Confirmed or InProgress before this operation (current: {Status}).");
+        }
         Status = OrderStatus.Completed;
+        CheckedInAt ??= DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -109,6 +113,43 @@ public sealed class ServiceOrder
         Status = OrderStatus.Cancelled;
         CancellationReason = reason.Trim();
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public static ServiceOrder Seed(
+        Guid id,
+        Guid providerId,
+        Guid seekerId,
+        DateTime startTime,
+        DateTime endTime,
+        OrderStatus status,
+        decimal totalAmount,
+        string meetingAddress,
+        BookingRequirements requirements,
+        string? checkInPin,
+        DateTime? checkedInAt,
+        string? cancellationReason,
+        DateTime createdAt)
+    {
+        var fee = decimal.Round(totalAmount * 0.15m, 2);
+        return new ServiceOrder
+        {
+            Id = id,
+            ProviderId = providerId,
+            SeekerId = seekerId,
+            StartTime = startTime,
+            EndTime = endTime,
+            Status = status,
+            TotalAmount = totalAmount,
+            PlatformFee = fee,
+            ProviderEarnings = totalAmount - fee,
+            MeetingAddress = meetingAddress,
+            Requirements = requirements,
+            CheckInPin = checkInPin,
+            CheckedInAt = checkedInAt,
+            CancellationReason = cancellationReason,
+            CreatedAt = createdAt,
+            UpdatedAt = createdAt
+        };
     }
 
     private void EnsureStatus(OrderStatus expected)

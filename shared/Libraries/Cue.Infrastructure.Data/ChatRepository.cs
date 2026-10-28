@@ -11,6 +11,7 @@ public sealed class ChatRepository(CueDbContext dbContext) : IChatRepository
     public async Task<IReadOnlyList<ChatMessage>> GetOrderMessagesAsync(Guid orderId, int limit, int offset, CancellationToken cancellationToken)
     {
         return await dbContext.ChatMessages
+            .AsNoTracking()
             .Where(m => m.OrderId == orderId)
             .OrderBy(m => m.SentAt)
             .Skip(offset)

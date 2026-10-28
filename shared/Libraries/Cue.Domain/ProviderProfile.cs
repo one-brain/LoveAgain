@@ -54,6 +54,9 @@ public sealed class ProviderProfile
     public Guid Id { get; private set; }
     public Guid UserId { get; private set; }
     public string? DisplayName { get; private set; }
+    public string? Gender { get; private set; }
+    public string? City { get; private set; }
+    public string? Area { get; private set; }
     public IReadOnlyCollection<string> ProfileImages { get; private set; } = [];
     public decimal HourlyRate { get; private set; }
     public string Bio { get; private set; } = string.Empty;
@@ -75,6 +78,75 @@ public sealed class ProviderProfile
     public DateTime? UpdatedAt { get; private set; }
     public DateTime? DeletedAt { get; private set; }
     public bool IsDeleted => DeletedAt.HasValue;
+
+    public void SetDemographicsAndHub(string? gender, string? city, string? area)
+    {
+        if (!string.IsNullOrWhiteSpace(gender)) Gender = gender.Trim();
+        if (!string.IsNullOrWhiteSpace(city)) City = city.Trim();
+        if (!string.IsNullOrWhiteSpace(area)) Area = area.Trim();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetRatingAndResponseTime(decimal averageRating, decimal responseTimeMinutes = 5m)
+    {
+        AverageRating = Math.Clamp(averageRating, 0m, 5m);
+        AverageResponseTime = Math.Max(0m, responseTimeMinutes);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public static ProviderProfile Seed(
+        Guid id,
+        Guid userId,
+        string displayName,
+        string gender,
+        string city,
+        string area,
+        decimal hourlyRate,
+        string bio,
+        IEnumerable<string> specialties,
+        IEnumerable<string> profileImages,
+        double latitude,
+        double longitude,
+        decimal maxRadiusKm,
+        decimal averageRating,
+        VerificationStatus status,
+        bool isActive,
+        string? idProofUrl = null,
+        string? selfieUrl = null,
+        string? rejectionReason = null,
+        DateTime? reviewedAt = null,
+        string? introVideoUrl = null,
+        DateTime? createdAt = null)
+    {
+        var ts = createdAt ?? DateTime.UtcNow;
+        return new ProviderProfile
+        {
+            Id = id,
+            UserId = userId,
+            DisplayName = displayName.Trim(),
+            Gender = gender.Trim(),
+            City = city.Trim(),
+            Area = area.Trim(),
+            HourlyRate = hourlyRate,
+            Bio = bio.Trim(),
+            Specialties = specialties.Where(s => !string.IsNullOrWhiteSpace(s)).Select(s => s.Trim()).Distinct(StringComparer.OrdinalIgnoreCase).ToArray(),
+            ProfileImages = NormalizeProfileImages(profileImages),
+            Latitude = latitude,
+            Longitude = longitude,
+            MaxRadiusKm = maxRadiusKm,
+            AverageRating = averageRating,
+            AverageResponseTime = 4m,
+            Status = status,
+            IsActive = isActive,
+            IdProofUrl = idProofUrl,
+            SelfieVerificationUrl = selfieUrl,
+            RejectionReason = rejectionReason,
+            ReviewedAt = reviewedAt,
+            IntroVideoUrl = introVideoUrl,
+            CreatedAt = ts,
+            UpdatedAt = ts
+        };
+    }
 
     public void Activate() { IsActive = true; UpdatedAt = DateTime.UtcNow; }
     public void Deactivate() { IsActive = false; UpdatedAt = DateTime.UtcNow; }

@@ -36,13 +36,14 @@ public sealed class BookingRepository(CueDbContext dbContext) : IBookingReposito
 
     public async Task<IReadOnlyList<ServiceOrder>> GetForUserAsync(Guid userId, CancellationToken cancellationToken) =>
         await dbContext.ServiceOrders
+            .AsNoTracking()
             .Where(order => order.ProviderId == userId || order.SeekerId == userId)
             .OrderByDescending(order => order.StartTime)
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<ProviderProfile>> GetAvailableProvidersAsync(string? specialty, decimal? maxHourlyRate, CancellationToken cancellationToken)
     {
-        var query = dbContext.ProviderProfiles.Where(profile => profile.IsActive);
+        var query = dbContext.ProviderProfiles.AsNoTracking().Where(profile => profile.IsActive);
         if (!string.IsNullOrWhiteSpace(specialty)) query = query.Where(profile => profile.Specialties.Contains(specialty));
         if (maxHourlyRate.HasValue) query = query.Where(profile => profile.HourlyRate <= maxHourlyRate.Value);
         return await query.OrderByDescending(profile => profile.AverageRating).ToListAsync(cancellationToken);
@@ -58,13 +59,64 @@ public sealed class BookingRepository(CueDbContext dbContext) : IBookingReposito
     // Provider incoming / seeker outgoing history queries
     public async Task<IReadOnlyList<ServiceOrder>> GetProviderIncomingAsync(Guid providerId, CancellationToken cancellationToken) =>
         await dbContext.ServiceOrders
+            .AsNoTracking()
             .Where(order => order.ProviderId == providerId)
             .OrderByDescending(order => order.StartTime)
             .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<ServiceOrder>> GetSeekerOutgoingAsync(Guid seekerId, CancellationToken cancellationToken) =>
         await dbContext.ServiceOrders
+            .AsNoTracking()
             .Where(order => order.SeekerId == seekerId)
             .OrderByDescending(order => order.StartTime)
             .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyDictionary<Guid, BookingParticipantInfo>> GetParticipantsMetadataAsync(
+        IEnumerable<Guid> userIds,
+        CancellationToken cancellationToken)
+    {
+        var ids = userIds.Distinct().ToArray();
+        if (ids.Length == 0)
+        {
+            return new Dictionary<Guid, BookingParticipantInfo>();
+        }
+
+        var users = await dbContext.Users
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(u => ids.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id, cancellationToken);
+
+        var profiles = await dbContext.ProviderProfiles
+            .IgnoreQueryFilters()
+            .AsNoTracking()
+            .Where(p => ids.Contains(p.UserId))
+            .ToDictionaryAsync(p => p.UserId, cancellationToken);
+
+        var result = new Dictionary<Guid, BookingParticipantInfo>(ids.Length);
+        foreach (var id in ids)
+        {
+            users.TryGetValue(id, out var user);
+            profiles.TryGetValue(id, out var profile);
+
+            var displayName = !string.IsNullOrWhiteSpace(profile?.DisplayName)
+                ? profile.DisplayName!
+                : (user != null ? $"{user.FirstName} {user.LastName}".Trim() : "Verified Member");
+
+            var photoUrl = profile?.ProfileImages.FirstOrDefault() ?? user?.PhotoUrl;
+            var rating = profile != null && profile.AverageRating > 0 ? profile.AverageRating : (decimal?)null;
+            var specialty = profile?.Specialties.FirstOrDefault();
+            var isVerified = user?.IsVerified ?? (profile?.Status == VerificationStatus.Approved);
+
+            result[id] = new BookingParticipantInfo(
+                id,
+                displayName,
+                photoUrl,
+                rating,
+                specialty,
+                isVerified);
+        }
+
+        return result;
+    }
 }

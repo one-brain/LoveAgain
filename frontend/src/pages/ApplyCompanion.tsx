@@ -80,6 +80,9 @@ export const ApplyCompanion: React.FC = () => {
         idProofUrl: idProofUrl.trim(),
         selfieVerificationUrl: selfieVerificationUrl.trim(),
         upiId: upiId.trim(),
+        displayName: providerProfile?.displayName,
+        profileImages: providerProfile?.profileImages,
+        introVideoUrl: providerProfile?.introVideoUrl,
       }).unwrap();
 
       await refetchProfile();

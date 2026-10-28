@@ -20,7 +20,10 @@ public sealed record ProviderCardResponse(
     double? DistanceKm,
     IReadOnlyCollection<string>? ProfileImages = null,
     double? Latitude = null,
-    double? Longitude = null);
+    double? Longitude = null,
+    string? Gender = null,
+    string? City = null,
+    string? Area = null);
 
 public sealed record ProviderDetailResponse(
     Guid ProviderId,
@@ -38,7 +41,10 @@ public sealed record ProviderDetailResponse(
     IReadOnlyCollection<string>? ProfileImages = null,
     double? Latitude = null,
     double? Longitude = null,
-    double? DistanceKm = null);
+    double? DistanceKm = null,
+    string? Gender = null,
+    string? City = null,
+    string? Area = null);
 
 public sealed record AvailabilitySlotResponse(
     Guid SlotId,
@@ -50,7 +56,7 @@ public sealed record AvailabilitySlotResponse(
 [Route("api/v1/discovery")]
 public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
 {
-    private const int MaxPageSize = 50;
+    private const int MaxPageSize = 250;
 
     [HttpGet("providers")]
     [ProducesResponseType(typeof(IReadOnlyList<ProviderCardResponse>), StatusCodes.Status200OK)]
@@ -65,7 +71,9 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
         [FromQuery] double? longitude,
         [FromQuery] double? radiusKm,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 12,
+        [FromQuery] int pageSize = 120,
+        [FromQuery] string? gender = null,
+        [FromQuery] string? city = null,
         CancellationToken cancellationToken = default)
     {
         page = Math.Max(1, page);
@@ -79,16 +87,6 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                 user => user.Id,
                 (profile, user) => new { profile, user })
             .Where(join => join.user.DeletedAt == null);
-
-        if (!string.IsNullOrWhiteSpace(specialty))
-        {
-            query = query.Where(join => join.profile.Specialties.Contains(specialty.Trim()));
-        }
-
-        if (!string.IsNullOrWhiteSpace(skillTag))
-        {
-            query = query.Where(join => join.profile.Specialties.Contains(skillTag.Trim()));
-        }
 
         if (minRate.HasValue)
         {
@@ -144,22 +142,62 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
             _ => projectQuery.OrderByDescending(p => p.profile.AverageRating).ThenByDescending(p => p.profile.UpdatedAt),
         };
 
-        if (!string.IsNullOrWhiteSpace(q))
+        var rawItems = await projectQuery.ToListAsync(cancellationToken);
+
+        // In-memory filtration for text & array fields prevents EF Core Npgsql translation failure
+        if (!string.IsNullOrWhiteSpace(specialty))
         {
-            // ILIKE-style case-insensitive match over name, bio and specialties
-            var term = q.Trim().ToLowerInvariant();
-            projectQuery = projectQuery.Where(p =>
-                (p.user.FirstName + " " + p.user.LastName).ToLower().Contains(term) ||
-                p.profile.Bio.ToLower().Contains(term) ||
-                p.profile.Specialties.Any(s => s.ToLower().Contains(term)));
+            var specTrim = specialty.Trim();
+            rawItems = rawItems
+                .Where(p => p.profile.Specialties.Any(s => s.Equals(specTrim, StringComparison.OrdinalIgnoreCase) || s.Contains(specTrim, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
         }
 
-        var rawItems = await projectQuery
+        if (!string.IsNullOrWhiteSpace(skillTag))
+        {
+            var tagTrim = skillTag.Trim();
+            rawItems = rawItems
+                .Where(p => p.profile.Specialties.Any(s => s.Equals(tagTrim, StringComparison.OrdinalIgnoreCase) || s.Contains(tagTrim, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(gender) && !string.Equals(gender.Trim(), "all", StringComparison.OrdinalIgnoreCase))
+        {
+            var gTrim = gender.Trim();
+            rawItems = rawItems
+                .Where(p => string.Equals(p.profile.Gender ?? "Female", gTrim, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(city) && !string.Equals(city.Trim(), "all", StringComparison.OrdinalIgnoreCase))
+        {
+            var cTrim = city.Trim();
+            rawItems = rawItems
+                .Where(p => !string.IsNullOrWhiteSpace(p.profile.City) &&
+                            p.profile.City.Contains(cTrim, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+        }
+
+        if (!string.IsNullOrWhiteSpace(q))
+        {
+            var term = q.Trim().ToLowerInvariant();
+            rawItems = rawItems
+                .Where(p =>
+                    (p.profile.DisplayName ?? "").ToLowerInvariant().Contains(term) ||
+                    (p.user.FirstName + " " + p.user.LastName).ToLowerInvariant().Contains(term) ||
+                    (p.profile.City ?? "").ToLowerInvariant().Contains(term) ||
+                    (p.profile.Area ?? "").ToLowerInvariant().Contains(term) ||
+                    p.profile.Bio.ToLowerInvariant().Contains(term) ||
+                    p.profile.Specialties.Any(s => s.ToLowerInvariant().Contains(term)))
+                .ToList();
+        }
+
+        var pagedItems = rawItems
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
-            .ToListAsync(cancellationToken);
+            .ToList();
 
-        var cards = rawItems
+        var cards = pagedItems
             .Select(p =>
             {
                 var displayName = !string.IsNullOrWhiteSpace(p.profile.DisplayName)
@@ -179,7 +217,10 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                     p.Distance != null ? Math.Round(p.Distance.Value, 1) : null,
                     p.profile.ProfileImages,
                     p.profile.Latitude,
-                    p.profile.Longitude);
+                    p.profile.Longitude,
+                    p.profile.Gender ?? "Female",
+                    p.profile.City,
+                    p.profile.Area);
             })
             .ToList();
 
@@ -223,7 +264,10 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                     join.profile.ProfileImages,
                     join.profile.Latitude,
                     join.profile.Longitude,
-                    null),
+                    null,
+                    join.profile.Gender ?? "Female",
+                    join.profile.City,
+                    join.profile.Area),
                 UserId = join.profile.UserId,
                 join.profile.Latitude,
                 join.profile.Longitude

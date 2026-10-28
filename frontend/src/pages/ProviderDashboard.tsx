@@ -1,39 +1,39 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import {
   useGetProviderIncomingBookingsQuery,
-  useAddServiceSpecialtyMutation,
-  useRemoveServiceSpecialtyMutation,
   useGetMyProfileQuery,
 } from '../store/bookingApi';
-import { ServiceManagement } from '../components/ServiceManagement';
-import { BookingCard } from '../components/BookingCard';
 import { ProviderEarningsCard } from '../components/payment/ProviderEarningsCard';
-import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
-import { DiscoveryVisibilityCard } from '../components/profile/DiscoveryVisibilityCard';
 import { setSpecialties } from '../store/slices/profileSlice';
+import { formatINR } from '../utils/currency';
 import {
   BriefcaseIcon,
   SparklesIcon,
-  ClockIcon,
   CalendarDaysIcon,
+  InboxArrowDownIcon,
+  ArrowRightIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline';
 
+const ACTIVE_STATUSES = ['PendingPayment', 'Confirmed', 'InProgress'];
+
+/**
+ * Companion Dashboard: performance at a glance and earnings/payouts.
+ * Bookings live in My Experience Bookings (/bookings) and configuration lives in
+ * Companion Profile & Settings (/profile?tab=provider); this page only links to them.
+ */
 const ProviderDashboard: React.FC = () => {
   const dispatch = useDispatch();
   const userId = localStorage.getItem('userId') || '';
   const { specialties } = useSelector((state: any) => state.profile || { specialties: [] });
 
-  // Fetch provider profile and bookings
   const { data: profileData, isLoading: profileLoading } = useGetMyProfileQuery();
   const { data: providerBookingsData, isLoading: isLoadingBookings } = useGetProviderIncomingBookingsQuery(
     userId,
     { skip: !userId }
   );
-
-  const [addService] = useAddServiceSpecialtyMutation();
-  const [removeService] = useRemoveServiceSpecialtyMutation();
 
   useEffect(() => {
     if (profileData?.profile?.specialties) {
@@ -41,27 +41,27 @@ const ProviderDashboard: React.FC = () => {
     }
   }, [profileData, dispatch]);
 
-  const providerBookings = providerBookingsData?.bookings || [];
+  const profile: any = profileData?.profile ?? profileData ?? {};
+  const isApproved = profile?.status === 'Approved';
+  const isVisible = profile?.isActive ?? true;
+  const hourlyRate = Number(profile?.hourlyRate) || 0;
+  const radiusKm = Number(profile?.maxRadiusKm) || 0;
+  const hasLocation = profile?.latitude != null && profile?.longitude != null;
 
-  const handleAddService = async (specialty: string) => {
-    try {
-      const result = await addService({ specialty }).unwrap();
-      dispatch(setSpecialties(result.specialties));
-    } catch {
-      // Local optimistic update
-      dispatch(setSpecialties([...specialties, specialty]));
-    }
-  };
-
-  const handleRemoveService = async (specialty: string) => {
-    try {
-      const result = await removeService({ specialty }).unwrap();
-      dispatch(setSpecialties(result.specialties));
-    } catch {
-      // Local optimistic update
-      dispatch(setSpecialties(specialties.filter((s: string) => s !== specialty)));
-    }
-  };
+  const { pendingCount, upcomingCount, completedCount, nextSession } = useMemo(() => {
+    const list: any[] = providerBookingsData?.bookings || [];
+    const now = Date.now();
+    const active = list.filter((b) => ACTIVE_STATUSES.includes(b.status));
+    const upcoming = active
+      .filter((b) => new Date(b.startTime).getTime() >= now)
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    return {
+      pendingCount: list.filter((b) => b.status === 'PendingPayment').length,
+      upcomingCount: upcoming.length,
+      completedCount: list.filter((b) => b.status === 'Completed').length,
+      nextSession: upcoming[0],
+    };
+  }, [providerBookingsData]);
 
   if (profileLoading) {
     return (
@@ -74,129 +74,125 @@ const ProviderDashboard: React.FC = () => {
     );
   }
 
+  const kpis = [
+    { label: 'Awaiting payment', value: pendingCount, hint: 'Requests clients have not paid yet', icon: InboxArrowDownIcon, tone: 'text-amber-500' },
+    { label: 'Upcoming sessions', value: upcomingCount, hint: 'Confirmed or in progress', icon: CalendarDaysIcon, tone: 'text-accent' },
+    { label: 'Completed meetups', value: completedCount, hint: 'Lifetime finished sessions', icon: SparklesIcon, tone: 'text-emerald-500' },
+  ];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Top Banner */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
             Companion Management Hub
           </span>
-          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
-            Companion Dashboard
-          </h1>
+          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">Companion Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Manage your service offerings, set availability rates, and review incoming companion requests.
+            Your performance and earnings at a glance.
           </p>
         </div>
-
-        <Link
-          to="/profile?tab=provider"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl border border-border bg-card hover:bg-muted font-semibold text-sm text-foreground shadow-xs transition-colors"
-        >
-          <BriefcaseIcon className="w-4 h-4 text-accent" />
-          <span>Edit Companion Settings</span>
-        </Link>
       </div>
 
-      {/* KPI Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            <span>Upcoming Sessions</span>
-            <CalendarDaysIcon className="w-5 h-5 text-accent" />
-          </div>
-          <div className="text-3xl font-bold font-serif text-foreground">
-            {providerBookings.filter((b: any) => new Date(b.startTime) > new Date()).length}
-          </div>
-          <p className="text-xs text-muted-foreground">Active bookings scheduled this week</p>
-        </div>
-
-        <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            <span>Active Offerings</span>
-            <SparklesIcon className="w-5 h-5 text-success" />
-          </div>
-          <div className="text-3xl font-bold font-serif text-foreground">
-            {specialties.length || 3}
-          </div>
-          <p className="text-xs text-muted-foreground">Published activity & skill categories</p>
-        </div>
-
-        <div className="p-6 rounded-2xl bg-card border border-border shadow-xs space-y-2">
-          <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
-            <span>Average Response</span>
-            <ClockIcon className="w-5 h-5 text-amber-500" />
-          </div>
-          <div className="text-3xl font-bold font-serif text-foreground">
-            &lt; 15m
-          </div>
-          <p className="text-xs text-muted-foreground">High responsiveness increases bookings</p>
-        </div>
-      </div>
-
-      {/* Discovery Visibility Control (Pause & Resume Anytime) */}
-      <DiscoveryVisibilityCard
-        isActive={profileData?.profile?.isActive ?? (profileData as any)?.isActive ?? true}
-        isApproved={
-          (profileData?.profile?.status ?? (profileData as any)?.status) === 'Approved'
-        }
-      />
-
-      {/* Base Location & Proximity Service Area */}
-      <CompanionLocationCard
-        currentLatitude={profileData?.profile?.latitude ?? (profileData as any)?.latitude}
-        currentLongitude={profileData?.profile?.longitude ?? (profileData as any)?.longitude}
-        currentMaxRadiusKm={profileData?.profile?.maxRadiusKm ?? (profileData as any)?.maxRadiusKm ?? 25}
-      />
-
-      {/* Provider Earnings & UPI Payout Section */}
-      <ProviderEarningsCard />
-
-      {/* Service Management Component */}
-      <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
-        <div>
-          <h2 className="text-xl font-bold font-serif text-foreground">
-            Your Active Specialties & Services
-          </h2>
-          <p className="text-xs text-muted-foreground mt-1">
-            Add or remove activities you are available to accompany seekers for.
-          </p>
-        </div>
-
-        <ServiceManagement
-          specialties={specialties.length > 0 ? specialties : ['Tennis', 'Cooking', 'Art']}
-          onAddService={handleAddService}
-          onRemoveService={handleRemoveService}
-        />
-      </div>
-
-      {/* Incoming Requests Section */}
-      <div className="space-y-4">
-        <h2 className="text-xl font-bold font-serif text-foreground">
-          Incoming Booking Requests
-        </h2>
-
-        {isLoadingBookings ? (
-          <div className="py-12 text-center text-sm text-muted-foreground">Loading bookings...</div>
-        ) : providerBookings.length === 0 ? (
-          <div className="py-12 text-center rounded-3xl bg-card border border-border p-8">
-            <div className="w-12 h-12 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto mb-3">
-              <CalendarDaysIcon className="w-6 h-6" />
+      {/* KPI strip */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {kpis.map(({ label, value, hint, icon: Icon, tone }) => (
+          <div key={label} className="p-5 rounded-2xl bg-card border border-border shadow-xs space-y-1.5">
+            <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+              <span>{label}</span>
+              <Icon className={`w-5 h-5 ${tone}`} />
             </div>
-            <h3 className="font-bold text-foreground text-base">No pending requests right now</h3>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto mt-1">
-              Your profile is visible on the discovery marketplace. New booking requests will appear here with instant notifications.
-            </p>
+            <div className="text-3xl font-bold font-serif text-foreground tabular-nums">
+              {isLoadingBookings ? '–' : value}
+            </div>
+            <p className="text-xs text-muted-foreground">{hint}</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {providerBookings.map((booking: any) => (
-              <BookingCard key={booking.orderId} booking={booking} />
-            ))}
-          </div>
-        )}
+        ))}
       </div>
+
+      {/* Signposts: where bookings and settings are managed */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Bookings signpost */}
+        <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
+          <div className="space-y-2">
+            <h2 className="text-lg font-bold font-serif text-foreground">Booking requests</h2>
+            {nextSession ? (
+              <p className="text-sm text-muted-foreground">
+                Next session{' '}
+                <strong className="text-foreground">
+                  {new Date(nextSession.startTime).toLocaleString('en-IN', {
+                    weekday: 'short',
+                    day: 'numeric',
+                    month: 'short',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                  })}
+                </strong>
+                {nextSession.totalAmount ? <> · {formatINR(nextSession.totalAmount)}</> : null}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                No upcoming sessions. New requests appear in My Experience Bookings.
+              </p>
+            )}
+          </div>
+          <Link
+            to="/bookings?view=incoming"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors self-start"
+          >
+            <span>Manage in My Experience Bookings</span>
+            <ArrowRightIcon className="w-4 h-4" />
+          </Link>
+        </section>
+
+        {/* Profile signpost */}
+        <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h2 className="text-lg font-bold font-serif text-foreground">Public profile</h2>
+              <span
+                className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
+                  !isApproved
+                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
+                    : isVisible
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
+                    : 'bg-muted text-muted-foreground'
+                }`}
+              >
+                {!isApproved ? 'Not yet approved' : isVisible ? 'Visible in Discovery' : 'Paused'}
+              </span>
+            </div>
+            <dl className="grid grid-cols-3 gap-3 text-sm">
+              <div>
+                <dt className="text-xs text-muted-foreground">Hourly rate</dt>
+                <dd className="font-semibold text-foreground tabular-nums">{hourlyRate ? formatINR(hourlyRate) : '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Specialties</dt>
+                <dd className="font-semibold text-foreground tabular-nums">{specialties.length}</dd>
+              </div>
+              <div>
+                <dt className="text-xs text-muted-foreground">Service area</dt>
+                <dd className="font-semibold text-foreground flex items-center gap-1">
+                  <MapPinIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                  {hasLocation ? `${radiusKm || 25} km` : 'Not set'}
+                </dd>
+              </div>
+            </dl>
+          </div>
+          <Link
+            to="/profile?tab=provider"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background hover:bg-muted font-semibold text-sm text-foreground transition-colors self-start"
+          >
+            <BriefcaseIcon className="w-4 h-4 text-accent" />
+            <span>Edit in Profile & Settings</span>
+          </Link>
+        </section>
+      </div>
+
+      {/* Earnings & UPI payouts: unique to this page */}
+      <ProviderEarningsCard />
     </div>
   );
 };

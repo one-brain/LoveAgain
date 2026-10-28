@@ -91,3 +91,18 @@ GitHub Actions in `.github/workflows/`:
 - **Mobile**: Flutter install + analyze
 - **Containers**: Docker build validation for AuthService, BookingService, PaymentService, ChatService
 - **Deploy**: Separate pipelines for infrastructure (manual trigger) vs services (push to main)
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues using the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical five-role vocabulary (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context (`CONTEXT.md` at repo root, ADRs in `docs/adr/`). See `docs/agents/domain.md`.
+

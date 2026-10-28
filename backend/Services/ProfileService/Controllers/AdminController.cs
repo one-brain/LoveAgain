@@ -9,10 +9,16 @@ namespace ProfileService.Controllers;
 
 [ApiController]
 [Route("api/v1/admin")]
+[Authorize]
 public sealed class AdminController(CueDbContext dbContext) : ControllerBase
 {
     private async Task<bool> IsAdminAsync(CancellationToken cancellationToken = default)
     {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return false;
+        }
+
         var role = User.FindFirstValue(ClaimTypes.Role);
         if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
             User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin"))
@@ -26,8 +32,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             if (user != null && user.Roles.Contains(UserRole.Admin)) return true;
         }
 
-        var email = User.FindFirstValue(ClaimTypes.Email)
-            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+        var email = User.FindFirstValue(ClaimTypes.Email);
         if (!string.IsNullOrWhiteSpace(email))
         {
             var normalized = email.Trim().ToLowerInvariant();
@@ -41,8 +46,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     private bool TryGetUserId(out Guid userId)
     {
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value
-            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+            ?? User.FindFirst("sub")?.Value;
         return Guid.TryParse(userIdClaim, out userId);
     }
 

@@ -3,6 +3,17 @@ import { baseQueryWithReauth } from './baseQueryWithReauth';
 
 
 
+export interface BookingRequirementsDto {
+  activity?: string;
+  activityName?: string;
+  dressCode?: string;
+  transportMode?: string;
+  dietPreference?: string;
+  equipmentGear?: string;
+  languagePreference?: string;
+  specialNotes?: string;
+}
+
 export interface CreateBookingRequest {
   providerId: string;
   startTime: string;
@@ -10,6 +21,7 @@ export interface CreateBookingRequest {
   hourlyRate: number;
   durationHours: number;
   meetingAddress?: string;
+  requirements?: BookingRequirementsDto;
 }
 
 export interface CreateBookingResponse {
@@ -26,6 +38,15 @@ export interface BookingSummary {
   endTime: string;
   status: 'PendingPayment' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'Disputed';
   totalAmount: number;
+  platformFee?: number;
+  providerEarnings?: number;
+  meetingAddress?: string;
+  requirements?: BookingRequirementsDto;
+  checkInPin?: string;
+  checkedInAt?: string;
+  cancellationReason?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CancelBookingRequest {
@@ -70,7 +91,8 @@ export const bookingApi = createApi({
       invalidatesTags: ['Bookings'],
     }),
     getMyBookings: builder.query<BookingSummary[], void>({
-      query: () => `/bookings/mine`,
+      query: () => `/bookings`,
+      transformResponse: (res: any) => (Array.isArray(res) ? res : res?.bookings || []),
       providesTags: ['Bookings'],
     }),
     confirmBooking: builder.mutation<void, string>({
@@ -121,19 +143,24 @@ export const bookingApi = createApi({
     }),
     removeServiceSpecialty: builder.mutation<RemoveServiceSpecialtyResponse, RemoveServiceSpecialtyRequest>({
       query: (body) => ({
-        url: `/profiles/provider/services`,
+        url: `/profiles/provider/services/${encodeURIComponent(body.specialty)}`,
         method: 'DELETE',
-        body,
       }),
       invalidatesTags: ['Profile'],
     }),
     // Booking History
     getProviderIncomingBookings: builder.query<ProviderIncomingBookingsResponse, string>({
       query: (providerId) => `/bookings/provider/incoming/${providerId}`,
+      transformResponse: (res: any) => ({
+        bookings: Array.isArray(res) ? res : res?.bookings || [],
+      }),
       providesTags: ['Bookings'],
     }),
     getSeekerOutgoingBookings: builder.query<SeekerOutgoingBookingsResponse, string>({
       query: (seekerId) => `/bookings/seeker/outgoing/${seekerId}`,
+      transformResponse: (res: any) => ({
+        bookings: Array.isArray(res) ? res : res?.bookings || [],
+      }),
       providesTags: ['Bookings'],
     }),
   }),

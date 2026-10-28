@@ -14,6 +14,7 @@ public sealed class ProviderProfileRepository(CueDbContext dbContext) : IProvide
 
     public async Task<IReadOnlyList<AvailabilitySlot>> GetSlotsAsync(Guid providerId, CancellationToken cancellationToken) =>
         await dbContext.AvailabilitySlots
+            .AsNoTracking()
             .Where(slot => slot.ProviderId == providerId)
             .OrderBy(slot => slot.StartTime)
             .ToListAsync(cancellationToken);
@@ -35,13 +36,21 @@ public sealed class ProviderProfileRepository(CueDbContext dbContext) : IProvide
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => dbContext.SaveChangesAsync(cancellationToken);
 
-    public Task AddSpecialtyAsync(Guid providerId, string specialty, CancellationToken cancellationToken)
+    public async Task AddSpecialtyAsync(Guid providerId, string specialty, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var profile = await dbContext.ProviderProfiles.SingleOrDefaultAsync(
+            p => p.Id == providerId || p.UserId == providerId, cancellationToken)
+            ?? throw new KeyNotFoundException("Provider profile not found.");
+        profile.AddSpecialty(specialty);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 
-    public Task RemoveSpecialtyAsync(Guid providerId, string specialty, CancellationToken cancellationToken)
+    public async Task RemoveSpecialtyAsync(Guid providerId, string specialty, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var profile = await dbContext.ProviderProfiles.SingleOrDefaultAsync(
+            p => p.Id == providerId || p.UserId == providerId, cancellationToken)
+            ?? throw new KeyNotFoundException("Provider profile not found.");
+        profile.RemoveSpecialty(specialty);
+        await dbContext.SaveChangesAsync(cancellationToken);
     }
 }

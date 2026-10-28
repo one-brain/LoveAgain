@@ -196,16 +196,15 @@ public sealed class BookingsController(ISender sender) : ControllerBase
 
     private bool IsAdmin()
     {
-        var role = User.FindFirstValue(ClaimTypes.Role)
-            ?? Request.Headers["X-User-Role"].FirstOrDefault();
+        if (User.Identity?.IsAuthenticated != true) return false;
+        var role = User.FindFirstValue(ClaimTypes.Role);
         if (string.Equals(role, "Admin", StringComparison.OrdinalIgnoreCase) ||
             User.HasClaim(c => c.Type == ClaimTypes.Role && c.Value == "Admin"))
         {
             return true;
         }
 
-        var email = User.FindFirstValue(ClaimTypes.Email)
-            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+        var email = User.FindFirstValue(ClaimTypes.Email);
         if (!string.IsNullOrWhiteSpace(email) && email.Trim().Equals("admin@cue.local", StringComparison.OrdinalIgnoreCase))
         {
             return true;
@@ -216,9 +215,13 @@ public sealed class BookingsController(ISender sender) : ControllerBase
 
     private bool TryGetUserId(out Guid userId)
     {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            userId = Guid.Empty;
+            return false;
+        }
         var value = User.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? User.FindFirst("sub")?.Value
-            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+            ?? User.FindFirst("sub")?.Value;
         return Guid.TryParse(value, out userId);
     }
 

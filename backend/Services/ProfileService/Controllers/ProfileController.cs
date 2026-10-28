@@ -14,9 +14,13 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
 {
     private async Task<User?> ResolveUserAsync(CancellationToken cancellationToken)
     {
+        if (User.Identity?.IsAuthenticated != true)
+        {
+            return null;
+        }
+
         var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
-            ?? User.FindFirst("sub")?.Value
-            ?? Request.Headers["X-User-Id"].FirstOrDefault();
+            ?? User.FindFirst("sub")?.Value;
 
         if (!string.IsNullOrWhiteSpace(userIdClaim) && Guid.TryParse(userIdClaim, out var userId))
         {
@@ -29,8 +33,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         }
 
         var emailClaim = User.FindFirst(ClaimTypes.Email)?.Value
-            ?? User.FindFirst("email")?.Value
-            ?? Request.Headers["X-User-Email"].FirstOrDefault();
+            ?? User.FindFirst("email")?.Value;
 
         if (!string.IsNullOrWhiteSpace(emailClaim))
         {
@@ -46,6 +49,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         return null;
     }
 
+    [Authorize]
     [HttpGet("me")]
     [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
