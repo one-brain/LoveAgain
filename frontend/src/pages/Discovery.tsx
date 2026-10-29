@@ -858,10 +858,10 @@ const Discovery: React.FC = () => {
                   <div className="p-5 flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors">
+                        <h3 className="font-display font-medium text-xl text-foreground group-hover:text-accent transition-colors">
                           {provider.displayName}
                         </h3>
-                        <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
+                        <div className="flex items-center gap-1 text-xs font-semibold font-mono text-amber-500">
                           <StarIcon className="w-4 h-4 fill-amber-400" />
                           <span>{provider.averageRating}</span>
                         </div>

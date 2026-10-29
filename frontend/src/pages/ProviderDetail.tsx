@@ -370,7 +370,7 @@ const ProviderDetail: React.FC = () => {
               <div className="absolute bottom-6 left-6 right-6 text-white flex flex-col sm:flex-row sm:items-end justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <h1 className="text-3xl sm:text-4xl font-bold tracking-tight font-serif text-white">
+                    <h1 className="text-4xl sm:text-5xl font-normal tracking-tight font-display text-white">
                       {provider.displayName}
                     </h1>
                     {provider.isVerified && (
@@ -380,7 +380,7 @@ const ProviderDetail: React.FC = () => {
                   <div className="flex items-center gap-3 text-sm text-white/90">
                     <div className="flex items-center gap-1">
                       <StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      <span className="font-semibold">{provider.averageRating.toFixed(2)}</span>
+                      <span className="font-semibold font-mono">{provider.averageRating.toFixed(2)}</span>
                     </div>
                     <span>•</span>
                     <div className="flex items-center gap-1">

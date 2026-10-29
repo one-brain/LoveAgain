@@ -48,7 +48,7 @@ export const RateBadge: React.FC<RateBadgeProps> = ({
     // Default: 'card-badge'
     return (
       <div
-        className={`bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-foreground border border-border shadow-xs ${className}`}
+        className={`bg-card/90 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold font-mono text-foreground border border-border shadow-xs ${className}`}
       >
         {formatRate(rate)}
       </div>

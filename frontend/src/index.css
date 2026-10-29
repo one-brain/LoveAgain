@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,300..700;1,300..700&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -41,13 +41,14 @@
   --color-ring: var(--ring);
   --radius: 0.75rem;
 
-  --font-display: "Playfair Display", Georgia, serif;
-  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: "Instrument Serif", Georgia, serif;
+  --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
 @layer base {
   :root {
-    /* 1. Warm Earthy Editorial Theme (Default Light) */
+    /* 1. Warm Earthy Editorial Theme (Default Light) - Luxury Hospitality Warmth */
     --background: #FAF8F5;
     --foreground: #1A1615;
     --card: #FFFFFF;
@@ -63,23 +64,23 @@
     --primary-hover: #0E151F;
     --primary-light: #24344B;
 
-    --accent: #E06D3B;
+    --accent: #881337;
     --accent-foreground: #FFFFFF;
-    --accent-hover: #C85929;
-    --accent-light: #FDF1EA;
-    --accent-muted: #E89E7C;
+    --accent-hover: #9F1239;
+    --accent-light: #FFF1F2;
+    --accent-muted: #BE123C;
 
     --secondary: #96867E;
     --secondary-foreground: #FFFFFF;
     --secondary-light: #F4EFEB;
 
-    --success: #2E8B57;
+    --success: #15803D;
     --success-foreground: #FFFFFF;
     --success-light: #EBF7F0;
 
-    --warning: #D97706;
-    --warning-foreground: #FFFFFF;
-    --warning-light: #FEF3C7;
+    --warning: #C5A059;
+    --warning-foreground: #1A1615;
+    --warning-light: #FBF7EE;
 
     --destructive: #DC2626;
     --destructive-foreground: #FFFFFF;
@@ -87,7 +88,7 @@
 
     --border: #E8E2DC;
     --input: #E8E2DC;
-    --ring: #E06D3B;
+    --ring: #881337;
   }
 
   .dark {
@@ -107,11 +108,11 @@
     --primary-hover: #1F2937;
     --primary-light: #1E293B;
 
-    --accent: #F97316;
+    --accent: #9F1239;
     --accent-foreground: #FFFFFF;
-    --accent-hover: #FB923C;
-    --accent-light: #2C1810;
-    --accent-muted: #EA580C;
+    --accent-hover: #BE123C;
+    --accent-light: #2D0A14;
+    --accent-muted: #881337;
 
     --secondary: #64748B;
     --secondary-foreground: #F8FAFC;
@@ -121,7 +122,7 @@
     --success-foreground: #FFFFFF;
     --success-light: #064E3B;
 
-    --warning: #FBBF24;
+    --warning: #D4AF37;
     --warning-foreground: #0B0F17;
     --warning-light: #451A03;
 
@@ -131,7 +132,7 @@
 
     --border: #2B3D55;
     --input: #2B3D55;
-    --ring: #F97316;
+    --ring: #9F1239;
   }
 
   .romantic {
@@ -151,11 +152,11 @@
     --primary-hover: #35142B;
     --primary-light: #3D1831;
 
-    --accent: #E11D48;
+    --accent: #9F1239;
     --accent-foreground: #FFFFFF;
-    --accent-hover: #F43F5E;
-    --accent-light: #3D1225;
-    --accent-muted: #FB7185;
+    --accent-hover: #BE123C;
+    --accent-light: #350D1C;
+    --accent-muted: #881337;
 
     --secondary: #A87084;
     --secondary-foreground: #FFF1F5;
@@ -165,7 +166,7 @@
     --success-foreground: #140810;
     --success-light: #134E4A;
 
-    --warning: #F59E0B;
+    --warning: #D4AF37;
     --warning-foreground: #140810;
     --warning-light: #451A03;
 
@@ -175,7 +176,7 @@
 
     --border: #4E233E;
     --input: #4E233E;
-    --ring: #E11D48;
+    --ring: #9F1239;
   }
 
   * {
@@ -199,9 +200,9 @@
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    font-weight: 600;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
+    font-weight: 400;
+    line-height: 1.2;
+    letter-spacing: -0.015em;
     color: var(--foreground);
   }
 
