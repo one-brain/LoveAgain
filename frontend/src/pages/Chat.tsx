@@ -138,22 +138,6 @@ const Chat: React.FC = () => {
       } catch (error) {
         console.warn('Could not deliver via SignalR hub, message kept in local session:', error);
       }
-    } else {
-      // Simulated response in demo mode after 1.5s
-      setTimeout(() => {
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: `reply-${Date.now()}`,
-            orderId,
-            senderId: 'companion-1',
-            content: 'Got it, thank you! I will see you there.',
-            messageType: 'Text',
-            sentAt: new Date().toISOString(),
-            isRead: true,
-          },
-        ]);
-      }, 1500);
     }
 
     setIsSending(false);

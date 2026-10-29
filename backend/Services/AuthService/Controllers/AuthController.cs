@@ -23,7 +23,8 @@ public sealed class AuthController(
     JwtTokenService tokens,
     IEmailSender emailSender,
     IOptions<AppOptions> appOptions,
-    Microsoft.Extensions.Caching.Memory.IMemoryCache cache) : ControllerBase
+    Microsoft.Extensions.Caching.Memory.IMemoryCache cache,
+    IHostEnvironment environment) : ControllerBase
 {
     private const string RefreshTokenCookie = "cue.refresh";
 
@@ -106,11 +107,6 @@ public sealed class AuthController(
 
         // Generate 6-digit OTP
         var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString("D6");
-        // For known demo phone numbers, use 123456
-        if (phone.EndsWith("9876543210") || phone.EndsWith("9999999999"))
-        {
-            otp = "123456";
-        }
 
         var cacheKey = $"mobile_otp_{phone}";
         cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
@@ -124,7 +120,7 @@ public sealed class AuthController(
         return Ok(new SendMobileOtpResponse(
             Message: $"OTP sent successfully to {masked}",
             ExpiresInSeconds: 300,
-            DevOtp: otp
+            DevOtp: environment.IsDevelopment() ? otp : null
         ));
     }
 
@@ -151,10 +147,6 @@ public sealed class AuthController(
         {
             isValidOtp = true;
             cache.Remove(cacheKey); // Invalidate once used
-        }
-        else if (request.Otp.Trim() == "123456") // Sandbox / demo fallback
-        {
-            isValidOtp = true;
         }
 
         if (!isValidOtp)

@@ -9,7 +9,7 @@ import { BookingRequestModal, type BookingRequirementData } from '../components/
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { RateBadge } from '../components/ui/RateBadge';
 import { CompanionCardSkeleton } from '../components/ui/Skeleton';
-import { SAMPLE_PROVIDERS_LIST, toProviderGuid } from '../utils/providerData';
+import { toProviderGuid } from '../utils/providerData';
 import {
   calculateHaversineDistance,
   resolveNearestHub,
@@ -61,8 +61,6 @@ const RADIUS_OPTIONS: DropdownOption[] = [
   { value: '50', label: 'Within 50 km', description: 'Greater metropolitan area' },
   { value: '100', label: 'Within 100 km', description: 'Extended regional area' },
 ];
-
-const CURATED_SAMPLE_PROVIDERS = SAMPLE_PROVIDERS_LIST;
 
 const Discovery: React.FC = () => {
   const navigate = useNavigate();
@@ -217,15 +215,7 @@ const Discovery: React.FC = () => {
       };
     });
 
-    const existingIds = new Set(liveItems.map((i: any) => String(i.providerId).toLowerCase()));
-    const existingNames = new Set(liveItems.map((i: any) => String(i.displayName || '').trim().toLowerCase()));
-    const fallbackSamples = CURATED_SAMPLE_PROVIDERS.filter(
-      (s) =>
-        !existingIds.has(s.providerId.toLowerCase()) &&
-        !existingIds.has(toProviderGuid(s.providerId).toLowerCase()) &&
-        !existingNames.has(s.displayName.trim().toLowerCase())
-    );
-    let list: any[] = [...liveItems, ...fallbackSamples];
+    let list: any[] = [...liveItems];
 
     // Exclude logged-in user's own companion profile card
     if (user?.id) {

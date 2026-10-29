@@ -35,7 +35,6 @@ const Login: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
   const [isNewUserStep, setIsNewUserStep] = useState(false);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -86,9 +85,6 @@ const Login: React.FC = () => {
       setOtpSent(true);
       setCountdown(30);
       setInfoMessage(res.message);
-      if (res.devOtp) {
-        setDevOtpHint(res.devOtp);
-      }
     } catch (err: any) {
       setError(err?.data?.error || 'Failed to send OTP. Please check your number.');
     }
@@ -222,94 +218,6 @@ const Login: React.FC = () => {
     } catch {
       setError('Invalid email or password.');
     }
-  };
-
-  const handleDemoLogin = async (role: 'Seeker' | 'Provider' | 'Admin') => {
-    let demoEmail = 'seeker.demo@cue.com';
-    let demoPassword = 'Password123!';
-
-    if (role === 'Provider') {
-      demoEmail = 'elena.provider@cue.com';
-      demoPassword = 'Password123!';
-    } else if (role === 'Admin') {
-      demoEmail = 'admin@cue.local';
-      demoPassword = 'CueAdmin123!';
-    }
-
-    setEmail(demoEmail);
-    setPassword(demoPassword);
-    setError(null);
-
-    try {
-      const result = await login({ email: demoEmail, password: demoPassword }).unwrap();
-      resetAllApiCaches(dispatch);
-
-      if (role === 'Admin') {
-        dispatch(
-          loginSuccess({
-            accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
-            user: {
-              id: result.userId,
-              email: demoEmail,
-              firstName: 'Back-Office',
-              lastName: 'Administrator',
-              isVerified: true,
-              trustScore: 100,
-              roles: ['Admin'],
-            },
-          })
-        );
-        navigate(rawRedirect && rawRedirect.startsWith('/admin') ? rawRedirect : '/admin', { replace: true });
-        return;
-      }
-
-      const seekerData = await refetchSeeker().unwrap().catch(() => null);
-      const profile = seekerData?.profile;
-
-      dispatch(
-        loginSuccess({
-          accessToken: result.accessToken,
-          refreshToken: result.refreshToken,
-          user: {
-            id: result.userId,
-            email: profile?.email ?? demoEmail,
-            firstName: profile?.firstName ?? (role === 'Seeker' ? 'Alex' : 'Elena'),
-            lastName: profile?.lastName ?? (role === 'Seeker' ? 'Rivera' : 'Rostova'),
-            roles: ['Seeker', 'Provider'],
-          },
-        })
-      );
-      navigate(role === 'Provider' ? '/provider' : redirectTarget, { replace: true });
-    } catch {
-      // Local fallback
-      dispatch(
-        loginSuccess({
-          accessToken: 'demo-jwt-token-12345',
-          refreshToken: 'demo-refresh-token-12345',
-          user: {
-            id: role === 'Seeker' ? 'user-self' : 'sample-1',
-            email: demoEmail,
-            firstName: role === 'Seeker' ? 'Alex' : 'Elena',
-            lastName: role === 'Seeker' ? 'Rivera' : 'Rostova',
-            roles: ['Seeker', 'Provider'],
-          },
-        })
-      );
-      navigate(role === 'Provider' ? '/provider' : redirectTarget, { replace: true });
-    }
-  };
-
-  const handleDemoMobileFill = () => {
-    setAuthMethod('mobile');
-    setCountryCode('+91');
-    setPhoneNumber('9876543210');
-    setOtp('123456');
-    setOtpSent(true);
-    setCountdown(30);
-    setDevOtpHint('123456');
-    setError(null);
-    setInfoMessage('Demo mobile filled! Click "Verify & Sign In" to proceed.');
   };
 
   return (
@@ -463,16 +371,9 @@ const Login: React.FC = () => {
               {otpSent && (
                 <div className="space-y-3 animate-in fade-in duration-200">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="otp" className="text-xs font-semibold text-muted-foreground">
-                        6-Digit Verification Code
-                      </label>
-                      {devOtpHint && (
-                        <span className="text-[10px] text-accent font-mono font-semibold">
-                          Sandbox OTP: {devOtpHint}
-                        </span>
-                      )}
-                    </div>
+                    <label htmlFor="otp" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                      6-Digit Verification Code
+                    </label>
                     <div className="relative">
                       <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <input
@@ -617,43 +518,6 @@ const Login: React.FC = () => {
               </button>
             </form>
           )}
-
-          {/* Quick Demo Access Pills */}
-          <div className="pt-5 border-t border-border space-y-3">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block text-center">
-              Instant Demo Access
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              <button
-                type="button"
-                onClick={handleDemoMobileFill}
-                className="py-2.5 px-2 rounded-xl border border-accent/40 bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold transition-colors flex items-center justify-center text-center cursor-pointer"
-              >
-                <span>📱 Demo OTP</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('Seeker')}
-                className="py-2.5 px-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center text-center cursor-pointer"
-              >
-                <span>Seeker</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('Provider')}
-                className="py-2.5 px-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center text-center cursor-pointer"
-              >
-                <span>Companion</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoLogin('Admin')}
-                className="py-2.5 px-2 rounded-xl border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 text-xs font-semibold transition-colors flex items-center justify-center text-center shadow-xs cursor-pointer"
-              >
-                <span>Admin</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

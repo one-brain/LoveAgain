@@ -47,7 +47,6 @@ const Register: React.FC = () => {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const [devOtpHint, setDevOtpHint] = useState<string | null>(null);
 
   const maxLegalDate = getMaxLegalBirthdate(18);
 
@@ -112,9 +111,6 @@ const Register: React.FC = () => {
       setOtpSent(true);
       setCountdown(30);
       setInfoMessage(res.message);
-      if (res.devOtp) {
-        setDevOtpHint(res.devOtp);
-      }
     } catch (err: any) {
       setErrors({ form: err?.data?.error || 'Failed to send verification code. Please check your number.' });
     }
@@ -481,16 +477,9 @@ const Register: React.FC = () => {
               {otpSent && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <label htmlFor="otp" className="text-xs font-semibold text-muted-foreground">
-                        6-Digit Verification Code
-                      </label>
-                      {devOtpHint && (
-                        <span className="text-[10px] text-accent font-mono font-semibold">
-                          Sandbox OTP: {devOtpHint}
-                        </span>
-                      )}
-                    </div>
+                    <label htmlFor="otp" className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                      6-Digit Verification Code
+                    </label>
                     <div className="relative">
                       <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
                       <input

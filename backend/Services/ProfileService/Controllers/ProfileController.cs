@@ -11,7 +11,7 @@ namespace ProfileService.Controllers;
 
 [ApiController]
 [Route("api/v1/profiles")]
-public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobStorage, IMemoryCache cache) : ControllerBase
+public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobStorage, IMemoryCache cache, IHostEnvironment environment) : ControllerBase
 {
     private static UserProfileResponse MapUserProfile(User user) => new(
         user.Id,
@@ -275,7 +275,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         {
             message = $"Verification code sent to {user.Email}",
             expiresInSeconds = 300,
-            devOtp = otp
+            devOtp = environment.IsDevelopment() ? otp : null
         });
     }
 
@@ -306,10 +306,6 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         {
             isValid = true;
             cache.Remove(cacheKey);
-        }
-        else if (request.Otp.Trim() == "123456") // Sandbox/dev fallback
-        {
-            isValid = true;
         }
 
         if (!isValid)
@@ -351,7 +347,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         {
             message = $"SMS verification code sent to {user.Phone}",
             expiresInSeconds = 300,
-            devOtp = otp
+            devOtp = environment.IsDevelopment() ? otp : null
         });
     }
 
@@ -382,10 +378,6 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         {
             isValid = true;
             cache.Remove(cacheKey);
-        }
-        else if (request.Otp.Trim() == "123456") // Sandbox/dev fallback
-        {
-            isValid = true;
         }
 
         if (!isValid)

@@ -34,7 +34,7 @@ export const createBaseQueryWithReauth = (
         localStorage.getItem('cue_token') ||
         sessionStorage.getItem('cue_token');
 
-      if (token && token !== 'demo-jwt-token-12345') {
+      if (token) {
         headers.set('Authorization', `Bearer ${token}`);
       }
 

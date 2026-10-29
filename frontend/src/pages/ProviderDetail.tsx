@@ -8,7 +8,7 @@ import { BookingRequestModal, type BookingRequirementData } from '../components/
 import { RateBadge } from '../components/ui/RateBadge';
 import { formatINR, formatRate } from '../utils/currency';
 import { resolveNearestHub } from '../utils/location';
-import { SAMPLE_PROVIDERS_MAP, toProviderGuid } from '../utils/providerData';
+import { toProviderGuid } from '../utils/providerData';
 import type { RootState } from '../store';
 import {
   StarIcon,
@@ -25,168 +25,7 @@ import {
   LockClosedIcon,
 } from '@heroicons/react/24/outline';
 
-// Fallback provider data lookup with Display Name and 3 Profile Images
-const FALLBACK_PROVIDERS_MAP: Record<string, any> = {
-  'sample-1': {
-    providerId: 'sample-1',
-    displayName: 'Elena Rostova',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
-    ],
-    hourlyRate: 1500,
-    bio: 'Hi, I am Elena! I am a semi-professional tennis player and contemporary art curator based in the city. Whether you want to hit the courts for a friendly, competitive rally, improve your backhand, or spend a relaxing Saturday exploring modern art galleries with lively discussion, I would love to accompany you. I value authenticity, positive energy, and great sportsmanship.',
-    specialties: ['Tennis', 'Yoga', 'Art', 'Fitness'],
-    maxRadiusKm: 25,
-    latitude: 12.9784,
-    longitude: 77.6408,
-    introVideoUrl: 'https://youtube.com',
-    averageRating: 4.98,
-    isVerified: true,
-    trustScore: 99,
-  },
-  'sample-2': {
-    providerId: 'sample-2',
-    displayName: 'Marcus Vance',
-    photoUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
-    ],
-    hourlyRate: 1800,
-    bio: 'Former restaurant sous-chef and active urban photographer. I specialize in culinary walks, private handmade pasta sessions, and exploring bustling farmers markets. I believe great food and shared conversation create the warmest human connections.',
-    specialties: ['Cooking', 'Photography', 'Reading'],
-    maxRadiusKm: 30,
-    latitude: 19.0596,
-    longitude: 72.8295,
-    introVideoUrl: null,
-    averageRating: 4.95,
-    isVerified: true,
-    trustScore: 98,
-  },
-  'sample-3': {
-    providerId: 'sample-3',
-    displayName: 'Dr. Sophia Chen',
-    photoUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?auto=format&fit=crop&w=800&q=80',
-    ],
-    hourlyRate: 1200,
-    bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony. Available for trail hikes and music sessions.',
-    specialties: ['Hiking', 'Music', 'Photography', 'Wellness'],
-    maxRadiusKm: 40,
-    latitude: 28.5494,
-    longitude: 77.2001,
-    introVideoUrl: null,
-    averageRating: 4.92,
-    isVerified: true,
-    trustScore: 97,
-    services: ['Violin Performance / Lesson'],
-  },
-  'sample-4': {
-    providerId: 'sample-4',
-    displayName: 'Julian Alvarez',
-    photoUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
-    ],
-    hourlyRate: 1600,
-    bio: 'Certified salsa dancer and architectural history guide. Available for private dance sessions, wedding plus-one, and city heritage tours.',
-    specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
-    maxRadiusKm: 35,
-    latitude: 17.4435,
-    longitude: 78.3772,
-    introVideoUrl: null,
-    averageRating: 4.88,
-    isVerified: true,
-    trustScore: 96,
-    services: ['Salsa Coaching (1-on-1)', 'Wedding Plus-One & Social Host'],
-  },
-  'sample-5': {
-    providerId: 'sample-5',
-    displayName: 'Aria Thorne',
-    photoUrl: 'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80',
-    ],
-    hourlyRate: 1500,
-    bio: 'Principal Software Architect & yoga practitioner. Available for system design deep-dives, career mentorship, or mindful yoga morning flows.',
-    specialties: ['Yoga Partner', 'Coding Mentorship', 'Reading', 'Career Coaching'],
-    maxRadiusKm: 25,
-    latitude: 12.9352,
-    longitude: 77.6245,
-    introVideoUrl: null,
-    averageRating: 4.97,
-    isVerified: true,
-    trustScore: 99,
-    services: ['System Design Mentorship', 'Yoga Morning Flow'],
-  },
-  'sample-6': {
-    providerId: 'sample-6',
-    displayName: 'David Morales',
-    photoUrl: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
-    profileImages: [
-      'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1480455624313-e29b44bbfde1?auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=800&q=80',
-    ],
-    hourlyRate: 2000,
-    bio: 'Sommelier and certified fitness trainer. Available to host wine tasting dinners, curated culinary tours, or 1-on-1 strength training sessions.',
-    specialties: ['Fine Dining', 'Fitness Trainer', 'Nightlife', 'Cooking'],
-    maxRadiusKm: 30,
-    latitude: 18.5362,
-    longitude: 73.8940,
-    introVideoUrl: null,
-    averageRating: 4.94,
-    isVerified: true,
-    trustScore: 98,
-    services: ['Curated Wine Tasting Session', 'Strength Training (1-on-1)'],
-  },
-};
 
-// Generate realistic slots for today and next few days
-function generateDemoSlots() {
-  const slots = [];
-  const now = new Date();
-  for (let i = 1; i <= 4; i++) {
-    const d = new Date(now);
-    d.setDate(d.getDate() + i);
-
-    // Morning slot
-    const startM = new Date(d);
-    startM.setHours(10, 0, 0, 0);
-    const endM = new Date(d);
-    endM.setHours(12, 0, 0, 0);
-    slots.push({
-      slotId: `slot-${i}-m`,
-      startTime: startM.toISOString(),
-      endTime: endM.toISOString(),
-      isBooked: false,
-    });
-
-    // Afternoon slot
-    const startA = new Date(d);
-    startA.setHours(14, 30, 0, 0);
-    const endA = new Date(d);
-    endA.setHours(16, 30, 0, 0);
-    slots.push({
-      slotId: `slot-${i}-a`,
-      startTime: startA.toISOString(),
-      endTime: endA.toISOString(),
-      isBooked: false,
-    });
-  }
-  return slots;
-}
 
 const ProviderDetail: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -211,54 +50,23 @@ const ProviderDetail: React.FC = () => {
 
   const [createBooking] = useCreateBookingMutation();
 
-  // Resolve provider data
+  // Resolve provider data directly from API
   const provider = useMemo<any>(() => {
     if (apiProvider) {
-      const slots = apiProvider.upcomingSlots?.length
-        ? apiProvider.upcomingSlots
-        : generateDemoSlots();
-      return {
-        ...apiProvider,
-        upcomingSlots: slots,
-      };
+      return apiProvider;
     }
-    if (userId && (SAMPLE_PROVIDERS_MAP[userId] || FALLBACK_PROVIDERS_MAP[userId])) {
-      const sample = SAMPLE_PROVIDERS_MAP[userId] || FALLBACK_PROVIDERS_MAP[userId];
-      return {
-        ...sample,
-        upcomingSlots: generateDemoSlots(),
-      };
-    }
-    // Generic fallback for showcase
-    return {
-      providerId: userId || 'companion',
-      displayName: 'Verified Companion',
-      photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-      profileImages: [
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?auto=format&fit=crop&w=800&q=80',
-      ],
-      hourlyRate: 1500,
-      bio: 'Enthusiastic and experienced companion offering activities, city tours, and skill exchange with verified background checks and safety check-ins.',
-      specialties: ['Tennis', 'Cooking', 'Art', 'Hiking'],
-      maxRadiusKm: 25,
-      introVideoUrl: null,
-      averageRating: 4.95,
-      isVerified: true,
-      trustScore: 98,
-      upcomingSlots: generateDemoSlots(),
-    };
-  }, [apiProvider, userId]);
+    return null;
+  }, [apiProvider]);
 
   const baseHub = useMemo(() => {
+    if (!provider) return null;
     const lat = provider.latitude;
     const lon = provider.longitude;
     if (lat != null && lon != null) {
       return resolveNearestHub(lat, lon);
     }
     return null;
-  }, [provider.latitude, provider.longitude]);
+  }, [provider?.latitude, provider?.longitude]);
 
   if (isLoading) {
     return (
@@ -271,11 +79,32 @@ const ProviderDetail: React.FC = () => {
     );
   }
 
+  if (!provider) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
+        <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center text-rose-500 mb-4">
+          <ShieldCheckIcon className="w-8 h-8" />
+        </div>
+        <h2 className="text-2xl font-serif text-foreground font-semibold mb-2">Companion Not Found</h2>
+        <p className="text-muted-foreground max-w-md mb-6">
+          The companion profile you are looking for does not exist or may have been unlisted.
+        </p>
+        <button
+          onClick={() => navigate('/discovery')}
+          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-medium hover:bg-accent/90 transition-colors cursor-pointer"
+        >
+          <ArrowLeftIcon className="w-4 h-4" />
+          <span>Browse Active Companions</span>
+        </button>
+      </div>
+    );
+  }
+
   const galleryImages: string[] =
     provider.profileImages && provider.profileImages.length > 0
       ? provider.profileImages.slice(0, 3)
-      : [provider.photoUrl];
-  const currentHeroPhoto = galleryImages[activePhotoIdx] || galleryImages[0];
+      : (provider.photoUrl ? [provider.photoUrl] : []);
+  const currentHeroPhoto = galleryImages[activePhotoIdx] || galleryImages[0] || '';
 
   const availableSlots = (provider.upcomingSlots || []).filter((s: any) => !s.isBooked);
   const selectedSlotData = availableSlots.find((s: any) => s.slotId === selectedSlot);
@@ -447,19 +276,21 @@ const ProviderDetail: React.FC = () => {
               </div>
 
               {/* Specialties / Skills */}
-              <div>
-                <h2 className="text-lg font-bold text-foreground font-serif mb-3">Specialties & Activities</h2>
-                <div className="flex flex-wrap gap-2">
-                  {provider.specialties.map((spec: string) => (
-                    <span
-                      key={spec}
-                      className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-accent/10 text-accent border border-accent/20"
-                    >
-                      {spec}
-                    </span>
-                  ))}
+              {provider.specialties && provider.specialties.length > 0 && (
+                <div>
+                  <h2 className="text-lg font-bold text-foreground font-serif mb-3">Specialties & Activities</h2>
+                  <div className="flex flex-wrap gap-2">
+                    {provider.specialties.map((spec: string) => (
+                      <span
+                        key={spec}
+                        className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-accent/10 text-accent border border-accent/20"
+                      >
+                        {spec}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Offered Services & Gigs (If available) */}
               {provider.services && provider.services.length > 0 && (

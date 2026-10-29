@@ -33,7 +33,6 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
   const [isVerifying, setIsVerifying] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [devHint, setDevHint] = useState<string | null>(null);
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -58,11 +57,8 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
     setIsSending(true);
     setErrorMessage(null);
     try {
-      const res = await onSendOtp();
+      await onSendOtp();
       setCooldown(60);
-      if (res?.devOtp) {
-        setDevHint(`Demo OTP: ${res.devOtp}`);
-      }
       setTimeout(() => {
         inputRefs.current[0]?.focus();
       }, 100);
@@ -124,7 +120,6 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
     try {
       await onVerifyOtp(code);
       setIsOpen(false);
-      setDevHint(null);
     } catch (err: any) {
       setErrorMessage(err?.data?.error || err?.message || 'Invalid or expired verification code.');
     } finally {
@@ -176,12 +171,6 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
               <XMarkIcon className="w-4 h-4" />
             </button>
           </div>
-
-          {devHint && (
-            <div className="px-2.5 py-1 rounded-lg bg-accent/15 border border-accent/20 text-accent text-[11px] font-mono font-bold w-fit">
-              {devHint}
-            </div>
-          )}
 
           {errorMessage && (
             <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-center gap-2">

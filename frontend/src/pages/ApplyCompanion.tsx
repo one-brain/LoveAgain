@@ -14,12 +14,6 @@ import {
   PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 
-const SAMPLE_GALLERY = [
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=600',
-  'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&q=80&w=600',
-  'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&q=80&w=600',
-];
-
 export const ApplyCompanion: React.FC = () => {
   const navigate = useNavigate();
   const { data: profileData, isLoading: isLoadingProfile, refetch: refetchProfile } = useGetMyProfileQuery();
@@ -31,11 +25,9 @@ export const ApplyCompanion: React.FC = () => {
   const [isEditingVerification, setIsEditingVerification] = useState(false);
 
   const [idType, setIdType] = useState('Aadhaar (DigiLocker)');
-  const [idProofUrl, setIdProofUrl] = useState(
-    'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=600'
-  );
-  const [selfieVerificationUrl, setSelfieVerificationUrl] = useState(SAMPLE_GALLERY[0]);
-  const [upiId, setUpiId] = useState('companion@oksbi');
+  const [idProofUrl, setIdProofUrl] = useState('');
+  const [selfieVerificationUrl, setSelfieVerificationUrl] = useState('');
+  const [upiId, setUpiId] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [submittedJustNow, setSubmittedJustNow] = useState(false);
 
@@ -339,37 +331,19 @@ export const ApplyCompanion: React.FC = () => {
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-              Live Verification Selfie
+              Live Verification Selfie URL
             </label>
-            <div className="grid grid-cols-3 gap-3 mb-2">
-              {SAMPLE_GALLERY.map((imgUrl, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setSelfieVerificationUrl(imgUrl)}
-                  className={`relative rounded-xl overflow-hidden h-24 border-2 transition-all cursor-pointer ${
-                    selfieVerificationUrl === imgUrl
-                      ? 'border-accent ring-2 ring-accent/30 scale-[1.01]'
-                      : 'border-border/60 opacity-60 hover:opacity-100'
-                  }`}
-                >
-                  <img src={imgUrl} alt={`Selfie ${idx + 1}`} className="w-full h-full object-cover" />
-                  {selfieVerificationUrl === imgUrl && (
-                    <div className="absolute top-1.5 right-1.5 bg-accent text-accent-foreground rounded-full p-0.5">
-                      <CheckCircleIcon className="w-4 h-4" />
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
             <input
               type="url"
               value={selfieVerificationUrl}
               onChange={(e) => setSelfieVerificationUrl(e.target.value)}
-              placeholder="Or paste custom selfie image URL..."
-              className="w-full px-4 py-2 rounded-xl bg-muted/50 border border-border text-foreground text-xs focus:border-accent outline-hidden"
+              placeholder="https://..."
+              className="w-full px-4 py-2.5 rounded-xl bg-muted/50 border border-border text-foreground text-sm focus:border-accent outline-hidden"
               required
             />
+            <p className="text-[11px] text-muted-foreground mt-1.5">
+              Provide a direct, clear photo link of yourself holding your photo ID.
+            </p>
           </div>
         </div>
 
