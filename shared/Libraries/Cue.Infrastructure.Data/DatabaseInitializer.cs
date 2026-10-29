@@ -170,6 +170,9 @@ public static class DatabaseInitializer
             "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS gender character varying(30) NULL;",
             "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS is_email_verified boolean NOT NULL DEFAULT FALSE;",
             "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS is_phone_verified boolean NOT NULL DEFAULT FALSE;",
+            "ALTER TABLE profiles.user_kyc_documents ALTER COLUMN front_image_url TYPE text;",
+            "ALTER TABLE profiles.user_kyc_documents ALTER COLUMN back_image_url TYPE text;",
+            "ALTER TABLE profiles.user_kyc_documents ALTER COLUMN selfie_image_url TYPE text;",
             "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);",
             """
             CREATE TABLE IF NOT EXISTS profiles.user_kyc_documents (
@@ -177,9 +180,9 @@ public static class DatabaseInitializer
                 user_id uuid NOT NULL,
                 document_type character varying(50) NOT NULL,
                 document_number character varying(100) NOT NULL,
-                front_image_url character varying(2000) NOT NULL,
-                back_image_url character varying(2000) NOT NULL,
-                selfie_image_url character varying(2000) NOT NULL,
+                front_image_url text NOT NULL,
+                back_image_url text NOT NULL,
+                selfie_image_url text NOT NULL,
                 status integer NOT NULL DEFAULT 1,
                 rejection_reason character varying(1000) NULL,
                 submitted_at timestamp with time zone NOT NULL,

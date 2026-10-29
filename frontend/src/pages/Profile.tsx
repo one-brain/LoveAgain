@@ -240,15 +240,15 @@ const Profile: React.FC = () => {
     }
   }, [providerProfile, seekerData, user]);
 
-  const handleKycFileSelect = (
+  const handleKycFileSelect = async (
     e: React.ChangeEvent<HTMLInputElement>,
     setFile: (f: File | null) => void,
     setPreview: (url: string | null) => void
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setKycError('File must be 5MB or smaller.');
+    if (file.size > 10 * 1024 * 1024) {
+      setKycError('File must be 10MB or smaller.');
       return;
     }
     const valid = ['image/jpeg', 'image/png', 'image/webp'];
@@ -257,10 +257,16 @@ const Profile: React.FC = () => {
       return;
     }
     setKycError(null);
-    setFile(file);
-    const reader = new FileReader();
-    reader.onload = () => setPreview(reader.result as string);
-    reader.readAsDataURL(file);
+    try {
+      const { file: compressedFile, dataUrl } = await compressImageFile(file, 1200, 0.85);
+      setFile(compressedFile);
+      setPreview(dataUrl);
+    } catch {
+      setFile(file);
+      const reader = new FileReader();
+      reader.onload = () => setPreview(reader.result as string);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleKycSubmit = async (e: React.FormEvent) => {
@@ -298,7 +304,8 @@ const Profile: React.FC = () => {
       refetchKyc();
       refetchSeeker();
     } catch (err: any) {
-      setKycError(err?.data?.error || 'Failed to submit identity verification. Please verify your files and try again.');
+      const msg = err?.data?.error || err?.data?.message || err?.error || err?.message || 'Failed to submit identity verification. Please verify your files and try again.';
+      setKycError(msg);
     }
   };
 
