@@ -189,6 +189,9 @@ export const profileApi = createApi({
             photoUrl: raw.photoUrl || null,
             isVerified: raw.isVerified ?? false,
             trustScore: raw.trustScore ?? 50,
+            gender: raw.gender ?? null,
+            isEmailVerified: raw.isEmailVerified ?? false,
+            isPhoneVerified: raw.isPhoneVerified ?? false,
             createdAt: raw.createdAt || '',
             updatedAt: raw.updatedAt || '',
             specialties: raw.specialties || [],
@@ -202,6 +205,28 @@ export const profileApi = createApi({
         method: 'PUT',
         body,
       }),
+      transformResponse: (response: any) => {
+        const raw = response?.profile ?? response ?? {};
+        return {
+          profile: {
+            userId: raw.userId || raw.id || '',
+            email: raw.email || '',
+            firstName: raw.firstName || '',
+            lastName: raw.lastName || '',
+            phone: raw.phone || null,
+            dateOfBirth: raw.dateOfBirth || null,
+            photoUrl: raw.photoUrl || null,
+            isVerified: raw.isVerified ?? false,
+            trustScore: raw.trustScore ?? 50,
+            gender: raw.gender ?? null,
+            isEmailVerified: raw.isEmailVerified ?? false,
+            isPhoneVerified: raw.isPhoneVerified ?? false,
+            createdAt: raw.createdAt || '',
+            updatedAt: raw.updatedAt || '',
+            specialties: raw.specialties || [],
+          },
+        };
+      },
       invalidatesTags: ['Profile'],
     }),
     uploadSeekerPhoto: builder.mutation<SeekerProfileResponse, FormData>({

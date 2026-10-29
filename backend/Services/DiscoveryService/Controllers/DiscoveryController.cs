@@ -88,6 +88,11 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                 (profile, user) => new { profile, user })
             .Where(join => join.user.DeletedAt == null);
 
+        if (TryGetUserId(out var currentUserId))
+        {
+            query = query.Where(join => join.profile.UserId != currentUserId);
+        }
+
         if (minRate.HasValue)
         {
             query = query.Where(join => join.profile.HourlyRate >= minRate.Value);
@@ -340,7 +345,9 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
 
     private bool TryGetUserId(out Guid userId)
     {
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var userIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? User?.FindFirst("sub")?.Value
+            ?? (Request != null && Request.Headers.TryGetValue("X-User-Id", out var hVal) ? hVal.FirstOrDefault() : null);
         return Guid.TryParse(userIdClaim, out userId);
     }
 }

@@ -10,6 +10,7 @@ export interface AuthUser {
   isVerified?: boolean;
   trustScore?: number;
   roles: ('Seeker' | 'Provider' | 'Admin')[];
+  gender?: string | null;
 }
 
 interface AuthState {

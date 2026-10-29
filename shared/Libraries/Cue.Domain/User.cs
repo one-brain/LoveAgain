@@ -98,10 +98,7 @@ public sealed class User
     {
         UpdateContact(phone, firstName, lastName);
         DateOfBirth = dateOfBirth;
-        if (gender != null)
-        {
-            SetGender(gender);
-        }
+        SetGender(gender);
         UpdatedAt = DateTime.UtcNow;
     }
 

@@ -32,6 +32,27 @@ public sealed class CueDbContext(DbContextOptions<CueDbContext> options) : DbCon
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(CueDbContext).Assembly);
+
+        if (Database.ProviderName?.Contains("InMemory", StringComparison.OrdinalIgnoreCase) == true)
+        {
+            modelBuilder.Entity<User>(b =>
+            {
+                b.Property(u => u.Roles).HasConversion(
+                    roles => string.Join(',', roles.Select(r => (int)r)),
+                    str => str.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => (UserRole)int.Parse(s)).ToHashSet());
+            });
+
+            modelBuilder.Entity<ProviderProfile>(b =>
+            {
+                b.Property(p => p.ProfileImages).HasConversion(
+                    images => string.Join(';', images),
+                    str => str.Split(';', StringSplitOptions.RemoveEmptyEntries));
+                b.Property(p => p.Specialties).HasConversion(
+                    specialties => string.Join(';', specialties),
+                    str => str.Split(';', StringSplitOptions.RemoveEmptyEntries));
+            });
+        }
     }
 }

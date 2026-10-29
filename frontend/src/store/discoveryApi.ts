@@ -1,10 +1,9 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createBaseQueryWithReauth } from './baseQueryWithReauth';
 
 export const discoveryApi = createApi({
   reducerPath: 'discoveryApi',
-  baseQuery: fetchBaseQuery({ baseUrl: `${API_BASE_URL}/api/v1` }),
+  baseQuery: createBaseQueryWithReauth('/api/v1'),
   tagTypes: ['DiscoveryProviders'],
   endpoints: (builder) => ({
     listProviders: builder.query<

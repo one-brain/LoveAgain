@@ -210,6 +210,7 @@ const Profile: React.FC = () => {
     } else if (user) {
       setFirstName(user.firstName || '');
       setLastName(user.lastName || '');
+      if (user.gender) setGender(user.gender);
     }
   }, [seekerData, user]);
 
@@ -386,7 +387,7 @@ const Profile: React.FC = () => {
       const cleanDob = dateOfBirth.trim() || null;
       const cleanGender = gender.trim() || null;
 
-      await updateSeeker({
+      const res = await updateSeeker({
         firstName: cleanFirst,
         lastName: cleanLast,
         phone: cleanPhone,
@@ -394,12 +395,17 @@ const Profile: React.FC = () => {
         gender: cleanGender,
       }).unwrap();
 
+      if (res?.profile?.gender !== undefined) {
+        setGender(res.profile.gender || '');
+      }
+
       if (user) {
         dispatch(
           setUser({
             ...user,
             firstName: cleanFirst,
             lastName: cleanLast,
+            gender: cleanGender,
           })
         );
       }

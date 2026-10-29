@@ -67,7 +67,7 @@ const CURATED_SAMPLE_PROVIDERS = SAMPLE_PROVIDERS_LIST;
 const Discovery: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isAuthenticated } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
   const [createBooking] = useCreateBookingMutation();
 
   const initialQ = searchParams.get('q') || '';
@@ -185,6 +185,16 @@ const Discovery: React.FC = () => {
         !existingNames.has(s.displayName.trim().toLowerCase())
     );
     let list: any[] = [...liveItems, ...fallbackSamples];
+
+    // Exclude logged-in user's own companion profile card
+    if (user?.id) {
+      const currentUserId = String(user.id).toLowerCase();
+      list = list.filter((p: any) => {
+        const provId = String(p.providerId || '').toLowerCase();
+        const usrId = String(p.userId || '').toLowerCase();
+        return provId !== currentUserId && usrId !== currentUserId;
+      });
+    }
 
     // Exclude any provider explicitly rejected by platform administration
     try {
