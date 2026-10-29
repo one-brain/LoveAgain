@@ -41,6 +41,17 @@ public sealed class BookingRepository(CueDbContext dbContext) : IBookingReposito
             .OrderByDescending(order => order.StartTime)
             .ToListAsync(cancellationToken);
 
+    public Task<ServiceOrder?> GetPendingOrderForSeekerAsync(Guid seekerId, Guid providerId, DateTime startTime, CancellationToken cancellationToken)
+    {
+        return dbContext.ServiceOrders
+            .FirstOrDefaultAsync(
+                order => order.SeekerId == seekerId &&
+                         order.ProviderId == providerId &&
+                         order.Status == OrderStatus.PendingPayment &&
+                         order.StartTime == startTime,
+                cancellationToken);
+    }
+
     public async Task<IReadOnlyList<ProviderProfile>> GetAvailableProvidersAsync(string? specialty, decimal? maxHourlyRate, CancellationToken cancellationToken)
     {
         var query = dbContext.ProviderProfiles.AsNoTracking().Where(profile => profile.IsActive);

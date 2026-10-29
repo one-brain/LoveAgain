@@ -119,6 +119,56 @@ public sealed class BookingsController(ISender sender, CueDbContext dbContext) :
         return Ok(bookings);
     }
 
+    [HttpPut("{orderId:guid}")]
+    [HttpPatch("{orderId:guid}")]
+    [ProducesResponseType(typeof(BookingSummary), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<ActionResult<BookingSummary>> Update(
+        Guid orderId,
+        [FromBody] UpdateBookingRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var command = new UpdateBookingCommand(
+                orderId,
+                userId,
+                request.MeetingAddress,
+                request.StartTime,
+                request.EndTime,
+                request.DurationHours,
+                request.Requirements);
+
+            var result = await sender.Send(command, cancellationToken);
+            return Ok(result);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound(new { error = "Booking was not found." });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Only a booking participant can modify this booking." });
+        }
+        catch (InvalidOperationException exception)
+        {
+            return Conflict(new { error = exception.Message });
+        }
+        catch (ValidationException exception)
+        {
+            return BadRequest(new { error = string.Join(" ", exception.Errors.Select(e => e.ErrorMessage)) });
+        }
+    }
+
     [HttpPatch("{orderId:guid}/confirm")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> Confirm(Guid orderId, CancellationToken cancellationToken)
@@ -243,4 +293,10 @@ public sealed class BookingsController(ISender sender, CueDbContext dbContext) :
 
     public sealed record CheckInBookingRequest(string Pin);
     public sealed record CancelBookingRequest(string Reason);
+    public sealed record UpdateBookingRequest(
+        string? MeetingAddress,
+        DateTime? StartTime,
+        DateTime? EndTime,
+        decimal? DurationHours,
+        Cue.Domain.BookingRequirements? Requirements);
 }

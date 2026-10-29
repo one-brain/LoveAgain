@@ -182,3 +182,104 @@ public sealed class CompleteOrderCommandHandler(
         return Unit.Value;
     }
 }
+
+public sealed record UpdateBookingCommand(
+    Guid OrderId,
+    Guid UserId,
+    string? MeetingAddress,
+    DateTime? StartTime,
+    DateTime? EndTime,
+    decimal? DurationHours,
+    BookingRequirements? Requirements) : IRequest<BookingSummary>;
+
+public sealed class UpdateBookingCommandValidator : AbstractValidator<UpdateBookingCommand>
+{
+    public UpdateBookingCommandValidator()
+    {
+        RuleFor(command => command.OrderId).NotEmpty();
+        RuleFor(command => command.UserId).NotEmpty();
+    }
+}
+
+public sealed class UpdateBookingCommandHandler(
+    IBookingRepository repository,
+    IEventPublisher eventPublisher) : IRequestHandler<UpdateBookingCommand, BookingSummary>
+{
+    public async Task<BookingSummary> Handle(UpdateBookingCommand command, CancellationToken cancellationToken)
+    {
+        var order = await repository.GetByIdAsync(command.OrderId, cancellationToken)
+            ?? throw new KeyNotFoundException("Booking was not found.");
+
+        if (order.SeekerId != command.UserId && order.ProviderId != command.UserId)
+        {
+            throw new UnauthorizedAccessException("Only a booking participant can modify this booking.");
+        }
+
+        if (order.Status is OrderStatus.InProgress or OrderStatus.Completed or OrderStatus.Cancelled)
+        {
+            throw new InvalidOperationException($"Booking in status '{order.Status}' cannot be modified.");
+        }
+
+        if (command.StartTime.HasValue && command.EndTime.HasValue)
+        {
+            if (command.EndTime.Value <= command.StartTime.Value)
+            {
+                throw new InvalidOperationException("End time must be after start time.");
+            }
+
+            var isShowcaseSample = order.ProviderId.ToString()
+                .StartsWith("00000000-0000-0000-0000-0000000000", StringComparison.OrdinalIgnoreCase);
+
+            if (!isShowcaseSample && (order.StartTime != command.StartTime.Value || order.EndTime != command.EndTime.Value))
+            {
+                var isOverlapping = await repository.HasOverlappingSlotAsync(
+                    order.ProviderId,
+                    command.StartTime.Value,
+                    command.EndTime.Value,
+                    cancellationToken);
+
+                if (isOverlapping)
+                {
+                    throw new InvalidOperationException("The companion has another confirmed booking during this time window.");
+                }
+            }
+        }
+
+        order.UpdateDetails(
+            command.MeetingAddress,
+            command.Requirements,
+            command.StartTime,
+            command.EndTime,
+            command.DurationHours);
+
+        await repository.SaveChangesAsync(cancellationToken);
+
+        var meta = await repository.GetParticipantsMetadataAsync(
+            new[] { order.ProviderId, order.SeekerId },
+            cancellationToken);
+
+        meta.TryGetValue(order.ProviderId, out var prov);
+        meta.TryGetValue(order.SeekerId, out var seek);
+
+        return new BookingSummary(
+            order.Id,
+            order.ProviderId,
+            order.SeekerId,
+            order.StartTime,
+            order.EndTime,
+            order.Status,
+            order.TotalAmount,
+            order.MeetingAddress,
+            order.SeekerId == command.UserId ? order.CheckInPin : (order.Status is OrderStatus.InProgress or OrderStatus.Completed ? order.CheckInPin : null),
+            order.CheckedInAt,
+            order.Requirements,
+            prov?.DisplayName,
+            prov?.PhotoUrl,
+            seek?.DisplayName,
+            seek?.PhotoUrl,
+            prov?.AverageRating,
+            order.Requirements?.Activity ?? prov?.PrimarySpecialty,
+            prov?.IsVerified
+        );
+    }
+}

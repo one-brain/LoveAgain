@@ -30,6 +30,15 @@ export interface CreateBookingResponse {
   status: 'PendingPayment' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'Disputed';
 }
 
+export interface UpdateBookingRequest {
+  orderId: string;
+  meetingAddress?: string;
+  startTime?: string;
+  endTime?: string;
+  durationHours?: number;
+  requirements?: BookingRequirementsDto;
+}
+
 export interface BookingSummary {
   orderId: string;
   providerId: string;
@@ -86,6 +95,14 @@ export const bookingApi = createApi({
       query: (body) => ({
         url: `/bookings`,
         method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Bookings'],
+    }),
+    updateBooking: builder.mutation<BookingSummary, UpdateBookingRequest>({
+      query: ({ orderId, ...body }) => ({
+        url: `/bookings/${orderId}`,
+        method: 'PUT',
         body,
       }),
       invalidatesTags: ['Bookings'],
@@ -169,6 +186,7 @@ export const bookingApi = createApi({
 // Export hooks for usage in functional components
 export const {
   useCreateBookingMutation,
+  useUpdateBookingMutation,
   useGetMyBookingsQuery,
   useConfirmBookingMutation,
   useCheckInBookingMutation,

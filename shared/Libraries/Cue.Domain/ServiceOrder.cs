@@ -65,6 +65,53 @@ public sealed class ServiceOrder
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void UpdateDetails(
+        string? meetingAddress,
+        BookingRequirements? requirements,
+        DateTime? startTime = null,
+        DateTime? endTime = null,
+        decimal? durationHours = null)
+    {
+        if (Status is OrderStatus.InProgress or OrderStatus.Completed or OrderStatus.Cancelled)
+        {
+            throw new InvalidOperationException($"Booking in status '{Status}' cannot be modified.");
+        }
+
+        if (meetingAddress is not null)
+        {
+            MeetingAddress = meetingAddress.Trim();
+        }
+
+        if (requirements is not null)
+        {
+            Requirements = requirements;
+        }
+
+        if (startTime.HasValue && endTime.HasValue)
+        {
+            if (endTime.Value <= startTime.Value)
+            {
+                throw new ArgumentException("End time must be after start time.", nameof(endTime));
+            }
+
+            // Recalculate fees if in PendingPayment status
+            if (Status == OrderStatus.PendingPayment && durationHours.HasValue && durationHours.Value > 0)
+            {
+                var oldDuration = (decimal)(EndTime - StartTime).TotalHours;
+                if (oldDuration <= 0) oldDuration = 1m;
+                var hourlyRate = decimal.Round(TotalAmount / oldDuration, 2);
+                TotalAmount = decimal.Round(hourlyRate * durationHours.Value, 2);
+                PlatformFee = decimal.Round(TotalAmount * 0.15m, 2);
+                ProviderEarnings = TotalAmount - PlatformFee;
+            }
+
+            StartTime = startTime.Value;
+            EndTime = endTime.Value;
+        }
+
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Confirm()
     {
         EnsureStatus(OrderStatus.PendingPayment);
