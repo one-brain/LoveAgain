@@ -17,6 +17,7 @@ import {
 } from '../store/paymentApi';
 import { loadRazorpayScript } from '../utils/razorpay';
 import { RazorpaySandboxModal, type RazorpaySandboxPaymentResult } from '../components/payment/RazorpaySandboxModal';
+import { ProviderEarningsCard } from '../components/payment/ProviderEarningsCard';
 
 const PRESET_AMOUNTS = [500, 1000, 2000, 5000];
 
@@ -203,6 +204,9 @@ export const WalletPage: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Companion Earnings & UPI Withdrawal Destination */}
+      <ProviderEarningsCard />
 
       {/* Top-Up Section */}
       <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border/80 shadow-md space-y-6">

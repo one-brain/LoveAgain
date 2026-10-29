@@ -57,9 +57,12 @@ public sealed class User
     public string? Phone { get; private set; }
     public string FirstName { get; private set; } = string.Empty;
     public string LastName { get; private set; } = string.Empty;
+    public string? Gender { get; private set; }
     public DateOnly? DateOfBirth { get; private set; }
     public string? PhotoUrl { get; private set; }
     public bool IsVerified { get; private set; }
+    public bool IsEmailVerified { get; private set; }
+    public bool IsPhoneVerified { get; private set; }
     public int TrustScore { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
@@ -91,11 +94,41 @@ public sealed class User
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void UpdateProfile(string firstName, string? lastName, string? phone, DateOnly? dateOfBirth)
+    public void UpdateProfile(string firstName, string? lastName, string? phone, DateOnly? dateOfBirth, string? gender = null)
     {
         UpdateContact(phone, firstName, lastName);
         DateOfBirth = dateOfBirth;
+        if (gender != null)
+        {
+            SetGender(gender);
+        }
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetGender(string? gender)
+    {
+        Gender = string.IsNullOrWhiteSpace(gender) ? null : gender.Trim();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void VerifyEmail()
+    {
+        if (!IsEmailVerified)
+        {
+            IsEmailVerified = true;
+            TrustScore = Math.Clamp(TrustScore + 10, 0, 100);
+            UpdatedAt = DateTime.UtcNow;
+        }
+    }
+
+    public void VerifyPhone()
+    {
+        if (!IsPhoneVerified)
+        {
+            IsPhoneVerified = true;
+            TrustScore = Math.Clamp(TrustScore + 10, 0, 100);
+            UpdatedAt = DateTime.UtcNow;
+        }
     }
 
     public void SetDateOfBirth(DateOnly dateOfBirth)

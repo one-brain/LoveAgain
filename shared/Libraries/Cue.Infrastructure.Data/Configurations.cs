@@ -16,6 +16,9 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.Phone).HasMaxLength(50);
         builder.Property(user => user.FirstName).HasMaxLength(100).IsRequired();
         builder.Property(user => user.LastName).HasMaxLength(100).IsRequired();
+        builder.Property(user => user.Gender).HasColumnName("gender").HasMaxLength(30);
+        builder.Property(user => user.IsEmailVerified).HasColumnName("is_email_verified").HasDefaultValue(false);
+        builder.Property(user => user.IsPhoneVerified).HasColumnName("is_phone_verified").HasDefaultValue(false);
         builder.Property(user => user.Roles).HasColumnName("roles").HasColumnType("integer[]").HasConversion(
             roles => roles.Select(role => (int)role).ToArray(),
             values => values.Select(value => (UserRole)value).ToHashSet());

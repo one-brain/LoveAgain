@@ -13,52 +13,39 @@ import {
   useDeleteMyAccountMutation,
   useGetMyKycQuery,
   useSubmitMyKycMutation,
+  useSendEmailOtpMutation,
+  useVerifyEmailOtpMutation,
+  useSendPhoneOtpMutation,
+  useVerifyPhoneOtpMutation,
 } from '../store/api';
 import { CompanionLocationCard } from '../components/profile/CompanionLocationCard';
 import { DiscoveryVisibilityCard } from '../components/profile/DiscoveryVisibilityCard';
 import { SpecialtySearchPicker } from '../components/profile/SpecialtySearchPicker';
+import { CameraSelfieCapture } from '../components/profile/CameraSelfieCapture';
+import { OtpVerificationDrawer } from '../components/profile/OtpVerificationDrawer';
 import {
   BriefcaseIcon,
   CheckBadgeIcon,
   CalendarDaysIcon,
   CheckCircleIcon,
-  UserCircleIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   BanknotesIcon,
-  PhotoIcon,
   ArrowUpTrayIcon,
   ArrowRightIcon,
   TrashIcon,
   ExclamationCircleIcon,
   ClockIcon,
   ArrowPathIcon,
+  EnvelopeIcon,
+  IdentificationIcon,
 } from '@heroicons/react/24/outline';
 
-const PRESET_SPECIALTIES = [
-  'Regional Homestyle Cook',
-  'Festival & Pooja Decor',
-  'Senior Companion & Temple Escort',
-  'Sabzi Mandi & Bazaar Guide',
-  'Ethnic Styling & Saree Draping',
-  'Balcony Tulsi & Gardening',
-  'Carrom & Society Sports',
-  'Evening Chai & Gupshup',
-  'Pantry & Dabba Organization',
-  'Photography & Video',
-  'Fitness & Sports Coaching',
-  'Yoga & Mindfulness',
-  'Language Tutoring',
-  'Coding & Tech Mentorship',
-  'DJ & Music Performance',
-  'City Guide & Tours',
-  'Dinner Date & Foodie',
-  'Concert & Festival Buddy',
-  'Workout & Tennis Partner',
-  'Business Gala & Plus-One',
-  'Hiking & Outdoor Walks',
-  'Seeking Matrimony Match',
-  'Live-In Compatibility',
+const GENDER_OPTIONS = [
+  { value: '', label: 'Select Gender (Optional)' },
+  { value: 'Female', label: 'Female' },
+  { value: 'Male', label: 'Male' },
+  { value: 'Non-Binary', label: 'Non-Binary' },
+  { value: 'Prefer not to say', label: 'Prefer not to say' },
 ];
 
 const SLOT_LABELS = [
@@ -68,8 +55,7 @@ const SLOT_LABELS = [
 ];
 
 /**
- * Compresses and resizes an uploaded image file via HTML5 Canvas so uploads are fast
- * and Base64 fallbacks remain lightweight (<120KB).
+ * Compresses an uploaded image via Canvas to keep payloads small and snappy.
  */
 async function compressImageFile(file: File, maxDim = 800, quality = 0.82): Promise<{ file: File; dataUrl: string }> {
   return new Promise((resolve, reject) => {
@@ -163,31 +149,24 @@ const Profile: React.FC = () => {
   const [uploadCompanionPhoto] = useUploadCompanionPhotoMutation();
   const [deleteMyAccount, { isLoading: isDeletingAccount }] = useDeleteMyAccountMutation();
   const [submitMyKyc, { isLoading: isSubmittingKyc }] = useSubmitMyKycMutation();
+  const [sendEmailOtp] = useSendEmailOtpMutation();
+  const [verifyEmailOtp] = useVerifyEmailOtpMutation();
+  const [sendPhoneOtp] = useSendPhoneOtpMutation();
+  const [verifyPhoneOtp] = useVerifyPhoneOtpMutation();
+
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-  const handleDeleteAccount = async () => {
-    try {
-      await deleteMyAccount().unwrap();
-      dispatch(logout());
-      navigate('/login');
-    } catch (err: any) {
-      setPersonalError(
-        err?.data?.error || 'Unable to delete account. Ensure you have no active upcoming bookings.'
-      );
-      setConfirmDeleteOpen(false);
-    }
-  };
-
-  // Personal Form State
+  // 1. Personal Form State
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
+  const [gender, setGender] = useState('');
   const [phone, setPhone] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [personalSuccess, setPersonalSuccess] = useState(false);
   const [personalError, setPersonalError] = useState<string | null>(null);
 
-  // Provider Form State (Display Name + 3 Profile Images)
+  // 2. Companion Settings State
   const [displayName, setDisplayName] = useState('');
   const [profileImages, setProfileImages] = useState<string[]>(['', '', '']);
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
@@ -198,7 +177,7 @@ const Profile: React.FC = () => {
   const [providerSuccess, setProviderSuccess] = useState(false);
   const [providerError, setProviderError] = useState<string | null>(null);
 
-  // KYC Form State
+  // 3. KYC Form State
   const [kycDocType, setKycDocType] = useState('Aadhaar Card');
   const [kycDocNumber, setKycDocNumber] = useState('');
   const [frontFile, setFrontFile] = useState<File | null>(null);
@@ -212,13 +191,54 @@ const Profile: React.FC = () => {
 
   const frontInputRef = useRef<HTMLInputElement>(null);
   const backInputRef = useRef<HTMLInputElement>(null);
-  const selfieInputRef = useRef<HTMLInputElement>(null);
-
-  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
   const avatarInputRef = useRef<HTMLInputElement | null>(null);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([null, null, null]);
 
   const providerProfile = providerData?.profile;
   const companionStatus = providerProfile?.status || 'Draft';
+
+  // Populate Personal Details
+  useEffect(() => {
+    if (seekerData?.profile) {
+      const p = seekerData.profile;
+      setFirstName(p.firstName || user?.firstName || '');
+      setLastName(p.lastName || user?.lastName || '');
+      setPhone(p.phone || '');
+      setGender(p.gender || '');
+      setDateOfBirth(p.dateOfBirth ? p.dateOfBirth.split('T')[0] : '');
+      if (p.photoUrl) setAvatarUrl(p.photoUrl);
+    } else if (user) {
+      setFirstName(user.firstName || '');
+      setLastName(user.lastName || '');
+    }
+  }, [seekerData, user]);
+
+  // Populate Companion Settings
+  useEffect(() => {
+    if (providerProfile) {
+      const defaultDisplay =
+        providerProfile.displayName ||
+        `${seekerData?.profile?.firstName || user?.firstName || ''} ${seekerData?.profile?.lastName || user?.lastName || ''}`.trim();
+      setDisplayName(defaultDisplay);
+      setHourlyRate(providerProfile.hourlyRate ? String(providerProfile.hourlyRate) : '1500');
+      setBio(providerProfile.bio || '');
+      setMaxRadiusKm(providerProfile.maxRadiusKm ? String(providerProfile.maxRadiusKm) : '25');
+
+      if (providerProfile.profileImages && providerProfile.profileImages.length > 0) {
+        const slots = ['', '', ''];
+        providerProfile.profileImages.slice(0, 3).forEach((url, idx) => {
+          slots[idx] = url || '';
+        });
+        setProfileImages(slots);
+      }
+
+      if (providerProfile.specialties && providerProfile.specialties.length > 0) {
+        setSpecialties(providerProfile.specialties);
+      }
+    } else if (user && !displayName) {
+      setDisplayName(`${user.firstName || ''} ${user.lastName || ''}`.trim());
+    }
+  }, [providerProfile, seekerData, user]);
 
   const handleKycFileSelect = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -261,7 +281,7 @@ const Profile: React.FC = () => {
       return;
     }
     if (!selfieFile) {
-      setKycError('Please upload your live selfie verification.');
+      setKycError('Please take a live selfie or upload your selfie verification photo.');
       return;
     }
 
@@ -281,48 +301,6 @@ const Profile: React.FC = () => {
       setKycError(err?.data?.error || 'Failed to submit identity verification. Please verify your files and try again.');
     }
   };
-
-  // Populate Personal Details
-  useEffect(() => {
-    if (seekerData?.profile) {
-      const p = seekerData.profile;
-      setFirstName(p.firstName || user?.firstName || '');
-      setLastName(p.lastName || user?.lastName || '');
-      setPhone(p.phone || '');
-      setDateOfBirth(p.dateOfBirth ? p.dateOfBirth.split('T')[0] : '');
-      if (p.photoUrl) setAvatarUrl(p.photoUrl);
-    } else if (user) {
-      setFirstName(user.firstName || '');
-      setLastName(user.lastName || '');
-    }
-  }, [seekerData, user]);
-
-  // Populate Provider Details (including DisplayName and 3 ProfileImages)
-  useEffect(() => {
-    if (providerProfile) {
-      const defaultDisplay =
-        providerProfile.displayName ||
-        `${seekerData?.profile?.firstName || user?.firstName || ''} ${seekerData?.profile?.lastName || user?.lastName || ''}`.trim();
-      setDisplayName(defaultDisplay);
-      setHourlyRate(providerProfile.hourlyRate ? String(providerProfile.hourlyRate) : '1500');
-      setBio(providerProfile.bio || '');
-      setMaxRadiusKm(providerProfile.maxRadiusKm ? String(providerProfile.maxRadiusKm) : '25');
-
-      if (providerProfile.profileImages && providerProfile.profileImages.length > 0) {
-        const slots = ['', '', ''];
-        providerProfile.profileImages.slice(0, 3).forEach((url, idx) => {
-          slots[idx] = url || '';
-        });
-        setProfileImages(slots);
-      }
-
-      if (providerProfile.specialties && providerProfile.specialties.length > 0) {
-        setSpecialties(providerProfile.specialties);
-      }
-    } else if (user && !displayName) {
-      setDisplayName(`${user.firstName || ''} ${user.lastName || ''}`.trim());
-    }
-  }, [providerProfile, seekerData, user]);
 
   const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -366,7 +344,6 @@ const Profile: React.FC = () => {
           finalUrl = res.photoUrl;
         }
       } catch {
-        // Use client-compressed dataUrl if multipart upload fails
         finalUrl = dataUrl;
       }
 
@@ -381,14 +358,6 @@ const Profile: React.FC = () => {
       setUploadingSlot(null);
       e.target.value = '';
     }
-  };
-
-  const handleSlotUrlChange = (slotIndex: number, value: string) => {
-    setProfileImages((prev) => {
-      const next = [...prev];
-      next[slotIndex] = value;
-      return next;
-    });
   };
 
   const handleRemoveSlotImage = (slotIndex: number) => {
@@ -408,12 +377,14 @@ const Profile: React.FC = () => {
       const cleanLast = lastName.trim();
       const cleanPhone = phone.trim() || null;
       const cleanDob = dateOfBirth.trim() || null;
+      const cleanGender = gender.trim() || null;
 
       await updateSeeker({
         firstName: cleanFirst,
         lastName: cleanLast,
         phone: cleanPhone,
         dateOfBirth: cleanDob,
+        gender: cleanGender,
       }).unwrap();
 
       if (user) {
@@ -470,12 +441,25 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteMyAccount().unwrap();
+      dispatch(logout());
+      navigate('/login');
+    } catch (err: any) {
+      setPersonalError(
+        err?.data?.error || 'Unable to delete account. Ensure you have no active upcoming bookings.'
+      );
+      setConfirmDeleteOpen(false);
+    }
+  };
+
   if (seekerLoading || providerLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading unified profile...</p>
+          <p className="text-sm text-muted-foreground">Loading account details...</p>
         </div>
       </div>
     );
@@ -485,11 +469,15 @@ const Profile: React.FC = () => {
   const activeHeroAvatar =
     profileImages.find((img) => img && img.trim().length > 0) || avatarUrl;
 
+  const isKycApproved = user?.isVerified || kycData?.status === 'Approved';
+  const isEmailVerified = seekerData?.profile?.isEmailVerified ?? true; // primary registration email verified by default
+  const isPhoneVerified = seekerData?.profile?.isPhoneVerified ?? false;
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Header Profile Summary Card */}
+      {/* 1. Header Profile Summary Card */}
       <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs flex flex-col sm:flex-row items-center sm:items-start gap-6">
-        <div className="relative group flex-shrink-0">
+        <div className="relative group shrink-0">
           {activeHeroAvatar ? (
             <img
               src={activeHeroAvatar}
@@ -506,7 +494,7 @@ const Profile: React.FC = () => {
             onClick={() => avatarInputRef.current?.click()}
             disabled={isUploadingAvatar}
             title="Upload Profile Photo"
-            className="absolute -bottom-2 -right-2 px-2.5 py-1 rounded-xl bg-accent text-accent-foreground text-[10px] font-bold shadow-md hover:bg-accent-hover transition-colors flex items-center gap-1"
+            className="absolute -bottom-2 -right-2 px-2.5 py-1 rounded-xl bg-accent text-accent-foreground text-[10px] font-bold shadow-md hover:bg-accent-hover transition-colors flex items-center gap-1 cursor-pointer"
           >
             <ArrowUpTrayIcon className="w-3 h-3" />
             <span>{isUploadingAvatar ? '...' : 'Photo'}</span>
@@ -525,7 +513,7 @@ const Profile: React.FC = () => {
             <h1 className="text-2xl sm:text-3xl font-bold font-serif text-foreground">
               {displayName || `${firstName} ${lastName}`.trim() || 'Member'}
             </h1>
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-success/15 text-success w-fit mx-auto sm:mx-0">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 w-fit mx-auto sm:mx-0">
               <CheckBadgeIcon className="w-3.5 h-3.5" />
               <span>Unified Account</span>
             </span>
@@ -536,7 +524,14 @@ const Profile: React.FC = () => {
           <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-muted text-xs font-medium text-foreground">
               <ShieldCheckIcon className="w-4 h-4 text-emerald-500" />
-              <span>Trust Score: {user?.trustScore ?? 50}%</span>
+              <span>Trust Score: {seekerData?.profile?.trustScore ?? user?.trustScore ?? 50}%</span>
+            </span>
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-semibold ${
+              isKycApproved
+                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/30'
+                : 'bg-amber-500/10 text-amber-600 border border-amber-500/30'
+            }`}>
+              <span>{isKycApproved ? '✓ Identity Verified' : '⚠️ KYC Verification Required'}</span>
             </span>
             <Link
               to="/bookings"
@@ -549,38 +544,38 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
-      {/* 3-Tab Segmented Switcher */}
+      {/* 2. Simplified 3-Tab Segmented Switcher */}
       <div className="flex border-b border-border/80 gap-2 sm:gap-4 overflow-x-auto scrollbar-none">
         <button
           type="button"
           onClick={() => handleTabChange('personal')}
-          className={`py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+          className={`py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${
             activeTab === 'personal'
               ? 'border-accent text-accent font-bold'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
-          <UserCircleIcon className="w-4 h-4" />
+          <IdentificationIcon className="w-4 h-4" />
           <span>1. Personal Details</span>
         </button>
 
         <button
           type="button"
           onClick={() => handleTabChange('provider')}
-          className={`py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+          className={`py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${
             activeTab === 'provider'
               ? 'border-accent text-accent font-bold'
               : 'border-transparent text-muted-foreground hover:text-foreground'
           }`}
         >
           <BriefcaseIcon className="w-4 h-4" />
-          <span>2. Companion Profile & Settings</span>
+          <span>2. Companion Settings</span>
         </button>
 
         <button
           type="button"
           onClick={() => handleTabChange('kyc')}
-          className={`py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap ${
+          className={`py-3 px-4 font-semibold text-xs sm:text-sm border-b-2 transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer ${
             activeTab === 'kyc'
               ? 'border-accent text-accent font-bold'
               : 'border-transparent text-muted-foreground hover:text-foreground'
@@ -588,22 +583,25 @@ const Profile: React.FC = () => {
         >
           <ShieldCheckIcon className="w-4 h-4" />
           <span>3. Identity Verification</span>
+          {isKycApproved && <span className="text-[10px] text-emerald-500 font-bold">✓</span>}
         </button>
       </div>
 
-      {/* Tab 1: Personal Information */}
+      {/* ============================================================== */}
+      {/* TAB 1: PERSONAL DETAILS SECTION                                */}
+      {/* ============================================================== */}
       {activeTab === 'personal' && (
         <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
           <div>
-            <h2 className="text-xl font-bold font-serif text-foreground">Personal Information</h2>
+            <h2 className="text-xl font-bold font-serif text-foreground">Personal Details</h2>
             <p className="text-xs text-muted-foreground mt-1">
-              Your contact details used for notifications and booking confirmations.
+              Manage your legal name, gender, date of birth, and safety contact details.
             </p>
           </div>
 
           {personalSuccess && (
             <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-semibold flex items-center gap-2">
-              <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
+              <CheckCircleIcon className="w-5 h-5 shrink-0" />
               <span>Personal details updated successfully!</span>
             </div>
           )}
@@ -615,9 +613,10 @@ const Profile: React.FC = () => {
           )}
 
           <form onSubmit={handleUpdateSeeker} className="space-y-5">
+            {/* 1. First & Last Name */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">First Name</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">First Name *</label>
                 <input
                   type="text"
                   value={firstName}
@@ -638,32 +637,27 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Account Email</label>
-              <input
-                type="email"
-                value={user?.email || ''}
-                disabled
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted/50 text-muted-foreground text-sm cursor-not-allowed"
-              />
-            </div>
-
+            {/* 2. Gender & Date of Birth */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Phone Number (For Safety Alerts)
-                </label>
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                />
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Gender</label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value)}
+                  className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
+                >
+                  {GENDER_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Date of Birth</label>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                  Date of Birth (Must be 18+ to book)
+                </label>
                 <input
                   type="date"
                   value={dateOfBirth}
@@ -673,25 +667,59 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
+            {/* 3. Account Email */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-muted-foreground">Account Email</label>
+                <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                  <CheckBadgeIcon className="w-3.5 h-3.5" />
+                  <span>Primary Login</span>
+                </span>
+              </div>
+              <input
+                type="email"
+                value={user?.email || ''}
+                disabled
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-muted/40 text-muted-foreground text-sm cursor-not-allowed"
+              />
+            </div>
+
+            {/* 4. Phone Number */}
+            <div>
+              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
+                Phone Number (For Safety Alerts & Meetup SMS)
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+91 98765 43210"
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+              <span className="text-[11px] text-muted-foreground mt-1 block">
+                You can verify this mobile number in the Identity Verification tab via SMS OTP.
+              </span>
+            </div>
+
             <div className="pt-4 border-t border-border flex justify-end">
               <button
                 type="submit"
                 disabled={isUpdatingSeeker}
-                className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40"
+                className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 cursor-pointer"
               >
                 {isUpdatingSeeker ? 'Saving Changes...' : 'Save Personal Details'}
               </button>
             </div>
           </form>
 
-          {/* Account Deactivation / Deletion (DELETE /api/v1/profiles/me) */}
+          {/* Account Privacy & Deactivation */}
           <div className="pt-6 border-t border-border/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 Account Privacy & Deactivation
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Permanently deactivate your account and revoke all active sessions (requires no active upcoming bookings).
+                Permanently deactivate your account and revoke active sessions (requires zero upcoming active bookings).
               </p>
             </div>
             {!confirmDeleteOpen ? (
@@ -726,14 +754,16 @@ const Profile: React.FC = () => {
         </div>
       )}
 
-      {/* Tab 2: Companion & Provider Settings */}
+      {/* ============================================================== */}
+      {/* TAB 2: COMPANION SETTINGS                                      */}
+      {/* ============================================================== */}
       {activeTab === 'provider' && (
         <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold font-serif text-foreground">Companion Profile & Settings</h2>
+              <h2 className="text-xl font-bold font-serif text-foreground">Companion Settings</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Configure your public Display Name, 3 Browse Profile photos, hourly rate, offered activities, and discovery visibility.
+                Configure your public Display Name, 3 Browse Profile photos, hourly rate, GPS service area, public bio, and offered specialties.
               </p>
             </div>
 
@@ -765,20 +795,9 @@ const Profile: React.FC = () => {
           </div>
 
           {providerSuccess && (
-            <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-semibold flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <CheckCircleIcon className="w-5 h-5 flex-shrink-0" />
-                <span>Companion Display Name, 3 profile images, and settings saved!</span>
-              </div>
-              {companionStatus === 'Draft' && (
-                <Link
-                  to="/apply-companion"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-accent text-accent-foreground text-[11px] font-bold hover:opacity-90 transition-opacity whitespace-nowrap shrink-0 w-fit"
-                >
-                  <span>Complete Verification (ID & Payout)</span>
-                  <ArrowRightIcon className="w-3 h-3 shrink-0" />
-                </Link>
-              )}
+            <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-semibold flex items-center gap-2">
+              <CheckCircleIcon className="w-5 h-5 shrink-0" />
+              <span>Companion settings saved successfully!</span>
             </div>
           )}
 
@@ -788,11 +807,33 @@ const Profile: React.FC = () => {
             </div>
           )}
 
+          {/* Wallet Settings Relocation Notice */}
+          <div className="p-4 rounded-2xl bg-muted/40 border border-border flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-xl bg-accent/10 text-accent shrink-0">
+                <BanknotesIcon className="w-5 h-5" />
+              </div>
+              <div>
+                <p className="text-xs font-bold text-foreground">Earnings & Withdrawal Destination (UPI)</p>
+                <p className="text-[11px] text-muted-foreground">
+                  Your UPI ID and direct bank transfer settings are now managed in Wallet Settings.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/wallet"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-border bg-card hover:bg-muted text-foreground text-xs font-semibold whitespace-nowrap self-start sm:self-auto transition-colors"
+            >
+              <span>Manage in Wallet</span>
+              <ArrowRightIcon className="w-3.5 h-3.5 text-accent" />
+            </Link>
+          </div>
+
           <form onSubmit={handleUpdateProvider} className="space-y-6">
-            {/* Public Companion Display Name */}
+            {/* 1. Public Display Name */}
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Companion Display Name (Shown on Browse Profiles)
+                Companion Display Name (Shown on Browse Profiles) *
               </label>
               <input
                 type="text"
@@ -803,19 +844,19 @@ const Profile: React.FC = () => {
                 required
               />
               <span className="text-[11px] text-muted-foreground mt-1 block">
-                This name is displayed publicly on your Discovery card and Companion profile page.
+                This name is displayed publicly on your Discovery card and companion profile page.
               </span>
             </div>
 
-            {/* 3 Profile Images Uploader */}
+            {/* 2. 3 Profile Images */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <div>
                   <label className="block text-xs font-semibold text-foreground">
-                    Companion Profile Images (Upload up to 3 Photos for Browse Profiles)
+                    Profile Images (Upload up to 3 Photos) *
                   </label>
                   <p className="text-[11px] text-muted-foreground">
-                    Upload directly from your device or paste an image URL. All 3 photos appear in an interactive carousel during Browse Profiles.
+                    All 3 photos appear in an interactive carousel during Browse Profiles.
                   </p>
                 </div>
                 <span className="text-xs font-bold text-accent">
@@ -840,7 +881,7 @@ const Profile: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => handleRemoveSlotImage(slot.index)}
-                              className="text-destructive hover:opacity-80 p-1"
+                              className="text-destructive hover:opacity-80 p-1 cursor-pointer"
                               title="Remove photo"
                             >
                               <TrashIcon className="w-3.5 h-3.5" />
@@ -849,73 +890,47 @@ const Profile: React.FC = () => {
                         </div>
                         <p className="text-[10px] text-muted-foreground mb-2">{slot.subtitle}</p>
 
-                        {/* Image Preview Box */}
-                        <div
-                          onClick={() => fileInputRefs.current[slot.index]?.click()}
-                          className="relative h-44 w-full rounded-xl overflow-hidden border-2 border-dashed border-border hover:border-accent bg-background flex flex-col items-center justify-center cursor-pointer group transition-colors"
-                        >
+                        <div className="aspect-4/3 rounded-xl overflow-hidden border border-border bg-black/5 relative group">
                           {currentImg ? (
-                            <>
-                              <img
-                                src={currentImg}
-                                alt={slot.title}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                              />
-                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                <span className="px-3 py-1.5 rounded-lg bg-card/90 text-foreground text-xs font-semibold flex items-center gap-1.5 shadow-md">
-                                  <ArrowUpTrayIcon className="w-4 h-4 text-accent" />
-                                  Replace Photo
-                                </span>
-                              </div>
-                            </>
+                            <img
+                              src={currentImg}
+                              alt={slot.title}
+                              className="w-full h-full object-cover"
+                            />
                           ) : (
-                            <div className="text-center p-4 space-y-1.5">
-                              <PhotoIcon className="w-8 h-8 text-muted-foreground mx-auto group-hover:text-accent transition-colors" />
-                              <div className="text-xs font-semibold text-foreground">
-                                {isUploadingThisSlot ? 'Uploading...' : 'Click to Upload Photo'}
-                              </div>
-                              <div className="text-[10px] text-muted-foreground">
-                                JPG, PNG, WebP
-                              </div>
+                            <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground">
+                              <ArrowUpTrayIcon className="w-6 h-6 mb-1 opacity-50" />
+                              <span className="text-[11px]">Empty slot</span>
+                            </div>
+                          )}
+
+                          {isUploadingThisSlot && (
+                            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-xs font-semibold">
+                              <ArrowPathIcon className="w-5 h-5 animate-spin" />
                             </div>
                           )}
                         </div>
+                      </div>
 
+                      <div className="space-y-1.5 pt-1">
                         <input
                           ref={(el) => {
                             fileInputRefs.current[slot.index] = el;
                           }}
                           type="file"
                           accept="image/*"
-                          onChange={(e) => handleCompanionSlotFileUpload(slot.index, e)}
                           className="hidden"
+                          onChange={(e) => handleCompanionSlotFileUpload(slot.index, e)}
                         />
-                      </div>
-
-                      {/* Upload Button + Optional URL input */}
-                      <div className="space-y-1.5">
                         <button
                           type="button"
                           disabled={isUploadingThisSlot}
                           onClick={() => fileInputRefs.current[slot.index]?.click()}
-                          className="w-full py-1.5 px-3 rounded-xl bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent font-semibold text-xs transition-colors flex items-center justify-center gap-1.5"
+                          className="w-full py-2 px-3 rounded-xl bg-background border border-border hover:bg-muted text-foreground text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                         >
-                          <ArrowUpTrayIcon className="w-3.5 h-3.5" />
-                          <span>
-                            {isUploadingThisSlot
-                              ? 'Uploading...'
-                              : currentImg
-                              ? 'Upload Different File'
-                              : 'Upload from Device'}
-                          </span>
+                          <ArrowUpTrayIcon className="w-3.5 h-3.5 text-accent" />
+                          <span>{currentImg ? 'Change Photo' : 'Upload Photo'}</span>
                         </button>
-                        <input
-                          type="text"
-                          value={currentImg.startsWith('data:') ? '' : currentImg}
-                          onChange={(e) => handleSlotUrlChange(slot.index, e.target.value)}
-                          placeholder="Or paste image URL..."
-                          className="w-full px-2.5 py-1.5 rounded-lg border border-border bg-background text-foreground text-[11px] focus:outline-none focus:ring-1 focus:ring-accent"
-                        />
                       </div>
                     </div>
                   );
@@ -923,70 +938,76 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Hourly Rate (₹ INR)
+            {/* 3. Hourly Rate */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Hourly Experience Fee (₹ / hr) *
               </label>
-              <div className="relative max-w-sm">
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-foreground">₹</span>
-                <input
-                  type="number"
-                  min="500"
-                  max="50000"
-                  step="50"
-                  value={hourlyRate}
-                  onChange={(e) => setHourlyRate(e.target.value)}
-                  className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
-                  required
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-mono font-bold text-sm">
+                    ₹
+                  </span>
+                  <input
+                    type="number"
+                    min="500"
+                    max="10000"
+                    step="100"
+                    value={hourlyRate}
+                    onChange={(e) => setHourlyRate(e.target.value)}
+                    className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm font-mono font-bold focus:outline-none focus:ring-1 focus:ring-accent"
+                    required
+                  />
+                </div>
+                <div className="p-3 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">You receive (85% net):</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-sm">
+                    ₹{netRate} / hr
+                  </span>
+                </div>
               </div>
-              <span className="text-[11px] text-muted-foreground mt-1 block">
-                Recommended: ₹800 – ₹3,000/hr. You receive <strong>₹{netRate}/hr</strong> (85% take-home earnings with safe payment protection).
-              </span>
             </div>
 
-            {/* Dynamic Companion Location & Travel Radius Switcher */}
-            <CompanionLocationCard
-              currentLatitude={providerProfile?.latitude}
-              currentLongitude={providerProfile?.longitude}
-              currentMaxRadiusKm={Number(maxRadiusKm) || 25}
-              onLocationUpdated={(_newLat, _newLon, newRadius) => {
-                setMaxRadiusKm(String(newRadius));
-                refetchProvider();
-              }}
-            />
-
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Public Bio & Introduction
+            {/* 4. Base Location & Service Area */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Base Location & Service Area
               </label>
-              <textarea
-                rows={3}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Share your conversational style, hobbies, activities offered, and experience..."
-                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                required
+              <CompanionLocationCard
+                currentLatitude={providerProfile?.latitude ?? 12.9716}
+                currentLongitude={providerProfile?.longitude ?? 77.5946}
+                currentMaxRadiusKm={Number(maxRadiusKm)}
+                onLocationUpdated={(_lat, _lon, rad) => {
+                  setMaxRadiusKm(String(rad));
+                  refetchProvider();
+                }}
               />
             </div>
 
-            {/* Offered Specialties & Activities */}
-            <div id="offered-specialties" className="pt-2 border-t border-border/60">
+            {/* 5. Public Bio */}
+            <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-bold text-foreground">
-                  Offered Specialties & Activities
-                </label>
-                <span className="text-[11px] font-semibold text-accent">
-                  {specialties.length} selected
-                </span>
+                <label className="block text-xs font-semibold text-muted-foreground">Public Bio</label>
+                <span className="text-[11px] text-muted-foreground">{bio.length} / 500 characters</span>
               </div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Select from popular categories or search and create custom activities you are available to accompany clients for.
-              </p>
+              <textarea
+                rows={4}
+                maxLength={500}
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="Introduce yourself, your conversational passions, hobbies, and what kind of outing you enjoy..."
+                className="w-full px-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+              />
+            </div>
+
+            {/* 6. Offered Specialties */}
+            <div className="space-y-2">
+              <label className="block text-xs font-semibold text-muted-foreground">
+                Offered Specialties & Outing Activities *
+              </label>
               <SpecialtySearchPicker
                 selectedSpecialties={specialties}
-                onChange={setSpecialties}
-                availablePresets={PRESET_SPECIALTIES}
+                onChange={(newSpecialties) => setSpecialties(newSpecialties)}
               />
             </div>
 
@@ -994,345 +1015,377 @@ const Profile: React.FC = () => {
               <button
                 type="submit"
                 disabled={isUpdatingProvider}
-                className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40"
+                className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 cursor-pointer"
               >
-                {isUpdatingProvider ? 'Saving Changes...' : 'Save Companion Settings'}
+                {isUpdatingProvider ? 'Saving Settings...' : 'Save Companion Settings'}
               </button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Tab 3: Verification & KYC */}
+      {/* ============================================================== */}
+      {/* TAB 3: IDENTITY VERIFICATION                                   */}
+      {/* ============================================================== */}
       {activeTab === 'kyc' && (
-        <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-8">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold mb-2">
-              <ShieldCheckIcon className="w-4 h-4" />
-              <span>Identity Verification (KYC)</span>
-            </div>
-            <h2 className="text-xl font-bold font-serif text-foreground">User Identity Verification & Trust Status</h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              For community safety, all users must complete one-time government ID verification before booking companions. Your documents are stored securely with 256-bit encryption and only reviewed by authorized safety admins.
-            </p>
-          </div>
-
-          {/* Quick Metrics Strip */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="p-4 rounded-2xl bg-muted/40 border border-border text-center space-y-1">
-              <ShieldCheckIcon
-                className={`w-7 h-7 mx-auto ${
-                  user?.isVerified || kycData?.status === 'Approved'
-                    ? 'text-emerald-500'
-                    : kycData?.status === 'PendingReview'
-                      ? 'text-amber-500 animate-pulse'
-                      : 'text-muted-foreground'
-                }`}
-              />
-              <div className="text-xs font-bold text-foreground">Verification Status</div>
-              <div className="text-[11px] font-semibold text-muted-foreground">
-                {user?.isVerified || kycData?.status === 'Approved' ? (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold">Verified Member</span>
-                ) : kycData?.status === 'PendingReview' ? (
-                  <span className="text-amber-600 dark:text-amber-400 font-bold">In Review (Under 24h)</span>
-                ) : kycData?.status === 'Rejected' ? (
-                  <span className="text-rose-600 dark:text-rose-400 font-bold">Requires Resubmission</span>
-                ) : (
-                  <span>Unverified</span>
-                )}
-              </div>
+        <div className="space-y-6">
+          {/* Top Trust & Status Badges */}
+          <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h2 className="text-xl font-bold font-serif text-foreground">Identity & Security Verification</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Complete government KYC verification and contact verifications to unlock full booking privileges and boost your Trust Score.
+              </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-muted/40 border border-border text-center space-y-1">
-              <SparklesIcon className="w-7 h-7 text-accent mx-auto" />
-              <div className="text-xs font-bold text-foreground">Trust Score</div>
-              <div className="text-sm font-bold text-accent">{user?.trustScore ?? 50}%</div>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-muted/40 border border-border text-center space-y-1">
-              <BanknotesIcon className="w-7 h-7 text-emerald-500 mx-auto" />
-              <div className="text-xs font-bold text-foreground">Booking Privileges</div>
-              <div className="text-[11px] font-semibold text-muted-foreground">
-                {user?.isVerified || kycData?.status === 'Approved' ? (
-                  <span className="text-emerald-600 dark:text-emerald-400">Unlocked (Full Access)</span>
-                ) : (
-                  <span className="text-amber-600 dark:text-amber-400">Locked until KYC</span>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Conditional Status Cards */}
-          {(user?.isVerified || kycData?.status === 'Approved') && (
-            <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3">
-              <div className="flex items-center gap-3">
-                <CheckCircleIcon className="w-8 h-8 text-emerald-500 shrink-0" />
-                <div>
-                  <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
-                    Identity Verified Successfully
-                  </h3>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                    Your identity has been verified. You have full access to explore, message, and book experience companions. A +20 Trust Score boost has been applied to your profile.
-                  </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border text-center space-y-1">
+                <ShieldCheckIcon className="w-7 h-7 text-emerald-500 mx-auto" />
+                <div className="text-xs font-bold text-foreground">Platform Trust Score</div>
+                <div className="text-base font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                  {seekerData?.profile?.trustScore ?? user?.trustScore ?? 50}%
                 </div>
               </div>
 
-              {kycData?.documentType && (
-                <div className="mt-3 pt-3 border-t border-emerald-500/20 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-emerald-900 dark:text-emerald-200">
-                  <div>
-                    <span className="opacity-70">Document: </span>
-                    <span className="font-semibold">{kycData.documentType}</span>
-                  </div>
-                  <div>
-                    <span className="opacity-70">Document Number: </span>
-                    <span className="font-mono font-semibold">{kycData.documentNumberMasked}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {kycData?.status === 'PendingReview' && !user?.isVerified && (
-            <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-4">
-              <div className="flex items-center gap-3">
-                <ClockIcon className="w-8 h-8 text-amber-500 shrink-0 animate-pulse" />
-                <div>
-                  <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300">
-                    Verification Documents Under Review
-                  </h3>
-                  <p className="text-xs text-amber-700 dark:text-amber-400">
-                    Your {kycData.documentType} (ending in {kycData.documentNumberMasked}) and live selfie were submitted on {new Date(kycData.submittedAt || Date.now()).toLocaleDateString()}. Our safety team is reviewing your details (typically takes under 24 hours).
-                  </p>
-                </div>
-              </div>
-
-              {/* Thumbnails of what was submitted */}
-              <div className="grid grid-cols-3 gap-3 pt-2">
-                {kycData.frontImageUrl && (
-                  <div className="rounded-xl overflow-hidden border border-amber-500/30 aspect-4/3 bg-black/5 relative">
-                    <img src={kycData.frontImageUrl} alt="Front ID" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[10px] text-white text-center py-0.5">Front ID</span>
-                  </div>
-                )}
-                {kycData.backImageUrl && (
-                  <div className="rounded-xl overflow-hidden border border-amber-500/30 aspect-4/3 bg-black/5 relative">
-                    <img src={kycData.backImageUrl} alt="Back ID" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[10px] text-white text-center py-0.5">Back ID</span>
-                  </div>
-                )}
-                {kycData.selfieImageUrl && (
-                  <div className="rounded-xl overflow-hidden border border-amber-500/30 aspect-4/3 bg-black/5 relative">
-                    <img src={kycData.selfieImageUrl} alt="Live Selfie" className="w-full h-full object-cover" />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[10px] text-white text-center py-0.5">Live Selfie</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {kycData?.status === 'Rejected' && !user?.isVerified && (
-            <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-3">
-              <div className="flex items-center gap-3">
-                <ExclamationCircleIcon className="w-8 h-8 text-rose-500 shrink-0" />
-                <div>
-                  <h3 className="text-sm font-bold text-rose-800 dark:text-rose-300">
-                    Verification Needs Correction & Resubmission
-                  </h3>
-                  <p className="text-xs text-rose-700 dark:text-rose-400 mt-1">
-                    <span className="font-bold">Admin Feedback: </span>
-                    {kycData.rejectionReason || 'The submitted documents could not be verified. Please review the requirements and resubmit clear photographs.'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Submission Form (Shown when NotSubmitted or Rejected) */}
-          {(kycData?.status === 'NotSubmitted' || kycData?.status === 'Rejected' || !kycData?.status) && !user?.isVerified && (
-            <form onSubmit={handleKycSubmit} className="space-y-6 pt-2">
-              <div className="border-b border-border pb-3">
-                <h3 className="text-base font-bold text-foreground">Submit Your Identity Documents</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Accepted formats: JPEG, PNG, or WebP. Maximum size: 5MB per file.
-                </p>
-              </div>
-
-              {kycError && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-2">
-                  <ExclamationCircleIcon className="w-4 h-4 shrink-0" />
-                  <span>{kycError}</span>
-                </div>
-              )}
-
-              {kycSuccess && (
-                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-2">
-                  <CheckCircleIcon className="w-4 h-4 shrink-0" />
-                  <span>{kycSuccess}</span>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Document Type *</label>
-                  <select
-                    value={kycDocType}
-                    onChange={(e) => setKycDocType(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-accent cursor-pointer"
-                  >
-                    <option value="Aadhaar Card">Aadhaar Card (India)</option>
-                    <option value="Passport">Passport</option>
-                    <option value="Driving License">Driving License</option>
-                    <option value="Voter ID">Voter ID Card</option>
-                    <option value="National Identity Card">National Identity Card / Other Government ID</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-foreground">Document Number *</label>
-                  <input
-                    type="text"
-                    value={kycDocNumber}
-                    onChange={(e) => setKycDocNumber(e.target.value)}
-                    placeholder="e.g. 1234 5678 9012 or Z1234567"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* 3 Upload Dropzones */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {/* 1. Front of Document */}
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-foreground">1. Front of ID Card *</span>
-                  <input
-                    ref={frontInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={(e) => handleKycFileSelect(e, setFrontFile, setFrontPreview)}
-                  />
-                  <div
-                    onClick={() => frontInputRef.current?.click()}
-                    className={`aspect-4/3 rounded-2xl border-2 border-dashed p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all overflow-hidden relative group ${
-                      frontPreview
-                        ? 'border-accent bg-accent/5'
-                        : 'border-border hover:border-accent/60 bg-muted/20 hover:bg-muted/40'
-                    }`}
-                  >
-                    {frontPreview ? (
-                      <>
-                        <img src={frontPreview} alt="Front preview" className="w-full h-full object-cover rounded-xl" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
-                          Click to Change
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <ArrowUpTrayIcon className="w-7 h-7 text-muted-foreground group-hover:text-accent transition-colors mb-2" />
-                        <span className="text-xs font-bold text-foreground">Upload Front Side</span>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">JPEG, PNG, WebP up to 5MB</span>
-                      </>
-                    )}
-                  </div>
-                  {frontFile && <p className="text-[10px] text-muted-foreground truncate">{frontFile.name}</p>}
-                </div>
-
-                {/* 2. Back of Document */}
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-foreground">2. Back of ID Card *</span>
-                  <input
-                    ref={backInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={(e) => handleKycFileSelect(e, setBackFile, setBackPreview)}
-                  />
-                  <div
-                    onClick={() => backInputRef.current?.click()}
-                    className={`aspect-4/3 rounded-2xl border-2 border-dashed p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all overflow-hidden relative group ${
-                      backPreview
-                        ? 'border-accent bg-accent/5'
-                        : 'border-border hover:border-accent/60 bg-muted/20 hover:bg-muted/40'
-                    }`}
-                  >
-                    {backPreview ? (
-                      <>
-                        <img src={backPreview} alt="Back preview" className="w-full h-full object-cover rounded-xl" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
-                          Click to Change
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <ArrowUpTrayIcon className="w-7 h-7 text-muted-foreground group-hover:text-accent transition-colors mb-2" />
-                        <span className="text-xs font-bold text-foreground">Upload Back Side</span>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">JPEG, PNG, WebP up to 5MB</span>
-                      </>
-                    )}
-                  </div>
-                  {backFile && <p className="text-[10px] text-muted-foreground truncate">{backFile.name}</p>}
-                </div>
-
-                {/* 3. Live Selfie Verification */}
-                <div className="space-y-1.5">
-                  <span className="text-xs font-bold text-foreground">3. Live Selfie *</span>
-                  <input
-                    ref={selfieInputRef}
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp"
-                    className="hidden"
-                    onChange={(e) => handleKycFileSelect(e, setSelfieFile, setSelfiePreview)}
-                  />
-                  <div
-                    onClick={() => selfieInputRef.current?.click()}
-                    className={`aspect-4/3 rounded-2xl border-2 border-dashed p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all overflow-hidden relative group ${
-                      selfiePreview
-                        ? 'border-accent bg-accent/5'
-                        : 'border-border hover:border-accent/60 bg-muted/20 hover:bg-muted/40'
-                    }`}
-                  >
-                    {selfiePreview ? (
-                      <>
-                        <img src={selfiePreview} alt="Selfie preview" className="w-full h-full object-cover rounded-xl" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
-                          Click to Change
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <UserCircleIcon className="w-7 h-7 text-muted-foreground group-hover:text-accent transition-colors mb-2" />
-                        <span className="text-xs font-bold text-foreground">Upload Selfie Photo</span>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">Face must be clearly visible</span>
-                      </>
-                    )}
-                  </div>
-                  {selfieFile && <p className="text-[10px] text-muted-foreground truncate">{selfieFile.name}</p>}
-                </div>
-              </div>
-
-              {/* Submit CTA */}
-              <div className="pt-4 border-t border-border flex justify-end items-center gap-3">
-                <button
-                  type="submit"
-                  disabled={isSubmittingKyc}
-                  className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isSubmittingKyc ? (
-                    <>
-                      <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                      <span>Uploading & Submitting...</span>
-                    </>
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border text-center space-y-1">
+                <IdentificationIcon className="w-7 h-7 text-accent mx-auto" />
+                <div className="text-xs font-bold text-foreground">Government KYC</div>
+                <div className="text-xs font-semibold">
+                  {isKycApproved ? (
+                    <span className="text-emerald-600 dark:text-emerald-400">Approved (+20 Trust)</span>
+                  ) : kycData?.status === 'PendingReview' ? (
+                    <span className="text-amber-600 dark:text-amber-400">Under Review</span>
+                  ) : kycData?.status === 'Rejected' ? (
+                    <span className="text-rose-600 dark:text-rose-400">Needs Resubmission</span>
                   ) : (
-                    <>
-                      <ShieldCheckIcon className="w-4 h-4" />
-                      <span>Submit Documents for Verification</span>
-                    </>
+                    <span className="text-muted-foreground">Not Submitted</span>
                   )}
-                </button>
+                </div>
               </div>
-            </form>
-          )}
+
+              <div className="p-4 rounded-2xl bg-muted/30 border border-border text-center space-y-1">
+                <BanknotesIcon className="w-7 h-7 text-emerald-500 mx-auto" />
+                <div className="text-xs font-bold text-foreground">Booking Privileges</div>
+                <div className="text-xs font-semibold">
+                  {isKycApproved ? (
+                    <span className="text-emerald-600 dark:text-emerald-400">Unlocked (Full Access)</span>
+                  ) : (
+                    <span className="text-amber-600 dark:text-amber-400">Locked until KYC</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Approved KYC Banner */}
+            {isKycApproved && (
+              <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-3">
+                <div className="flex items-center gap-3">
+                  <CheckCircleIcon className="w-8 h-8 text-emerald-500 shrink-0" />
+                  <div>
+                    <h3 className="text-sm font-bold text-emerald-800 dark:text-emerald-300">
+                      Identity Verified Successfully
+                    </h3>
+                    <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                      Your identity has been verified. You have full access to explore, message, and book experience companions. A +20 Trust Score boost is active on your profile.
+                    </p>
+                  </div>
+                </div>
+
+                {kycData?.documentType && (
+                  <div className="mt-3 pt-3 border-t border-emerald-500/20 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-emerald-900 dark:text-emerald-200">
+                    <div>
+                      <span className="opacity-70">Document: </span>
+                      <span className="font-semibold">{kycData.documentType}</span>
+                    </div>
+                    <div>
+                      <span className="opacity-70">Document Number: </span>
+                      <span className="font-mono font-semibold">{kycData.documentNumberMasked}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Pending Review Banner */}
+            {kycData?.status === 'PendingReview' && !isKycApproved && (
+              <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-4">
+                <div className="flex items-center gap-3">
+                  <ClockIcon className="w-8 h-8 text-amber-500 shrink-0 animate-pulse" />
+                  <div>
+                    <h3 className="text-sm font-bold text-amber-800 dark:text-amber-300">
+                      Verification Documents Under Review
+                    </h3>
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      Your {kycData.documentType} (ending in {kycData.documentNumberMasked}) and live selfie were submitted on {new Date(kycData.submittedAt || Date.now()).toLocaleDateString()}. Our safety team is reviewing your details (typically takes under 24 hours).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3 pt-2">
+                  {kycData.frontImageUrl && (
+                    <div className="rounded-xl overflow-hidden border border-amber-500/30 aspect-4/3 bg-black/5 relative">
+                      <img src={kycData.frontImageUrl} alt="Front ID" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[10px] text-white text-center py-0.5">Front ID</span>
+                    </div>
+                  )}
+                  {kycData.backImageUrl && (
+                    <div className="rounded-xl overflow-hidden border border-amber-500/30 aspect-4/3 bg-black/5 relative">
+                      <img src={kycData.backImageUrl} alt="Back ID" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[10px] text-white text-center py-0.5">Back ID</span>
+                    </div>
+                  )}
+                  {kycData.selfieImageUrl && (
+                    <div className="rounded-xl overflow-hidden border border-amber-500/30 aspect-4/3 bg-black/5 relative">
+                      <img src={kycData.selfieImageUrl} alt="Live Selfie" className="w-full h-full object-cover" />
+                      <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[10px] text-white text-center py-0.5">Live Selfie</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Rejected Banner */}
+            {kycData?.status === 'Rejected' && !isKycApproved && (
+              <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-3">
+                <div className="flex items-center gap-3">
+                  <ExclamationCircleIcon className="w-8 h-8 text-rose-500 shrink-0" />
+                  <div>
+                    <h3 className="text-sm font-bold text-rose-800 dark:text-rose-300">
+                      Verification Needs Correction & Resubmission
+                    </h3>
+                    <p className="text-xs text-rose-700 dark:text-rose-400 mt-1">
+                      <span className="font-bold">Admin Feedback: </span>
+                      {kycData.rejectionReason || 'The submitted documents could not be verified. Please review the requirements and resubmit clear photographs.'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* KYC Submission Form (when NotSubmitted or Rejected) */}
+            {(kycData?.status === 'NotSubmitted' || kycData?.status === 'Rejected' || !kycData?.status) && !isKycApproved && (
+              <form onSubmit={handleKycSubmit} className="space-y-6 pt-2">
+                <div className="border-b border-border pb-3">
+                  <h3 className="text-base font-bold text-foreground">Submit Your Government ID & Live Selfie</h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Accepted formats: JPEG, PNG, or WebP. Maximum size: 5MB per file.
+                  </p>
+                </div>
+
+                {kycError && (
+                  <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-xs text-rose-600 dark:text-rose-400 font-semibold flex items-center gap-2">
+                    <ExclamationCircleIcon className="w-4 h-4 shrink-0" />
+                    <span>{kycError}</span>
+                  </div>
+                )}
+
+                {kycSuccess && (
+                  <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-2">
+                    <CheckCircleIcon className="w-4 h-4 shrink-0" />
+                    <span>{kycSuccess}</span>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">Document Type *</label>
+                    <select
+                      value={kycDocType}
+                      onChange={(e) => setKycDocType(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-accent cursor-pointer"
+                    >
+                      <option value="Aadhaar Card">Aadhaar Card (India)</option>
+                      <option value="Passport">Passport</option>
+                      <option value="Driving License">Driving License</option>
+                      <option value="Voter ID">Voter ID Card</option>
+                      <option value="National Identity Card">National Identity Card / Other Government ID</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-foreground">Document Number *</label>
+                    <input
+                      type="text"
+                      value={kycDocNumber}
+                      onChange={(e) => setKycDocNumber(e.target.value)}
+                      placeholder="e.g. 1234 5678 9012 or Z1234567"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-background border border-border text-xs text-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Document Images (Front & Back) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Front of Document */}
+                  <div className="space-y-1.5">
+                    <span className="text-xs font-bold text-foreground">1. Front Image of ID *</span>
+                    <input
+                      ref={frontInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => handleKycFileSelect(e, setFrontFile, setFrontPreview)}
+                    />
+                    <div
+                      onClick={() => frontInputRef.current?.click()}
+                      className={`aspect-4/3 rounded-2xl border-2 border-dashed p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all overflow-hidden relative group ${
+                        frontPreview
+                          ? 'border-accent bg-accent/5'
+                          : 'border-border hover:border-accent/60 bg-muted/20 hover:bg-muted/40'
+                      }`}
+                    >
+                      {frontPreview ? (
+                        <>
+                          <img src={frontPreview} alt="Front preview" className="w-full h-full object-cover rounded-xl" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
+                            Click to Change
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUpTrayIcon className="w-7 h-7 text-muted-foreground group-hover:text-accent transition-colors mb-2" />
+                          <span className="text-xs font-bold text-foreground">Upload Front Side</span>
+                          <span className="text-[10px] text-muted-foreground mt-0.5">JPEG, PNG, WebP up to 5MB</span>
+                        </>
+                      )}
+                    </div>
+                    {frontFile && <p className="text-[10px] text-muted-foreground truncate">{frontFile.name}</p>}
+                  </div>
+
+                  {/* Back of Document */}
+                  <div className="space-y-1.5">
+                    <span className="text-xs font-bold text-foreground">2. Back Image of ID *</span>
+                    <input
+                      ref={backInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      className="hidden"
+                      onChange={(e) => handleKycFileSelect(e, setBackFile, setBackPreview)}
+                    />
+                    <div
+                      onClick={() => backInputRef.current?.click()}
+                      className={`aspect-4/3 rounded-2xl border-2 border-dashed p-4 flex flex-col items-center justify-center text-center cursor-pointer transition-all overflow-hidden relative group ${
+                        backPreview
+                          ? 'border-accent bg-accent/5'
+                          : 'border-border hover:border-accent/60 bg-muted/20 hover:bg-muted/40'
+                      }`}
+                    >
+                      {backPreview ? (
+                        <>
+                          <img src={backPreview} alt="Back preview" className="w-full h-full object-cover rounded-xl" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold">
+                            Click to Change
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <ArrowUpTrayIcon className="w-7 h-7 text-muted-foreground group-hover:text-accent transition-colors mb-2" />
+                          <span className="text-xs font-bold text-foreground">Upload Back Side</span>
+                          <span className="text-[10px] text-muted-foreground mt-0.5">JPEG, PNG, WebP up to 5MB</span>
+                        </>
+                      )}
+                    </div>
+                    {backFile && <p className="text-[10px] text-muted-foreground truncate">{backFile.name}</p>}
+                  </div>
+                </div>
+
+                {/* Live Selfie Capture */}
+                <div className="space-y-2 pt-2">
+                  <span className="text-xs font-bold text-foreground">3. Live Selfie Verification *</span>
+                  <CameraSelfieCapture
+                    existingPreviewUrl={selfiePreview}
+                    onSelfieCaptured={(file, preview) => {
+                      setSelfieFile(file);
+                      setSelfiePreview(preview);
+                    }}
+                    onClear={() => {
+                      setSelfieFile(null);
+                      setSelfiePreview(null);
+                    }}
+                  />
+                </div>
+
+                {/* Submit CTA */}
+                <div className="pt-4 border-t border-border flex justify-end items-center gap-3">
+                  <button
+                    type="submit"
+                    disabled={isSubmittingKyc}
+                    className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {isSubmittingKyc ? (
+                      <>
+                        <ArrowPathIcon className="w-4 h-4 animate-spin" />
+                        <span>Uploading & Submitting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShieldCheckIcon className="w-4 h-4" />
+                        <span>Submit Documents for Verification</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+
+          {/* Email & Mobile OTP Verification Card */}
+          <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
+            <div>
+              <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                <EnvelopeIcon className="w-5 h-5 text-accent" />
+                <span>Email & Mobile Verification</span>
+              </h3>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Verify your contact credentials to receive real-time booking alerts, OTP logins, and secure escrow updates (+10 Trust Score each).
+              </p>
+            </div>
+
+            <div className="space-y-5 divide-y divide-border/60">
+              {/* Email Verification */}
+              <div className="pt-2">
+                <OtpVerificationDrawer
+                  type="email"
+                  label="Account Email Address"
+                  targetValue={user?.email || ''}
+                  isVerified={isEmailVerified}
+                  onSendOtp={async () => {
+                    const res = await sendEmailOtp().unwrap();
+                    return res;
+                  }}
+                  onVerifyOtp={async (code) => {
+                    await verifyEmailOtp({ otp: code }).unwrap();
+                    await refetchSeeker();
+                  }}
+                />
+              </div>
+
+              {/* Mobile Phone Verification */}
+              <div className="pt-5">
+                <OtpVerificationDrawer
+                  type="phone"
+                  label="Registered Mobile Number"
+                  targetValue={phone || seekerData?.profile?.phone || ''}
+                  isVerified={isPhoneVerified}
+                  disabled={!phone && !seekerData?.profile?.phone}
+                  onSendOtp={async () => {
+                    const res = await sendPhoneOtp().unwrap();
+                    return res;
+                  }}
+                  onVerifyOtp={async (code) => {
+                    await verifyPhoneOtp({ otp: code }).unwrap();
+                    await refetchSeeker();
+                  }}
+                />
+                {!phone && !seekerData?.profile?.phone && (
+                  <p className="text-[11px] text-amber-600 dark:text-amber-400 mt-1">
+                    * Please enter and save your phone number in the Personal Details tab to verify mobile SMS.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

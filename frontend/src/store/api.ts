@@ -45,6 +45,9 @@ export interface SeekerProfile {
   trustScore: number;
   createdAt: string;
   updatedAt: string;
+  gender?: string | null;
+  isEmailVerified?: boolean;
+  isPhoneVerified?: boolean;
 }
 
 export interface UpdateProviderProfileRequest {
@@ -81,6 +84,7 @@ export interface UpdateSeekerProfileRequest {
   lastName?: string;
   phone?: string | null;
   dateOfBirth?: string | null;
+  gender?: string | null;
 }
 
 export interface AvailabilitySlot {
@@ -293,6 +297,34 @@ export const profileApi = createApi({
       }),
       invalidatesTags: ['Profile'],
     }),
+    sendEmailOtp: builder.mutation<{ message: string; expiresInSeconds: number; devOtp?: string }, void>({
+      query: () => ({
+        url: `/profiles/me/email/send-otp`,
+        method: 'POST',
+      }),
+    }),
+    verifyEmailOtp: builder.mutation<SeekerProfileResponse, { otp: string }>({
+      query: (body) => ({
+        url: `/profiles/me/email/verify-otp`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
+    sendPhoneOtp: builder.mutation<{ message: string; expiresInSeconds: number; devOtp?: string }, void>({
+      query: () => ({
+        url: `/profiles/me/phone/send-otp`,
+        method: 'POST',
+      }),
+    }),
+    verifyPhoneOtp: builder.mutation<SeekerProfileResponse, { otp: string }>({
+      query: (body) => ({
+        url: `/profiles/me/phone/verify-otp`,
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Profile'],
+    }),
   }),
 });
 
@@ -315,4 +347,8 @@ export const {
   useDeleteProviderProfileMutation,
   useActivateProfileMutation,
   useUpdateProviderLocationMutation,
+  useSendEmailOtpMutation,
+  useVerifyEmailOtpMutation,
+  useSendPhoneOtpMutation,
+  useVerifyPhoneOtpMutation,
 } = profileApi;

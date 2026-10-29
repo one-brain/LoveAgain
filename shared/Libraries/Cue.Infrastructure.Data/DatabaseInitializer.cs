@@ -167,6 +167,9 @@ public static class DatabaseInitializer
             // User.Suspend() stores -1 as the suspended sentinel; widen the legacy 0..100 check to allow it.
             "ALTER TABLE auth.users DROP CONSTRAINT IF EXISTS users_trust_score_check;",
             "ALTER TABLE auth.users ADD CONSTRAINT users_trust_score_check CHECK (trust_score >= -1 AND trust_score <= 100);",
+            "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS gender character varying(30) NULL;",
+            "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS is_email_verified boolean NOT NULL DEFAULT FALSE;",
+            "ALTER TABLE auth.users ADD COLUMN IF NOT EXISTS is_phone_verified boolean NOT NULL DEFAULT FALSE;",
             "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);",
             """
             CREATE TABLE IF NOT EXISTS profiles.user_kyc_documents (

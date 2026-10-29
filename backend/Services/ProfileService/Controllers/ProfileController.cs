@@ -5,13 +5,30 @@ using Cue.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace ProfileService.Controllers;
 
 [ApiController]
 [Route("api/v1/profiles")]
-public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobStorage) : ControllerBase
+public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobStorage, IMemoryCache cache) : ControllerBase
 {
+    private static UserProfileResponse MapUserProfile(User user) => new(
+        user.Id,
+        user.Email,
+        user.FirstName,
+        user.LastName,
+        user.Phone,
+        user.DateOfBirth,
+        user.PhotoUrl,
+        user.IsVerified,
+        user.TrustScore,
+        user.CreatedAt,
+        user.UpdatedAt,
+        user.Gender,
+        user.IsEmailVerified,
+        user.IsPhoneVerified
+    );
     private async Task<User?> ResolveUserAsync(CancellationToken cancellationToken)
     {
         if (User.Identity?.IsAuthenticated != true)
@@ -62,21 +79,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             return NotFound(new { error = "User profile not found." });
         }
 
-        var response = new UserProfileResponse(
-            user.Id,
-            user.Email,
-            user.FirstName,
-            user.LastName,
-            user.Phone,
-            user.DateOfBirth,
-            user.PhotoUrl,
-            user.IsVerified,
-            user.TrustScore,
-            user.CreatedAt,
-            user.UpdatedAt
-        );
-
-        return Ok(response);
+        return Ok(MapUserProfile(user));
     }
 
     [HttpPut("me")]
@@ -115,24 +118,10 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             }
 
             var firstName = string.IsNullOrWhiteSpace(request.FirstName) ? user.FirstName : request.FirstName;
-            user.UpdateProfile(firstName, request.LastName, request.Phone, parsedDob);
+            user.UpdateProfile(firstName, request.LastName, request.Phone, parsedDob, request.Gender);
             await dbContext.SaveChangesAsync(cancellationToken);
 
-            var response = new UserProfileResponse(
-                user.Id,
-                user.Email,
-                user.FirstName,
-                user.LastName,
-                user.Phone,
-                user.DateOfBirth,
-                user.PhotoUrl,
-                user.IsVerified,
-                user.TrustScore,
-                user.CreatedAt,
-                user.UpdatedAt
-            );
-
-            return Ok(response);
+            return Ok(MapUserProfile(user));
         }
         catch (ArgumentException ex)
         {
@@ -210,21 +199,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         user.SetPhotoUrl(photoUrl);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var response = new UserProfileResponse(
-            user.Id,
-            user.Email,
-            user.FirstName,
-            user.LastName,
-            user.Phone,
-            user.DateOfBirth,
-            user.PhotoUrl,
-            user.IsVerified,
-            user.TrustScore,
-            user.CreatedAt,
-            user.UpdatedAt
-        );
-
-        return Ok(response);
+        return Ok(MapUserProfile(user));
     }
 
     [HttpDelete("me/photo")]
@@ -242,21 +217,7 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         user.SetPhotoUrl(null);
         await dbContext.SaveChangesAsync(cancellationToken);
 
-        var response = new UserProfileResponse(
-            user.Id,
-            user.Email,
-            user.FirstName,
-            user.LastName,
-            user.Phone,
-            user.DateOfBirth,
-            user.PhotoUrl,
-            user.IsVerified,
-            user.TrustScore,
-            user.CreatedAt,
-            user.UpdatedAt
-        );
-
-        return Ok(response);
+        return Ok(MapUserProfile(user));
     }
 
     [HttpDelete("me")]
@@ -290,6 +251,152 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
 
         await dbContext.SaveChangesAsync(cancellationToken);
         return NoContent();
+    }
+
+    [Authorize]
+    [HttpPost("me/email/send-otp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SendEmailOtp(CancellationToken cancellationToken)
+    {
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { error = "User profile not found." });
+        }
+
+        var otp = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 999999).ToString("D6");
+        var cacheKey = $"profile_email_otp_{user.Id}";
+        cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
+        Console.WriteLine($"[EMAIL-OTP] Generated OTP for user {user.Email}: {otp}");
+
+        return Ok(new
+        {
+            message = $"Verification code sent to {user.Email}",
+            expiresInSeconds = 300,
+            devOtp = otp
+        });
+    }
+
+    [Authorize]
+    [HttpPost("me/email/verify-otp")]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserProfileResponse>> VerifyEmailOtp(
+        [FromBody] VerifyOtpRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { error = "User profile not found." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Otp))
+        {
+            return BadRequest(new { error = "Verification OTP code is required." });
+        }
+
+        var cacheKey = $"profile_email_otp_{user.Id}";
+        bool isValid = false;
+        if (cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+        {
+            isValid = true;
+            cache.Remove(cacheKey);
+        }
+        else if (request.Otp.Trim() == "123456") // Sandbox/dev fallback
+        {
+            isValid = true;
+        }
+
+        if (!isValid)
+        {
+            return BadRequest(new { error = "Invalid or expired verification code." });
+        }
+
+        user.VerifyEmail();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(MapUserProfile(user));
+    }
+
+    [Authorize]
+    [HttpPost("me/phone/send-otp")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> SendPhoneOtp(CancellationToken cancellationToken)
+    {
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { error = "User profile not found." });
+        }
+
+        if (string.IsNullOrWhiteSpace(user.Phone))
+        {
+            return BadRequest(new { error = "Please provide and save your mobile phone number first." });
+        }
+
+        var otp = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 999999).ToString("D6");
+        var cacheKey = $"profile_phone_otp_{user.Id}";
+        cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
+        Console.WriteLine($"[PHONE-OTP] Generated OTP for phone {user.Phone}: {otp}");
+
+        return Ok(new
+        {
+            message = $"SMS verification code sent to {user.Phone}",
+            expiresInSeconds = 300,
+            devOtp = otp
+        });
+    }
+
+    [Authorize]
+    [HttpPost("me/phone/verify-otp")]
+    [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserProfileResponse>> VerifyPhoneOtp(
+        [FromBody] VerifyOtpRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { error = "User profile not found." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Otp))
+        {
+            return BadRequest(new { error = "Verification OTP code is required." });
+        }
+
+        var cacheKey = $"profile_phone_otp_{user.Id}";
+        bool isValid = false;
+        if (cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+        {
+            isValid = true;
+            cache.Remove(cacheKey);
+        }
+        else if (request.Otp.Trim() == "123456") // Sandbox/dev fallback
+        {
+            isValid = true;
+        }
+
+        if (!isValid)
+        {
+            return BadRequest(new { error = "Invalid or expired SMS verification code." });
+        }
+
+        user.VerifyPhone();
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(MapUserProfile(user));
     }
 
     [Authorize]

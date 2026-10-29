@@ -13,15 +13,21 @@ public sealed record UserProfileResponse(
     bool IsVerified,
     int TrustScore,
     DateTime CreatedAt,
-    DateTime UpdatedAt
+    DateTime UpdatedAt,
+    string? Gender = null,
+    bool IsEmailVerified = false,
+    bool IsPhoneVerified = false
 );
 
 public sealed record UpdateProfileRequest(
     string? FirstName,
     string? LastName,
     string? Phone,
-    string? DateOfBirth
+    string? DateOfBirth,
+    string? Gender = null
 );
+
+public sealed record VerifyOtpRequest(string Otp);
 
 public sealed record SaveProviderProfileRequest(
     decimal HourlyRate,
