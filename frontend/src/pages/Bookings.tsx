@@ -456,11 +456,11 @@ const Bookings: React.FC = () => {
                 <div className="w-24 h-4 bg-muted rounded-md" />
                 <div className="w-20 h-5 bg-muted rounded-full" />
               </div>
-              <div className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40">
-                <div className="w-13 h-13 rounded-xl bg-muted shrink-0" />
-                <div className="space-y-2 flex-1">
-                  <div className="w-28 h-4 bg-muted rounded" />
-                  <div className="w-20 h-3 bg-muted rounded" />
+              <div className="flex items-start gap-3.5">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-muted shrink-0" />
+                <div className="space-y-2 flex-1 pt-1">
+                  <div className="w-32 h-5 bg-muted rounded" />
+                  <div className="w-24 h-3.5 bg-muted rounded" />
                 </div>
               </div>
               <div className="space-y-2 py-3 border-y border-border/60">

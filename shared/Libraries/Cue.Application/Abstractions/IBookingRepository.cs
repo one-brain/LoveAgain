@@ -10,6 +10,7 @@ public interface IBookingRepository
     Task<AvailabilitySlot?> GetSlotByBookingAsync(Guid orderId, CancellationToken cancellationToken);
     Task<ServiceOrder?> GetByIdAsync(Guid orderId, CancellationToken cancellationToken);
     Task<IReadOnlyList<ServiceOrder>> GetForUserAsync(Guid userId, CancellationToken cancellationToken);
+    Task<decimal?> GetProviderHourlyRateAsync(Guid providerId, CancellationToken cancellationToken);
     Task<ServiceOrder?> GetPendingOrderForSeekerAsync(Guid seekerId, Guid providerId, DateTime startTime, CancellationToken cancellationToken);
     Task<IReadOnlyList<ProviderProfile>> GetAvailableProvidersAsync(string? specialty, decimal? maxHourlyRate, CancellationToken cancellationToken);
     Task AddAsync(ServiceOrder order, CancellationToken cancellationToken);

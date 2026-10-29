@@ -123,3 +123,7 @@
 **/.dart_tool/
 **/dist/
 **/dist-ssr/
+
+# Database backups
+backups/
+*.sql.gz
