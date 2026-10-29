@@ -95,6 +95,14 @@ components:
   - Warning / Escrow Hold: Champagne Amber (`#C5A059`)
   - Destructive / Cancellation: Muted Crimson (`#DC2626`)
 
+### Curated Theme Palettes
+1. **Warm Daylight (`light`)**: Vanilla Ivory (`#FAF8F5`), Deep Charcoal (`#1A1615`), Bordeaux Velvet accent (`#881337`).
+2. **Midnight Luxe (`dark`)**: Obsidian Noir (`#0B0F17`), Slate card (`#151D2A`), Cool Indigo & Sky (`#94A3B8`).
+3. **Velvet Night (`romantic`)**: Rose-Noir (`#140810`), Plum card (`#22101C`), Velvet Champagne & Bordeaux (`#9F1239`).
+4. **Emerald Estate (`emerald`)**: Heritage Racing Green (`#071510`), Deep Forest card (`#0E231B`), Burnished Champagne Gold (`#C5A059`).
+5. **Champagne Sand (`champagne`)**: Sun-Bleached Linen (`#F7F2EB`), Crisp White card (`#FFFFFF`), Terracotta Bronze (`#A45A2A`).
+6. **Sapphire Royal (`sapphire`)**: Parisian Midnight (`#070C18`), Deep Cobalt card (`#0E172B`), Luminous Sky Platinum (`#38BDF8`).
+
 ## Typography
 
 - **Display Voice**: **Instrument Serif** (Google Fonts) — High-contrast, elegant editorial serif. Used for display titles, companion hero names, and modal headlines. It evokes curated hospitality journals and eliminates generic wedding-serif clichés.
