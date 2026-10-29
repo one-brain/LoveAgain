@@ -113,6 +113,72 @@ Users currently rely on:
 
 ---
 
+## Design Review (UI & Visual Specs)
+
+### 1. Verified Public Venue Badge
+- **Placement**: Rendered in `ProviderDetail.tsx` (slot cards), `BookingRequestModal.tsx` (Venue step), and `BookingCheckoutModal.tsx` (order summary).
+- **Design System Tokens (`DESIGN.md`)**:
+  - Border: `border-amber-500/30`
+  - Background: `bg-amber-500/10`
+  - Text: Burnished Champagne Gold (`text-[#C5A059]` / `text-amber-600 dark:text-amber-400`)
+  - Typography: `Plus Jakarta Sans`, 11px uppercase tracking-wider font-bold (`label` style).
+  - Icon: `BuildingLibraryIcon` or `ShieldCheckIcon` (14x14px).
+- **Mobile Touch Invariant**: All interactive slot selection cards must strictly maintain `min-h-[44px]` touch targets.
+
+### 2. Emergency Support & SOS Drawer (`Chat.tsx`)
+- **Placement**: Discrete safety shield icon button located in the top-right header of `Chat.tsx` (ensuring easy access without creating anxiety during casual conversation).
+- **Drawer Contents**:
+  - Clean bottom sheet overlay on mobile / right-side popout on desktop.
+  - Primary Action 1: **"Call Emergency Services (112)"** (`href="tel:112"`, high contrast button, red velvet `#991B1B`).
+  - Primary Action 2: **"Call Cue 24/7 Safety Desk"** (`href="tel:+918000000000"`, Bordeaux Velvet `#881337`).
+  - Secondary Action: **"Flag Platonic Boundary Violation"** (prompts quick feedback modal and notifies Trust & Safety).
+- **Touch Target**: Minimum 44x44px for the header trigger and full-width buttons inside the drawer.
+
+---
+
+## Engineering Review (Architecture, Failure Modes & Edge Cases)
+
+### 1. Zero Silent Failures
+- If slot availability changes between request creation and checkout, `BookingService` returns `HTTP 409 Conflict` with a human-readable error (`"This activity slot was just reserved by another member. Please choose another time window."`).
+- Frontend modal catches error, avoids crashing, and redirects user back to slot selection.
+
+### 2. Double-Click & Re-entrancy Protection
+- In `BookingRequestModal` and `BookingCheckoutModal`, enforce strict mutation state disables (`isSubmitting = true`) to prevent duplicate Razorpay order creation or double booking submissions.
+
+### 3. Escrow State Invariants
+- `PaymentStatus` strictly transitions: `Pending` -> `HeldInEscrow` -> `ReleasedToCompanion` (or `RefundedToUser`).
+- Payout to companion UPI is only released when either:
+  1. Both client and companion confirm meetup conclusion.
+  2. 24 hours elapse post-meetup with zero dispute or boundary reports filed.
+
+### 4. Database Schema Impact
+- **Zero Schema Migrations**: The Koramangala Activity Drops wedge stores verified venue names and activity categories in existing JSON requirements columns and companion specialty lists.
+
+---
+
+## Review Record (Autoplan Decisions)
+
+<!-- autoplan-accepted:ceo -->
+- Approved: Launch restricted to 5 km Koramangala/Indiranagar radius with 15 companions across 4 core activities.
+- Approved: Addition of Verified Public Venue Badge.
+- Approved: Addition of Emergency Support & SOS Drawer in active chat.
+- Deferred: Automated SMS / WhatsApp DLT arrival ping deferred to `TODOS.md`.
+<!-- /autoplan-accepted:ceo -->
+
+<!-- autoplan-accepted:design -->
+- Enforced: Burnished Champagne Gold `#C5A059` and Bordeaux Velvet `#881337` tokens for trust badges.
+- Enforced: 44x44px minimum touch targets across all mobile slot buttons and safety triggers.
+- Enforced: Discrete top header icon for safety drawer to avoid psychological alarmism.
+<!-- /autoplan-accepted:design -->
+
+<!-- autoplan-accepted:eng -->
+- Enforced: HTTP 409 conflict handling on slot race conditions.
+- Enforced: Double-click mutation debouncing in checkout modals.
+- Enforced: Zero-schema migration launch wedge utilizing existing JSON metadata columns.
+<!-- /autoplan-accepted:eng -->
+
+---
+
 ## The Assignment
 
 **Do not write more code this week.** Your infrastructure, microservices, and design system are completely production-ready.
