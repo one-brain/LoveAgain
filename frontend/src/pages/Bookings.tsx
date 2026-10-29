@@ -86,7 +86,8 @@ const Bookings: React.FC = () => {
   } = useGetSeekerOutgoingBookingsQuery(user?.id || '', { skip: !user?.id });
 
   // Query live backend providers to enrich candidate profiles
-  const { data: liveProviders } = useListProvidersQuery({ pageSize: 120 });
+  const { data: rawLiveProviders } = useListProvidersQuery({ pageSize: 120 });
+  const liveProviders = Array.isArray(rawLiveProviders) ? rawLiveProviders : rawLiveProviders?.items;
 
   const [cancelBooking] = useCancelBookingMutation();
 

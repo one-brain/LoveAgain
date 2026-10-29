@@ -52,6 +52,14 @@ public sealed record AvailabilitySlotResponse(
     DateTime EndTime,
     bool IsBooked);
 
+public sealed record DiscoveryPagedResponse(
+    IReadOnlyList<ProviderCardResponse> Items,
+    int TotalCount,
+    int Page,
+    int PageSize,
+    int TotalPages,
+    bool IsPublicLimited);
+
 [ApiController]
 [Route("api/v1/discovery")]
 public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
@@ -59,8 +67,8 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
     private const int MaxPageSize = 250;
 
     [HttpGet("providers")]
-    [ProducesResponseType(typeof(IReadOnlyList<ProviderCardResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<ProviderCardResponse>>> ListProviders(
+    [ProducesResponseType(typeof(DiscoveryPagedResponse), StatusCodes.Status200OK)]
+    public async Task<ActionResult<DiscoveryPagedResponse>> ListProviders(
         [FromQuery] string? q,
         [FromQuery] string? specialty,
         [FromQuery] string? skillTag,
@@ -71,7 +79,7 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
         [FromQuery] double? longitude,
         [FromQuery] double? radiusKm,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 120,
+        [FromQuery] int pageSize = 24,
         [FromQuery] string? gender = null,
         [FromQuery] string? city = null,
         CancellationToken cancellationToken = default)
@@ -197,18 +205,15 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
                 .ToList();
         }
 
-        var pagedItems = rawItems
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .ToList();
-
-        var cards = pagedItems
+        var allCards = rawItems
             .Select(p =>
             {
                 var displayName = !string.IsNullOrWhiteSpace(p.profile.DisplayName)
                     ? p.profile.DisplayName
                     : p.user.FirstName + " " + p.user.LastName;
-                var primaryPhoto = p.profile.ProfileImages.FirstOrDefault() ?? p.user.PhotoUrl;
+                var primaryPhoto = (p.profile.ProfileImages != null && p.profile.ProfileImages.Count > 0)
+                    ? p.profile.ProfileImages.First()
+                    : p.user.PhotoUrl;
                 return new ProviderCardResponse(
                     p.profile.UserId,
                     displayName,
@@ -229,7 +234,30 @@ public sealed class DiscoveryController(CueDbContext dbContext) : ControllerBase
             })
             .ToList();
 
-        return Ok(cards);
+        var isAuthenticated = TryGetUserId(out _);
+        int totalCount;
+        int totalPages;
+        bool isPublicLimited = false;
+        List<ProviderCardResponse> pagedCards;
+
+        if (!isAuthenticated)
+        {
+            isPublicLimited = true;
+            totalCount = Math.Min(allCards.Count, 24);
+            totalPages = 1;
+            pagedCards = page == 1 ? allCards.Take(24).ToList() : new List<ProviderCardResponse>();
+        }
+        else
+        {
+            totalCount = allCards.Count;
+            totalPages = totalCount == 0 ? 1 : (int)Math.Ceiling((double)totalCount / pageSize);
+            pagedCards = allCards
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+
+        return Ok(new DiscoveryPagedResponse(pagedCards, totalCount, page, pageSize, totalPages, isPublicLimited));
     }
 
     [HttpGet("providers/{userId:guid}")]

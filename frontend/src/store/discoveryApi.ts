@@ -1,30 +1,41 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { createBaseQueryWithReauth } from './baseQueryWithReauth';
 
+export interface ProviderCardItem {
+  providerId: string;
+  displayName: string;
+  photoUrl: string | null;
+  hourlyRate: number;
+  bio: string;
+  specialties: string[];
+  averageRating: number;
+  isVerified: boolean;
+  trustScore: number;
+  distanceKm: number | null;
+  profileImages?: string[];
+  latitude?: number | null;
+  longitude?: number | null;
+  gender?: string | null;
+  city?: string | null;
+  area?: string | null;
+}
+
+export interface DiscoveryPagedResponse {
+  items: ProviderCardItem[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+  isPublicLimited?: boolean;
+}
+
 export const discoveryApi = createApi({
   reducerPath: 'discoveryApi',
   baseQuery: createBaseQueryWithReauth('/api/v1'),
   tagTypes: ['DiscoveryProviders'],
   endpoints: (builder) => ({
     listProviders: builder.query<
-      Array<{
-        providerId: string;
-        displayName: string;
-        photoUrl: string | null;
-        hourlyRate: number;
-        bio: string;
-        specialties: string[];
-        averageRating: number;
-        isVerified: boolean;
-        trustScore: number;
-        distanceKm: number | null;
-        profileImages?: string[];
-        latitude?: number | null;
-        longitude?: number | null;
-        gender?: string | null;
-        city?: string | null;
-        area?: string | null;
-      }>,
+      DiscoveryPagedResponse,
       {
         q?: string;
         specialty?: string;
@@ -51,7 +62,7 @@ export const discoveryApi = createApi({
         if (params.longitude != null) searchParams.set('longitude', String(params.longitude));
         if (params.radiusKm != null) searchParams.set('radiusKm', String(params.radiusKm));
         if (params.page) searchParams.set('page', String(params.page));
-        searchParams.set('pageSize', String(params.pageSize || 120));
+        searchParams.set('pageSize', String(params.pageSize || 24));
         if (params.gender && params.gender !== 'all') searchParams.set('gender', params.gender);
         if (params.city && params.city !== 'all') searchParams.set('city', params.city);
         return { url: `/discovery/providers?${searchParams.toString()}` };

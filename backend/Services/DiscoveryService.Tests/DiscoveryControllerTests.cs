@@ -42,7 +42,9 @@ public class DiscoveryControllerTests
 
         // Assert
         var okResult = Assert.IsType<OkObjectResult>(result.Result);
-        var cards = Assert.IsAssignableFrom<IReadOnlyList<ProviderCardResponse>>(okResult.Value);
+        var response = Assert.IsType<DiscoveryPagedResponse>(okResult.Value);
+        Assert.NotNull(response.Items);
+        Assert.True(response.IsPublicLimited);
     }
 
     [Fact]

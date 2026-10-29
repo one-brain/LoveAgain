@@ -123,6 +123,8 @@ const Discovery: React.FC = () => {
     }
   }, [searchParams]);
 
+  const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+
   // Query live backend providers
   const { data: backendData, isLoading: isDiscoveryLoading } = useListProvidersQuery({
     q: q.trim() || undefined,
@@ -132,8 +134,47 @@ const Discovery: React.FC = () => {
     latitude: userLocation?.latitude,
     longitude: userLocation?.longitude,
     radiusKm: Number(radiusKm) || 50,
-    pageSize: 120,
+    page: currentPage,
+    pageSize: 24,
   });
+
+  const totalCount = (backendData as any)?.totalCount ?? (Array.isArray(backendData) ? backendData.length : 24);
+  const totalPages = (backendData as any)?.totalPages ?? Math.max(1, Math.ceil(totalCount / 24));
+  const isPublicLimited = Boolean((backendData as any)?.isPublicLimited);
+
+  const handlePageChange = (newPage: number) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      if (newPage > 1) {
+        next.set('page', String(newPage));
+      } else {
+        next.delete('page');
+      }
+      return next;
+    });
+    const gridEl = document.getElementById('discovery-grid');
+    if (gridEl) {
+      gridEl.scrollIntoView({ behavior: 'smooth' });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push('...');
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (currentPage < totalPages - 2) pages.push('...');
+      pages.push(totalPages);
+    }
+    return pages;
+  };
 
   const displayProviders = useMemo(() => {
     const rawItems = Array.isArray(backendData)
@@ -627,7 +668,13 @@ const Discovery: React.FC = () => {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-muted-foreground">
-            Showing <span className="font-semibold text-foreground">{displayProviders.length}</span> verified profiles
+            Showing <span className="font-semibold text-foreground">{displayProviders.length}</span>
+            {totalCount > displayProviders.length && (
+              <>
+                {' '}of <span className="font-semibold text-foreground">{totalCount}</span>
+              </>
+            )}{' '}
+            verified profiles
             {q && (
               <>
                 {' '}
@@ -640,11 +687,17 @@ const Discovery: React.FC = () => {
                 • <span className="font-medium text-foreground">{GENDER_OPTIONS.find((g) => g.value === genderFilter)?.label || genderFilter}</span>
               </>
             )}
+            {isAuthenticated && totalPages > 1 && (
+              <>
+                {' '}
+                • <span className="font-medium text-muted-foreground">Page {currentPage} of {totalPages}</span>
+              </>
+            )}
           </p>
         </div>
 
         {isDiscoveryLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div id="discovery-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <CompanionCardSkeleton key={i} />
             ))}
@@ -664,7 +717,7 @@ const Discovery: React.FC = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div id="discovery-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {displayProviders.map((provider) => {
               const images =
                 provider.profileImages && provider.profileImages.length > 0
@@ -885,6 +938,86 @@ const Discovery: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        )}
+
+        {/* Public Discovery 24-Profile Limit Banner (Unauthenticated) */}
+        {!isAuthenticated && (isPublicLimited || displayProviders.length > 0) && (
+          <div className="mt-12 p-8 rounded-3xl bg-gradient-to-br from-card via-card/90 to-accent/5 border border-border/80 shadow-xl text-center max-w-3xl mx-auto backdrop-blur-sm">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold uppercase tracking-wider mb-4 border border-accent/20">
+              <SparklesIcon className="w-4 h-4" />
+              Public Preview Limit (24 Profiles)
+            </div>
+            <h3 className="text-2xl font-bold font-serif text-foreground tracking-tight">
+              Looking for more verified companions?
+            </h3>
+            <p className="text-muted-foreground text-sm mt-2 max-w-xl mx-auto leading-relaxed">
+              You are currently viewing a curated preview of 24 companions. Sign in or create a free account to unlock our entire community of verified companions, full photo galleries, and instant booking with escrow protection.
+            </p>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
+              <Link
+                to="/register?redirect=/discovery"
+                className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-sm hover:opacity-90 transition-all shadow-md shadow-accent/20"
+              >
+                Create Free Account & Explore All
+              </Link>
+              <Link
+                to="/login?redirect=/discovery"
+                className="px-6 py-2.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground font-semibold text-sm border border-border transition-all"
+              >
+                Sign In
+              </Link>
+            </div>
+          </div>
+        )}
+
+        {/* Numbered Pagination Bar (Authenticated) */}
+        {isAuthenticated && totalPages > 1 && (
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/60">
+            <p className="text-xs text-muted-foreground order-2 sm:order-1">
+              Showing page <strong className="text-foreground">{currentPage}</strong> of{' '}
+              <strong className="text-foreground">{totalPages}</strong> ({totalCount} verified companions)
+            </p>
+            <div className="flex items-center gap-1.5 order-1 sm:order-2">
+              <button
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => handlePageChange(currentPage - 1)}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                &larr; Previous
+              </button>
+
+              {getPageNumbers().map((p, idx) =>
+                p === '...' ? (
+                  <span key={`ellipsis-${idx}`} className="px-2 py-1 text-xs text-muted-foreground">
+                    &hellip;
+                  </span>
+                ) : (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => handlePageChange(Number(p))}
+                    className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                      currentPage === p
+                        ? 'bg-accent text-accent-foreground shadow-sm'
+                        : 'border border-border bg-card text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    {p}
+                  </button>
+                )
+              )}
+
+              <button
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => handlePageChange(currentPage + 1)}
+                className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              >
+                Next &rarr;
+              </button>
+            </div>
           </div>
         )}
 
