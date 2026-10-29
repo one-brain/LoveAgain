@@ -167,7 +167,25 @@ public static class DatabaseInitializer
             // User.Suspend() stores -1 as the suspended sentinel; widen the legacy 0..100 check to allow it.
             "ALTER TABLE auth.users DROP CONSTRAINT IF EXISTS users_trust_score_check;",
             "ALTER TABLE auth.users ADD CONSTRAINT users_trust_score_check CHECK (trust_score >= -1 AND trust_score <= 100);",
-            "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);"
+            "CREATE INDEX IF NOT EXISTS ix_provider_profiles_status ON profiles.provider_profiles (status, is_active);",
+            """
+            CREATE TABLE IF NOT EXISTS profiles.user_kyc_documents (
+                id uuid NOT NULL PRIMARY KEY,
+                user_id uuid NOT NULL,
+                document_type character varying(50) NOT NULL,
+                document_number character varying(100) NOT NULL,
+                front_image_url character varying(2000) NOT NULL,
+                back_image_url character varying(2000) NOT NULL,
+                selfie_image_url character varying(2000) NOT NULL,
+                status integer NOT NULL DEFAULT 1,
+                rejection_reason character varying(1000) NULL,
+                submitted_at timestamp with time zone NOT NULL,
+                reviewed_at timestamp with time zone NULL,
+                reviewed_by uuid NULL
+            );
+            """,
+            "CREATE UNIQUE INDEX IF NOT EXISTS ix_user_kyc_documents_user_id ON profiles.user_kyc_documents (user_id);",
+            "CREATE INDEX IF NOT EXISTS ix_user_kyc_documents_status ON profiles.user_kyc_documents (status);"
         };
 
         foreach (var statement in statements)

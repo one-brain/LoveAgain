@@ -36,6 +36,24 @@ export interface AdminVerificationItem {
   reviewedAt?: string;
 }
 
+export interface AdminKycVerificationItem {
+  id: string;
+  userId: string;
+  fullName: string;
+  email: string;
+  phone?: string;
+  photoUrl?: string;
+  documentType: string;
+  documentNumberMasked: string;
+  frontImageUrl: string;
+  backImageUrl: string;
+  selfieImageUrl: string;
+  status: 'PendingReview' | 'Approved' | 'Rejected';
+  rejectionReason?: string | null;
+  submittedAt: string;
+  reviewedAt?: string | null;
+}
+
 export interface AdminBookingLedgerItem {
   id?: string;
   bookingId?: string;
@@ -108,8 +126,45 @@ export interface AdminPayoutItem {
 export const adminApi = createApi({
   reducerPath: 'adminApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Verifications', 'AdminUsers', 'AdminMis', 'AdminPayouts', 'AdminBookings', 'Profile'],
+  tagTypes: ['Verifications', 'KycVerifications', 'AdminUsers', 'AdminMis', 'AdminPayouts', 'AdminBookings', 'Profile'],
   endpoints: (builder) => ({
+    getAdminKycVerifications: builder.query<AdminKycVerificationItem[], { status?: number } | void>({
+      query: (params) => ({
+        url: '/admin/kyc-verifications',
+        params: params || undefined,
+      }),
+      providesTags: ['KycVerifications'],
+    }),
+
+    approveAdminKyc: builder.mutation<{ message: string }, string>({
+      query: (id) => ({
+        url: `/admin/kyc-verifications/${id}/approve`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['KycVerifications', 'AdminUsers', 'Verifications'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(profileApi.util.invalidateTags(['Profile', 'Kyc']));
+        } catch {}
+      },
+    }),
+
+    rejectAdminKyc: builder.mutation<{ message: string }, { id: string; reason: string }>({
+      query: ({ id, reason }) => ({
+        url: `/admin/kyc-verifications/${id}/reject`,
+        method: 'POST',
+        body: { reason },
+      }),
+      invalidatesTags: ['KycVerifications', 'AdminUsers', 'Verifications'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(profileApi.util.invalidateTags(['Profile', 'Kyc']));
+        } catch {}
+      },
+    }),
+
     applyCompanion: builder.mutation<any, CompanionApplicationRequest>({
       query: (body) => ({
         url: '/profiles/provider/apply',
@@ -258,6 +313,9 @@ export const adminApi = createApi({
 });
 
 export const {
+  useGetAdminKycVerificationsQuery,
+  useApproveAdminKycMutation,
+  useRejectAdminKycMutation,
   useApplyCompanionMutation,
   useGetAdminVerificationsQuery,
   useApproveVerificationMutation,

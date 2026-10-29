@@ -1,19 +1,22 @@
 using System.Security.Claims;
 using Cue.Application.Bookings;
+using Cue.Infrastructure.Data;
 using FluentValidation;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookingService.Controllers;
 
 [ApiController]
 [Route("api/v1/bookings")]
-public sealed class BookingsController(ISender sender) : ControllerBase
+public sealed class BookingsController(ISender sender, CueDbContext dbContext) : ControllerBase
 {
     [HttpPost]
     [ProducesResponseType(typeof(CreateBookingResult), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<CreateBookingResult>> Create(
         [FromBody] CreateBookingCommand command,
@@ -28,6 +31,19 @@ public sealed class BookingsController(ISender sender) : ControllerBase
         if (!TryGetUserId(out var seekerId))
         {
             return Unauthorized();
+        }
+
+        var seeker = await dbContext.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == seekerId && u.DeletedAt == null, cancellationToken);
+
+        if (seeker is null || !seeker.IsVerified)
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new
+            {
+                error = "Identity verification is required before you can book companions. Please submit your identity card in your Profile.",
+                code = "KYC_VERIFICATION_REQUIRED"
+            });
         }
 
         try

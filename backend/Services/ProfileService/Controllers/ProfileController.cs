@@ -183,16 +183,27 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
 
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms, cancellationToken);
-        ms.Position = 0;
+        var buffer = ms.ToArray();
 
         string photoUrl;
         try
         {
-            photoUrl = await blobStorage.UploadAsync(objectName, ms, file.ContentType, cancellationToken);
+            using var uploadStream = new MemoryStream(buffer);
+            var uploadTask = blobStorage.UploadAsync(objectName, uploadStream, file.ContentType, cancellationToken);
+            var completedTask = await Task.WhenAny(uploadTask, Task.Delay(1500, cancellationToken));
+            if (completedTask == uploadTask)
+            {
+                photoUrl = await uploadTask;
+            }
+            else
+            {
+                var base64 = Convert.ToBase64String(buffer);
+                photoUrl = $"data:{file.ContentType};base64,{base64}";
+            }
         }
         catch
         {
-            var base64 = Convert.ToBase64String(ms.ToArray());
+            var base64 = Convert.ToBase64String(buffer);
             photoUrl = $"data:{file.ContentType};base64,{base64}";
         }
 
@@ -280,4 +291,232 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
         await dbContext.SaveChangesAsync(cancellationToken);
         return NoContent();
     }
+
+    [Authorize]
+    [HttpGet("me/kyc")]
+    [ProducesResponseType(typeof(UserKycResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserKycResponse>> GetMyKyc(CancellationToken cancellationToken)
+    {
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { error = "User profile not found." });
+        }
+
+        var kyc = await dbContext.UserKycDocuments
+            .AsNoTracking()
+            .FirstOrDefaultAsync(d => d.UserId == user.Id, cancellationToken);
+
+        if (kyc == null)
+        {
+            return Ok(new UserKycResponse(
+                null,
+                user.Id,
+                null,
+                null,
+                null,
+                null,
+                null,
+                KycStatus.NotSubmitted.ToString(),
+                null,
+                null,
+                null
+            ));
+        }
+
+        return Ok(new UserKycResponse(
+            kyc.Id,
+            kyc.UserId,
+            kyc.DocumentType,
+            MaskDocumentNumber(kyc.DocumentNumber),
+            kyc.FrontImageUrl,
+            kyc.BackImageUrl,
+            kyc.SelfieImageUrl,
+            kyc.Status.ToString(),
+            kyc.RejectionReason,
+            kyc.SubmittedAt,
+            kyc.ReviewedAt
+        ));
+    }
+
+    [Authorize]
+    [HttpPost("me/kyc")]
+    [Consumes("multipart/form-data")]
+    [ProducesResponseType(typeof(UserKycResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<UserKycResponse>> SubmitMyKyc(
+        [FromForm] SubmitKycRequest request,
+        CancellationToken cancellationToken)
+    {
+        var user = await ResolveUserAsync(cancellationToken);
+        if (user == null)
+        {
+            return NotFound(new { error = "User profile not found." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.DocumentType))
+        {
+            return BadRequest(new { error = "Document type is required." });
+        }
+        if (string.IsNullOrWhiteSpace(request.DocumentNumber))
+        {
+            return BadRequest(new { error = "Document number is required." });
+        }
+
+        if (request.FrontImage == null || request.FrontImage.Length == 0)
+        {
+            return BadRequest(new { error = "Front image of document is required." });
+        }
+        if (!IsValidImageFile(request.FrontImage))
+        {
+            return BadRequest(new { error = "Front image must be a JPEG, PNG, or WebP image under 5MB." });
+        }
+
+        if (request.BackImage == null || request.BackImage.Length == 0)
+        {
+            return BadRequest(new { error = "Back image of document is required." });
+        }
+        if (!IsValidImageFile(request.BackImage))
+        {
+            return BadRequest(new { error = "Back image must be a JPEG, PNG, or WebP image under 5MB." });
+        }
+
+        if (request.SelfieImage == null || request.SelfieImage.Length == 0)
+        {
+            return BadRequest(new { error = "Selfie image is required." });
+        }
+        if (!IsValidImageFile(request.SelfieImage))
+        {
+            return BadRequest(new { error = "Selfie image must be a JPEG, PNG, or WebP image under 5MB." });
+        }
+
+        var existing = await dbContext.UserKycDocuments
+            .FirstOrDefaultAsync(d => d.UserId == user.Id, cancellationToken);
+
+        if (existing != null && existing.Status == KycStatus.Approved)
+        {
+            return BadRequest(new { error = "Your identity verification has already been approved." });
+        }
+
+        var frontTask = UploadKycFileAsync(user.Id, request.FrontImage!, "front", cancellationToken);
+        var backTask = UploadKycFileAsync(user.Id, request.BackImage!, "back", cancellationToken);
+        var selfieTask = UploadKycFileAsync(user.Id, request.SelfieImage!, "selfie", cancellationToken);
+
+        await Task.WhenAll(frontTask, backTask, selfieTask);
+
+        var frontUrl = await frontTask;
+        var backUrl = await backTask;
+        var selfieUrl = await selfieTask;
+
+        if (existing != null)
+        {
+            existing.Resubmit(request.DocumentType, request.DocumentNumber, frontUrl, backUrl, selfieUrl);
+        }
+        else
+        {
+            existing = new UserKycDocument(
+                user.Id,
+                request.DocumentType,
+                request.DocumentNumber,
+                frontUrl,
+                backUrl,
+                selfieUrl);
+            dbContext.UserKycDocuments.Add(existing);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return Ok(new UserKycResponse(
+            existing.Id,
+            existing.UserId,
+            existing.DocumentType,
+            MaskDocumentNumber(existing.DocumentNumber),
+            existing.FrontImageUrl,
+            existing.BackImageUrl,
+            existing.SelfieImageUrl,
+            existing.Status.ToString(),
+            existing.RejectionReason,
+            existing.SubmittedAt,
+            existing.ReviewedAt
+        ));
+    }
+
+    private static bool IsValidImageFile(IFormFile? file)
+    {
+        if (file == null || file.Length == 0 || file.Length > 5 * 1024 * 1024) return false;
+        var permittedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (permittedTypes.Contains(file.ContentType)) return true;
+        var ext = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        return ext is ".jpg" or ".jpeg" or ".png" or ".webp";
+    }
+
+    private static string MaskDocumentNumber(string documentNumber)
+    {
+        if (string.IsNullOrWhiteSpace(documentNumber)) return string.Empty;
+        var trimmed = documentNumber.Trim();
+        if (trimmed.Length <= 4) return trimmed;
+        var visible = trimmed[^4..];
+        var maskedPrefix = new string('•', trimmed.Length - 4);
+        return $"{maskedPrefix}{visible}";
+    }
+
+    private async Task<string> UploadKycFileAsync(Guid userId, IFormFile file, string filePrefix, CancellationToken cancellationToken)
+    {
+        var extension = Path.GetExtension(file.FileName)?.ToLowerInvariant();
+        if (string.IsNullOrEmpty(extension))
+        {
+            extension = file.ContentType switch
+            {
+                "image/png" => ".png",
+                "image/webp" => ".webp",
+                _ => ".jpg"
+            };
+        }
+        var contentType = file.ContentType;
+        if (contentType == "application/octet-stream" || string.IsNullOrWhiteSpace(contentType))
+        {
+            contentType = extension switch
+            {
+                ".png" => "image/png",
+                ".webp" => "image/webp",
+                _ => "image/jpeg"
+            };
+        }
+        var objectName = $"kyc/{userId}/{filePrefix}_{Guid.NewGuid():N}{extension}";
+
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms, cancellationToken);
+        var buffer = ms.ToArray();
+
+        try
+        {
+            using var uploadStream = new MemoryStream(buffer);
+            var uploadTask = blobStorage.UploadAsync(objectName, uploadStream, contentType, cancellationToken);
+            var completedTask = await Task.WhenAny(uploadTask, Task.Delay(1500, cancellationToken));
+            if (completedTask == uploadTask)
+            {
+                return await uploadTask;
+            }
+        }
+        catch
+        {
+            // S3 upload failed or timed out; fall back to base64 Data URL
+        }
+
+        var base64 = Convert.ToBase64String(buffer);
+        return $"data:{contentType};base64,{base64}";
+    }
+}
+
+public sealed class SubmitKycRequest
+{
+    public string DocumentType { get; set; } = string.Empty;
+    public string DocumentNumber { get; set; } = string.Empty;
+    public IFormFile? FrontImage { get; set; }
+    public IFormFile? BackImage { get; set; }
+    public IFormFile? SelfieImage { get; set; }
 }

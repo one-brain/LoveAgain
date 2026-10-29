@@ -134,6 +134,19 @@ public sealed class User
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void ApproveKyc(Guid reviewerId)
+    {
+        IsVerified = true;
+        TrustScore = Math.Clamp(TrustScore + 20, 0, 100);
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void RejectKyc(Guid reviewerId, string reason)
+    {
+        IsVerified = false;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void SetPasswordHash(string passwordHash)
     {
         if (string.IsNullOrWhiteSpace(passwordHash)) throw new ArgumentException("Password hash is required.", nameof(passwordHash));

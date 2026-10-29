@@ -152,3 +152,37 @@ public sealed record AdminBookingLedgerItemResponse(
     DateTime EndTime,
     DateTime CreatedAt
 );
+
+public sealed record UserKycResponse(
+    Guid? Id,
+    Guid UserId,
+    string? DocumentType,
+    string? DocumentNumberMasked,
+    string? FrontImageUrl,
+    string? BackImageUrl,
+    string? SelfieImageUrl,
+    string Status,
+    string? RejectionReason,
+    DateTime? SubmittedAt,
+    DateTime? ReviewedAt
+);
+
+public sealed record AdminKycVerificationItemResponse(
+    Guid Id,
+    Guid UserId,
+    string FullName,
+    string Email,
+    string? Phone,
+    string? PhotoUrl,
+    string DocumentType,
+    string DocumentNumberMasked,
+    string FrontImageUrl,
+    string BackImageUrl,
+    string SelfieImageUrl,
+    string Status,
+    string? RejectionReason,
+    DateTime SubmittedAt,
+    DateTime? ReviewedAt
+);
+
+public sealed record RejectKycRequest(string Reason);

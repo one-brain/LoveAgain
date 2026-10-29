@@ -159,6 +159,113 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         return Ok(new { message = "Companion application rejected.", reason = request.Reason, status = "Rejected" });
     }
 
+    [HttpGet("kyc-verifications")]
+    [ProducesResponseType(typeof(IReadOnlyList<AdminKycVerificationItemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<AdminKycVerificationItemResponse>>> GetKycVerifications(
+        [FromQuery] KycStatus? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 200,
+        CancellationToken cancellationToken = default)
+    {
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
+
+        var query = dbContext.UserKycDocuments
+            .AsNoTracking()
+            .Join(dbContext.Users.AsNoTracking(),
+                k => k.UserId,
+                u => u.Id,
+                (k, u) => new { k, u });
+
+        if (status.HasValue)
+        {
+            query = query.Where(x => x.k.Status == status.Value);
+        }
+
+        var items = await query
+            .OrderByDescending(x => x.k.SubmittedAt)
+            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
+            .Take(Math.Clamp(pageSize, 1, 500))
+            .Select(x => new AdminKycVerificationItemResponse(
+                x.k.Id,
+                x.u.Id,
+                $"{x.u.FirstName} {x.u.LastName}".Trim(),
+                x.u.Email,
+                x.u.Phone,
+                x.u.PhotoUrl,
+                x.k.DocumentType,
+                x.k.DocumentNumber,
+                x.k.FrontImageUrl,
+                x.k.BackImageUrl,
+                x.k.SelfieImageUrl,
+                x.k.Status.ToString(),
+                x.k.RejectionReason,
+                x.k.SubmittedAt,
+                x.k.ReviewedAt
+            ))
+            .ToListAsync(cancellationToken);
+
+        return Ok(items);
+    }
+
+    [HttpPost("kyc-verifications/{id:guid}/approve")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> ApproveKycVerification(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
+        TryGetUserId(out var adminId);
+
+        var kyc = await dbContext.UserKycDocuments
+            .SingleOrDefaultAsync(k => k.Id == id, cancellationToken);
+        if (kyc == null) return NotFound(new { error = "KYC document not found." });
+
+        kyc.Approve(adminId);
+
+        var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == kyc.UserId, cancellationToken);
+        if (user != null)
+        {
+            user.ApproveKyc(adminId);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(new { message = "User identity verification approved.", status = "Approved" });
+    }
+
+    [HttpPost("kyc-verifications/{id:guid}/reject")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> RejectKycVerification(
+        Guid id,
+        [FromBody] RejectKycRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
+        TryGetUserId(out var adminId);
+
+        if (string.IsNullOrWhiteSpace(request.Reason))
+        {
+            return BadRequest(new { error = "A rejection reason is required." });
+        }
+
+        var kyc = await dbContext.UserKycDocuments
+            .SingleOrDefaultAsync(k => k.Id == id, cancellationToken);
+        if (kyc == null) return NotFound(new { error = "KYC document not found." });
+
+        kyc.Reject(adminId, request.Reason);
+
+        var user = await dbContext.Users.SingleOrDefaultAsync(u => u.Id == kyc.UserId, cancellationToken);
+        if (user != null)
+        {
+            user.RejectKyc(adminId, request.Reason);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return Ok(new { message = "User identity verification rejected.", reason = request.Reason, status = "Rejected" });
+    }
+
     [HttpGet("users")]
     [ProducesResponseType(typeof(IReadOnlyList<AdminUserItemResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<AdminUserItemResponse>>> GetUsers(

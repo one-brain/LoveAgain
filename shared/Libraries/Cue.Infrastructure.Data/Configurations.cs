@@ -267,3 +267,21 @@ internal sealed class EmailVerificationTokenConfiguration : IEntityTypeConfigura
         builder.HasIndex(t => t.UserId);
     }
 }
+
+internal sealed class UserKycDocumentConfiguration : IEntityTypeConfiguration<UserKycDocument>
+{
+    public void Configure(EntityTypeBuilder<UserKycDocument> builder)
+    {
+        builder.ToTable("user_kyc_documents", "profiles");
+        builder.HasKey(d => d.Id);
+        builder.HasIndex(d => d.UserId).IsUnique();
+        builder.Property(d => d.DocumentType).HasMaxLength(50).IsRequired();
+        builder.Property(d => d.DocumentNumber).HasMaxLength(100).IsRequired();
+        builder.Property(d => d.FrontImageUrl).HasMaxLength(2000).IsRequired();
+        builder.Property(d => d.BackImageUrl).HasMaxLength(2000).IsRequired();
+        builder.Property(d => d.SelfieImageUrl).HasMaxLength(2000).IsRequired();
+        builder.Property(d => d.Status).HasConversion<int>().IsRequired();
+        builder.Property(d => d.RejectionReason).HasMaxLength(1000);
+        builder.HasIndex(d => d.Status);
+    }
+}

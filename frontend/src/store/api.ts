@@ -62,6 +62,20 @@ export interface SeekerProfileResponse {
   profile: SeekerProfile;
 }
 
+export interface UserKycDocument {
+  id?: string;
+  userId: string;
+  documentType?: string;
+  documentNumberMasked?: string;
+  frontImageUrl?: string;
+  backImageUrl?: string;
+  selfieImageUrl?: string;
+  status: 'NotSubmitted' | 'PendingReview' | 'Approved' | 'Rejected';
+  rejectionReason?: string | null;
+  submittedAt?: string | null;
+  reviewedAt?: string | null;
+}
+
 export interface UpdateSeekerProfileRequest {
   firstName?: string;
   lastName?: string;
@@ -114,8 +128,20 @@ export interface EmergencySosResponse {
 export const profileApi = createApi({
   reducerPath: 'profileApi',
   baseQuery: baseQueryWithReauth,
-  tagTypes: ['Profile', 'Availability'],
+  tagTypes: ['Profile', 'Availability', 'Kyc'],
   endpoints: (builder) => ({
+    getMyKyc: builder.query<UserKycDocument, void>({
+      query: () => `/profiles/me/kyc`,
+      providesTags: ['Kyc'],
+    }),
+    submitMyKyc: builder.mutation<UserKycDocument, FormData>({
+      query: (formData) => ({
+        url: `/profiles/me/kyc`,
+        method: 'POST',
+        body: formData,
+      }),
+      invalidatesTags: ['Kyc', 'Profile'],
+    }),
     getMyProfile: builder.query<ProviderProfileResponse, void>({
       query: () => `/profiles/provider`,
       providesTags: ['Profile'],
@@ -271,6 +297,8 @@ export const profileApi = createApi({
 });
 
 export const {
+  useGetMyKycQuery,
+  useSubmitMyKycMutation,
   useGetMyProfileQuery,
   useGetSeekerProfileQuery,
   useUpdateSeekerProfileMutation,

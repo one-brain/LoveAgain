@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../store';
 import {
   XMarkIcon,
   ShieldCheckIcon,
@@ -97,6 +100,9 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   tomorrow.setDate(tomorrow.getDate() + 1);
   const defaultDateStr = tomorrow.toISOString().split('T')[0];
 
+  const navigate = useNavigate();
+  const user = useSelector((state: RootState) => state.auth.user);
+
   const [step, setStep] = useState<1 | 2>(1);
   const [activity, setActivity] = useState(initialActivity || provider.specialties[0] || 'Companionship / Activity');
   const [customActivity] = useState('');
@@ -130,6 +136,51 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
+
+  if (!user || !user.isVerified) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+        <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-150">
+          <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto shadow-inner">
+            <ShieldCheckIcon className="w-9 h-9" />
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold font-serif text-foreground">
+              Identity Verification Required
+            </h3>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              Identity verification required to book companions. Complete KYC now.
+            </p>
+            <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1">
+              For community trust and member safety, government identity card submission is mandatory before initiating bookings with verified companions.
+            </p>
+          </div>
+
+          <div className="space-y-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                navigate('/profile?tab=kyc');
+              }}
+              className="w-full py-3 px-4 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+            >
+              <ShieldCheckIcon className="w-4 h-4" />
+              <span>Complete KYC Now &rarr;</span>
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full py-2.5 px-4 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold transition-all cursor-pointer"
+            >
+              Back to Companion Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const resolvedActivity = activity === 'Other' && customActivity.trim() ? customActivity.trim() : activity;
   const subtotal = durationHours * provider.hourlyRate;

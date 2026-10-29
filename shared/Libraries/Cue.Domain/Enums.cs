@@ -100,3 +100,11 @@ public enum PayoutMethodType
     Upi = 1,
     BankTransfer = 2
 }
+
+public enum KycStatus
+{
+    NotSubmitted = 0,
+    PendingReview = 1,
+    Approved = 2,
+    Rejected = 3
+}
