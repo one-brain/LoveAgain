@@ -5,7 +5,6 @@ import {
   useGetProviderIncomingBookingsQuery,
   useGetSeekerOutgoingBookingsQuery,
   useGetMyProfileQuery,
-  useCancelBookingMutation,
 } from '../store/bookingApi';
 import { useListProvidersQuery } from '../store/discoveryApi';
 import { BookingCard, type BookingSummary } from '../components/BookingCard';
@@ -13,6 +12,8 @@ import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal
 import { CheckInModal } from '../components/CheckInModal';
 import { OutingSosModal } from '../components/OutingSosModal';
 import { ProviderProfileModal } from '../components/booking/ProviderProfileModal';
+import { EditBookingModal } from '../components/booking/EditBookingModal';
+import { CancelBookingModal } from '../components/booking/CancelBookingModal';
 import { useCompleteBookingMutation } from '../store/bookingApi';
 import { useReleaseEscrowMutation } from '../store/paymentApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
@@ -89,8 +90,6 @@ const Bookings: React.FC = () => {
   const { data: rawLiveProviders } = useListProvidersQuery({ pageSize: 120 });
   const liveProviders = Array.isArray(rawLiveProviders) ? rawLiveProviders : rawLiveProviders?.items;
 
-  const [cancelBooking] = useCancelBookingMutation();
-
   // Tab & display state
   const [activeTab, setActiveTab] = useState<'upcoming' | 'history' | 'calendar'>('upcoming');
   const [calendarView] = useState<'day' | 'week' | 'month'>('week');
@@ -98,6 +97,8 @@ const Bookings: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [bookingSort, setBookingSort] = useState('date-asc');
   const [checkoutBooking, setCheckoutBooking] = useState<BookingSummary | null>(null);
+  const [editingBooking, setEditingBooking] = useState<BookingSummary | null>(null);
+  const [cancellingBooking, setCancellingBooking] = useState<BookingSummary | null>(null);
   const [completeBooking] = useCompleteBookingMutation();
   const [releaseEscrow] = useReleaseEscrowMutation();
   const [checkInBooking, setCheckInBooking] = useState<BookingSummary | null>(null);
@@ -169,10 +170,13 @@ const Bookings: React.FC = () => {
 
   // Single source of truth for every booking the user is part of
   const bookings: PerspectiveBooking[] = useMemo(() => {
-    if (viewMode === 'client') return clientBookings;
-    if (viewMode === 'companion') return companionBookings;
+    let source: PerspectiveBooking[];
+    if (viewMode === 'client') source = clientBookings;
+    else if (viewMode === 'companion') source = companionBookings;
+    else source = [...companionBookings, ...clientBookings];
+
     const seen = new Set<string>();
-    return [...companionBookings, ...clientBookings].filter((b) => {
+    return source.filter((b) => {
       if (seen.has(b.orderId)) return false;
       seen.add(b.orderId);
       return true;
@@ -211,14 +215,8 @@ const Bookings: React.FC = () => {
     [bookings, statusFilter, bookingSort]
   );
 
-  const handleCancel = async (orderId: string) => {
-    if (window.confirm('Are you sure you want to cancel this booking? Payment will be refunded according to the cancellation policy.')) {
-      try {
-        await cancelBooking({ orderId, reason: 'Client requested cancellation' }).unwrap();
-      } catch (err) {
-        console.warn('Cancel API warning:', err);
-      }
-    }
+  const handleCancel = (booking: BookingSummary) => {
+    setCancellingBooking(booking);
   };
 
   const navigateDate = (direction: 'prev' | 'next') => {
@@ -506,6 +504,7 @@ const Bookings: React.FC = () => {
                       roleMode={b.perspective}
                       showRoleBadge={viewMode === 'all'}
                       liveProviders={liveProviders}
+                      onEdit={(bkg) => setEditingBooking(bkg)}
                       onCancel={handleCancel}
                       onPay={(bkg) => setCheckoutBooking(bkg)}
                       onCheckIn={handleCheckIn}
@@ -657,6 +656,7 @@ const Bookings: React.FC = () => {
                           roleMode={b.perspective}
                       showRoleBadge={viewMode === 'all'}
                           liveProviders={liveProviders}
+                          onEdit={(bkg) => setEditingBooking(bkg)}
                           onCancel={handleCancel}
                           onPay={(bkg) => setCheckoutBooking(bkg)}
                           onCheckIn={handleCheckIn}
@@ -715,6 +715,31 @@ const Bookings: React.FC = () => {
           onClose={() => setCheckoutBooking(null)}
           onSuccess={() => {
             setCheckoutBooking(null);
+            refetchProviderBookings();
+            refetchSeekerBookings();
+          }}
+        />
+      )}
+
+      {editingBooking && (
+        <EditBookingModal
+          isOpen={true}
+          onClose={() => {
+            setEditingBooking(null);
+            refetchProviderBookings();
+            refetchSeekerBookings();
+          }}
+          booking={editingBooking}
+        />
+      )}
+
+      {cancellingBooking && (
+        <CancelBookingModal
+          isOpen={true}
+          onClose={() => setCancellingBooking(null)}
+          booking={cancellingBooking}
+          onSuccess={() => {
+            setCancellingBooking(null);
             refetchProviderBookings();
             refetchSeekerBookings();
           }}

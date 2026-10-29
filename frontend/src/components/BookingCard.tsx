@@ -15,6 +15,7 @@ import {
   CheckBadgeIcon,
   StarIcon,
   ArrowUpRightIcon,
+  PencilSquareIcon,
 } from '@heroicons/react/24/outline';
 
 export interface BookingSummary {
@@ -54,7 +55,8 @@ interface BookingCardProps {
   /** Shows whether this is an outing you booked or a request you received (used in the combined feed). */
   showRoleBadge?: boolean;
   liveProviders?: any[];
-  onCancel?: (orderId: string) => void;
+  onEdit?: (booking: BookingSummary) => void;
+  onCancel?: (booking: BookingSummary) => void;
   onPay?: (booking: BookingSummary) => void;
   onCheckIn?: (booking: BookingSummary) => void;
   onComplete?: (orderId: string) => void;
@@ -119,6 +121,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   roleMode = 'client',
   showRoleBadge = false,
   liveProviders,
+  onEdit,
   onCancel,
   onPay,
   onCheckIn,
@@ -389,11 +392,27 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </button>
           )}
 
+          {/* Edit / Modify Booking (PendingPayment or Confirmed) */}
+          {(isPendingPayment || isConfirmed) && onEdit && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(booking);
+              }}
+              className="px-3 py-2 min-h-[36px] rounded-xl border border-border hover:border-accent/40 text-foreground hover:text-accent hover:bg-muted text-xs font-semibold transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+              title="Edit venue, requirements, or schedule"
+            >
+              <PencilSquareIcon className="w-3.5 h-3.5" />
+              <span>Edit</span>
+            </button>
+          )}
+
           {onCancel && booking.status !== 'Cancelled' && booking.status !== 'Completed' && !isInProgress && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onCancel(booking.orderId);
+                onCancel(booking);
               }}
               className="px-3 py-2 min-h-[36px] rounded-xl border border-border hover:border-destructive/40 text-muted-foreground hover:text-destructive text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50 cursor-pointer"
             >

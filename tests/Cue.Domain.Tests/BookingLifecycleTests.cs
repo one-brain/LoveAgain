@@ -121,4 +121,76 @@ public sealed class BookingLifecycleTests
         Assert.Equal(OrderStatus.InProgress, order.Status);
         Assert.NotNull(order.CheckedInAt);
     }
+
+    [Fact]
+    public void ServiceOrder_UpdateDetails_UpdatesMeetingAddressAndRequirements()
+    {
+        var order = new ServiceOrder(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(3), 200m, 30m);
+        var updatedReq = new BookingRequirements(
+            Activity: "Tennis Match",
+            DressCode: "Sporty",
+            TransportMode: "Meet at venue",
+            DietPreference: "Energy drink",
+            EquipmentGear: "Rackets",
+            LanguagePreference: "English",
+            SpecialNotes: "Clay court reserved");
+
+        order.UpdateDetails("Koramangala Club, 6th Block", updatedReq);
+
+        Assert.Equal("Koramangala Club, 6th Block", order.MeetingAddress);
+        Assert.Equal("Tennis Match", order.Requirements?.Activity);
+        Assert.Equal("Clay court reserved", order.Requirements?.SpecialNotes);
+    }
+
+    [Fact]
+    public void ServiceOrder_UpdateDetails_RecalculatesAmount_WhenPendingPaymentAndDurationChanges()
+    {
+        // 2 hours at 100/hr = 200 total
+        var order = new ServiceOrder(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(3), 200m, 30m);
+        var newStart = DateTime.UtcNow.AddDays(2);
+        var newEnd = newStart.AddHours(3); // 3 hours
+
+        order.UpdateDetails("New Cafe", null, newStart, newEnd, durationHours: 3m);
+
+        Assert.Equal(300m, order.TotalAmount); // 100/hr * 3 hrs
+        Assert.Equal(45m, order.PlatformFee); // 15% of 300
+        Assert.Equal(255m, order.ProviderEarnings);
+        Assert.Equal(newStart, order.StartTime);
+        Assert.Equal(newEnd, order.EndTime);
+    }
+
+    [Fact]
+    public void ServiceOrder_UpdateDetails_Throws_WhenBookingInProgressOrCompletedOrCancelled()
+    {
+        var order = new ServiceOrder(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(3), 200m, 30m);
+        order.Confirm();
+        order.CheckIn(order.CheckInPin!); // InProgress
+
+        Assert.Throws<InvalidOperationException>(() => {
+            order.UpdateDetails("Another place", null);
+        });
+
+        order.Complete();
+        Assert.Throws<InvalidOperationException>(() => {
+            order.UpdateDetails("Another place", null);
+        });
+
+        var cancelledOrder = new ServiceOrder(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(3), 200m, 30m);
+        cancelledOrder.Cancel("Client change of plans");
+        Assert.Throws<InvalidOperationException>(() => {
+            cancelledOrder.UpdateDetails("Another place", null);
+        });
+    }
+
+    [Fact]
+    public void ServiceOrder_UpdateDetails_Throws_WhenEndTimeBeforeStartTime()
+    {
+        var order = new ServiceOrder(Guid.NewGuid(), Guid.NewGuid(), DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(3), 200m, 30m);
+        var start = DateTime.UtcNow.AddDays(1);
+        var end = start.AddHours(-1);
+
+        Assert.Throws<ArgumentException>(() => {
+            order.UpdateDetails("Cafe", null, start, end);
+        });
+    }
 }

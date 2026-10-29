@@ -40,6 +40,27 @@ public sealed class CreateBookingCommandHandler(
 {
     public async Task<CreateBookingResult> Handle(CreateBookingCommand command, CancellationToken cancellationToken)
     {
+        // Check if an existing pending booking already exists for this seeker & provider & time
+        // to prevent duplicate entries from retries or concurrent clicks
+        var existingPending = await bookingRepository.GetPendingOrderForSeekerAsync(
+            command.SeekerId,
+            command.ProviderId,
+            command.StartTime,
+            cancellationToken);
+
+        if (existingPending is not null)
+        {
+            existingPending.UpdateDetails(
+                command.MeetingAddress,
+                command.Requirements,
+                command.StartTime,
+                command.EndTime,
+                command.DurationHours);
+
+            await bookingRepository.SaveChangesAsync(cancellationToken);
+            return new CreateBookingResult(existingPending.Id, existingPending.TotalAmount, existingPending.Status);
+        }
+
         var isShowcaseSampleProvider = command.ProviderId.ToString()
             .StartsWith("00000000-0000-0000-0000-0000000000", StringComparison.OrdinalIgnoreCase);
 
