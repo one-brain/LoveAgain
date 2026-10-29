@@ -179,6 +179,138 @@
     --ring: #9F1239;
   }
 
+  .emerald {
+    /* 4. Emerald Estate Theme (Heritage Forest, Deep Sage & Champagne Gold) */
+    --background: #071510;
+    --foreground: #ECFDF5;
+    --card: #0E231B;
+    --card-foreground: #ECFDF5;
+    --popover: #0E231B;
+    --popover-foreground: #ECFDF5;
+
+    --muted: #153328;
+    --muted-foreground: #86B3A2;
+
+    --primary: #06130D;
+    --primary-foreground: #ECFDF5;
+    --primary-hover: #0B2017;
+    --primary-light: #15382B;
+
+    --accent: #C5A059;
+    --accent-foreground: #071510;
+    --accent-hover: #D4AF37;
+    --accent-light: #232616;
+    --accent-muted: #A0813D;
+
+    --secondary: #6E9385;
+    --secondary-foreground: #ECFDF5;
+    --secondary-light: #163328;
+
+    --success: #34D399;
+    --success-foreground: #071510;
+    --success-light: #064E3B;
+
+    --warning: #FBBF24;
+    --warning-foreground: #071510;
+    --warning-light: #451A03;
+
+    --destructive: #F87171;
+    --destructive-foreground: #FFFFFF;
+    --destructive-light: #450A0A;
+
+    --border: #1C4032;
+    --input: #1C4032;
+    --ring: #C5A059;
+  }
+
+  .champagne {
+    /* 5. Champagne Sand Theme (Sun-Bleached Linen, Warm Sand & Terracotta Bronze) */
+    --background: #F7F2EB;
+    --foreground: #241E1A;
+    --card: #FFFFFF;
+    --card-foreground: #241E1A;
+    --popover: #FFFFFF;
+    --popover-foreground: #241E1A;
+
+    --muted: #EDE4D8;
+    --muted-foreground: #786B60;
+
+    --primary: #2B221C;
+    --primary-foreground: #FFFFFF;
+    --primary-hover: #1D1713;
+    --primary-light: #3D3129;
+
+    --accent: #A45A2A;
+    --accent-foreground: #FFFFFF;
+    --accent-hover: #B86834;
+    --accent-light: #FDF3EB;
+    --accent-muted: #88451B;
+
+    --secondary: #8E7E73;
+    --secondary-foreground: #FFFFFF;
+    --secondary-light: #F3ECE2;
+
+    --success: #15803D;
+    --success-foreground: #FFFFFF;
+    --success-light: #EBF7F0;
+
+    --warning: #C5A059;
+    --warning-foreground: #241E1A;
+    --warning-light: #FBF7EE;
+
+    --destructive: #DC2626;
+    --destructive-foreground: #FFFFFF;
+    --destructive-light: #FEE2E2;
+
+    --border: #DED4C5;
+    --input: #DED4C5;
+    --ring: #A45A2A;
+  }
+
+  .sapphire {
+    /* 6. Sapphire Royal Theme (Parisian Midnight, Deep Cobalt & Platinum) */
+    --background: #070C18;
+    --foreground: #F1F5F9;
+    --card: #0E172B;
+    --card-foreground: #F1F5F9;
+    --popover: #0E172B;
+    --popover-foreground: #F1F5F9;
+
+    --muted: #17233E;
+    --muted-foreground: #8A9DBE;
+
+    --primary: #0A1122;
+    --primary-foreground: #F1F5F9;
+    --primary-hover: #111C36;
+    --primary-light: #1A284D;
+
+    --accent: #38BDF8;
+    --accent-foreground: #070C18;
+    --accent-hover: #60A5FA;
+    --accent-light: #0C2340;
+    --accent-muted: #0284C7;
+
+    --secondary: #64748B;
+    --secondary-foreground: #F1F5F9;
+    --secondary-light: #17233E;
+
+    --success: #34D399;
+    --success-foreground: #070C18;
+    --success-light: #064E3B;
+
+    --warning: #FBBF24;
+    --warning-foreground: #070C18;
+    --warning-light: #451A03;
+
+    --destructive: #F87171;
+    --destructive-foreground: #FFFFFF;
+    --destructive-light: #450A0A;
+
+    --border: #1E3156;
+    --input: #1E3156;
+    --ring: #38BDF8;
+  }
+
   * {
     border-color: var(--border);
   }

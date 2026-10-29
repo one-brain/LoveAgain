@@ -136,20 +136,27 @@ const Header: React.FC = () => {
     return 'My Account';
   }, [user]);
 
-  const [theme, setTheme] = useState<'light' | 'dark' | 'romantic'>(() => {
+  type ThemeMode = 'light' | 'dark' | 'romantic' | 'emerald' | 'champagne' | 'sapphire';
+
+  const [theme, setTheme] = useState<ThemeMode>(() => {
     const saved = localStorage.getItem('theme');
-    if (saved === 'light' || saved === 'dark' || saved === 'romantic') {
-      return saved as 'light' | 'dark' | 'romantic';
+    if (
+      saved === 'light' ||
+      saved === 'dark' ||
+      saved === 'romantic' ||
+      saved === 'emerald' ||
+      saved === 'champagne' ||
+      saved === 'sapphire'
+    ) {
+      return saved as ThemeMode;
     }
     return 'light';
   });
 
   useEffect(() => {
-    document.documentElement.classList.remove('dark', 'romantic');
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (theme === 'romantic') {
-      document.documentElement.classList.add('romantic');
+    document.documentElement.classList.remove('dark', 'romantic', 'emerald', 'champagne', 'sapphire');
+    if (theme !== 'light') {
+      document.documentElement.classList.add(theme);
     }
     localStorage.setItem('theme', theme);
   }, [theme]);
@@ -192,7 +199,7 @@ const Header: React.FC = () => {
   }, [location.pathname, location.search]);
 
   const cycleTheme = () => {
-    const themes: ('light' | 'dark' | 'romantic')[] = ['light', 'dark', 'romantic'];
+    const themes: ThemeMode[] = ['light', 'dark', 'romantic', 'emerald', 'champagne', 'sapphire'];
     const currentIndex = themes.indexOf(theme);
     const nextIndex = (currentIndex + 1) % themes.length;
     setTheme(themes[nextIndex]);
@@ -543,7 +550,7 @@ const Header: React.FC = () => {
                 {theme === 'light' && (
                   <>
                     <SunIcon className="w-4 h-4 text-amber-500" />
-                    <span className="text-foreground">Warm</span>
+                    <span className="text-foreground">Daylight</span>
                   </>
                 )}
                 {theme === 'dark' && (
@@ -556,6 +563,24 @@ const Header: React.FC = () => {
                   <>
                     <HeartIcon className="w-4 h-4 text-rose-500" />
                     <span className="text-foreground">Velvet</span>
+                  </>
+                )}
+                {theme === 'emerald' && (
+                  <>
+                    <SparklesIcon className="w-4 h-4 text-emerald-500" />
+                    <span className="text-foreground">Emerald</span>
+                  </>
+                )}
+                {theme === 'champagne' && (
+                  <>
+                    <SunIcon className="w-4 h-4 text-amber-600" />
+                    <span className="text-foreground">Sand</span>
+                  </>
+                )}
+                {theme === 'sapphire' && (
+                  <>
+                    <MoonIcon className="w-4 h-4 text-blue-500" />
+                    <span className="text-foreground">Sapphire</span>
                   </>
                 )}
                 <ChevronDownIcon
@@ -644,6 +669,78 @@ const Header: React.FC = () => {
                       </div>
                     </div>
                     {theme === 'romantic' && <CheckIcon className="w-4 h-4 text-accent" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={theme === 'emerald'}
+                    onClick={() => {
+                      setTheme('emerald');
+                      setThemeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                      theme === 'emerald'
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-foreground/90 hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-4 h-4 rounded-full bg-emerald-600 border border-emerald-400 shadow-xs flex-shrink-0" />
+                      <div className="text-left">
+                        <div className="leading-tight">Emerald Estate</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Heritage Forest & Gold</div>
+                      </div>
+                    </div>
+                    {theme === 'emerald' && <CheckIcon className="w-4 h-4 text-accent" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={theme === 'champagne'}
+                    onClick={() => {
+                      setTheme('champagne');
+                      setThemeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                      theme === 'champagne'
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-foreground/90 hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-4 h-4 rounded-full bg-amber-700 border border-amber-500 shadow-xs flex-shrink-0" />
+                      <div className="text-left">
+                        <div className="leading-tight">Champagne Sand</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Linen & Terracotta Bronze</div>
+                      </div>
+                    </div>
+                    {theme === 'champagne' && <CheckIcon className="w-4 h-4 text-accent" />}
+                  </button>
+
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={theme === 'sapphire'}
+                    onClick={() => {
+                      setTheme('sapphire');
+                      setThemeDropdownOpen(false);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                      theme === 'sapphire'
+                        ? 'bg-accent/15 text-accent font-semibold'
+                        : 'text-foreground/90 hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-4 h-4 rounded-full bg-blue-600 border border-blue-400 shadow-xs flex-shrink-0" />
+                      <div className="text-left">
+                        <div className="leading-tight">Sapphire Royal</div>
+                        <div className="text-[10px] text-muted-foreground mt-0.5">Parisian Cobalt & Pearl</div>
+                      </div>
+                    </div>
+                    {theme === 'sapphire' && <CheckIcon className="w-4 h-4 text-accent" />}
                   </button>
                 </div>
               )}
@@ -995,6 +1092,9 @@ const Header: React.FC = () => {
               {theme === 'light' && <SunIcon className="w-5 h-5 text-amber-500" />}
               {theme === 'dark' && <MoonIcon className="w-5 h-5 text-indigo-400" />}
               {theme === 'romantic' && <HeartIcon className="w-5 h-5 text-rose-500" />}
+              {theme === 'emerald' && <SparklesIcon className="w-5 h-5 text-emerald-400" />}
+              {theme === 'champagne' && <SunIcon className="w-5 h-5 text-amber-600" />}
+              {theme === 'sapphire' && <MoonIcon className="w-5 h-5 text-sky-400" />}
             </button>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
