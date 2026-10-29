@@ -230,11 +230,27 @@ public sealed class AuthController(
     [HttpPost("login")]
     public async Task<ActionResult<TokenResponse>> Login(LoginRequest request, CancellationToken cancellationToken)
     {
-        var user = await dbContext.Users.SingleOrDefaultAsync(candidate => candidate.Email == request.Email.Trim().ToLower(), cancellationToken);
+        var normalizedEmail = request.Email.Trim().ToLowerInvariant();
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var rateKey = $"login_fail_{normalizedEmail}_{clientIp}";
+
+        if (cache.TryGetValue<int>(rateKey, out var failedAttempts) && failedAttempts >= 5)
+        {
+            return StatusCode(StatusCodes.Status429TooManyRequests, new
+            {
+                error = "Too many failed login attempts. Please wait 5 minutes before trying again."
+            });
+        }
+
+        var user = await dbContext.Users.SingleOrDefaultAsync(candidate => candidate.Email == normalizedEmail, cancellationToken);
         if (user?.PasswordHash is null || user.IsDeleted || !passwords.Verify(request.Password, user.PasswordHash))
         {
+            cache.Set(rateKey, failedAttempts + 1, TimeSpan.FromMinutes(5));
             return Unauthorized(new { error = "Invalid email or password." });
         }
+
+        // Clear failed attempts counter on successful login
+        cache.Remove(rateKey);
 
         var tokenResponse = await IssueTokensAsync(user, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);

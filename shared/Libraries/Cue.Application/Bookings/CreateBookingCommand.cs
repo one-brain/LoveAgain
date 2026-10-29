@@ -86,7 +86,13 @@ public sealed class CreateBookingCommandHandler(
             }
         }
 
-        var totalAmount = decimal.Round(command.HourlyRate * command.DurationHours, 2);
+        // Enforce authoritative provider hourly rate from DB to prevent client price tampering
+        var authoritativeRate = await bookingRepository.GetProviderHourlyRateAsync(command.ProviderId, cancellationToken);
+        var effectiveRate = authoritativeRate.HasValue && authoritativeRate.Value > 0
+            ? authoritativeRate.Value
+            : command.HourlyRate;
+
+        var totalAmount = decimal.Round(effectiveRate * command.DurationHours, 2);
         var platformFee = decimal.Round(totalAmount * 0.15m, 2);
         var order = new ServiceOrder(
             command.ProviderId,
