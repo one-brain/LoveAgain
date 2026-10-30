@@ -3,9 +3,11 @@
 Related GitHub Issue: [#11](https://github.com/one-brain/LoveAgain/issues/11)
 
 ## Context & Problem Statement
-Currently, an outing can be prematurely marked as `Completed` directly from the `Confirmed` state without mandatory in-person session verification. This introduces escrow release vulnerability, where funds could be settled before parties physically meet. 
+
+Currently, an outing can be prematurely marked as `Completed` directly from the `Confirmed` state without mandatory in-person session verification. This introduces escrow release vulnerability, where funds could be settled before parties physically meet.
 
 To eliminate this vulnerability, the platform requires strict mutual cryptographic verification:
+
 1. **Arrival Initiation**: The session cannot enter `InProgress` without the companion verifying the seeker's **Arrival PIN**.
 2. **Escrow Completion**: The session cannot be marked `Completed` without the seeker verifying the companion's **Completion PIN**.
 3. **Strict Sequencing**: Direct transition from `Confirmed` to `Completed` is strictly forbidden at both domain and API levels.
@@ -33,6 +35,7 @@ To eliminate this vulnerability, the platform requires strict mutual cryptograph
 ## Detailed Specifications
 
 ### 1. Domain Model (`Cue.Domain.ServiceOrder`)
+
 - **Properties**:
   - `ArrivalPin` (`CheckInPin`): 6-digit numeric string generated upon booking confirmation. Owned by Seeker.
   - `CompletionPin`: 6-digit numeric string generated upon booking creation/confirmation. Owned by Companion.
@@ -49,6 +52,7 @@ To eliminate this vulnerability, the platform requires strict mutual cryptograph
     - Postcondition: `Status = OrderStatus.Completed`, `UpdatedAt = DateTime.UtcNow`.
 
 ### 2. Backend Commands & Endpoints (`BookingService`)
+
 - **Arrival Verification**:
   - `PATCH /api/v1/bookings/{orderId}/checkin`
   - Body: `{ "pin": "string" }`
@@ -66,6 +70,7 @@ To eliminate this vulnerability, the platform requires strict mutual cryptograph
   - Never expose both PINs to the same party prior to physical meeting.
 
 ### 3. Frontend UX & Voucher Interaction (`BookingCard.tsx` & Modals)
+
 - **Status: Confirmed**:
   - **Seeker Card**:
     - Displays **Arrival PIN Voucher**: "Present this 6-digit PIN to your companion upon arrival to begin the session."

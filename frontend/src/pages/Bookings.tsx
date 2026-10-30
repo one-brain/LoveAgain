@@ -5,13 +5,12 @@ import {
   useGetProviderIncomingBookingsQuery,
   useGetSeekerOutgoingBookingsQuery,
   useGetMyProfileQuery,
-  useCompleteBookingMutation,
 } from '../store/bookingApi';
-import { useReleaseEscrowMutation } from '../store/paymentApi';
 import { useListProvidersQuery } from '../store/discoveryApi';
 import { BookingCard, type BookingSummary } from '../components/BookingCard';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { CheckInModal } from '../components/CheckInModal';
+import { CompleteOutingModal } from '../components/booking/CompleteOutingModal';
 import { OutingSosModal } from '../components/OutingSosModal';
 import { ProviderProfileModal } from '../components/booking/ProviderProfileModal';
 import { EditBookingModal } from '../components/booking/EditBookingModal';
@@ -134,8 +133,7 @@ const Bookings: React.FC = () => {
   const [checkoutBooking, setCheckoutBooking] = useState<BookingSummary | null>(null);
   const [editingBooking, setEditingBooking] = useState<BookingSummary | null>(null);
   const [cancellingBooking, setCancellingBooking] = useState<BookingSummary | null>(null);
-  const [completeBooking] = useCompleteBookingMutation();
-  const [releaseEscrow] = useReleaseEscrowMutation();
+  const [completingBooking, setCompletingBooking] = useState<BookingSummary | null>(null);
   const [checkInBooking, setCheckInBooking] = useState<BookingSummary | null>(null);
   const [sosBooking, setSosBooking] = useState<BookingSummary | null>(null);
   const [previewProviderId, setPreviewProviderId] = useState<string | null>(null);
@@ -144,22 +142,15 @@ const Bookings: React.FC = () => {
     setCheckInBooking(b);
   };
 
-  const handleComplete = async (orderId: string) => {
-    if (window.confirm('Confirm that this outing experience has completed safely? This will finalize the session and release escrow funds.')) {
-      try {
-        await completeBooking(orderId).unwrap();
-        try {
-          await releaseEscrow({ orderId }).unwrap();
-        } catch {
-          // Ignore if escrow was already processed
-        }
-        await Promise.all([refetchProviderBookings(), refetchSeekerBookings()]);
-        setStatusFilter('all');
-        setActiveTab('completed');
-      } catch (err: any) {
-        alert(err?.data?.error || 'Failed to complete session');
-      }
-    }
+  const handleOpenComplete = (b: BookingSummary) => {
+    setCompletingBooking(b);
+  };
+
+  const handleCompleteSuccess = async () => {
+    setCompletingBooking(null);
+    await Promise.all([refetchProviderBookings(), refetchSeekerBookings()]);
+    setStatusFilter('all');
+    setActiveTab('completed');
   };
 
   const handleOpenSos = (b: BookingSummary) => {
@@ -782,7 +773,7 @@ const Bookings: React.FC = () => {
                       onCancel={handleCancel}
                       onPay={(bkg) => setCheckoutBooking(bkg)}
                       onCheckIn={handleCheckIn}
-                      onComplete={handleComplete}
+                      onComplete={handleOpenComplete}
                       onOpenSos={handleOpenSos}
                       onViewProfile={(id) => setPreviewProviderId(id)}
                     />
@@ -1058,7 +1049,7 @@ const Bookings: React.FC = () => {
                         onCancel={handleCancel}
                         onPay={(bkg) => setCheckoutBooking(bkg)}
                         onCheckIn={handleCheckIn}
-                        onComplete={handleComplete}
+                        onComplete={handleOpenComplete}
                         onOpenSos={handleOpenSos}
                         onViewProfile={(id) => setPreviewProviderId(id)}
                       />
@@ -1092,6 +1083,17 @@ const Bookings: React.FC = () => {
             refetchProviderBookings();
             refetchSeekerBookings();
           }}
+        />
+      )}
+
+      {completingBooking && (
+        <CompleteOutingModal
+          isOpen={true}
+          onClose={() => setCompletingBooking(null)}
+          orderId={completingBooking.orderId}
+          companionName={completingBooking.providerName}
+          meetingAddress={completingBooking.meetingAddress}
+          onSuccess={handleCompleteSuccess}
         />
       )}
 

@@ -144,14 +144,15 @@ public sealed class CancelBookingCommandHandler(
     }
 }
 
-public sealed record CompleteOrderCommand(Guid OrderId, Guid ProviderId) : IRequest<Unit>;
+public sealed record CompleteOrderCommand(Guid OrderId, Guid UserId, string CompletionPin) : IRequest<Unit>;
 
 public sealed class CompleteOrderCommandValidator : AbstractValidator<CompleteOrderCommand>
 {
     public CompleteOrderCommandValidator()
     {
         RuleFor(command => command.OrderId).NotEmpty();
-        RuleFor(command => command.ProviderId).NotEmpty();
+        RuleFor(command => command.UserId).NotEmpty();
+        RuleFor(command => command.CompletionPin).NotEmpty().Length(6);
     }
 }
 
@@ -164,12 +165,12 @@ public sealed class CompleteOrderCommandHandler(
         var order = await repository.GetByIdAsync(command.OrderId, cancellationToken)
             ?? throw new KeyNotFoundException("Booking was not found.");
 
-        if (order.ProviderId != command.ProviderId && order.SeekerId != command.ProviderId)
+        if (order.SeekerId != command.UserId)
         {
-            throw new UnauthorizedAccessException("Only a booking participant can complete a booking.");
+            throw new UnauthorizedAccessException("Only the seeker can verify the completion PIN and release escrow.");
         }
 
-        order.Complete();
+        order.Complete(command.CompletionPin);
 
         var slot = await repository.GetSlotByBookingAsync(order.Id, cancellationToken);
         if (slot is not null)
@@ -279,7 +280,8 @@ public sealed class UpdateBookingCommandHandler(
             seek?.PhotoUrl,
             prov?.AverageRating,
             order.Requirements?.Activity ?? prov?.PrimarySpecialty,
-            prov?.IsVerified
+            prov?.IsVerified,
+            order.ProviderId == command.UserId ? order.CompletionPin : (order.Status is OrderStatus.Completed ? order.CompletionPin : null)
         );
     }
 }
