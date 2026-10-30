@@ -75,6 +75,16 @@ public sealed class BookingsController(ISender sender, CueDbContext dbContext) :
         return Ok(bookings);
     }
 
+    [HttpGet("availability/{providerId:guid}")]
+    [ProducesResponseType(typeof(IReadOnlyList<CompanionSlotSummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<CompanionSlotSummary>>> GetCompanionAvailability(
+        Guid providerId,
+        CancellationToken cancellationToken)
+    {
+        var slots = await sender.Send(new GetCompanionAvailabilityQuery(providerId), cancellationToken);
+        return Ok(slots);
+    }
+
     [HttpGet("provider/incoming/{providerId}")]
     [ProducesResponseType(typeof(IReadOnlyList<BookingSummary>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]

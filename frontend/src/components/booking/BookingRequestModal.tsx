@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../store';
@@ -10,8 +10,11 @@ import {
   CalendarDaysIcon,
   AdjustmentsHorizontalIcon,
   MapPinIcon,
+  ClockIcon,
+  SparklesIcon,
 } from '@heroicons/react/24/outline';
 import { formatINR, formatRate } from '../../utils/currency';
+import { useGetCompanionAvailabilityQuery, type CompanionAvailabilitySlot } from '../../store/bookingApi';
 
 export interface BookingRequirementData {
   activity: string;
@@ -109,6 +112,65 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const [startDate, setStartDate] = useState(initialDate || defaultDateStr);
   const [startTime, setStartTime] = useState(initialTime || '18:00');
   const [durationHours, setDurationHours] = useState(initialDuration || 2);
+  const [selectedDateKey, setSelectedDateKey] = useState<string>('');
+  const [selectedSlot, setSelectedSlot] = useState<CompanionAvailabilitySlot | null>(null);
+
+  const { data: rawSlots = [], isLoading: isLoadingSlots } = useGetCompanionAvailabilityQuery(
+    provider.providerId,
+    { skip: !isOpen || !provider?.providerId }
+  );
+
+  const availableSlots = useMemo(() => {
+    const now = new Date();
+    return (rawSlots || []).filter((s: CompanionAvailabilitySlot) => !s.isBooked && new Date(s.endTime) > now);
+  }, [rawSlots]);
+
+  const slotsByDate = useMemo(() => {
+    const map = new Map<string, CompanionAvailabilitySlot[]>();
+    for (const slot of availableSlots) {
+      const d = new Date(slot.startTime);
+      const dateKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      if (!map.has(dateKey)) {
+        map.set(dateKey, []);
+      }
+      map.get(dateKey)!.push(slot);
+    }
+    for (const [_, slots] of map.entries()) {
+      slots.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    }
+    return map;
+  }, [availableSlots]);
+
+  const availableDates = useMemo(() => {
+    return Array.from(slotsByDate.keys()).sort();
+  }, [slotsByDate]);
+
+  const handleSelectSlot = (slot: CompanionAvailabilitySlot) => {
+    setSelectedSlot(slot);
+    const start = new Date(slot.startTime);
+    const end = new Date(slot.endTime);
+    const dateStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+    const timeStr = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
+    const diffHours = (end.getTime() - start.getTime()) / (1000 * 3600);
+    const resolvedHours = slot.durationHours || (diffHours > 0 ? Math.round(diffHours * 10) / 10 : 2);
+
+    setStartDate(dateStr);
+    setStartTime(timeStr);
+    setDurationHours(resolvedHours);
+  };
+
+  useEffect(() => {
+    if (availableDates.length > 0) {
+      if (!selectedDateKey || !slotsByDate.has(selectedDateKey)) {
+        const firstDate = availableDates[0];
+        setSelectedDateKey(firstDate);
+        const slotsForFirst = slotsByDate.get(firstDate);
+        if (slotsForFirst && slotsForFirst.length > 0) {
+          handleSelectSlot(slotsForFirst[0]);
+        }
+      }
+    }
+  }, [availableDates, slotsByDate]);
   const [meetingVenue, setMeetingVenue] = useState('');
   const [dressCode, setDressCode] = useState(DRESS_CODES[0]);
   const [transportMode, setTransportMode] = useState(TRANSPORT_MODES[0]);
@@ -306,7 +368,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
             <form onSubmit={handleStep1Submit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold text-muted-foreground mb-1.5">
-                  Select Activity / Skill Required
+                  Select Activity / Experience
                 </label>
                 <div className="grid grid-cols-2 gap-2">
                   {provider.specialties.slice(0, 4).map((spec) => (
@@ -314,87 +376,177 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                       key={spec}
                       type="button"
                       onClick={() => setActivity(spec)}
-                      className={`p-2.5 rounded-xl border text-left font-medium text-xs transition-all ${
+                      className={`min-h-[44px] p-2.5 rounded-xl border text-left font-medium text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
                         activity === spec
                           ? 'border-accent bg-accent/10 text-accent font-semibold shadow-2xs'
                           : 'border-border bg-muted/40 text-foreground hover:bg-muted'
                       }`}
                     >
-                      ✓ {spec}
+                      <span className="text-accent font-bold">✓</span>
+                      <span className="truncate">{spec}</span>
                     </button>
                   ))}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-2">
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Date
+              {/* Companion Availability Slot Selector */}
+              <div className="space-y-3 pt-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                    <CalendarDaysIcon className="w-4 h-4 text-accent" />
+                    <span>Select Available Companion Schedule</span>
                   </label>
-                  <input
-                    type="date"
-                    value={startDate}
-                    min={defaultDateStr}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                    required
-                  />
+                  {availableSlots.length > 0 && (
+                    <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 tabular-nums">
+                      {availableSlots.length} slot{availableSlots.length > 1 ? 's' : ''} open
+                    </span>
+                  )}
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Start Time
-                  </label>
-                  <input
-                    type="time"
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                    required
-                  />
-                </div>
-              </div>
+                {isLoadingSlots ? (
+                  <div className="p-8 rounded-2xl bg-muted/30 border border-border/60 text-center space-y-2 animate-pulse">
+                    <ClockIcon className="w-6 h-6 text-muted-foreground mx-auto animate-spin" />
+                    <p className="text-xs text-muted-foreground">Checking companion's published schedule...</p>
+                  </div>
+                ) : availableDates.length === 0 ? (
+                  /* Zero-Slot Empty State: Informational notice with NO action button; booking disabled */
+                  <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
+                    <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
+                      <CalendarDaysIcon className="w-6 h-6" />
+                    </div>
+                    <h4 className="font-serif text-base font-bold text-foreground">
+                      No Availability Scheduled
+                    </h4>
+                    <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
+                      This companion currently has no open availability slots scheduled. Please check back later.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {/* Day Selector Pills */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
+                      {availableDates.map((dateKey) => {
+                        const [y, m, d] = dateKey.split('-').map(Number);
+                        const dateObj = new Date(y, m - 1, d);
+                        const weekday = dateObj.toLocaleDateString('en-IN', { weekday: 'short' });
+                        const day = dateObj.getDate();
+                        const month = dateObj.toLocaleDateString('en-IN', { month: 'short' });
+                        const isSelected = selectedDateKey === dateKey;
+                        const count = slotsByDate.get(dateKey)?.length || 0;
+                        return (
+                          <button
+                            key={dateKey}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDateKey(dateKey);
+                              const slotsForDate = slotsByDate.get(dateKey) || [];
+                              if (slotsForDate.length > 0) {
+                                handleSelectSlot(slotsForDate[0]);
+                              }
+                            }}
+                            className={`min-w-[76px] min-h-[64px] px-3 py-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center shrink-0 ${
+                              isSelected
+                                ? 'border-accent bg-accent text-accent-foreground shadow-xs'
+                                : 'border-border bg-card hover:bg-muted/60 text-foreground'
+                            }`}
+                          >
+                            <span className={`text-[10px] uppercase font-semibold tracking-wider ${isSelected ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+                              {weekday}
+                            </span>
+                            <span className="text-base font-bold font-mono tabular-nums leading-tight">
+                              {day}
+                            </span>
+                            <span className={`text-[10px] ${isSelected ? 'text-accent-foreground/90' : 'text-muted-foreground'}`}>
+                              {month} • {count}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
 
-              <div className="pt-2">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-xs font-bold text-muted-foreground">
-                    Duration: <strong className="text-foreground">{durationHours} hours</strong>
-                  </span>
-                  <span className="text-xs font-bold text-accent">
-                    {formatINR(provider.hourlyRate)} × {durationHours} = {formatINR(subtotal)}
-                  </span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="8"
-                  step="1"
-                  value={durationHours}
-                  onChange={(e) => setDurationHours(Number(e.target.value))}
-                  className="w-full accent-accent cursor-pointer"
-                />
-                <div className="flex justify-between text-[10px] text-muted-foreground px-1 mt-0.5">
-                  <span>1 hr</span>
-                  <span>2 hrs</span>
-                  <span>4 hrs</span>
-                  <span>6 hrs</span>
-                  <span>8 hrs</span>
-                </div>
+                    {/* Time Slot Chips for Selected Day */}
+                    {selectedDateKey && slotsByDate.has(selectedDateKey) && (
+                      <div className="space-y-1.5 pt-1">
+                        <span className="text-[11px] font-semibold text-muted-foreground block">
+                          Available Slots for Selected Date:
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {slotsByDate.get(selectedDateKey)!.map((slot) => {
+                            const isSlotActive = selectedSlot?.slotId === slot.slotId;
+                            const s = new Date(slot.startTime);
+                            const e = new Date(slot.endTime);
+                            const timeRangeStr = `${s.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })} – ${e.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`;
+                            const slotHours = slot.durationHours || 2;
+                            const slotCost = slotHours * provider.hourlyRate;
+                            return (
+                              <button
+                                key={slot.slotId}
+                                type="button"
+                                onClick={() => handleSelectSlot(slot)}
+                                className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
+                                  isSlotActive
+                                    ? 'border-accent bg-accent/10 ring-1 ring-accent text-foreground shadow-2xs'
+                                    : 'border-border bg-card hover:bg-muted/50 text-foreground'
+                                }`}
+                              >
+                                <div className="min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <ClockIcon className={`w-3.5 h-3.5 shrink-0 ${isSlotActive ? 'text-accent' : 'text-muted-foreground'}`} />
+                                    <span className="font-mono text-xs font-bold tabular-nums truncate">
+                                      {timeRangeStr}
+                                    </span>
+                                  </div>
+                                  <span className="text-[11px] text-muted-foreground font-medium block mt-0.5">
+                                    {slotHours} hr session
+                                  </span>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <span className="font-mono font-bold text-xs text-foreground block tabular-nums">
+                                    {formatINR(slotCost)}
+                                  </span>
+                                  <span className="text-[10px] text-accent font-semibold block">
+                                    {isSlotActive ? '✓ Selected' : 'Available'}
+                                  </span>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Selected Slot Confirmation Pill */}
+                    {selectedSlot && (
+                      <div className="p-3.5 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-between text-xs mt-2">
+                        <div className="flex items-center gap-2">
+                          <SparklesIcon className="w-4 h-4 text-accent shrink-0" />
+                          <span className="text-foreground font-medium">
+                            Confirmed slot: <strong className="font-semibold text-accent">{durationHours} hrs</strong> on <strong className="font-mono">{startDate}</strong> at <strong className="font-mono">{startTime}</strong>
+                          </span>
+                        </div>
+                        <span className="font-mono font-bold text-foreground tabular-nums">
+                          {formatINR(subtotal)}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Escrow Preview Pill */}
               <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/80 flex items-center justify-between text-xs">
                 <div className="flex items-center gap-2">
-                  <ShieldCheckIcon className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                  <ShieldCheckIcon className="w-5 h-5 text-emerald-500 shrink-0" />
                   <span className="text-muted-foreground">Protected Payment (Safe Escrow)</span>
                 </div>
-                <span className="text-sm font-bold text-foreground">{formatINR(totalAmount)}</span>
+                <span className="text-sm font-bold font-mono text-foreground tabular-nums">{formatINR(totalAmount)}</span>
               </div>
 
               <div className="pt-2 flex justify-end">
                 <button
                   type="submit"
-                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-md hover:bg-accent-hover transition-all flex items-center justify-center gap-1.5"
+                  disabled={!selectedSlot || availableDates.length === 0}
+                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-md hover:bg-accent-hover transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
                 >
                   <span>Continue to Venue & Preferences &rarr;</span>
                 </button>

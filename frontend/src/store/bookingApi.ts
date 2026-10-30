@@ -94,6 +94,15 @@ export interface SeekerOutgoingBookingsResponse {
   bookings: BookingSummary[];
 }
 
+export interface CompanionAvailabilitySlot {
+  slotId: string;
+  providerId: string;
+  startTime: string;
+  endTime: string;
+  durationHours?: number;
+  isBooked: boolean;
+}
+
 export const bookingApi = createApi({
   reducerPath: 'bookingApi',
   baseQuery: baseQueryWithReauth,
@@ -189,6 +198,11 @@ export const bookingApi = createApi({
       }),
       providesTags: ['Bookings'],
     }),
+    getCompanionAvailability: builder.query<CompanionAvailabilitySlot[], string>({
+      query: (providerId) => `/bookings/availability/${providerId}`,
+      transformResponse: (res: any) => (Array.isArray(res) ? res : res?.slots || []),
+      providesTags: ['Bookings'],
+    }),
   }),
 });
 
@@ -206,6 +220,7 @@ export const {
   useRemoveServiceSpecialtyMutation,
   useGetProviderIncomingBookingsQuery,
   useGetSeekerOutgoingBookingsQuery,
+  useGetCompanionAvailabilityQuery,
 } = bookingApi;
 
 // Re-export profile hooks for convenience

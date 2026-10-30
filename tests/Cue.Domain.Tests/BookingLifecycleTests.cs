@@ -33,6 +33,20 @@ public sealed class BookingLifecycleTests
     }
 
     [Fact]
+    public void AvailabilitySlot_ReleasesOnlyByHoldingBooking()
+    {
+        var slot = new AvailabilitySlot(Guid.NewGuid(), DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(2));
+        var orderId = Guid.NewGuid();
+
+        slot.Hold(orderId);
+        Assert.Throws<InvalidOperationException>(() => slot.Release(Guid.NewGuid()));
+
+        slot.Release(orderId);
+        Assert.False(slot.IsBooked);
+        Assert.Null(slot.BookingId);
+    }
+
+    [Fact]
     public void PaymentTransaction_CanBeCapturedThenRefunded()
     {
         var transaction = new PaymentTransaction(Guid.NewGuid(), "pi_test", 25m, "usd");

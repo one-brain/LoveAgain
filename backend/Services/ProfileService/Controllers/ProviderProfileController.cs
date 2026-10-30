@@ -270,6 +270,23 @@ public sealed class ProviderProfileController(CueDbContext dbContext, ISender se
         }
     }
 
+    [HttpGet("{providerId:guid}/availability")]
+    [ProducesResponseType(typeof(IReadOnlyList<AvailabilitySlotSummary>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<IReadOnlyList<AvailabilitySlotSummary>>> GetCompanionAvailability(
+        Guid providerId,
+        CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        var slots = await dbContext.AvailabilitySlots
+            .AsNoTracking()
+            .Where(slot => slot.ProviderId == providerId && !slot.IsBooked && slot.EndTime > now)
+            .OrderBy(slot => slot.StartTime)
+            .Select(slot => new AvailabilitySlotSummary(slot.Id, slot.ProviderId, slot.StartTime, slot.EndTime, slot.IsBooked))
+            .ToListAsync(cancellationToken);
+
+        return Ok(slots);
+    }
+
     // --- Delete provider profile ---
     [HttpDelete]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

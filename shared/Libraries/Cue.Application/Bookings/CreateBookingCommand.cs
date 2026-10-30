@@ -61,29 +61,15 @@ public sealed class CreateBookingCommandHandler(
             return new CreateBookingResult(existingPending.Id, existingPending.TotalAmount, existingPending.Status);
         }
 
-        var isShowcaseSampleProvider = command.ProviderId.ToString()
-            .StartsWith("00000000-0000-0000-0000-0000000000", StringComparison.OrdinalIgnoreCase);
-
-        AvailabilitySlot? slot = null;
-        if (!isShowcaseSampleProvider)
+        var slot = await bookingRepository.GetAvailableSlotAsync(command.ProviderId, command.StartTime, cancellationToken);
+        if (slot is null || slot.IsBooked)
         {
-            slot = await bookingRepository.GetAvailableSlotAsync(command.ProviderId, command.StartTime, cancellationToken);
-            if (slot is null)
-            {
-                var isOverlapping = await bookingRepository.HasOverlappingSlotAsync(
-                    command.ProviderId,
-                    command.StartTime,
-                    command.EndTime,
-                    cancellationToken);
+            throw new InvalidOperationException("The selected time does not match an open availability slot for this companion.");
+        }
 
-                if (isOverlapping)
-                {
-                    throw new InvalidOperationException("The companion has another confirmed booking during this time window.");
-                }
-
-                slot = new AvailabilitySlot(command.ProviderId, command.StartTime, command.EndTime);
-                await bookingRepository.AddSlotAsync(slot, cancellationToken);
-            }
+        if (command.EndTime > slot.EndTime.AddMinutes(5))
+        {
+            throw new InvalidOperationException("The requested booking duration exceeds the companion's available time slot.");
         }
 
         // Enforce authoritative provider hourly rate from DB to prevent client price tampering

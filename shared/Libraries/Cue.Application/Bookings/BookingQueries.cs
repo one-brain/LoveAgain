@@ -175,3 +175,30 @@ public sealed class GetAvailableProvidersQueryHandler(IBookingRepository reposit
         return profiles.Select(profile => new ProviderSummary(profile.UserId, profile.HourlyRate, profile.Bio, profile.Specialties, profile.AverageRating, profile.IsActive)).ToArray();
     }
 }
+
+public sealed record CompanionSlotSummary(
+    Guid SlotId,
+    Guid ProviderId,
+    DateTime StartTime,
+    DateTime EndTime,
+    decimal DurationHours,
+    bool IsBooked);
+
+public sealed record GetCompanionAvailabilityQuery(Guid ProviderId) : IRequest<IReadOnlyList<CompanionSlotSummary>>;
+
+public sealed class GetCompanionAvailabilityQueryHandler(IBookingRepository repository)
+    : IRequestHandler<GetCompanionAvailabilityQuery, IReadOnlyList<CompanionSlotSummary>>
+{
+    public async Task<IReadOnlyList<CompanionSlotSummary>> Handle(GetCompanionAvailabilityQuery query, CancellationToken cancellationToken)
+    {
+        var slots = await repository.GetFutureAvailableSlotsAsync(query.ProviderId, cancellationToken);
+        return slots.Select(s => new CompanionSlotSummary(
+            s.Id,
+            s.ProviderId,
+            s.StartTime,
+            s.EndTime,
+            (decimal)Math.Round((s.EndTime - s.StartTime).TotalHours, 1),
+            s.IsBooked
+        )).ToList();
+    }
+}
