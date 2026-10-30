@@ -210,14 +210,17 @@ public sealed class BookingsController(ISender sender, CueDbContext dbContext) :
 
     [HttpPatch("{orderId:guid}/complete")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
-    public async Task<IActionResult> Complete(Guid orderId, CancellationToken cancellationToken)
+    public async Task<IActionResult> Complete(
+        Guid orderId,
+        [FromBody] CompleteBookingRequest request,
+        CancellationToken cancellationToken)
     {
         if (!TryGetUserId(out var userId))
         {
             return Unauthorized();
         }
 
-        return await SendLifecycle(new CompleteOrderCommand(orderId, userId), cancellationToken);
+        return await SendLifecycle(new CompleteOrderCommand(orderId, userId, request.CompletionPin), cancellationToken);
     }
 
     [HttpPost("{orderId:guid}/cancel")]
@@ -292,6 +295,7 @@ public sealed class BookingsController(ISender sender, CueDbContext dbContext) :
     }
 
     public sealed record CheckInBookingRequest(string Pin);
+    public sealed record CompleteBookingRequest(string CompletionPin);
     public sealed record CancelBookingRequest(string Reason);
     public sealed record UpdateBookingRequest(
         string? MeetingAddress,

@@ -88,6 +88,7 @@ internal sealed class ServiceOrderConfiguration : IEntityTypeConfiguration<Servi
         builder.Property(order => order.PlatformFee).HasPrecision(10, 2);
         builder.Property(order => order.ProviderEarnings).HasPrecision(10, 2);
         builder.Property(order => order.CheckInPin).HasMaxLength(10);
+        builder.Property(order => order.CompletionPin).HasMaxLength(10);
         builder.Property(order => order.Requirements)
             .HasColumnName("requirements")
             .HasColumnType("jsonb")

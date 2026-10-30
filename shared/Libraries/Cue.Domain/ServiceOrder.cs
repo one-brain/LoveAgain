@@ -15,7 +15,8 @@ public sealed class ServiceOrder
         decimal platformFee,
         string? meetingAddress = null,
         BookingRequirements? requirements = null,
-        string? checkInPin = null)
+        string? checkInPin = null,
+        string? completionPin = null)
     {
         if (providerId == Guid.Empty || seekerId == Guid.Empty) throw new ArgumentException("Provider and seeker are required.");
         if (providerId == seekerId) throw new ArgumentException("Provider and seeker must be different users.");
@@ -33,7 +34,8 @@ public sealed class ServiceOrder
         ProviderEarnings = totalAmount - platformFee;
         MeetingAddress = meetingAddress?.Trim();
         Requirements = requirements;
-        CheckInPin = checkInPin?.Trim();
+        CheckInPin = checkInPin?.Trim() ?? Random.Shared.Next(100000, 999999).ToString();
+        CompletionPin = completionPin?.Trim() ?? Random.Shared.Next(100000, 999999).ToString();
         CreatedAt = DateTime.UtcNow;
         UpdatedAt = CreatedAt;
     }
@@ -50,6 +52,7 @@ public sealed class ServiceOrder
     public string? MeetingAddress { get; private set; }
     public BookingRequirements? Requirements { get; private set; }
     public string? CheckInPin { get; private set; }
+    public string? CompletionPin { get; private set; }
     public DateTime? CheckedInAt { get; private set; }
     public string? CancellationReason { get; private set; }
     public DateTime CreatedAt { get; private set; }
@@ -117,6 +120,7 @@ public sealed class ServiceOrder
         EnsureStatus(OrderStatus.PendingPayment);
         Status = OrderStatus.Confirmed;
         CheckInPin ??= Random.Shared.Next(100000, 999999).ToString();
+        CompletionPin ??= Random.Shared.Next(100000, 999999).ToString();
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -141,14 +145,30 @@ public sealed class ServiceOrder
         UpdatedAt = DateTime.UtcNow;
     }
 
+    public void Complete(string completionPin)
+    {
+        if (Status != OrderStatus.InProgress)
+        {
+            throw new InvalidOperationException("Outing cannot be completed before the session is initiated with the arrival verification PIN (order must be InProgress).");
+        }
+
+        if (string.IsNullOrWhiteSpace(completionPin) || !string.Equals(completionPin.Trim(), CompletionPin, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Invalid completion PIN.");
+        }
+
+        Status = OrderStatus.Completed;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void Complete()
     {
-        if (Status is not (OrderStatus.Confirmed or OrderStatus.InProgress))
+        if (Status != OrderStatus.InProgress)
         {
-            throw new InvalidOperationException($"Order must be Confirmed or InProgress before this operation (current: {Status}).");
+            throw new InvalidOperationException("Outing cannot be completed before the session is initiated with the arrival verification PIN (order must be InProgress).");
         }
+
         Status = OrderStatus.Completed;
-        CheckedInAt ??= DateTime.UtcNow;
         UpdatedAt = DateTime.UtcNow;
     }
 
@@ -175,7 +195,8 @@ public sealed class ServiceOrder
         string? checkInPin,
         DateTime? checkedInAt,
         string? cancellationReason,
-        DateTime createdAt)
+        DateTime createdAt,
+        string? completionPin = null)
     {
         var fee = decimal.Round(totalAmount * 0.15m, 2);
         return new ServiceOrder
@@ -192,6 +213,7 @@ public sealed class ServiceOrder
             MeetingAddress = meetingAddress,
             Requirements = requirements,
             CheckInPin = checkInPin,
+            CompletionPin = completionPin ?? (checkInPin != null ? Random.Shared.Next(100000, 999999).ToString() : null),
             CheckedInAt = checkedInAt,
             CancellationReason = cancellationReason,
             CreatedAt = createdAt,

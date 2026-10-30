@@ -42,6 +42,7 @@ export interface BookingSummary {
   meetingAddress?: string;
   activity?: string;
   checkInPin?: string;
+  completionPin?: string;
   checkedInAt?: string;
   cancellationReason?: string;
   requirements?: {
@@ -66,7 +67,7 @@ interface BookingCardProps {
   onCancel?: (booking: BookingSummary) => void;
   onPay?: (booking: BookingSummary) => void;
   onCheckIn?: (booking: BookingSummary) => void;
-  onComplete?: (orderId: string) => void;
+  onComplete?: (booking: BookingSummary) => void;
   onOpenSos?: (booking: BookingSummary) => void;
   onViewProfile?: (providerId: string) => void;
 }
@@ -360,7 +361,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           <div className="mt-3 p-3.5 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-between gap-3">
             <div>
               <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
-                Session Verification PIN
+                Session Arrival PIN
               </span>
               <span className="text-2xl font-mono font-bold tracking-[0.2em] text-foreground tabular-nums">
                 {booking.checkInPin ? booking.checkInPin : '••••••'}
@@ -372,8 +373,32 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               </span>
               <span className="text-[10px] text-muted-foreground leading-tight block">
                 {booking.checkInPin
-                  ? 'Companion verifies arrival with this PIN to release session escrow.'
+                  ? 'Present this 6-digit PIN to companion upon arrival to begin your outing.'
                   : 'PIN generated securely upon arrival check-in.'}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* In-Progress Outing Completion Voucher (Companion holds Completion PIN to disclose to Seeker) */}
+        {isInProgress && isCompanionView && (
+          <div className="mt-3 p-3.5 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-between gap-3">
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
+                Outing Completion PIN
+              </span>
+              <span className="text-2xl font-mono font-bold tracking-[0.2em] text-foreground tabular-nums">
+                {booking.completionPin ? booking.completionPin : '••••••'}
+              </span>
+            </div>
+            <div className="text-right max-w-[180px]">
+              <span className="text-[11px] font-semibold text-foreground block">
+                {booking.completionPin ? 'Provide to Seeker' : 'Escrow Release Code'}
+              </span>
+              <span className="text-[10px] text-muted-foreground leading-tight block">
+                {booking.completionPin
+                  ? 'Disclose this PIN to client when outing concludes to authorize escrow release.'
+                  : 'PIN available during active session.'}
               </span>
             </div>
           </div>
@@ -475,17 +500,17 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </button>
           )}
 
-          {(isInProgress || isConfirmed) && onComplete && (
+          {isInProgress && !isCompanionView && onComplete && (
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                onComplete(booking.orderId);
+                onComplete(booking);
               }}
-              className="flex-1 min-w-[130px] min-h-[44px] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+              className="flex-1 min-w-[150px] min-h-[44px] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <CheckCircleIcon className="w-4 h-4" />
-              <span>{isCompanionView ? 'End Meetup' : 'Complete Outing'}</span>
+              <span>Complete Outing</span>
             </button>
           )}
 

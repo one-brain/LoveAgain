@@ -193,4 +193,33 @@ public sealed class BookingLifecycleTests
             order.UpdateDetails("Cafe", null, start, end);
         });
     }
+
+    [Fact]
+    public void ServiceOrder_DualPin_RequiresCheckInPin_AndCompletionPin()
+    {
+        var providerId = Guid.NewGuid();
+        var seekerId = Guid.NewGuid();
+        var order = new ServiceOrder(providerId, seekerId, DateTime.UtcNow.AddHours(1), DateTime.UtcNow.AddHours(3), 100m, 15m);
+
+        order.Confirm();
+        Assert.NotNull(order.CheckInPin);
+        Assert.NotNull(order.CompletionPin);
+
+        // Cannot complete directly from Confirmed
+        Assert.Throws<InvalidOperationException>(() => order.Complete(order.CompletionPin!));
+
+        // Wrong Arrival PIN fails
+        Assert.Throws<InvalidOperationException>(() => order.CheckIn("000000"));
+
+        // Valid Arrival PIN transitions Confirmed -> InProgress
+        order.CheckIn(order.CheckInPin!);
+        Assert.Equal(OrderStatus.InProgress, order.Status);
+
+        // Wrong Completion PIN fails
+        Assert.Throws<InvalidOperationException>(() => order.Complete("999999"));
+
+        // Valid Completion PIN transitions InProgress -> Completed
+        order.Complete(order.CompletionPin!);
+        Assert.Equal(OrderStatus.Completed, order.Status);
+    }
 }

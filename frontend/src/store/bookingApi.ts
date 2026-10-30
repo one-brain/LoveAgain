@@ -52,6 +52,7 @@ export interface BookingSummary {
   meetingAddress?: string;
   requirements?: BookingRequirementsDto;
   checkInPin?: string;
+  completionPin?: string;
   checkedInAt?: string;
   cancellationReason?: string;
   createdAt?: string;
@@ -141,10 +142,11 @@ export const bookingApi = createApi({
       }),
       invalidatesTags: ['Bookings'],
     }),
-    completeBooking: builder.mutation<void, string>({
-      query: (orderId) => ({
+    completeBooking: builder.mutation<void, { orderId: string; completionPin: string }>({
+      query: ({ orderId, completionPin }) => ({
         url: `/bookings/${orderId}/complete`,
         method: 'PATCH',
+        body: { completionPin },
       }),
       invalidatesTags: ['Bookings'],
     }),

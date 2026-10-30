@@ -25,7 +25,8 @@ public sealed record BookingSummary(
     string? SeekerPhoto = null,
     decimal? AverageRating = null,
     string? Specialty = null,
-    bool? IsVerified = null);
+    bool? IsVerified = null,
+    string? CompletionPin = null);
 
 public sealed record GetUserBookingsQuery(Guid UserId) : IRequest<IReadOnlyList<BookingSummary>>;
 
@@ -60,7 +61,8 @@ public sealed class GetUserBookingsQueryHandler(IBookingRepository repository) :
                 seek?.PhotoUrl,
                 prov?.AverageRating,
                 order.Requirements?.Activity ?? prov?.PrimarySpecialty,
-                prov?.IsVerified
+                prov?.IsVerified,
+                order.ProviderId == query.UserId ? order.CompletionPin : (order.Status is OrderStatus.Completed ? order.CompletionPin : null)
             );
         }).ToArray();
     }
@@ -107,7 +109,8 @@ public sealed class GetProviderIncomingBookingsQueryHandler(IBookingRepository r
                 seek?.PhotoUrl,
                 prov?.AverageRating,
                 order.Requirements?.Activity ?? prov?.PrimarySpecialty,
-                prov?.IsVerified
+                prov?.IsVerified,
+                order.CompletionPin
             );
         }).ToArray();
     }
@@ -153,7 +156,8 @@ public sealed class GetSeekerOutgoingBookingsQueryHandler(IBookingRepository rep
                 seek?.PhotoUrl,
                 prov?.AverageRating,
                 order.Requirements?.Activity ?? prov?.PrimarySpecialty,
-                prov?.IsVerified
+                prov?.IsVerified,
+                order.Status is OrderStatus.Completed ? order.CompletionPin : null
             );
         }).ToArray();
     }
