@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useGetBookingReviewStatusQuery } from '../store/reviewApi';
+import { LeaveReviewModal } from './booking/LeaveReviewModal';
+import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { useNavigate } from 'react-router-dom';
 import { formatINR } from '../utils/currency';
 import { resolveProviderInfo } from '../utils/providerData';
@@ -132,6 +135,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 }) => {
   const navigate = useNavigate();
   const statusInfo = STATUS_CONFIG[booking.status] || STATUS_CONFIG.PendingPayment;
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const isCompleted = booking.status === 'Completed';
+  const { data: reviewStatus } = useGetBookingReviewStatusQuery(booking.orderId, {
+    skip: !isCompleted,
+  });
 
   // Resolve companion or client profile details based on perspective
   const providerInfo = resolveProviderInfo(booking.providerId, liveProviders);
@@ -173,7 +181,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const isConfirmed = booking.status === 'Confirmed';
   const isInProgress = booking.status === 'InProgress';
   const isCancelled = booking.status === 'Cancelled';
-  const isCompleted = booking.status === 'Completed';
 
   // Gather concise outing requirement chips
   const tags: string[] = [];
@@ -446,6 +453,27 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </button>
           )}
 
+          {isCompleted && (
+            reviewStatus?.hasReviewed ? (
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[#C5A059] text-xs font-semibold">
+                <SolidStarIcon className="w-4 h-4 text-[#C5A059]" />
+                <span>Reviewed ({reviewStatus.myReview?.rating || 5}/5)</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsReviewModalOpen(true);
+                }}
+                className="flex-1 min-w-[130px] min-h-[44px] px-4 py-2.5 rounded-xl bg-[#C5A059] hover:bg-[#b08e4c] text-white font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <SolidStarIcon className="w-4 h-4" />
+                <span>Leave a Review</span>
+              </button>
+            )
+          )}
+
           {/* Secondary Actions Group */}
           <div className="flex items-center gap-1.5 ml-auto">
             {/* Edit Booking */}
@@ -493,6 +521,15 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           </div>
         </div>
       </div>
+
+      {isReviewModalOpen && (
+        <LeaveReviewModal
+          booking={booking}
+          counterpartName={displayName}
+          isProviderViewing={roleMode === 'companion'}
+          onClose={() => setIsReviewModalOpen(false)}
+        />
+      )}
     </div>
   );
 };

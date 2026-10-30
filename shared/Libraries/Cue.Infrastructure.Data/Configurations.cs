@@ -108,7 +108,8 @@ internal sealed class ReviewConfiguration : IEntityTypeConfiguration<Review>
     {
         builder.ToTable("reviews", "reviews");
         builder.HasKey(review => review.Id);
-        builder.HasIndex(review => review.OrderId).IsUnique();
+        builder.HasIndex(review => new { review.OrderId, review.ReviewerId }).IsUnique();
+        builder.HasIndex(review => review.RevieweeId);
         builder.Property(review => review.Comment).HasMaxLength(4000).IsRequired();
     }
 }

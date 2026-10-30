@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Infrastructure.Messaging\Cue.Infrastructure.Messaging.csproj" />
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Infrastructure.Data\Cue.Infrastructure.Data.csproj" />
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Common\Cue.Common.csproj" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.NpgSql" Version="9.0.0" />
     <PackageReference Include="AspNetCore.HealthChecks.Rabbitmq" Version="9.0.0" />
