@@ -127,3 +127,7 @@
 # Database backups
 backups/
 *.sql.gz
+
+# Local tooling caches
+.archify/
+.gstack/tmp/
