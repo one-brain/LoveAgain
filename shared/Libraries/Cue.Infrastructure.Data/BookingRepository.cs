@@ -17,6 +17,16 @@ public sealed class BookingRepository(CueDbContext dbContext) : IBookingReposito
             .FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<AvailabilitySlot>> GetFutureAvailableSlotsAsync(Guid providerId, CancellationToken cancellationToken)
+    {
+        var now = DateTime.UtcNow;
+        return await dbContext.AvailabilitySlots
+            .AsNoTracking()
+            .Where(slot => slot.ProviderId == providerId && !slot.IsBooked && slot.EndTime > now)
+            .OrderBy(slot => slot.StartTime)
+            .ToListAsync(cancellationToken);
+    }
+
     public Task AddSlotAsync(AvailabilitySlot slot, CancellationToken cancellationToken) =>
         dbContext.AvailabilitySlots.AddAsync(slot, cancellationToken).AsTask();
 

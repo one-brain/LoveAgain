@@ -78,3 +78,4 @@ Interactive Day & Slot Picker   Empty State Informational Notice
 - [ ] **AC 4 (Interactive Day & Slot UI)**: `BookingRequestModal` displays interactive date chips and time slot chips, auto-filling duration and pricing.
 - [ ] **AC 5 (Zero Slots Fallback)**: Shows informational empty state without a primary action button when no slots are published; booking action remains disabled.
 - [ ] **AC 6 (Impeccable & Test Validation)**: Unit tests pass in `Cue.Domain.Tests`, Impeccable reports 0 violations, frontend builds with 0 errors.
+

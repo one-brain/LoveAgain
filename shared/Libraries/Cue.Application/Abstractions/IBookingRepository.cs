@@ -5,6 +5,7 @@ namespace Cue.Application.Abstractions;
 public interface IBookingRepository
 {
     Task<AvailabilitySlot?> GetAvailableSlotAsync(Guid providerId, DateTime startTime, CancellationToken cancellationToken);
+    Task<IReadOnlyList<AvailabilitySlot>> GetFutureAvailableSlotsAsync(Guid providerId, CancellationToken cancellationToken);
     Task AddSlotAsync(AvailabilitySlot slot, CancellationToken cancellationToken);
     Task<bool> HasOverlappingSlotAsync(Guid providerId, DateTime startTime, DateTime endTime, CancellationToken cancellationToken);
     Task<AvailabilitySlot?> GetSlotByBookingAsync(Guid orderId, CancellationToken cancellationToken);
