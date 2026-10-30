@@ -5,7 +5,9 @@ import {
   useGetProviderIncomingBookingsQuery,
   useGetSeekerOutgoingBookingsQuery,
   useGetMyProfileQuery,
+  useCompleteBookingMutation,
 } from '../store/bookingApi';
+import { useReleaseEscrowMutation } from '../store/paymentApi';
 import { useListProvidersQuery } from '../store/discoveryApi';
 import { BookingCard, type BookingSummary } from '../components/BookingCard';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
@@ -14,8 +16,6 @@ import { OutingSosModal } from '../components/OutingSosModal';
 import { ProviderProfileModal } from '../components/booking/ProviderProfileModal';
 import { EditBookingModal } from '../components/booking/EditBookingModal';
 import { CancelBookingModal } from '../components/booking/CancelBookingModal';
-import { useCompleteBookingMutation } from '../store/bookingApi';
-import { useReleaseEscrowMutation } from '../store/paymentApi';
 import { SelectDropdown, type DropdownOption } from '../components/ui/Dropdown';
 import { setSpecialties } from '../store/slices/profileSlice';
 import {
@@ -26,6 +26,8 @@ import {
   ClockIcon,
   ArrowUpRightIcon,
   ShieldCheckIcon,
+  CheckCircleIcon,
+  XCircleIcon,
 } from '@heroicons/react/24/outline';
 
 const SORT_BOOKING_OPTIONS: DropdownOption[] = [
@@ -34,17 +36,32 @@ const SORT_BOOKING_OPTIONS: DropdownOption[] = [
   { value: 'price-desc', label: 'Highest Amount' },
 ];
 
-const STATUS_FILTER_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All Statuses' },
+const UPCOMING_STATUS_OPTIONS: DropdownOption[] = [
+  { value: 'all', label: 'All Active Statuses' },
   { value: 'Confirmed', label: 'Confirmed', description: 'Active & ready' },
   { value: 'PendingPayment', label: 'Pending Payment', description: 'Awaiting payment' },
   { value: 'InProgress', label: 'In Progress', description: 'Active right now' },
-  { value: 'Completed', label: 'Completed', description: 'Finished sessions' },
+];
+
+const CANCELLED_STATUS_OPTIONS: DropdownOption[] = [
+  { value: 'all', label: 'All Inactive Statuses' },
   { value: 'Cancelled', label: 'Cancelled', description: 'Terminated sessions' },
+  { value: 'Disputed', label: 'Disputed', description: 'Under dispute review' },
 ];
 
 type ViewMode = 'all' | 'client' | 'companion';
+type BookingsTab = 'upcoming' | 'completed' | 'cancelled' | 'calendar';
 type PerspectiveBooking = BookingSummary & { perspective: 'client' | 'companion' };
+
+const WEEKDAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function isSameDay(d1: Date, d2: Date): boolean {
+  return (
+    d1.getFullYear() === d2.getFullYear() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getDate() === d2.getDate()
+  );
+}
 
 function sortAndFilterBookings<T extends BookingSummary>(
   list: T[],
@@ -65,6 +82,14 @@ function sortAndFilterBookings<T extends BookingSummary>(
       sortOrder === 'date-desc' || (sortOrder !== 'date-asc' && defaultDirection === 'desc');
     return isDesc ? timeB - timeA : timeA - timeB;
   });
+}
+
+interface CalendarCell {
+  date: Date;
+  isCurrentMonth: boolean;
+  isToday: boolean;
+  isSelected: boolean;
+  bookings: PerspectiveBooking[];
 }
 
 const Bookings: React.FC = () => {
@@ -91,9 +116,9 @@ const Bookings: React.FC = () => {
   const liveProviders = Array.isArray(rawLiveProviders) ? rawLiveProviders : rawLiveProviders?.items;
 
   // Tab & display state
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'history' | 'calendar'>('upcoming');
-  const [calendarView] = useState<'day' | 'week' | 'month'>('week');
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [activeTab, setActiveTab] = useState<BookingsTab>('upcoming');
+  const [calendarDate, setCalendarDate] = useState<Date>(() => new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => new Date());
   const [statusFilter, setStatusFilter] = useState('all');
   const [bookingSort, setBookingSort] = useState('date-asc');
   const [checkoutBooking, setCheckoutBooking] = useState<BookingSummary | null>(null);
@@ -120,7 +145,7 @@ const Bookings: React.FC = () => {
         }
         await Promise.all([refetchProviderBookings(), refetchSeekerBookings()]);
         setStatusFilter('all');
-        setActiveTab('history');
+        setActiveTab('completed');
       } catch (err: any) {
         alert(err?.data?.error || 'Failed to complete session');
       }
@@ -129,6 +154,16 @@ const Bookings: React.FC = () => {
 
   const handleOpenSos = (b: BookingSummary) => {
     setSosBooking(b);
+  };
+
+  const handleCancel = (booking: BookingSummary) => {
+    setCancellingBooking(booking);
+  };
+
+  // Switch tab helper resets status filter
+  const handleTabChange = (tab: BookingsTab) => {
+    setActiveTab(tab);
+    setStatusFilter('all');
   };
 
   // Initialize specialties
@@ -196,56 +231,109 @@ const Bookings: React.FC = () => {
       sortAndFilterBookings(
         bookings,
         ['PendingPayment', 'Confirmed', 'InProgress'],
-        statusFilter,
+        activeTab === 'upcoming' ? statusFilter : 'all',
         bookingSort,
         'asc'
       ),
-    [bookings, statusFilter, bookingSort]
+    [bookings, activeTab, statusFilter, bookingSort]
   );
 
-  const pastBookings = useMemo(
+  const completedBookings = useMemo(
     () =>
       sortAndFilterBookings(
         bookings,
-        ['Completed', 'Cancelled', 'Disputed'],
-        statusFilter,
+        ['Completed'],
+        'all',
         bookingSort,
         'desc'
       ),
-    [bookings, statusFilter, bookingSort]
+    [bookings, bookingSort]
   );
 
-  const handleCancel = (booking: BookingSummary) => {
-    setCancellingBooking(booking);
+  const cancelledBookings = useMemo(
+    () =>
+      sortAndFilterBookings(
+        bookings,
+        ['Cancelled', 'Disputed'],
+        activeTab === 'cancelled' ? statusFilter : 'all',
+        bookingSort,
+        'desc'
+      ),
+    [bookings, activeTab, statusFilter, bookingSort]
+  );
+
+  // Calendar month navigation
+  const navigateMonth = (direction: 'prev' | 'next') => {
+    setCalendarDate((prev) => {
+      const next = new Date(prev.getFullYear(), prev.getMonth() + (direction === 'next' ? 1 : -1), 1);
+      return next;
+    });
   };
 
-  const navigateDate = (direction: 'prev' | 'next') => {
-    const newDate = new Date(selectedDate);
-    if (calendarView === 'day') {
-      newDate.setDate(newDate.getDate() + (direction === 'next' ? 1 : -1));
-    } else if (calendarView === 'week') {
-      newDate.setDate(newDate.getDate() + (direction === 'next' ? 7 : -7));
-    } else {
-      newDate.setMonth(newDate.getMonth() + (direction === 'next' ? 1 : -1));
-    }
-    setSelectedDate(newDate);
+  const handleJumpToToday = () => {
+    const today = new Date();
+    setCalendarDate(new Date(today.getFullYear(), today.getMonth(), 1));
+    setSelectedDate(today);
   };
 
-  // Generate calendar days
-  const calendarDays = useMemo(() => {
-    const days = [];
-    const startDate = new Date(selectedDate);
-    const dayOfWeek = startDate.getDay();
-    const sunday = new Date(startDate);
-    sunday.setDate(startDate.getDate() - dayOfWeek);
+  // Generate 7-column matrix for full month
+  const monthGridCells = useMemo((): CalendarCell[] => {
+    const year = calendarDate.getFullYear();
+    const month = calendarDate.getMonth();
+    const firstDayOfMonth = new Date(year, month, 1);
+    const startDayIndex = firstDayOfMonth.getDay(); // 0 for Sunday
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
 
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(sunday);
-      day.setDate(sunday.getDate() + i);
-      days.push(day);
+    const cells: CalendarCell[] = [];
+    const today = new Date();
+
+    // Previous month padding
+    for (let i = startDayIndex - 1; i >= 0; i--) {
+      const d = new Date(year, month - 1, daysInPrevMonth - i);
+      cells.push({
+        date: d,
+        isCurrentMonth: false,
+        isToday: isSameDay(d, today),
+        isSelected: isSameDay(d, selectedDate),
+        bookings: bookings.filter((b) => isSameDay(new Date(b.startTime), d)),
+      });
     }
-    return days;
-  }, [selectedDate]);
+
+    // Current month days
+    for (let day = 1; day <= daysInMonth; day++) {
+      const d = new Date(year, month, day);
+      cells.push({
+        date: d,
+        isCurrentMonth: true,
+        isToday: isSameDay(d, today),
+        isSelected: isSameDay(d, selectedDate),
+        bookings: bookings.filter((b) => isSameDay(new Date(b.startTime), d)),
+      });
+    }
+
+    // Next month padding to complete trailing week row
+    const remaining = 7 - (cells.length % 7);
+    if (remaining < 7) {
+      for (let day = 1; day <= remaining; day++) {
+        const d = new Date(year, month + 1, day);
+        cells.push({
+          date: d,
+          isCurrentMonth: false,
+          isToday: isSameDay(d, today),
+          isSelected: isSameDay(d, selectedDate),
+          bookings: bookings.filter((b) => isSameDay(new Date(b.startTime), d)),
+        });
+      }
+    }
+
+    return cells;
+  }, [calendarDate, bookings, selectedDate]);
+
+  // Selected date bookings
+  const selectedDayBookings = useMemo(() => {
+    return bookings.filter((b) => isSameDay(new Date(b.startTime), selectedDate));
+  }, [bookings, selectedDate]);
 
   if (!user) {
     return (
@@ -293,7 +381,7 @@ const Bookings: React.FC = () => {
                 role="tab"
                 aria-selected={active}
                 onClick={() => setViewMode(mode)}
-                className={`flex-1 py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
+                className={`flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
                   active
                     ? 'bg-card text-foreground shadow-sm border border-border/80'
                     : 'text-muted-foreground hover:text-foreground'
@@ -317,7 +405,7 @@ const Bookings: React.FC = () => {
 
         <Link
           to="/discovery"
-          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-transform hover:scale-[1.02]"
+          className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-transform hover:scale-[1.02]"
         >
           <SparklesIcon className="w-4 h-4" />
           <span>Find New Companion</span>
@@ -340,7 +428,7 @@ const Bookings: React.FC = () => {
           </div>
           <Link
             to="/apply-companion"
-            className="px-4 py-2 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-xs shrink-0"
+            className="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-xs shrink-0"
           >
             {companionStatus === 'PendingReview' ? 'View Review Status' : 'Apply to Become Companion'}
           </Link>
@@ -363,64 +451,109 @@ const Bookings: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs and Controls Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-4">
-        {/* Tabs Switcher */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+      {/* 4-Tab Navigation & Controls Bar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-border pb-4">
+        {/* 4 Segmented Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
+          {/* 1. Upcoming & Active */}
           <button
             type="button"
-            onClick={() => setActiveTab('upcoming')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+            onClick={() => handleTabChange('upcoming')}
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'upcoming'
                 ? 'bg-accent text-accent-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
+            <SparklesIcon className="w-4 h-4" />
             <span>Upcoming & Active</span>
-            <span className="px-1.5 py-0.5 rounded-full text-xs bg-card/30 font-bold">
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+                activeTab === 'upcoming' ? 'bg-card/30 text-accent-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
               {upcomingBookings.length}
             </span>
           </button>
 
+          {/* 2. Completed */}
           <button
             type="button"
-            onClick={() => setActiveTab('history')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
-              activeTab === 'history'
+            onClick={() => handleTabChange('completed')}
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'completed'
                 ? 'bg-accent text-accent-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
-            <span>History & Completed</span>
-            <span className="px-1.5 py-0.5 rounded-full text-xs bg-card/30 font-bold">
-              {pastBookings.length}
+            <CheckCircleIcon className="w-4 h-4" />
+            <span>Completed</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+                activeTab === 'completed' ? 'bg-card/30 text-accent-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {completedBookings.length}
             </span>
           </button>
 
+          {/* 3. Cancelled */}
           <button
             type="button"
-            onClick={() => setActiveTab('calendar')}
-            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+            onClick={() => handleTabChange('cancelled')}
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+              activeTab === 'cancelled'
+                ? 'bg-accent text-accent-foreground shadow-xs'
+                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+            }`}
+          >
+            <XCircleIcon className="w-4 h-4" />
+            <span>Cancelled</span>
+            <span
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+                activeTab === 'cancelled' ? 'bg-card/30 text-accent-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {cancelledBookings.length}
+            </span>
+          </button>
+
+          {/* 4. Calendar Mode */}
+          <button
+            type="button"
+            onClick={() => handleTabChange('calendar')}
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
               activeTab === 'calendar'
                 ? 'bg-accent text-accent-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
             }`}
           >
             <CalendarDaysIcon className="w-4 h-4" />
-            <span>Schedule View</span>
+            <span>Month Calendar</span>
           </button>
         </div>
 
         {/* Dropdowns Filter & Sort */}
         {activeTab !== 'calendar' && (
           <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap">
-            <SelectDropdown
-              value={statusFilter}
-              onChange={(val) => setStatusFilter(val)}
-              options={STATUS_FILTER_OPTIONS}
-              size="sm"
-              className="w-full sm:w-44"
-            />
+            {activeTab === 'upcoming' && (
+              <SelectDropdown
+                value={statusFilter}
+                onChange={(val) => setStatusFilter(val)}
+                options={UPCOMING_STATUS_OPTIONS}
+                size="sm"
+                className="w-full sm:w-48"
+              />
+            )}
+            {activeTab === 'cancelled' && (
+              <SelectDropdown
+                value={statusFilter}
+                onChange={(val) => setStatusFilter(val)}
+                options={CANCELLED_STATUS_OPTIONS}
+                size="sm"
+                className="w-full sm:w-48"
+              />
+            )}
             <SelectDropdown
               value={bookingSort}
               onChange={(val) => setBookingSort(val)}
@@ -434,10 +567,10 @@ const Bookings: React.FC = () => {
       </div>
 
       {/* Escrow Protection & Cancellation Policy Bar */}
-      <div className="mb-6 px-4 py-2.5 rounded-xl bg-card border border-border/80 flex items-center justify-between gap-3 text-xs text-muted-foreground shadow-2xs">
+      <div className="px-4 py-2.5 rounded-xl bg-card border border-border/80 flex items-center justify-between gap-3 text-xs text-muted-foreground shadow-2xs">
         <div className="flex items-center gap-2">
           <ShieldCheckIcon className="w-4 h-4 text-emerald-500 shrink-0" />
-          <span>All bookings are held safely under 100% Escrow Protection. Payments are released only after meetup completion.</span>
+          <span>All bookings are held safely under 100% Escrow Protection. Funds are released only after meetup completion.</span>
         </div>
         <Link to="/cancellation-policy" className="text-accent underline font-medium hover:text-accent-hover shrink-0">
           Cancellation Policy
@@ -476,23 +609,26 @@ const Bookings: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Upcoming Tab */}
+          {/* Tab 1: Upcoming & Active */}
           {activeTab === 'upcoming' && (
             <div className="space-y-6">
               {upcomingBookings.length === 0 ? (
-                <div className="py-16 text-center rounded-3xl bg-card border border-border p-12">
-                  <div className="w-14 h-14 rounded-full bg-accent/10 text-accent flex items-center justify-center mx-auto mb-4">
+                <div className="py-16 text-center rounded-3xl bg-card border border-border p-8 sm:p-12 max-w-lg mx-auto shadow-xs space-y-4">
+                  <div className="w-14 h-14 rounded-2xl bg-accent/10 text-accent flex items-center justify-center mx-auto">
                     <CalendarDaysIcon className="w-7 h-7" />
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-1">No upcoming bookings</h3>
-                  <p className="text-sm text-muted-foreground max-w-sm mx-auto mb-6">
-                    You do not have any pending or confirmed companion sessions right now.
-                  </p>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">No Upcoming Bookings</h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      You do not have any pending or confirmed companion sessions right now. Browse our verified companions to schedule an outing.
+                    </p>
+                  </div>
                   <Link
                     to="/discovery"
-                    className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs"
+                    className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
                   >
-                    Explore Companions
+                    <SparklesIcon className="w-4 h-4" />
+                    <span>Explore Companions</span>
                   </Link>
                 </div>
               ) : (
@@ -518,26 +654,26 @@ const Bookings: React.FC = () => {
             </div>
           )}
 
-          {/* History Tab */}
-          {activeTab === 'history' && (
+          {/* Tab 2: Completed */}
+          {activeTab === 'completed' && (
             <div className="space-y-6">
-              {pastBookings.length === 0 ? (
+              {completedBookings.length === 0 ? (
                 <div className="py-16 text-center rounded-3xl bg-card border border-border p-8 sm:p-12 space-y-4 max-w-lg mx-auto shadow-xs">
-                  <div className="w-14 h-14 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
-                    <ClockIcon className="w-7 h-7" />
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                    <CheckCircleIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">No Past Meetups Yet</h3>
+                    <h3 className="text-lg font-bold text-foreground">No Completed Outings Yet</h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {roleMode === 'companion'
-                        ? 'Completed client meetups and payment receipts will be listed here.'
-                        : 'Your completed meetups and payment receipts will appear here after sessions conclude.'}
+                        ? 'Successfully fulfilled client outings, payment disbursements, and ratings will appear here.'
+                        : 'Your safely concluded meetups, review ratings, and escrow release receipts will appear here once an outing finishes.'}
                     </p>
                   </div>
                   {roleMode === 'client' && (
                     <Link
                       to="/discovery"
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
                     >
                       <span>Explore Verified Companions</span>
                       <ArrowUpRightIcon className="w-3.5 h-3.5" />
@@ -546,7 +682,7 @@ const Bookings: React.FC = () => {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pastBookings.map((b) => (
+                  {completedBookings.map((b) => (
                     <BookingCard
                       key={b.orderId}
                       booking={b}
@@ -562,72 +698,170 @@ const Bookings: React.FC = () => {
             </div>
           )}
 
-          {/* Calendar View */}
+          {/* Tab 3: Cancelled */}
+          {activeTab === 'cancelled' && (
+            <div className="space-y-6">
+              {cancelledBookings.length === 0 ? (
+                <div className="py-16 text-center rounded-3xl bg-card border border-border p-8 sm:p-12 space-y-4 max-w-lg mx-auto shadow-xs">
+                  <div className="w-14 h-14 rounded-2xl bg-muted text-muted-foreground flex items-center justify-center mx-auto">
+                    <ShieldCheckIcon className="w-7 h-7" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">No Cancelled or Disputed Outings</h3>
+                    <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
+                      All your bookings remain active or completed smoothly. If any cancellation or dispute ever occurs, our 100% Escrow Guarantee ensures instant, transparent refunds.
+                    </p>
+                  </div>
+                  <Link
+                    to="/cancellation-policy"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-xs shadow-xs transition-colors"
+                  >
+                    <span>Read Escrow & Cancellation Policy</span>
+                    <ArrowUpRightIcon className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {cancelledBookings.map((b) => (
+                    <BookingCard
+                      key={b.orderId}
+                      booking={b}
+                      roleMode={b.perspective}
+                      showRoleBadge={viewMode === 'all'}
+                      liveProviders={liveProviders}
+                      onOpenSos={handleOpenSos}
+                      onViewProfile={(id) => setPreviewProviderId(id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 4: Month Calendar Schedule View */}
           {activeTab === 'calendar' && (
-            <div className="bg-card rounded-3xl border border-border p-6 shadow-xs space-y-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="bg-card rounded-3xl border border-border p-5 sm:p-7 shadow-xs space-y-6">
+              {/* Calendar Month Navigation Header */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => navigateDate('prev')}
-                    className="p-2 rounded-xl border border-border hover:bg-muted text-foreground"
-                    aria-label="Previous date"
+                    type="button"
+                    onClick={() => navigateMonth('prev')}
+                    className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center justify-center transition-colors"
+                    aria-label="Previous month"
                   >
                     <ChevronLeftIcon className="w-5 h-5" />
                   </button>
-                  <h2 className="text-lg font-bold font-serif text-foreground">
-                    {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                  <h2 className="text-xl sm:text-2xl font-bold font-serif text-foreground min-w-[200px]">
+                    {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </h2>
                   <button
-                    onClick={() => navigateDate('next')}
-                    className="p-2 rounded-xl border border-border hover:bg-muted text-foreground"
-                    aria-label="Next date"
+                    type="button"
+                    onClick={() => navigateMonth('next')}
+                    className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center justify-center transition-colors"
+                    aria-label="Next month"
                   >
                     <ChevronRightIcon className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                  {/* Legend */}
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
+                      <span>Active</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
+                      <span>Pending</span>
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-[#C5A059] inline-block" />
+                      <span>Completed</span>
+                    </span>
+                  </div>
+
                   <button
-                    onClick={() => setSelectedDate(new Date())}
-                    className="px-3.5 py-1.5 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted"
+                    type="button"
+                    onClick={handleJumpToToday}
+                    className="min-h-[44px] px-4 py-2 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted transition-colors"
                   >
                     Today
                   </button>
                 </div>
               </div>
 
-              {/* 7 Days Strip */}
-              <div className="grid grid-cols-7 gap-2 sm:gap-3">
-                {calendarDays.map((day) => {
-                  const isSelected = day.toDateString() === selectedDate.toDateString();
-                  const isToday = day.toDateString() === new Date().toDateString();
-                  const dayBookings = bookings.filter(
-                    (b) => new Date(b.startTime).toDateString() === day.toDateString()
-                  );
+              {/* Weekday Column Headers */}
+              <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5 text-center">
+                {WEEKDAY_NAMES.map((name) => (
+                  <div
+                    key={name}
+                    className="py-1 text-xs font-mono font-semibold uppercase tracking-wider text-muted-foreground"
+                  >
+                    {name}
+                  </div>
+                ))}
+              </div>
 
+              {/* 7-Column Full Month Matrix Grid */}
+              <div className="grid grid-cols-7 gap-1.5 sm:gap-2.5">
+                {monthGridCells.map((cell) => {
                   return (
                     <button
-                      key={day.toISOString()}
-                      onClick={() => setSelectedDate(day)}
-                      className={`p-3 rounded-2xl border text-center transition-all flex flex-col items-center justify-between min-h-[90px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-                        isSelected
-                          ? 'border-accent bg-accent/15 text-foreground ring-1 ring-accent'
-                          : 'border-border bg-background hover:border-accent/40 text-foreground'
+                      key={cell.date.toISOString()}
+                      type="button"
+                      onClick={() => setSelectedDate(cell.date)}
+                      className={`min-h-[64px] sm:min-h-[76px] p-2 rounded-2xl border text-center transition-all flex flex-col items-center justify-between min-w-[44px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+                        cell.isSelected
+                          ? 'border-accent bg-accent/15 text-foreground ring-2 ring-accent shadow-xs'
+                          : cell.isCurrentMonth
+                          ? 'border-border bg-background hover:border-accent/40 text-foreground'
+                          : 'border-border/40 bg-muted/20 text-muted-foreground/60 hover:opacity-80'
                       }`}
                     >
-                      <span className="text-[11px] font-medium text-muted-foreground uppercase">
-                        {day.toLocaleDateString('en-US', { weekday: 'short' })}
-                      </span>
-                      <span
-                        className={`text-lg font-bold my-1 ${
-                          isToday ? 'text-accent' : 'text-foreground'
-                        }`}
-                      >
-                        {day.getDate()}
-                      </span>
-                      <div className="h-4 flex items-center justify-center">
-                        {dayBookings.length > 0 && (
-                          <span className="w-2 h-2 rounded-full bg-accent" />
+                      <div className="w-full flex items-center justify-between">
+                        <span
+                          className={`text-xs font-mono tabular-nums leading-none ${
+                            cell.isToday
+                              ? 'w-6 h-6 rounded-full bg-accent text-accent-foreground font-bold flex items-center justify-center'
+                              : cell.isSelected
+                              ? 'font-bold text-foreground'
+                              : cell.isCurrentMonth
+                              ? 'font-medium text-foreground'
+                              : 'text-muted-foreground/60'
+                          }`}
+                        >
+                          {cell.date.getDate()}
+                        </span>
+                        {cell.bookings.length > 0 && (
+                          <span className="text-[10px] font-mono font-bold text-muted-foreground leading-none">
+                            {cell.bookings.length}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Status Dots */}
+                      <div className="h-3 flex items-center justify-center gap-1 w-full overflow-hidden">
+                        {cell.bookings.slice(0, 3).map((b, idx) => {
+                          let dotColor = 'bg-accent';
+                          if (b.status === 'Confirmed' || b.status === 'InProgress') dotColor = 'bg-emerald-500';
+                          else if (b.status === 'PendingPayment') dotColor = 'bg-amber-500';
+                          else if (b.status === 'Completed') dotColor = 'bg-[#C5A059]';
+                          else if (b.status === 'Cancelled' || b.status === 'Disputed') dotColor = 'bg-rose-500';
+
+                          return (
+                            <span
+                              key={`${b.orderId}-${idx}`}
+                              className={`w-1.5 h-1.5 rounded-full shrink-0 ${dotColor}`}
+                              title={`${b.providerName || 'Session'}: ${b.status}`}
+                            />
+                          );
+                        })}
+                        {cell.bookings.length > 3 && (
+                          <span className="text-[9px] font-mono font-bold text-muted-foreground leading-none">
+                            +
+                          </span>
                         )}
                       </div>
                     </button>
@@ -635,36 +869,44 @@ const Bookings: React.FC = () => {
                 })}
               </div>
 
-              {/* Selected Day's Schedule List */}
-              <div className="pt-4 border-t border-border">
-                <h3 className="text-sm font-bold text-foreground mb-4">
-                  Schedule for {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}
-                </h3>
+              {/* Selected Day Schedule Inspector */}
+              <div className="pt-6 border-t border-border space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                  <h3 className="text-base sm:text-lg font-bold font-serif text-foreground">
+                    Outings on {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                  </h3>
+                  <span className="text-xs font-mono text-muted-foreground">
+                    {selectedDayBookings.length} {selectedDayBookings.length === 1 ? 'outing' : 'outings'} scheduled
+                  </span>
+                </div>
 
-                {bookings.filter((b) => new Date(b.startTime).toDateString() === selectedDate.toDateString()).length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-4 text-center">
-                    No sessions scheduled for this date.
-                  </p>
+                {selectedDayBookings.length === 0 ? (
+                  <div className="py-10 text-center rounded-2xl bg-muted/30 border border-border/70 p-6">
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      No sessions scheduled for this date.
+                    </p>
+                    <p className="text-xs text-muted-foreground/80 mt-1">
+                      Click any highlighted date above to view its scheduled companion meetups.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {bookings
-                      .filter((b) => new Date(b.startTime).toDateString() === selectedDate.toDateString())
-                      .map((b) => (
-                        <BookingCard
-                          key={b.orderId}
-                          booking={b}
-                          roleMode={b.perspective}
-                      showRoleBadge={viewMode === 'all'}
-                          liveProviders={liveProviders}
-                          onEdit={(bkg) => setEditingBooking(bkg)}
-                          onCancel={handleCancel}
-                          onPay={(bkg) => setCheckoutBooking(bkg)}
-                          onCheckIn={handleCheckIn}
-                          onComplete={handleComplete}
-                          onOpenSos={handleOpenSos}
-                          onViewProfile={(id) => setPreviewProviderId(id)}
-                        />
-                      ))}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {selectedDayBookings.map((b) => (
+                      <BookingCard
+                        key={b.orderId}
+                        booking={b}
+                        roleMode={b.perspective}
+                        showRoleBadge={viewMode === 'all'}
+                        liveProviders={liveProviders}
+                        onEdit={(bkg) => setEditingBooking(bkg)}
+                        onCancel={handleCancel}
+                        onPay={(bkg) => setCheckoutBooking(bkg)}
+                        onCheckIn={handleCheckIn}
+                        onComplete={handleComplete}
+                        onOpenSos={handleOpenSos}
+                        onViewProfile={(id) => setPreviewProviderId(id)}
+                      />
+                    ))}
                   </div>
                 )}
               </div>
