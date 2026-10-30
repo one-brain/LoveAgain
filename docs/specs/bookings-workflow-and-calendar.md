@@ -42,3 +42,4 @@ On the **My Experience Bookings** page, users previously navigated between an `U
   - Clicking any date displays the sessions scheduled on that date.
 - [x] **AC 4 (Empty State Guidance)**: Each tab shows a distinct empty state when no bookings match.
 - [x] **AC 5 (Zero-Error Build)**: `npm run build` passes with zero TypeScript warnings, and Impeccable detector reports 0 violations.
+

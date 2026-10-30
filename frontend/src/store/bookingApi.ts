@@ -56,6 +56,13 @@ export interface BookingSummary {
   cancellationReason?: string;
   createdAt?: string;
   updatedAt?: string;
+  providerName?: string;
+  providerPhoto?: string;
+  seekerName?: string;
+  seekerPhoto?: string;
+  averageRating?: number;
+  specialty?: string;
+  isVerified?: boolean;
 }
 
 export interface CancelBookingRequest {

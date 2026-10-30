@@ -28,6 +28,8 @@ import {
   ShieldCheckIcon,
   CheckCircleIcon,
   XCircleIcon,
+  AdjustmentsHorizontalIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline';
 
 const SORT_BOOKING_OPTIONS: DropdownOption[] = [
@@ -39,7 +41,7 @@ const SORT_BOOKING_OPTIONS: DropdownOption[] = [
 const UPCOMING_STATUS_OPTIONS: DropdownOption[] = [
   { value: 'all', label: 'All Active Statuses' },
   { value: 'Confirmed', label: 'Confirmed', description: 'Active & ready' },
-  { value: 'PendingPayment', label: 'Pending Payment', description: 'Awaiting payment' },
+  { value: 'PendingPayment', label: 'Pending Payment', description: 'Awaiting escrow' },
   { value: 'InProgress', label: 'In Progress', description: 'Active right now' },
 ];
 
@@ -63,6 +65,12 @@ function isSameDay(d1: Date, d2: Date): boolean {
   );
 }
 
+function parseDateSafely(val?: string | null): Date | null {
+  if (!val) return null;
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function sortAndFilterBookings<T extends BookingSummary>(
   list: T[],
   allowedStatuses: string[],
@@ -76,8 +84,10 @@ function sortAndFilterBookings<T extends BookingSummary>(
   }
   return [...filtered].sort((a, b) => {
     if (sortOrder === 'price-desc') return (b.totalAmount || 0) - (a.totalAmount || 0);
-    const timeA = new Date(a.startTime).getTime();
-    const timeB = new Date(b.startTime).getTime();
+    const dateA = parseDateSafely(a.startTime);
+    const dateB = parseDateSafely(b.startTime);
+    const timeA = dateA ? dateA.getTime() : 0;
+    const timeB = dateB ? dateB.getTime() : 0;
     const isDesc =
       sortOrder === 'date-desc' || (sortOrder !== 'date-asc' && defaultDirection === 'desc');
     return isDesc ? timeB - timeA : timeA - timeB;
@@ -194,29 +204,71 @@ const Bookings: React.FC = () => {
 
   const companionStatus = profileData?.profile?.status;
 
-  const clientBookings: PerspectiveBooking[] = useMemo(
-    () => (seekerBookingsData?.bookings || []).map((b: BookingSummary) => ({ ...b, perspective: 'client' as const })),
+  // Deterministic Single Source of Truth for Bookings with perspective resolution
+  const rawClientList: BookingSummary[] = useMemo(
+    () => seekerBookingsData?.bookings || [],
     [seekerBookingsData]
   );
-  const companionBookings: PerspectiveBooking[] = useMemo(
-    () => (providerBookingsData?.bookings || []).map((b: BookingSummary) => ({ ...b, perspective: 'companion' as const })),
+  const rawCompanionList: BookingSummary[] = useMemo(
+    () => providerBookingsData?.bookings || [],
     [providerBookingsData]
   );
 
-  // Single source of truth for every booking the user is part of
-  const bookings: PerspectiveBooking[] = useMemo(() => {
-    let source: PerspectiveBooking[];
-    if (viewMode === 'client') source = clientBookings;
-    else if (viewMode === 'companion') source = companionBookings;
-    else source = [...companionBookings, ...clientBookings];
+  const allBookingsMap = useMemo(() => {
+    const map = new Map<string, PerspectiveBooking>();
 
-    const seen = new Set<string>();
-    return source.filter((b) => {
-      if (seen.has(b.orderId)) return false;
-      seen.add(b.orderId);
-      return true;
-    });
-  }, [viewMode, clientBookings, companionBookings]);
+    // First process seeker outgoing bookings (user is seeker / client)
+    for (const b of rawClientList) {
+      map.set(b.orderId, {
+        ...b,
+        perspective: 'client',
+      });
+    }
+
+    // Process provider incoming bookings (user is provider / companion)
+    for (const b of rawCompanionList) {
+      const existing = map.get(b.orderId);
+      if (existing) {
+        const isProvider = b.providerId === user?.id;
+        map.set(b.orderId, {
+          ...existing,
+          ...b,
+          perspective: isProvider ? 'companion' : 'client',
+        });
+      } else {
+        map.set(b.orderId, {
+          ...b,
+          perspective: 'companion',
+        });
+      }
+    }
+
+    return map;
+  }, [rawClientList, rawCompanionList, user?.id]);
+
+  const allUniqueBookings = useMemo(() => Array.from(allBookingsMap.values()), [allBookingsMap]);
+
+  // Exact counts for the top view mode switcher
+  const totalAllCount = allUniqueBookings.length;
+  const clientCount = useMemo(
+    () => allUniqueBookings.filter((b) => b.perspective === 'client').length,
+    [allUniqueBookings]
+  );
+  const companionCount = useMemo(
+    () => allUniqueBookings.filter((b) => b.perspective === 'companion').length,
+    [allUniqueBookings]
+  );
+
+  // Active perspective-filtered bookings
+  const bookings: PerspectiveBooking[] = useMemo(() => {
+    if (viewMode === 'client') {
+      return allUniqueBookings.filter((b) => b.perspective === 'client');
+    }
+    if (viewMode === 'companion') {
+      return allUniqueBookings.filter((b) => b.perspective === 'companion');
+    }
+    return allUniqueBookings;
+  }, [viewMode, allUniqueBookings]);
 
   const isLoading =
     viewMode === 'companion'
@@ -225,7 +277,21 @@ const Bookings: React.FC = () => {
       ? isLoadingSeeker
       : isLoadingProvider || isLoadingSeeker;
 
-  // Segregate, filter and sort bookings
+  // Unchanging category totals for tab counts (not affected by intra-tab status filter)
+  const totalUpcomingCount = useMemo(
+    () => bookings.filter((b) => ['PendingPayment', 'Confirmed', 'InProgress'].includes(b.status)).length,
+    [bookings]
+  );
+  const totalCompletedCount = useMemo(
+    () => bookings.filter((b) => b.status === 'Completed').length,
+    [bookings]
+  );
+  const totalCancelledCount = useMemo(
+    () => bookings.filter((b) => ['Cancelled', 'Disputed'].includes(b.status)).length,
+    [bookings]
+  );
+
+  // Filtered and sorted booking lists for active tab rendering
   const upcomingBookings = useMemo(
     () =>
       sortAndFilterBookings(
@@ -262,11 +328,17 @@ const Bookings: React.FC = () => {
     [bookings, activeTab, statusFilter, bookingSort]
   );
 
-  // Calendar month navigation
+  // Month navigation: synchronizes both visible month and day selector
   const navigateMonth = (direction: 'prev' | 'next') => {
     setCalendarDate((prev) => {
-      const next = new Date(prev.getFullYear(), prev.getMonth() + (direction === 'next' ? 1 : -1), 1);
-      return next;
+      const nextMonth = new Date(prev.getFullYear(), prev.getMonth() + (direction === 'next' ? 1 : -1), 1);
+      const today = new Date();
+      if (nextMonth.getFullYear() === today.getFullYear() && nextMonth.getMonth() === today.getMonth()) {
+        setSelectedDate(today);
+      } else {
+        setSelectedDate(nextMonth);
+      }
+      return nextMonth;
     });
   };
 
@@ -274,6 +346,14 @@ const Bookings: React.FC = () => {
     const today = new Date();
     setCalendarDate(new Date(today.getFullYear(), today.getMonth(), 1));
     setSelectedDate(today);
+  };
+
+  const handleSelectCalendarDay = (cellDate: Date) => {
+    setSelectedDate(cellDate);
+    // If the clicked cell belongs to adjacent month padding, flip calendar month
+    if (cellDate.getMonth() !== calendarDate.getMonth() || cellDate.getFullYear() !== calendarDate.getFullYear()) {
+      setCalendarDate(new Date(cellDate.getFullYear(), cellDate.getMonth(), 1));
+    }
   };
 
   // Generate 7-column matrix for full month
@@ -296,7 +376,10 @@ const Bookings: React.FC = () => {
         isCurrentMonth: false,
         isToday: isSameDay(d, today),
         isSelected: isSameDay(d, selectedDate),
-        bookings: bookings.filter((b) => isSameDay(new Date(b.startTime), d)),
+        bookings: bookings.filter((b) => {
+          const parsed = parseDateSafely(b.startTime);
+          return parsed ? isSameDay(parsed, d) : false;
+        }),
       });
     }
 
@@ -308,7 +391,10 @@ const Bookings: React.FC = () => {
         isCurrentMonth: true,
         isToday: isSameDay(d, today),
         isSelected: isSameDay(d, selectedDate),
-        bookings: bookings.filter((b) => isSameDay(new Date(b.startTime), d)),
+        bookings: bookings.filter((b) => {
+          const parsed = parseDateSafely(b.startTime);
+          return parsed ? isSameDay(parsed, d) : false;
+        }),
       });
     }
 
@@ -322,7 +408,10 @@ const Bookings: React.FC = () => {
           isCurrentMonth: false,
           isToday: isSameDay(d, today),
           isSelected: isSameDay(d, selectedDate),
-          bookings: bookings.filter((b) => isSameDay(new Date(b.startTime), d)),
+          bookings: bookings.filter((b) => {
+            const parsed = parseDateSafely(b.startTime);
+            return parsed ? isSameDay(parsed, d) : false;
+          }),
         });
       }
     }
@@ -332,7 +421,10 @@ const Bookings: React.FC = () => {
 
   // Selected date bookings
   const selectedDayBookings = useMemo(() => {
-    return bookings.filter((b) => isSameDay(new Date(b.startTime), selectedDate));
+    return bookings.filter((b) => {
+      const parsed = parseDateSafely(b.startTime);
+      return parsed ? isSameDay(parsed, selectedDate) : false;
+    });
   }, [bookings, selectedDate]);
 
   if (!user) {
@@ -348,7 +440,7 @@ const Bookings: React.FC = () => {
           </p>
           <Link
             to="/login"
-            className="inline-block w-full py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors"
+            className="inline-block w-full py-3 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors flex items-center justify-center"
           >
             Go to Login
           </Link>
@@ -368,9 +460,9 @@ const Bookings: React.FC = () => {
         >
           {(
             [
-              { mode: 'all', label: 'All Bookings', count: clientBookings.length + companionBookings.length },
-              { mode: 'client', label: 'My Outings', count: clientBookings.length },
-              { mode: 'companion', label: 'Incoming Requests', count: companionBookings.length },
+              { mode: 'all', label: 'All Bookings', count: totalAllCount },
+              { mode: 'client', label: 'My Outings', count: clientCount },
+              { mode: 'companion', label: 'Incoming Requests', count: companionCount },
             ] as { mode: ViewMode; label: string; count: number }[]
           ).map(({ mode, label, count }) => {
             const active = viewMode === mode;
@@ -381,7 +473,7 @@ const Bookings: React.FC = () => {
                 role="tab"
                 aria-selected={active}
                 onClick={() => setViewMode(mode)}
-                className={`flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap ${
+                className={`flex-1 min-h-[44px] py-2.5 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer ${
                   active
                     ? 'bg-card text-foreground shadow-sm border border-border/80'
                     : 'text-muted-foreground hover:text-foreground'
@@ -390,7 +482,7 @@ const Bookings: React.FC = () => {
                 {mode === 'companion' && <SparklesIcon className="w-3.5 h-3.5 text-accent" />}
                 <span>{label}</span>
                 <span
-                  className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono ${
+                  className={`px-1.5 py-0.5 rounded-full text-[11px] font-mono tabular-nums ${
                     mode === 'companion'
                       ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
                       : 'bg-accent/15 text-accent'
@@ -459,7 +551,7 @@ const Bookings: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange('upcoming')}
-            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'upcoming'
                 ? 'bg-accent text-accent-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -468,11 +560,11 @@ const Bookings: React.FC = () => {
             <SparklesIcon className="w-4 h-4" />
             <span>Upcoming & Active</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold tabular-nums ${
                 activeTab === 'upcoming' ? 'bg-card/30 text-accent-foreground' : 'bg-muted text-muted-foreground'
               }`}
             >
-              {upcomingBookings.length}
+              {totalUpcomingCount}
             </span>
           </button>
 
@@ -480,7 +572,7 @@ const Bookings: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange('completed')}
-            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'completed'
                 ? 'bg-accent text-accent-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -489,11 +581,11 @@ const Bookings: React.FC = () => {
             <CheckCircleIcon className="w-4 h-4" />
             <span>Completed</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold tabular-nums ${
                 activeTab === 'completed' ? 'bg-card/30 text-accent-foreground' : 'bg-muted text-muted-foreground'
               }`}
             >
-              {completedBookings.length}
+              {totalCompletedCount}
             </span>
           </button>
 
@@ -501,7 +593,7 @@ const Bookings: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange('cancelled')}
-            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'cancelled'
                 ? 'bg-accent text-accent-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -510,11 +602,11 @@ const Bookings: React.FC = () => {
             <XCircleIcon className="w-4 h-4" />
             <span>Cancelled</span>
             <span
-              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold ${
+              className={`px-1.5 py-0.5 rounded-full text-xs font-mono font-bold tabular-nums ${
                 activeTab === 'cancelled' ? 'bg-card/30 text-accent-foreground' : 'bg-muted text-muted-foreground'
               }`}
             >
-              {cancelledBookings.length}
+              {totalCancelledCount}
             </span>
           </button>
 
@@ -522,7 +614,7 @@ const Bookings: React.FC = () => {
           <button
             type="button"
             onClick={() => handleTabChange('calendar')}
-            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap ${
+            className={`min-h-[44px] px-4 py-2 rounded-xl text-sm font-semibold transition-all flex items-center gap-2 whitespace-nowrap cursor-pointer ${
               activeTab === 'calendar'
                 ? 'bg-accent text-accent-foreground shadow-xs'
                 : 'text-muted-foreground hover:text-foreground hover:bg-muted'
@@ -565,6 +657,38 @@ const Bookings: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Active Filter Pill & Status Indicator */}
+      {statusFilter !== 'all' && activeTab !== 'calendar' && (
+        <div className="flex items-center justify-between gap-3 px-4 py-2 rounded-xl bg-accent/10 border border-accent/20 text-xs text-foreground">
+          <div className="flex items-center gap-2">
+            <AdjustmentsHorizontalIcon className="w-4 h-4 text-accent" />
+            <span>
+              Filtered by <strong>{statusFilter}</strong> — showing{' '}
+              <span className="font-mono font-bold">
+                {activeTab === 'upcoming'
+                  ? upcomingBookings.length
+                  : cancelledBookings.length}
+              </span>{' '}
+              of{' '}
+              <span className="font-mono font-bold">
+                {activeTab === 'upcoming'
+                  ? totalUpcomingCount
+                  : totalCancelledCount}
+              </span>{' '}
+              outings
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('all')}
+            className="flex items-center gap-1 text-accent font-semibold hover:underline cursor-pointer"
+          >
+            <XMarkIcon className="w-3.5 h-3.5" />
+            <span>Clear filter</span>
+          </button>
+        </div>
+      )}
 
       {/* Escrow Protection & Cancellation Policy Bar */}
       <div className="px-4 py-2.5 rounded-xl bg-card border border-border/80 flex items-center justify-between gap-3 text-xs text-muted-foreground shadow-2xs">
@@ -618,18 +742,32 @@ const Bookings: React.FC = () => {
                     <CalendarDaysIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">No Upcoming Bookings</h3>
+                    <h3 className="text-lg font-bold text-foreground font-serif">
+                      {statusFilter !== 'all' ? 'No Bookings Match Filter' : 'No Upcoming Bookings'}
+                    </h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                      You do not have any pending or confirmed companion sessions right now. Browse our verified companions to schedule an outing.
+                      {statusFilter !== 'all'
+                        ? `There are no outings currently in "${statusFilter}" status.`
+                        : 'You do not have any pending or confirmed companion sessions right now. Browse our verified companions to schedule an outing.'}
                     </p>
                   </div>
-                  <Link
-                    to="/discovery"
-                    className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
-                  >
-                    <SparklesIcon className="w-4 h-4" />
-                    <span>Explore Companions</span>
-                  </Link>
+                  {statusFilter !== 'all' ? (
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter('all')}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors cursor-pointer"
+                    >
+                      <span>Show All Active Statuses</span>
+                    </button>
+                  ) : (
+                    <Link
+                      to="/discovery"
+                      className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
+                    >
+                      <SparklesIcon className="w-4 h-4" />
+                      <span>Explore Companions</span>
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -663,7 +801,7 @@ const Bookings: React.FC = () => {
                     <CheckCircleIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">No Completed Outings Yet</h3>
+                    <h3 className="text-lg font-bold text-foreground font-serif">No Completed Outings Yet</h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {roleMode === 'companion'
                         ? 'Successfully fulfilled client outings, payment disbursements, and ratings will appear here.'
@@ -707,18 +845,32 @@ const Bookings: React.FC = () => {
                     <ShieldCheckIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">No Cancelled or Disputed Outings</h3>
+                    <h3 className="text-lg font-bold text-foreground font-serif">
+                      {statusFilter !== 'all' ? 'No Bookings Match Filter' : 'No Cancelled or Disputed Outings'}
+                    </h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                      All your bookings remain active or completed smoothly. If any cancellation or dispute ever occurs, our 100% Escrow Guarantee ensures instant, transparent refunds.
+                      {statusFilter !== 'all'
+                        ? `There are no outings matching status "${statusFilter}".`
+                        : 'All your bookings remain active or completed smoothly. If any cancellation or dispute ever occurs, our 100% Escrow Guarantee ensures instant, transparent refunds.'}
                     </p>
                   </div>
-                  <Link
-                    to="/cancellation-policy"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-xs shadow-xs transition-colors"
-                  >
-                    <span>Read Escrow & Cancellation Policy</span>
-                    <ArrowUpRightIcon className="w-3.5 h-3.5" />
-                  </Link>
+                  {statusFilter !== 'all' ? (
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter('all')}
+                      className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors cursor-pointer"
+                    >
+                      <span>Show All Inactive Statuses</span>
+                    </button>
+                  ) : (
+                    <Link
+                      to="/cancellation-policy"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-xs shadow-xs transition-colors"
+                    >
+                      <span>Read Escrow & Cancellation Policy</span>
+                      <ArrowUpRightIcon className="w-3.5 h-3.5" />
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -747,7 +899,7 @@ const Bookings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => navigateMonth('prev')}
-                    className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center justify-center transition-colors"
+                    className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center justify-center transition-colors cursor-pointer"
                     aria-label="Previous month"
                   >
                     <ChevronLeftIcon className="w-5 h-5" />
@@ -758,34 +910,38 @@ const Bookings: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => navigateMonth('next')}
-                    className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center justify-center transition-colors"
+                    className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl border border-border hover:bg-muted text-foreground flex items-center justify-center transition-colors cursor-pointer"
                     aria-label="Next month"
                   >
                     <ChevronRightIcon className="w-5 h-5" />
                   </button>
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+                <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
                   {/* Legend */}
-                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium">
-                    <span className="flex items-center gap-1">
+                  <div className="flex items-center gap-3 text-[11px] text-muted-foreground font-medium flex-wrap">
+                    <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                       <span>Active</span>
                     </span>
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
                       <span>Pending</span>
                     </span>
-                    <span className="flex items-center gap-1">
+                    <span className="flex items-center gap-1.5">
                       <span className="w-2 h-2 rounded-full bg-[#C5A059] inline-block" />
                       <span>Completed</span>
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
+                      <span>Cancelled</span>
                     </span>
                   </div>
 
                   <button
                     type="button"
                     onClick={handleJumpToToday}
-                    className="min-h-[44px] px-4 py-2 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted transition-colors"
+                    className="min-h-[44px] px-4 py-2 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted transition-colors cursor-pointer"
                   >
                     Today
                   </button>
@@ -811,7 +967,7 @@ const Bookings: React.FC = () => {
                     <button
                       key={cell.date.toISOString()}
                       type="button"
-                      onClick={() => setSelectedDate(cell.date)}
+                      onClick={() => handleSelectCalendarDay(cell.date)}
                       className={`min-h-[64px] sm:min-h-[76px] p-2 rounded-2xl border text-center transition-all flex flex-col items-center justify-between min-w-[44px] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
                         cell.isSelected
                           ? 'border-accent bg-accent/15 text-foreground ring-2 ring-accent shadow-xs'
@@ -875,7 +1031,7 @@ const Bookings: React.FC = () => {
                   <h3 className="text-base sm:text-lg font-bold font-serif text-foreground">
                     Outings on {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                   </h3>
-                  <span className="text-xs font-mono text-muted-foreground">
+                  <span className="text-xs font-mono text-muted-foreground tabular-nums">
                     {selectedDayBookings.length} {selectedDayBookings.length === 1 ? 'outing' : 'outings'} scheduled
                   </span>
                 </div>

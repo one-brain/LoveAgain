@@ -30,6 +30,8 @@ export interface BookingSummary {
   endTime: string;
   status: 'PendingPayment' | 'Confirmed' | 'InProgress' | 'Completed' | 'Cancelled' | 'Disputed';
   totalAmount: number;
+  platformFee?: number;
+  providerEarnings?: number;
   providerName?: string;
   providerPhoto?: string;
   seekerName?: string;
@@ -41,6 +43,7 @@ export interface BookingSummary {
   activity?: string;
   checkInPin?: string;
   checkedInAt?: string;
+  cancellationReason?: string;
   requirements?: {
     activity?: string;
     activityName?: string;
@@ -104,8 +107,10 @@ const STATUS_CONFIG: Record<
   },
 };
 
-function formatBookingDate(dateStr: string): string {
+function formatBookingDate(dateStr?: string | null): string {
+  if (!dateStr) return 'Date TBD';
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return 'Date TBD';
   return date.toLocaleDateString('en-IN', {
     weekday: 'short',
     day: 'numeric',
@@ -114,9 +119,11 @@ function formatBookingDate(dateStr: string): string {
   });
 }
 
-function formatBookingTimeRange(startStr: string, endStr: string): string {
+function formatBookingTimeRange(startStr?: string | null, endStr?: string | null): string {
+  if (!startStr || !endStr) return 'Flexible hours';
   const start = new Date(startStr);
   const end = new Date(endStr);
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return 'Flexible hours';
   return `${start.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })} – ${end.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`;
 }
 
@@ -141,17 +148,20 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     skip: !isCompleted,
   });
 
-  // Resolve companion or client profile details based on perspective
+  // Resolve participant profile details strictly according to perspective
+  const isCompanionView = roleMode === 'companion';
   const providerInfo = resolveProviderInfo(booking.providerId, liveProviders);
-  const displayName =
-    roleMode === 'companion'
-      ? booking.seekerName || booking.providerName || 'Verified Client'
-      : booking.providerName || providerInfo.displayName || 'Companion Outing';
-  const photoUrl =
-    roleMode === 'companion'
-      ? booking.seekerPhoto || booking.providerPhoto || providerInfo.photoUrl
-      : booking.providerPhoto || providerInfo.photoUrl;
-  const rating = booking.averageRating || providerInfo.averageRating;
+
+  const displayName = isCompanionView
+    ? (booking.seekerName || 'Verified Seeker')
+    : (booking.providerName || providerInfo.displayName || 'Verified Companion');
+
+  const photoUrl = isCompanionView
+    ? (booking.seekerPhoto || undefined)
+    : (booking.providerPhoto || providerInfo.photoUrl);
+
+  const rating = isCompanionView ? undefined : (booking.averageRating || providerInfo.averageRating);
+
   const activityTitle =
     booking.requirements?.activity ||
     booking.requirements?.activityName ||
@@ -159,7 +169,10 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     booking.specialty ||
     providerInfo.specialty ||
     'Platonic Outing';
-  const isVerified = booking.isVerified ?? providerInfo.isVerified ?? true;
+
+  const isVerified = isCompanionView
+    ? true
+    : (booking.isVerified ?? providerInfo.isVerified ?? true);
 
   const handleOpenChat = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -168,7 +181,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
   const handleViewProfile = (e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (roleMode === 'client' && booking.providerId) {
+    if (!isCompanionView && booking.providerId) {
       if (onViewProfile) {
         onViewProfile(booking.providerId);
       } else {
@@ -181,6 +194,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const isConfirmed = booking.status === 'Confirmed';
   const isInProgress = booking.status === 'InProgress';
   const isCancelled = booking.status === 'Cancelled';
+  const isDisputed = booking.status === 'Disputed';
 
   // Gather concise outing requirement chips
   const tags: string[] = [];
@@ -209,12 +223,12 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             {showRoleBadge && (
               <span
                 className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                  roleMode === 'companion'
+                  isCompanionView
                     ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
                     : 'bg-accent/10 text-accent border border-accent/20'
                 }`}
               >
-                {roleMode === 'companion' ? 'Client Request' : 'Your Outing'}
+                {isCompanionView ? 'Client Request' : 'Your Outing'}
               </span>
             )}
           </div>
@@ -230,9 +244,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         {/* Participant & Experience Header (Instrument Serif Typography & Clean Presentation) */}
         <div className="flex items-start gap-3.5 mb-4">
           <div
-            onClick={roleMode === 'client' && booking.providerId ? handleViewProfile : undefined}
+            onClick={!isCompanionView && booking.providerId ? handleViewProfile : undefined}
             className={`relative shrink-0 ${
-              roleMode === 'client' && booking.providerId ? 'cursor-pointer' : ''
+              !isCompanionView && booking.providerId ? 'cursor-pointer' : ''
             }`}
           >
             {photoUrl ? (
@@ -260,9 +274,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           <div className="min-w-0 flex-1">
             <div className="flex items-baseline justify-between gap-1">
               <h3
-                onClick={roleMode === 'client' && booking.providerId ? handleViewProfile : undefined}
+                onClick={!isCompanionView && booking.providerId ? handleViewProfile : undefined}
                 className={`font-serif text-lg sm:text-xl font-normal text-foreground leading-tight truncate ${
-                  roleMode === 'client' && booking.providerId
+                  !isCompanionView && booking.providerId
                     ? 'cursor-pointer hover:text-accent transition-colors'
                     : ''
                 }`}
@@ -270,7 +284,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 {displayName}
               </h3>
 
-              {roleMode === 'client' && booking.providerId && (
+              {!isCompanionView && booking.providerId && (
                 <button
                   type="button"
                   onClick={handleViewProfile}
@@ -342,24 +356,46 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         </div>
 
         {/* Confirmed Meeting Check-In Voucher (Concierge Verification Ticket) */}
-        {isConfirmed && roleMode === 'client' && (
+        {isConfirmed && !isCompanionView && (
           <div className="mt-3 p-3.5 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-between gap-3">
             <div>
               <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
                 Session Verification PIN
               </span>
               <span className="text-2xl font-mono font-bold tracking-[0.2em] text-foreground tabular-nums">
-                {booking.checkInPin || '849201'}
+                {booking.checkInPin ? booking.checkInPin : '••••••'}
               </span>
             </div>
-            <div className="text-right max-w-[160px]">
+            <div className="text-right max-w-[170px]">
               <span className="text-[11px] font-semibold text-foreground block">
-                Present at Meetup
+                {booking.checkInPin ? 'Present at Meetup' : 'Check-In Security'}
               </span>
               <span className="text-[10px] text-muted-foreground leading-tight block">
-                Companion enters PIN to verify arrival and activate session escrow.
+                {booking.checkInPin
+                  ? 'Companion verifies arrival with this PIN to release session escrow.'
+                  : 'PIN generated securely upon arrival check-in.'}
               </span>
             </div>
+          </div>
+        )}
+
+        {/* Cancelled or Disputed Status Banner */}
+        {(isCancelled || isDisputed) && (
+          <div className="mt-3 p-3 rounded-xl bg-muted/60 border border-border/80 space-y-1.5 text-xs">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                <ShieldCheckIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                <span>100% Escrow Protected</span>
+              </span>
+              <span className="text-[11px] font-mono text-muted-foreground uppercase">
+                {booking.status}
+              </span>
+            </div>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              {booking.cancellationReason
+                ? `Cancellation Note: "${booking.cancellationReason}"`
+                : 'Session ended prior to fulfillment. Funds held in the escrow vault were returned to your wallet or original payment method.'}
+            </p>
           </div>
         )}
 
@@ -411,7 +447,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         {/* Action Controls Matrix: strictly compliant 44px touch targets */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           {/* Primary Action Button */}
-          {isPendingPayment && onPay && (
+          {isPendingPayment && !isCompanionView && onPay && (
             <button
               type="button"
               onClick={(e) => {
@@ -425,7 +461,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </button>
           )}
 
-          {isConfirmed && roleMode === 'companion' && onCheckIn && (
+          {isConfirmed && isCompanionView && onCheckIn && (
             <button
               type="button"
               onClick={(e) => {
@@ -449,13 +485,13 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               className="flex-1 min-w-[130px] min-h-[44px] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
             >
               <CheckCircleIcon className="w-4 h-4" />
-              <span>{roleMode === 'companion' ? 'End Meetup' : 'Complete Outing'}</span>
+              <span>{isCompanionView ? 'End Meetup' : 'Complete Outing'}</span>
             </button>
           )}
 
           {isCompleted && (
             reviewStatus?.hasReviewed ? (
-              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[#C5A059] text-xs font-semibold">
+              <div className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-amber-500/10 border border-amber-500/20 text-[#C5A059] text-xs font-semibold">
                 <SolidStarIcon className="w-4 h-4 text-[#C5A059]" />
                 <span>Reviewed ({reviewStatus.myReview?.rating || 5}/5)</span>
               </div>
@@ -476,8 +512,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
           {/* Secondary Actions Group */}
           <div className="flex items-center gap-1.5 ml-auto">
-            {/* Edit Booking */}
-            {(isPendingPayment || isConfirmed) && onEdit && (
+            {/* Edit Booking (Only seeker can edit requirements/venue while pending or confirmed) */}
+            {(isPendingPayment || isConfirmed) && !isCompanionView && onEdit && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -493,7 +529,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             )}
 
             {/* Cancel Booking */}
-            {onCancel && !isCancelled && !isCompleted && !isInProgress && (
+            {onCancel && !isCancelled && !isDisputed && !isCompleted && !isInProgress && (
               <button
                 type="button"
                 onClick={(e) => {
@@ -526,7 +562,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         <LeaveReviewModal
           booking={booking}
           counterpartName={displayName}
-          isProviderViewing={roleMode === 'companion'}
+          isProviderViewing={isCompanionView}
           onClose={() => setIsReviewModalOpen(false)}
         />
       )}
