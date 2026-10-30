@@ -384,21 +384,23 @@ export function resolveProviderInfo(
 
   // Check live backend providers list if available
   if (liveProviders && liveProviders.length > 0) {
-    const found = liveProviders.find(
-      (p) => p.providerId === providerId || p.userId === providerId
-    );
+    const target = providerId.toLowerCase();
+    const found = liveProviders.find((p) => {
+      const pid = (p.providerId || p.userId || p.id || '').toString().toLowerCase();
+      return pid === target;
+    });
     if (found) {
       return {
-        providerId: found.providerId || found.userId,
-        displayName: found.displayName || 'Verified Companion',
-        photoUrl: found.photoUrl || (found.profileImages && found.profileImages[0]),
-        profileImages: found.profileImages,
+        providerId: found.providerId || found.userId || found.id,
+        displayName: found.displayName || (found.firstName ? (found.firstName + ' ' + (found.lastName || '')).trim() : 'Verified Companion'),
+        photoUrl: found.photoUrl || (found.profileImages && found.profileImages[0]) || (found.photoUrls && found.photoUrls[0]),
+        profileImages: found.profileImages || found.photoUrls || [],
         hourlyRate: found.hourlyRate,
         averageRating: found.averageRating,
         isVerified: found.isVerified ?? true,
         trustScore: found.trustScore,
-        specialty: found.specialties ? found.specialties[0] : undefined,
-        specialties: found.specialties,
+        specialty: found.specialties ? found.specialties[0] : (found.specialty || undefined),
+        specialties: found.specialties || (found.specialty ? [found.specialty] : []),
         bio: found.bio,
         maxRadiusKm: found.maxRadiusKm,
         distanceKm: found.distanceKm,
