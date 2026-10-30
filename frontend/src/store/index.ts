@@ -8,6 +8,7 @@ import { chatApi } from './chatApi';
 import { profileApi } from './api';
 import { paymentApi } from './paymentApi';
 import { adminApi } from './adminApi';
+import { reviewApi } from './reviewApi';
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     [profileApi.reducerPath]: profileApi.reducer,
     [paymentApi.reducerPath]: paymentApi.reducer,
     [adminApi.reducerPath]: adminApi.reducer,
+    [reviewApi.reducerPath]: reviewApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({ serializableCheck: false })
@@ -29,7 +31,8 @@ export const store = configureStore({
       .concat(chatApi.middleware)
       .concat(profileApi.middleware)
       .concat(paymentApi.middleware)
-      .concat(adminApi.middleware),
+      .concat(adminApi.middleware)
+      .concat(reviewApi.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

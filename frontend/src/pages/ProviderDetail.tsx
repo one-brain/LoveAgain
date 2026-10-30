@@ -3,6 +3,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { useGetProviderQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
+import { useGetProviderReviewsQuery, type ReviewDto } from '../store/reviewApi';
+import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { RateBadge } from '../components/ui/RateBadge';
@@ -45,6 +47,11 @@ const ProviderDetail: React.FC = () => {
   // Fetch API data
   const { data: apiProvider, isLoading } = useGetProviderQuery(
     resolvedUserId,
+    { skip: !resolvedUserId }
+  );
+
+  const { data: reviewsData } = useGetProviderReviewsQuery(
+    { providerId: resolvedUserId },
     { skip: !resolvedUserId }
   );
 
@@ -346,6 +353,114 @@ const ProviderDetail: React.FC = () => {
                   </a>
                 </div>
               )}
+
+              {/* Verified Client Reviews Section */}
+              <div className="space-y-4 pt-4 border-t border-border/80">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div>
+                    <h2 className="text-xl sm:text-2xl font-bold font-serif text-foreground">
+                      Verified Client Reviews
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Authentic ratings from completed Safe Escrow bookings
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-2xl">
+                    <SolidStarIcon className="w-4 h-4 text-[#C5A059]" />
+                    <span className="font-mono font-bold text-sm text-[#C5A059] tabular-nums">
+                      {(reviewsData?.averageRating ?? provider.averageRating).toFixed(1)}
+                    </span>
+                    <span className="text-xs text-muted-foreground font-medium">
+                      ({reviewsData?.totalReviews ?? 0} {reviewsData?.totalReviews === 1 ? 'review' : 'reviews'})
+                    </span>
+                  </div>
+                </div>
+
+                {!reviewsData || reviewsData.items.length === 0 ? (
+                  <div className="p-8 rounded-3xl bg-muted/20 border border-border/70 text-center space-y-2">
+                    <ShieldCheckIcon className="w-8 h-8 text-muted-foreground/60 mx-auto" />
+                    <p className="font-serif text-base font-semibold text-foreground">No public reviews yet</p>
+                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                      Be among the first to experience a verified outing with {provider.displayName} and leave a rating after completion.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {reviewsData.items.map((rev: ReviewDto) => (
+                      <div
+                        key={rev.id}
+                        className="p-5 rounded-3xl bg-card border border-border/70 shadow-xs space-y-3 hover:border-accent/30 transition-all"
+                      >
+                        <div className="flex items-center justify-between gap-2 flex-wrap">
+                          <div className="flex items-center gap-3">
+                            {rev.reviewerPhotoUrl ? (
+                              <img
+                                src={rev.reviewerPhotoUrl}
+                                alt={rev.reviewerName}
+                                className="w-10 h-10 rounded-2xl object-cover border border-border"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center font-serif font-bold text-accent text-sm">
+                                {rev.reviewerName.charAt(0)}
+                              </div>
+                            )}
+                            <div>
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-semibold text-sm text-foreground">
+                                  {rev.reviewerName}
+                                </span>
+                                <span className="inline-flex items-center gap-0.5 px-2 py-0.2 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                  Verified Client
+                                </span>
+                              </div>
+                              <span className="font-mono text-[11px] text-muted-foreground">
+                                {new Date(rev.createdAt).toLocaleDateString('en-IN', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                })}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Star Rating Badge */}
+                          <div className="flex items-center gap-1 bg-muted/40 px-2.5 py-1 rounded-xl border border-border/60">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <SolidStarIcon
+                                key={s}
+                                className={`w-3.5 h-3.5 ${
+                                  s <= rev.rating ? 'text-[#C5A059]' : 'text-muted-foreground/30'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Review Commentary */}
+                        <p className="text-sm text-foreground/90 leading-relaxed">
+                          {rev.comment}
+                        </p>
+
+                        {/* Sub-Score Badges (if present) */}
+                        {(rev.timelinessScore || rev.communicationScore) && (
+                          <div className="flex items-center gap-2 pt-1 flex-wrap">
+                            {rev.timelinessScore && (
+                              <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border border-border/50">
+                                Punctuality: <strong className="text-foreground">{rev.timelinessScore}/5</strong>
+                              </span>
+                            )}
+                            {rev.communicationScore && (
+                              <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border border-border/50">
+                                Communication: <strong className="text-foreground">{rev.communicationScore}/5</strong>
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
