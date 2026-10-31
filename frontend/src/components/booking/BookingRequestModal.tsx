@@ -5,16 +5,18 @@ import type { RootState } from '../../store';
 import {
   XMarkIcon,
   ShieldCheckIcon,
-  CheckCircleIcon,
   InformationCircleIcon,
   CalendarDaysIcon,
-  AdjustmentsHorizontalIcon,
-  MapPinIcon,
   ClockIcon,
+  MapPinIcon,
   SparklesIcon,
+  CheckBadgeIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import { formatINR, formatRate } from '../../utils/currency';
 import { useGetCompanionAvailabilityQuery, type CompanionAvailabilitySlot } from '../../store/bookingApi';
+import { DayAvailabilityTimeline } from './DayAvailabilityTimeline';
 
 export interface BookingRequirementData {
   activity: string;
@@ -45,6 +47,7 @@ interface BookingRequestModalProps {
     longitude?: number;
     city?: string;
     area?: string;
+    averageRating?: number;
   };
   initialDate?: string;
   initialTime?: string;
@@ -74,20 +77,7 @@ const TRANSPORT_MODES = [
   'Client will provide pickup',
 ];
 
-const DIET_PREFERENCES = [
-  'Coffee & Drinks Only',
-  'Vegetarian',
-  'Non-Vegetarian',
-  'No food involved',
-];
-
-const LANGUAGES = [
-  'English',
-  'Hindi',
-  'Tamil',
-  'Telugu',
-  'Any',
-];
+const DURATION_PRESETS = [1, 2, 3, 4, 5];
 
 export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   isOpen,
@@ -106,25 +96,36 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
 
-  const [step, setStep] = useState<1 | 2>(1);
-  const [activity, setActivity] = useState(initialActivity || provider.specialties[0] || 'Companionship / Activity');
-  const [customActivity] = useState('');
+  // Core booking state
+  const [activity, setActivity] = useState(
+    initialActivity || provider.specialties[0] || 'Companionship / Activity'
+  );
   const [startDate, setStartDate] = useState(initialDate || defaultDateStr);
-  const [startTime, setStartTime] = useState(initialTime || '18:00');
+  const [startTime, setStartTime] = useState(initialTime || '11:00');
   const [durationHours, setDurationHours] = useState(initialDuration || 2);
-  const [selectedDateKey, setSelectedDateKey] = useState<string>('');
-  const [selectedSlot, setSelectedSlot] = useState<CompanionAvailabilitySlot | null>(null);
+  const [meetingVenue, setMeetingVenue] = useState('');
+  const [dressCode, setDressCode] = useState(DRESS_CODES[0]);
+  const [transportMode, setTransportMode] = useState(TRANSPORT_MODES[0]);
+  const [specialNotes, setSpecialNotes] = useState('');
+  const [agreedToPlatonicPolicy, setAgreedToPlatonicPolicy] = useState(false);
+  const [showPreferences, setShowPreferences] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const { data: rawSlots = [], isLoading: isLoadingSlots } = useGetCompanionAvailabilityQuery(
+  // Fetch companion's future available slots
+  const { data: rawSlots = [] } = useGetCompanionAvailabilityQuery(
     provider.providerId,
     { skip: !isOpen || !provider?.providerId }
   );
 
   const availableSlots = useMemo(() => {
     const now = new Date();
-    return (rawSlots || []).filter((s: CompanionAvailabilitySlot) => !s.isBooked && new Date(s.endTime) > now);
+    return (rawSlots || []).filter(
+      (s: CompanionAvailabilitySlot) => !s.isBooked && new Date(s.endTime) > now
+    );
   }, [rawSlots]);
 
+  // Group slots by local date (YYYY-MM-DD)
   const slotsByDate = useMemo(() => {
     const map = new Map<string, CompanionAvailabilitySlot[]>();
     for (const slot of availableSlots) {
@@ -141,55 +142,55 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     return map;
   }, [availableSlots]);
 
-  const availableDates = useMemo(() => {
-    return Array.from(slotsByDate.keys()).sort();
+  // Slots specifically for currently selected date
+  const slotsForSelectedDate = useMemo(() => {
+    return slotsByDate.get(startDate) || [];
+  }, [slotsByDate, startDate]);
+
+  // Quick Date suggestions (next 4 days starting tomorrow)
+  const quickDateOptions = useMemo(() => {
+    const list: { key: string; label: string; weekday: string; openSlots: number }[] = [];
+    for (let i = 1; i <= 5; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const weekday = i === 1 ? 'Tomorrow' : d.toLocaleDateString('en-IN', { weekday: 'short' });
+      const label = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+      const openSlots = slotsByDate.get(key)?.length || 0;
+      list.push({ key, label, weekday, openSlots });
+    }
+    return list;
   }, [slotsByDate]);
 
-  const handleSelectSlot = (slot: CompanionAvailabilitySlot) => {
-    setSelectedSlot(slot);
-    const start = new Date(slot.startTime);
-    const end = new Date(slot.endTime);
-    const dateStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
-    const timeStr = `${String(start.getHours()).padStart(2, '0')}:${String(start.getMinutes()).padStart(2, '0')}`;
-    const diffHours = (end.getTime() - start.getTime()) / (1000 * 3600);
-    const resolvedHours = slot.durationHours || (diffHours > 0 ? Math.round(diffHours * 10) / 10 : 2);
-
-    setStartDate(dateStr);
-    setStartTime(timeStr);
-    setDurationHours(resolvedHours);
-  };
-
+  // Select first available start time on current date when slots or duration change
   useEffect(() => {
-    if (availableDates.length > 0) {
-      if (!selectedDateKey || !slotsByDate.has(selectedDateKey)) {
-        const firstDate = availableDates[0];
-        setSelectedDateKey(firstDate);
-        const slotsForFirst = slotsByDate.get(firstDate);
-        if (slotsForFirst && slotsForFirst.length > 0) {
-          handleSelectSlot(slotsForFirst[0]);
+    if (slotsForSelectedDate.length > 0) {
+      const requiredMinutes = durationHours * 60;
+      let matched = false;
+      for (const slot of slotsForSelectedDate) {
+        const s = new Date(slot.startTime);
+        const e = new Date(slot.endTime);
+        const sMin = s.getHours() * 60 + s.getMinutes();
+        const eMin = e.getHours() * 60 + e.getMinutes();
+        if (sMin + requiredMinutes <= eMin) {
+          const hours = String(s.getHours()).padStart(2, '0');
+          const mins = String(s.getMinutes()).padStart(2, '0');
+          setStartTime(`${hours}:${mins}`);
+          matched = true;
+          break;
         }
       }
+      if (!matched && slotsForSelectedDate[0]) {
+        const s = new Date(slotsForSelectedDate[0].startTime);
+        const hours = String(s.getHours()).padStart(2, '0');
+        const mins = String(s.getMinutes()).padStart(2, '0');
+        setStartTime(`${hours}:${mins}`);
+      }
     }
-  }, [availableDates, slotsByDate]);
-  const [meetingVenue, setMeetingVenue] = useState('');
-  const [dressCode, setDressCode] = useState(DRESS_CODES[0]);
-  const [transportMode, setTransportMode] = useState(TRANSPORT_MODES[0]);
-  const [dietPreference] = useState(DIET_PREFERENCES[0]);
-  const [equipmentGear] = useState('');
-  const [languagePreference] = useState(LANGUAGES[0]);
-  const [specialNotes, setSpecialNotes] = useState('');
-  const [agreedToPlatonicPolicy, setAgreedToPlatonicPolicy] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  }, [startDate, durationHours, slotsForSelectedDate]);
 
-  React.useEffect(() => {
-    if (initialDate) setStartDate(initialDate);
-    if (initialTime) setStartTime(initialTime);
-    if (initialDuration) setDurationHours(initialDuration);
-    if (initialActivity) setActivity(initialActivity);
-  }, [initialDate, initialTime, initialDuration, initialActivity]);
-
-  React.useEffect(() => {
+  // Handle escape key
+  useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -200,6 +201,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
 
   if (!isOpen) return null;
 
+  // Identity / KYC Guard
   if (!user || !user.isVerified) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
@@ -227,7 +229,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                 onClose();
                 navigate('/profile?tab=kyc');
               }}
-              className="w-full py-3 px-4 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
+              className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
             >
               <ShieldCheckIcon className="w-4 h-4" />
               <span>Complete KYC Now &rarr;</span>
@@ -235,7 +237,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-2.5 px-4 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold transition-all cursor-pointer"
+              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold transition-all cursor-pointer"
             >
               Back to Companion Profile
             </button>
@@ -245,16 +247,10 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     );
   }
 
-  const resolvedActivity = activity === 'Other' && customActivity.trim() ? customActivity.trim() : activity;
   const subtotal = durationHours * provider.hourlyRate;
   const totalAmount = subtotal;
 
-  const handleStep1Submit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setStep(2);
-  };
-
-  const handleFinalSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmitting) return;
     setErrorMsg('');
@@ -265,23 +261,27 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     }
 
     if (!agreedToPlatonicPolicy) {
-      setErrorMsg('Please confirm agreement with the safety guidelines and protected payment terms.');
+      setErrorMsg('Please confirm agreement with the safety guidelines and protected escrow terms.');
+      return;
+    }
+
+    if (slotsForSelectedDate.length === 0) {
+      setErrorMsg('Companion has no availability on this date. Please pick another date.');
       return;
     }
 
     setIsSubmitting(true);
     try {
       await onProceedToPayment({
-        activity: resolvedActivity,
+        activity,
         startDate,
         startTime,
         durationHours,
         meetingVenue: meetingVenue.trim(),
         dressCode,
         transportMode,
-        dietPreference,
-        equipmentGear: equipmentGear.trim() || undefined,
-        languagePreference,
+        dietPreference: 'Standard / Casual',
+        languagePreference: 'English',
         specialNotes: specialNotes.trim() || undefined,
         totalAmount,
       });
@@ -296,386 +296,328 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="booking-request-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+      aria-labelledby="booking-sheet-title"
+      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
     >
-      <div className="bg-card border border-border w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[92vh]">
-        {/* Header */}
-        <div className="p-5 border-b border-border flex items-center justify-between bg-muted/40">
-          <div className="flex items-center gap-3">
+      <div className="bg-card border border-border w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[94vh]">
+        {/* Header with companion summary */}
+        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-muted/30">
+          <div className="flex items-center gap-3 min-w-0">
             <img
-              src={provider.photoUrl ?? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'}
+              src={
+                provider.photoUrl ??
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+              }
               alt={provider.displayName}
-              className="w-12 h-12 rounded-2xl object-cover border border-border shadow-xs"
+              className="w-12 h-12 rounded-2xl object-cover border border-border shadow-xs shrink-0"
             />
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <h2 id="booking-request-title" className="text-base sm:text-lg font-bold text-foreground font-serif">
+                <h2
+                  id="booking-sheet-title"
+                  className="text-base sm:text-lg font-bold text-foreground font-serif truncate"
+                >
                   Book with Escrow: {provider.displayName}
                 </h2>
-                <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[11px] font-bold">
+                <CheckBadgeIcon className="w-4 h-4 text-amber-500 shrink-0" title="Verified Companion" />
+              </div>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-mono text-xs font-bold text-accent tabular-nums">
                   {formatRate(provider.hourlyRate)}
                 </span>
+                <span className="text-border">•</span>
+                <span className="text-xs text-muted-foreground truncate">
+                  {provider.area || provider.city || 'Central City Hub'}
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground">
-                Step {step} of 2: {step === 1 ? 'Schedule & Activity' : 'Preferences & Public Venue'}
-              </p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close booking dialog"
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+            className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer flex items-center justify-center"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
         </div>
 
-        {/* 2-Step Indicator */}
-        <div className="flex border-b border-border/80">
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
-              step === 1 ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <CalendarDaysIcon className="w-4 h-4" />
-            <span>1. Schedule & Activity</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep(2)}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 ${
-              step === 2 ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <AdjustmentsHorizontalIcon className="w-4 h-4" />
-            <span>2. Venue & Preferences</span>
-          </button>
-        </div>
-
-        {/* Scrollable Body */}
-        <div className="p-6 overflow-y-auto space-y-5 flex-1 text-xs sm:text-sm">
+        {/* Unified Single Sheet Body */}
+        <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1 text-xs sm:text-sm">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs font-medium flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs font-medium flex items-center gap-2">
               <InformationCircleIcon className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>
           )}
 
-          {step === 1 ? (
-            <form onSubmit={handleStep1Submit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-1.5">
-                  Select Activity / Experience
+          {/* Section 1: Activity Selection */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
+              1. Choose Activity / Experience
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {provider.specialties.slice(0, 5).map((spec) => {
+                const isSelected = activity === spec;
+                return (
+                  <button
+                    key={spec}
+                    type="button"
+                    onClick={() => setActivity(spec)}
+                    className={`min-h-[44px] px-3.5 py-2 rounded-xl border text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
+                      isSelected
+                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-2xs'
+                        : 'border-border bg-muted/40 text-foreground hover:bg-muted'
+                    }`}
+                  >
+                    <span>{isSelected ? '✓' : '•'}</span>
+                    <span>{spec}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Section 2: Date & Duration Selector */}
+          <div className="space-y-4 pt-1 border-t border-border/60">
+            {/* Date Quick Selector */}
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <CalendarDaysIcon className="w-4 h-4 text-accent" />
+                  <span>2. Outing Date</span>
                 </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {provider.specialties.slice(0, 4).map((spec) => (
+                <input
+                  type="date"
+                  value={startDate}
+                  min={defaultDateStr}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="px-2.5 py-1 rounded-lg border border-border bg-muted/60 text-foreground text-xs font-mono tabular-nums focus:ring-1 focus:ring-accent cursor-pointer"
+                  title="Choose custom date"
+                />
+              </div>
+
+              {/* Quick Date Pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                {quickDateOptions.map((opt) => {
+                  const isSelected = startDate === opt.key;
+                  return (
                     <button
-                      key={spec}
+                      key={opt.key}
                       type="button"
-                      onClick={() => setActivity(spec)}
-                      className={`min-h-[44px] p-2.5 rounded-xl border text-left font-medium text-xs transition-all flex items-center gap-1.5 cursor-pointer ${
-                        activity === spec
-                          ? 'border-accent bg-accent/10 text-accent font-semibold shadow-2xs'
-                          : 'border-border bg-muted/40 text-foreground hover:bg-muted'
+                      onClick={() => setStartDate(opt.key)}
+                      className={`min-h-[52px] p-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
+                        isSelected
+                          ? 'border-accent bg-accent text-accent-foreground shadow-xs'
+                          : 'border-border bg-card hover:bg-muted/60 text-foreground'
                       }`}
                     >
-                      <span className="text-accent font-bold">✓</span>
-                      <span className="truncate">{spec}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Companion Availability Slot Selector */}
-              <div className="space-y-3 pt-1">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                    <CalendarDaysIcon className="w-4 h-4 text-accent" />
-                    <span>Select Available Companion Schedule</span>
-                  </label>
-                  {availableSlots.length > 0 && (
-                    <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20 tabular-nums">
-                      {availableSlots.length} slot{availableSlots.length > 1 ? 's' : ''} open
-                    </span>
-                  )}
-                </div>
-
-                {isLoadingSlots ? (
-                  <div className="p-8 rounded-2xl bg-muted/30 border border-border/60 text-center space-y-2 animate-pulse">
-                    <ClockIcon className="w-6 h-6 text-muted-foreground mx-auto animate-spin" />
-                    <p className="text-xs text-muted-foreground">Checking companion's published schedule...</p>
-                  </div>
-                ) : availableDates.length === 0 ? (
-                  /* Zero-Slot Empty State: Informational notice with NO action button; booking disabled */
-                  <div className="p-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-center space-y-2">
-                    <div className="w-12 h-12 rounded-2xl bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center mx-auto">
-                      <CalendarDaysIcon className="w-6 h-6" />
-                    </div>
-                    <h4 className="font-serif text-base font-bold text-foreground">
-                      No Availability Scheduled
-                    </h4>
-                    <p className="text-xs text-muted-foreground leading-relaxed max-w-sm mx-auto">
-                      This companion currently has no open availability slots scheduled. Please check back later.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {/* Day Selector Pills */}
-                    <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5">
-                      {availableDates.map((dateKey) => {
-                        const [y, m, d] = dateKey.split('-').map(Number);
-                        const dateObj = new Date(y, m - 1, d);
-                        const weekday = dateObj.toLocaleDateString('en-IN', { weekday: 'short' });
-                        const day = dateObj.getDate();
-                        const month = dateObj.toLocaleDateString('en-IN', { month: 'short' });
-                        const isSelected = selectedDateKey === dateKey;
-                        const count = slotsByDate.get(dateKey)?.length || 0;
-                        return (
-                          <button
-                            key={dateKey}
-                            type="button"
-                            onClick={() => {
-                              setSelectedDateKey(dateKey);
-                              const slotsForDate = slotsByDate.get(dateKey) || [];
-                              if (slotsForDate.length > 0) {
-                                handleSelectSlot(slotsForDate[0]);
-                              }
-                            }}
-                            className={`min-w-[76px] min-h-[64px] px-3 py-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center shrink-0 ${
-                              isSelected
-                                ? 'border-accent bg-accent text-accent-foreground shadow-xs'
-                                : 'border-border bg-card hover:bg-muted/60 text-foreground'
-                            }`}
-                          >
-                            <span className={`text-[10px] uppercase font-semibold tracking-wider ${isSelected ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
-                              {weekday}
-                            </span>
-                            <span className="text-base font-bold font-mono tabular-nums leading-tight">
-                              {day}
-                            </span>
-                            <span className={`text-[10px] ${isSelected ? 'text-accent-foreground/90' : 'text-muted-foreground'}`}>
-                              {month} • {count}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Time Slot Chips for Selected Day */}
-                    {selectedDateKey && slotsByDate.has(selectedDateKey) && (
-                      <div className="space-y-1.5 pt-1">
-                        <span className="text-[11px] font-semibold text-muted-foreground block">
-                          Available Slots for Selected Date:
+                      <span className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+                        {opt.weekday}
+                      </span>
+                      <span className="text-xs font-bold font-mono tabular-nums">
+                        {opt.label}
+                      </span>
+                      {opt.openSlots > 0 ? (
+                        <span className={`text-[9px] font-mono font-medium ${isSelected ? 'text-accent-foreground/90' : 'text-emerald-600 dark:text-emerald-400'}`}>
+                          {opt.openSlots} open
                         </span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {slotsByDate.get(selectedDateKey)!.map((slot) => {
-                            const isSlotActive = selectedSlot?.slotId === slot.slotId;
-                            const s = new Date(slot.startTime);
-                            const e = new Date(slot.endTime);
-                            const timeRangeStr = `${s.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })} – ${e.toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}`;
-                            const slotHours = slot.durationHours || 2;
-                            const slotCost = slotHours * provider.hourlyRate;
-                            return (
-                              <button
-                                key={slot.slotId}
-                                type="button"
-                                onClick={() => handleSelectSlot(slot)}
-                                className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all cursor-pointer flex items-center justify-between gap-2 ${
-                                  isSlotActive
-                                    ? 'border-accent bg-accent/10 ring-1 ring-accent text-foreground shadow-2xs'
-                                    : 'border-border bg-card hover:bg-muted/50 text-foreground'
-                                }`}
-                              >
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-1.5">
-                                    <ClockIcon className={`w-3.5 h-3.5 shrink-0 ${isSlotActive ? 'text-accent' : 'text-muted-foreground'}`} />
-                                    <span className="font-mono text-xs font-bold tabular-nums truncate">
-                                      {timeRangeStr}
-                                    </span>
-                                  </div>
-                                  <span className="text-[11px] text-muted-foreground font-medium block mt-0.5">
-                                    {slotHours} hr session
-                                  </span>
-                                </div>
-                                <div className="text-right shrink-0">
-                                  <span className="font-mono font-bold text-xs text-foreground block tabular-nums">
-                                    {formatINR(slotCost)}
-                                  </span>
-                                  <span className="text-[10px] text-accent font-semibold block">
-                                    {isSlotActive ? '✓ Selected' : 'Available'}
-                                  </span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Selected Slot Confirmation Pill */}
-                    {selectedSlot && (
-                      <div className="p-3.5 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-between text-xs mt-2">
-                        <div className="flex items-center gap-2">
-                          <SparklesIcon className="w-4 h-4 text-accent shrink-0" />
-                          <span className="text-foreground font-medium">
-                            Confirmed slot: <strong className="font-semibold text-accent">{durationHours} hrs</strong> on <strong className="font-mono">{startDate}</strong> at <strong className="font-mono">{startTime}</strong>
-                          </span>
-                        </div>
-                        <span className="font-mono font-bold text-foreground tabular-nums">
-                          {formatINR(subtotal)}
+                      ) : (
+                        <span className={`text-[9px] ${isSelected ? 'text-accent-foreground/70' : 'text-muted-foreground/60'}`}>
+                          No slots
                         </span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Escrow Preview Pill */}
-              <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/80 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <ShieldCheckIcon className="w-5 h-5 text-emerald-500 shrink-0" />
-                  <span className="text-muted-foreground">Protected Payment (Safe Escrow)</span>
-                </div>
-                <span className="text-sm font-bold font-mono text-foreground tabular-nums">{formatINR(totalAmount)}</span>
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={!selectedSlot || availableDates.length === 0}
-                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-md hover:bg-accent-hover transition-all flex items-center justify-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <span>Continue to Venue & Preferences &rarr;</span>
-                </button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleFinalSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-1">
-                  Public Meeting Venue / Spot <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={meetingVenue}
-                  onChange={(e) => setMeetingVenue(e.target.value)}
-                  placeholder="e.g. Blue Tokai Cafe, Indiranagar / Cubbon Park Gate 2"
-                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                  required
-                />
-                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                  <MapPinIcon className="w-3.5 h-3.5 text-accent shrink-0" />
-                  <span>
-                    {provider.displayName} operates near{' '}
-                    <strong className="text-foreground">{provider.area || provider.city || 'Central City Hub'}</strong> and travels up to{' '}
-                    <strong className="text-foreground">{provider.maxRadiusKm ?? 25} km</strong>.
-                  </span>
-                </p>
-                {/* Venue Quick Chips */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {VENUE_SUGGESTIONS.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setMeetingVenue(v.replace(/^[^\w\s]+/, '').trim())}
-                      className="px-2 py-0.5 rounded-lg bg-muted text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-                    >
-                      {v}
+                      )}
                     </button>
-                  ))}
-                </div>
+                  );
+                })}
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Attire / Dress Code
-                  </label>
-                  <select
-                    value={dressCode}
-                    onChange={(e) => setDressCode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent"
-                  >
-                    {DRESS_CODES.map((dc) => (
-                      <option key={dc} value={dc}>{dc}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Logistics / Transport
-                  </label>
-                  <select
-                    value={transportMode}
-                    onChange={(e) => setTransportMode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent"
-                  >
-                    {TRANSPORT_MODES.map((tm) => (
-                      <option key={tm} value={tm}>{tm}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-1">
-                  Special Notes / Itinerary (Optional)
+            {/* Duration Selector */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                  <ClockIcon className="w-4 h-4 text-accent" />
+                  <span>3. Outing Duration</span>
                 </label>
-                <textarea
-                  rows={2}
-                  value={specialNotes}
-                  onChange={(e) => setSpecialNotes(e.target.value)}
-                  placeholder="Share any specific requests, discussion topics, or details about the outing..."
-                  className="w-full px-3 py-2 rounded-xl border border-border bg-muted/50 text-foreground text-xs"
-                />
-              </div>
-
-              <label className="flex items-start gap-2.5 cursor-pointer text-xs text-muted-foreground pt-1">
-                <input
-                  type="checkbox"
-                  checked={agreedToPlatonicPolicy}
-                  onChange={(e) => setAgreedToPlatonicPolicy(e.target.checked)}
-                  className="mt-0.5 rounded text-accent focus:ring-accent"
-                  required
-                />
-                <span>
-                  I understand this payment of <strong>{formatINR(totalAmount)}</strong> is held safely by the platform and released only after the meetup is complete.
+                <span className="font-mono text-xs font-bold text-accent tabular-nums">
+                  {formatINR(provider.hourlyRate)} × {durationHours}h = {formatINR(subtotal)}
                 </span>
-              </label>
-
-              <div className="pt-2 flex items-center justify-between gap-3">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="px-4 py-2.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:bg-muted"
-                >
-                  &larr; Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-md hover:bg-accent-hover disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-1.5 cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                      <span>Creating Safe Order...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Continue to Safe Payment ({formatINR(totalAmount)})</span>
-                      <CheckCircleIcon className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
               </div>
-            </form>
-          )}
-        </div>
+
+              <div className="flex items-center gap-2">
+                {DURATION_PRESETS.map((hrs) => {
+                  const isSelected = durationHours === hrs;
+                  return (
+                    <button
+                      key={hrs}
+                      type="button"
+                      onClick={() => setDurationHours(hrs)}
+                      className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer flex items-center justify-center font-mono tabular-nums ${
+                        isSelected
+                          ? 'border-accent bg-accent text-accent-foreground shadow-xs'
+                          : 'border-border bg-muted/40 hover:bg-muted text-foreground'
+                      }`}
+                    >
+                      <span>{hrs} {hrs === 1 ? 'hour' : 'hours'}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Visual Day Availability Timeline */}
+          <div className="pt-1">
+            <DayAvailabilityTimeline
+              availableSlots={slotsForSelectedDate}
+              durationHours={durationHours}
+              selectedStartTime={startTime}
+              onSelectStartTime={(newTime) => setStartTime(newTime)}
+              selectedDateKey={startDate}
+            />
+          </div>
+
+          {/* Section 4: Public Meeting Venue */}
+          <div className="space-y-2 pt-2 border-t border-border/60">
+            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+              <MapPinIcon className="w-4 h-4 text-accent" />
+              <span>4. Public Meeting Venue <span className="text-destructive">*</span></span>
+            </label>
+            <input
+              type="text"
+              value={meetingVenue}
+              onChange={(e) => setMeetingVenue(e.target.value)}
+              placeholder="e.g. Blue Tokai Coffee, Indiranagar / Cubbon Park Gate 2"
+              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+              required
+            />
+            {/* Quick Venue Chips */}
+            <div className="flex flex-wrap gap-1.5 pt-0.5">
+              {VENUE_SUGGESTIONS.map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setMeetingVenue(v.replace(/^[^\w\s]+/, '').trim())}
+                  className="px-2.5 py-1 min-h-[32px] rounded-lg bg-muted text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Optional Preferences Accordion */}
+          <div className="rounded-2xl border border-border/70 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowPreferences(!showPreferences)}
+              className="w-full p-3.5 bg-muted/30 hover:bg-muted/50 transition-colors flex items-center justify-between text-xs font-semibold text-foreground cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <SparklesIcon className="w-4 h-4 text-accent" />
+                <span>Optional Dress Code & Notes</span>
+              </div>
+              {showPreferences ? (
+                <ChevronUpIcon className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
+              )}
+            </button>
+
+            {showPreferences && (
+              <div className="p-4 space-y-3 bg-card border-t border-border/60 text-xs animate-in fade-in duration-150">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+                      Attire / Dress Code
+                    </label>
+                    <select
+                      value={dressCode}
+                      onChange={(e) => setDressCode(e.target.value)}
+                      className="w-full px-3 py-2 min-h-[40px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+                    >
+                      {DRESS_CODES.map((dc) => (
+                        <option key={dc} value={dc}>{dc}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+                      Travel / Logistics
+                    </label>
+                    <select
+                      value={transportMode}
+                      onChange={(e) => setTransportMode(e.target.value)}
+                      className="w-full px-3 py-2 min-h-[40px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+                    >
+                      {TRANSPORT_MODES.map((tm) => (
+                        <option key={tm} value={tm}>{tm}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
+                    Special Activity Notes
+                  </label>
+                  <input
+                    type="text"
+                    value={specialNotes}
+                    onChange={(e) => setSpecialNotes(e.target.value)}
+                    placeholder="e.g. Please bring comfortable walking shoes / beginner tennis player"
+                    className="w-full px-3 py-2 min-h-[40px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Section 5: Safety Policy & Escrow Guarantee */}
+          <div className="space-y-3 pt-2">
+            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/40 border border-border/80 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={agreedToPlatonicPolicy}
+                onChange={(e) => setAgreedToPlatonicPolicy(e.target.checked)}
+                className="mt-0.5 rounded border-border text-accent focus:ring-accent cursor-pointer"
+                required
+              />
+              <span className="text-[11px] text-muted-foreground leading-relaxed">
+                I agree to Cue's <strong>Platonic Companionship Policy</strong> and public venue safety rules. Booking fee is held in protected escrow and only released after mutual PIN completion.
+              </span>
+            </label>
+
+            {/* Escrow Ledger Card */}
+            <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheckIcon className="w-5 h-5 text-accent shrink-0" />
+                <div>
+                  <span className="text-[11px] font-bold text-foreground block">
+                    Escrow Protected Total
+                  </span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    {durationHours} hrs @ {formatRate(provider.hourlyRate)}
+                  </span>
+                </div>
+              </div>
+              <span className="font-mono text-xl font-bold text-foreground tabular-nums">
+                {formatINR(totalAmount)}
+              </span>
+            </div>
+
+            {/* Primary Action Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting || slotsForSelectedDate.length === 0}
+              className="w-full min-h-[48px] py-3 px-6 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ShieldCheckIcon className="w-4 h-4" />
+              <span>{isSubmitting ? 'Initiating Escrow Hold...' : `Deposit Escrow & Lock Outing (${formatINR(totalAmount)})`}</span>
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );
