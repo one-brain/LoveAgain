@@ -20,11 +20,14 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
 
   final List<String> _categories = const [
     'All',
+    'Coffee Dates',
+    'Restaurant Visits',
+    'Shopping',
+    'Movies & Cinema',
+    'Weekend Activities',
+    'Special Events',
     'Art & Culture',
-    'Language Exchange',
-    'Event Plus-One',
     'Outdoor & Fitness',
-    'Dining & Coffee',
   ];
 
   @override

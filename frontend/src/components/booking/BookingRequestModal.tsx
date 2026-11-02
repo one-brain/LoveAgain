@@ -57,11 +57,14 @@ interface BookingRequestModalProps {
 }
 
 const VENUE_SUGGESTIONS = [
-  '☕ Local Cafe / Coffee Shop',
-  '🎾 Sports Club / Tennis Courts',
-  '🛍️ City Mall / Public Plaza',
-  '🍽️ Fine Dining Restaurant',
+  '☕ Specialty Cafe / Coffee Date',
+  '🍽️ Fine Dining / Restaurant Visit',
+  '🛍️ City Mall / Shopping District',
+  '🎬 Cinema / Multiplex Outing',
+  '🌄 Scenic Spot / Weekend Activity',
+  '🎟️ Concert / Special Event Gala',
   '🌳 Public Park / Garden',
+  '🎾 Sports Club / Tennis Courts',
 ];
 
 const DRESS_CODES = [

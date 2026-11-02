@@ -413,7 +413,7 @@ const Discovery: React.FC = () => {
                     return next;
                   });
                 }}
-                placeholder="Search by activity, category, or companion name (e.g. Cooking, Yoga, Saree, Tennis, Elena)..."
+                placeholder="Search by activity (e.g. Coffee Dates, Restaurant Visits, Shopping, Movies, Elena)..."
                 className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-muted/50 border border-border/80 text-xs sm:text-sm placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all shadow-2xs"
               />
               {q && (
@@ -509,37 +509,48 @@ const Discovery: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Popular Search Tags */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
-            <span className="text-[11px] text-muted-foreground font-medium shrink-0">Popular:</span>
+          {/* Quick Curated Services Strip */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs">
+            <span className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider font-mono shrink-0 mr-1">
+              Services:
+            </span>
             {[
+              { label: 'All Services', query: '' },
+              { label: '☕ Coffee Dates', query: 'Coffee' },
+              { label: '🍽️ Restaurant Visits', query: 'Restaurant' },
+              { label: '🛍️ Shopping', query: 'Shopping' },
+              { label: '🎬 Movies', query: 'Movies' },
+              { label: '🌄 Weekend Activities', query: 'Weekend' },
+              { label: '🎟️ Special Events', query: 'Special Events' },
+              { label: '🎾 Tennis & Fitness', query: 'Tennis' },
               { label: '🍛 Homestyle Cooking', query: 'Cooking' },
-              { label: '🎾 Tennis', query: 'Tennis' },
-              { label: '🪔 Festival & Pooja', query: 'Pooja' },
               { label: '📸 Photography', query: 'Photography' },
-              { label: '👵 Senior Companion', query: 'Senior Companion' },
-              { label: '🧘 Yoga', query: 'Yoga' },
-            ].map((tag) => (
-              <button
-                key={tag.query}
-                type="button"
-                onClick={() => {
-                  setQ(tag.query);
-                  setSearchParams((prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.set('q', tag.query);
-                    return next;
-                  });
-                }}
-                className={`px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
-                  q.toLowerCase() === tag.query.toLowerCase()
-                    ? 'bg-accent text-accent-foreground border-accent shadow-2xs'
-                    : 'bg-muted/40 hover:bg-muted text-foreground/80 border-border/70 hover:border-accent/40'
-                }`}
-              >
-                {tag.label}
-              </button>
-            ))}
+              { label: '👵 Senior Care', query: 'Senior Companion' },
+            ].map((tag) => {
+              const isSelected = (!tag.query && !q.trim()) || (tag.query && q.toLowerCase().includes(tag.query.toLowerCase()));
+              return (
+                <button
+                  key={tag.label}
+                  type="button"
+                  onClick={() => {
+                    setQ(tag.query);
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      if (tag.query) next.set('q', tag.query);
+                      else next.delete('q');
+                      return next;
+                    });
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all shrink-0 cursor-pointer min-h-[36px] flex items-center gap-1 ${
+                    isSelected
+                      ? 'bg-accent text-accent-foreground border-accent shadow-2xs font-semibold'
+                      : 'bg-muted/40 hover:bg-muted text-foreground/85 border-border/80 hover:border-accent/40'
+                  }`}
+                >
+                  <span>{tag.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Active Location Indicator Pill */}

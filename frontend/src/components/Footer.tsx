@@ -59,28 +59,43 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/discovery?q=Coffee" className="text-foreground/80 hover:text-accent transition-colors">
+                  Coffee Dates & Cafes
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Restaurant" className="text-foreground/80 hover:text-accent transition-colors">
+                  Restaurant Visits & Dining
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Shopping" className="text-foreground/80 hover:text-accent transition-colors">
+                  Shopping & Styling Companion
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Movies" className="text-foreground/80 hover:text-accent transition-colors">
+                  Movies & Cinema Outings
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Weekend" className="text-foreground/80 hover:text-accent transition-colors">
+                  Weekend Activities & Day Trips
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Special+Events" className="text-foreground/80 hover:text-accent transition-colors">
+                  Special Events & Plus-One
+                </Link>
+              </li>
+              <li>
                 <Link to="/discovery?specialty=Tennis" className="text-foreground/80 hover:text-accent transition-colors">
                   Sports & Fitness
                 </Link>
               </li>
               <li>
-                <Link to="/discovery?specialty=Art" className="text-foreground/80 hover:text-accent transition-colors">
-                  Museums & Culture
-                </Link>
-              </li>
-              <li>
                 <Link to="/discovery?specialty=Cooking" className="text-foreground/80 hover:text-accent transition-colors">
-                  Culinary & Dining
-                </Link>
-              </li>
-              <li>
-                <Link to="/discovery?specialty=Hiking" className="text-foreground/80 hover:text-accent transition-colors">
-                  Outdoors & Hiking
-                </Link>
-              </li>
-              <li>
-                <Link to="/discovery?specialty=Photography" className="text-foreground/80 hover:text-accent transition-colors">
-                  Skill Sharing & Photo
+                  Homestyle Cooking
                 </Link>
               </li>
             </ul>

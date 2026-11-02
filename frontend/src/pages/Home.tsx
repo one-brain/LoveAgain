@@ -38,12 +38,12 @@ const PILLAR_CARDS: LensCard[] = [
   {
     id: 'companions',
     name: 'Cue Social & Events',
-    tagline: 'Connect with verified companions for city tours, concerts, fine dining, art galleries, and social plus-one gatherings.',
+    tagline: 'Connect with verified companions for coffee dates, restaurant visits, shopping, movies, weekend activities, and special events.',
     badge: '100% Platonic & Escrowed',
     icon: UserGroupIcon,
     accentColor: 'text-emerald-500',
     bgGradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
-    popularItems: ['City Tours', 'Fine Dining', 'Concerts', 'Art Gallery', 'Event Plus-One'],
+    popularItems: ['Coffee Dates', 'Restaurant Visits', 'Shopping Outings', 'Movie Dates', 'Weekend Activities', 'Special Events'],
   },
   {
     id: 'wellness',
@@ -335,11 +335,11 @@ const Home: React.FC = () => {
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground font-serif max-w-4xl mx-auto leading-[1.12] text-balance">
-            Meet Verified Companions for <span className="text-gradient">Events, Dining & Activities</span>
+            Meet Verified Companions for <span className="text-gradient">Coffee, Dining & Activities</span>
           </h1>
 
           <p className="mt-5 text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed text-pretty">
-            Connect with verified local partners for concerts, tennis, fine dining, city exploration, and weekend hobbies. 100% platonic, protected by platform escrow, and verified with government ID.
+            Connect with verified local partners for coffee dates, restaurant visits, shopping outings, movies, weekend activities, and special events. 100% platonic, protected by platform escrow, and verified with government ID.
           </p>
 
           {/* Primary Search Form */}
@@ -353,18 +353,39 @@ const Home: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Try 'Tennis in Indiranagar', 'Photography', 'Concert plus-one'..."
+                placeholder="Try 'Coffee date in Indiranagar', 'Restaurant visit', 'Movie outing', 'Shopping'..."
                 className="w-full bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none text-sm sm:text-base py-2.5"
               />
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm transition-all shadow-sm hover:scale-[1.02] flex items-center justify-center gap-2 flex-shrink-0"
+              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm transition-all shadow-sm hover:scale-[1.02] flex items-center justify-center gap-2 flex-shrink-0 cursor-pointer"
             >
               <span>Explore</span>
               <ArrowRightIcon className="w-4 h-4" />
             </button>
           </form>
+
+          {/* Curated Service Quick-Pills */}
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
+            {[
+              { label: '☕ Coffee Dates', q: 'Coffee' },
+              { label: '🍽️ Restaurant Visits', q: 'Restaurant' },
+              { label: '🛍️ Shopping Companion', q: 'Shopping' },
+              { label: '🎬 Movie Outings', q: 'Movies' },
+              { label: '🌄 Weekend Activities', q: 'Weekend' },
+              { label: '🎟️ Special Events', q: 'Special Events' },
+            ].map((srv) => (
+              <button
+                key={srv.label}
+                type="button"
+                onClick={() => navigate(`/discovery?q=${encodeURIComponent(srv.q)}`)}
+                className="px-3 py-1.5 rounded-full bg-card hover:bg-accent/10 border border-border/80 hover:border-accent text-xs font-medium text-foreground transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+              >
+                <span>{srv.label}</span>
+              </button>
+            ))}
+          </div>
 
           {/* Quick Metro Filter Chips */}
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">

@@ -22,11 +22,14 @@ interface EditBookingModalProps {
 }
 
 const VENUE_SUGGESTIONS = [
-  '☕ Local Cafe / Coffee Shop',
-  '🎾 Sports Club / Tennis Courts',
-  '🛍️ City Mall / Public Plaza',
-  '🍽️ Fine Dining Restaurant',
+  '☕ Specialty Cafe / Coffee Date',
+  '🍽️ Fine Dining / Restaurant Visit',
+  '🛍️ City Mall / Shopping District',
+  '🎬 Cinema / Multiplex Outing',
+  '🌄 Scenic Spot / Weekend Activity',
+  '🎟️ Concert / Special Event Gala',
   '🌳 Public Park / Garden',
+  '🎾 Sports Club / Tennis Courts',
 ];
 
 const DRESS_CODES = [
@@ -58,11 +61,14 @@ const LANGUAGES = [
 ];
 
 const POPULAR_ACTIVITIES = [
-  '☕ Specialty Coffee & Conversation',
-  '🍽️ Casual Dining / Lunch',
+  '☕ Coffee Date & Cafe Chat',
+  '🍽️ Restaurant Visit & Dining',
+  '🛍️ Shopping & Styling Companion',
+  '🎬 Movies & Cinema Outing',
+  '🌄 Weekend Activity & Day Out',
+  '🎟️ Special Event & Plus-One',
   '🎾 Sports / Tennis Practice',
   '🖼️ Art Gallery / Museum Tour',
-  '🛍️ Personal Shopping Companion',
   '🌳 City Walk / Mindful Stroll',
 ];
 

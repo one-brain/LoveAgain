@@ -27,7 +27,14 @@ Unlike conventional dating apps or informal social forums, Cue is an **identity-
 - Pricing Dynamics: Standard companion hourly rates range from ₹800/hr to ₹2,500/hr (benchmark average ₹1,500/hr). Minimum recommended rate is ₹300/hr.
 - Settlement Rails: Razorpay UPI (Google Pay, PhonePe, Paytm, BHIM, CRED), NetBanking, and RuPay/Visa/Mastercard cards.
 - Web platform (responsive mobile-first layout accessible from phones, tablets, and desktops).
-- Real-time category and specialty filtering (dining, tennis/fitness, city walks, art galleries, event attendance).
+- Real-time category and specialty filtering:
+  - **Coffee Dates & Cafe Chats**: Artisanal cafes, pour-over tastings, mindful conversation, bookish chats.
+  - **Restaurant Visits & Dining**: Fine dining etiquette, lunch dates, dinner companion, food trail explorations.
+  - **Shopping & Styling Companion**: Wardrobe consultation, mall/market companion, boutique styling, gift shopping.
+  - **Movies & Cinema Outings**: Film screenings, IMAX releases, film festival companion, cinema & post-show discussion.
+  - **Weekend Activities & Day Trips**: City sightseeing, Sunday morning markets, scenic road trips, park walks & picnic days.
+  - **Special Events & Plus-One**: Weddings, gallery openings, business dinners, corporate galas, concert plus-one.
+  - Active wellness (tennis, gym, hiking) and lifestyle care (homestyle cooking, elder accompaniment).
 - Unified Canonical Booking Standard ("Book with Escrow"): All bookings across Discovery cards and Companion Detail pages follow a single, unified 2-step escrow reservation pattern (Step 1: Experience & venue specifications; Step 2: Escrow wallet/Razorpay deposit).
 - Escrow transaction lifecycle: Booking requested -> Companion confirms -> Wallet funds escrowed -> Session takes place -> Funds settled (85% to companion wallet, 15% platform commission).
 - Strict separation between administrative oversight and marketplace participation.

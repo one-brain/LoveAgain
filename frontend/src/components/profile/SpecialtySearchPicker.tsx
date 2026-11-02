@@ -15,12 +15,31 @@ export interface SpecialtySearchPickerProps {
   disabled?: boolean;
 }
 
-const DEFAULT_POPULAR_PRESETS = [
+export const CURATED_COMPANIONSHIP_SERVICES = [
+  'Coffee Dates & Cafe Chats',
+  'Restaurant Visits & Dining',
+  'Shopping & Styling Companion',
+  'Movies & Cinema Outings',
+  'Weekend Activities & Getaways',
+  'Special Events & Plus-One',
   'Regional Homestyle Cook',
   'Yoga & Mindfulness',
   'Senior Companion & Temple Escort',
   'Workout & Tennis Partner',
   'Photography & Video',
+  'City Guide & Tours',
+];
+
+const DEFAULT_POPULAR_PRESETS = [
+  'Coffee Dates & Cafe Chats',
+  'Restaurant Visits & Dining',
+  'Shopping & Styling Companion',
+  'Movies & Cinema Outings',
+  'Weekend Activities & Getaways',
+  'Special Events & Plus-One',
+  'Workout & Tennis Partner',
+  'Regional Homestyle Cook',
+  'Senior Companion & Temple Escort',
   'City Guide & Tours',
 ];
 
@@ -48,9 +67,9 @@ export const SpecialtySearchPicker: React.FC<SpecialtySearchPickerProps> = ({
     return () => document.removeEventListener('mousedown', handleOutsideClick);
   }, []);
 
-  // Combine presets with any existing custom items in selectedSpecialties
+  // Combine presets, curated companionship services, and existing selections
   const allKnownOptions = useMemo(() => {
-    const set = new Set<string>(availablePresets);
+    const set = new Set<string>([...CURATED_COMPANIONSHIP_SERVICES, ...availablePresets]);
     selectedSpecialties.forEach((s) => set.add(s));
     return Array.from(set);
   }, [availablePresets, selectedSpecialties]);
@@ -215,7 +234,7 @@ export const SpecialtySearchPicker: React.FC<SpecialtySearchPickerProps> = ({
               setIsOpen(true);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Search activities (e.g. Cooking, Yoga, Saree, Tennis) or type custom..."
+            placeholder="Search activities (e.g. Coffee Dates, Restaurant Visits, Shopping, Movies) or type custom..."
             className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs sm:text-sm focus:outline-hidden focus:ring-2 focus:ring-accent/50 focus:border-accent transition-all placeholder:text-muted-foreground/70"
           />
           {searchQuery && (
