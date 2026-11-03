@@ -63,7 +63,7 @@ const Header: React.FC = () => {
 
   const currentAdminSection = useMemo(() => {
     const p = location.pathname;
-    if (p.startsWith('/admin/verifications')) return { key: 'verifications', label: 'Companion Verifications' };
+    if (p.startsWith('/admin/verifications')) return { key: 'verifications', label: 'Guest Verifications' };
     if (p.startsWith('/admin/bookings')) return { key: 'bookings', label: 'Bookings & Escrow' };
     if (p.startsWith('/admin/users')) return { key: 'users', label: 'Users Directory' };
     if (p.startsWith('/admin/payouts')) return { key: 'payouts', label: 'UPI Payouts' };
@@ -436,7 +436,7 @@ const Header: React.FC = () => {
               </Link>
             </nav>
           ) : isAuthenticated && !isAdmin ? (
-            /* Authenticated Seeker Desktop Navigation */
+            /* Authenticated Host Desktop Navigation */
             <nav className="hidden md:flex items-center gap-1">
               <Link
                 to="/discovery"
@@ -446,7 +446,7 @@ const Header: React.FC = () => {
                     : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                Discover Companions
+                Discover Guests
               </Link>
               <Link
                 to="/bookings"
@@ -456,7 +456,7 @@ const Header: React.FC = () => {
                     : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                My Bookings
+                My Outings
               </Link>
               <Link
                 to="/how-it-works"
@@ -470,7 +470,7 @@ const Header: React.FC = () => {
               </Link>
             </nav>
           ) : (
-            /* Public Guest & Admin Marketplace Desktop Navigation */
+            /* Public Host, Guest & Admin Marketplace Desktop Navigation */
             <nav className="hidden md:flex items-center gap-1">
               <Link
                 to="/discovery"
@@ -480,7 +480,7 @@ const Header: React.FC = () => {
                     : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                Discover Companions
+                Discover Guests
               </Link>
               <Link
                 to="/how-it-works"
@@ -501,7 +501,7 @@ const Header: React.FC = () => {
                       : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
                   }`}
                 >
-                  Become a Companion
+                  Become a Guest
                 </Link>
               )}
             </nav>
@@ -840,7 +840,7 @@ const Header: React.FC = () => {
                                   <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
                                 </div>
                                 <div className="truncate">
-                                  <p className="truncate leading-tight">Companion Verifications</p>
+                                  <p className="truncate leading-tight">Guest Verifications</p>
                                   <p className="text-[10px] text-muted-foreground font-normal truncate">
                                     KYC review & credential approval
                                   </p>
@@ -913,7 +913,7 @@ const Header: React.FC = () => {
                                 <div className="truncate">
                                   <p className="truncate leading-tight">UPI Payout Settlements</p>
                                   <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    Companion banking disbursements
+                                    Guest banking disbursements
                                   </p>
                                 </div>
                               </div>
@@ -986,7 +986,7 @@ const Header: React.FC = () => {
                             <div className="truncate">
                               <p className="truncate leading-tight">Browse Public Profiles</p>
                               <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                Explore companion directory
+                                Explore guest directory
                               </p>
                             </div>
                           </Link>
@@ -1023,7 +1023,7 @@ const Header: React.FC = () => {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
                           >
                             <SparklesIcon className="w-4 h-4 text-accent" />
-                            <span>{companionStatus === 'Approved' ? 'Companion Hub' : companionStatus === 'PendingReview' ? 'Application Status ⏳' : 'Become a Companion'}</span>
+                            <span>{companionStatus === 'Approved' ? 'Guest Dashboard' : companionStatus === 'PendingReview' ? 'Guest Status ⏳' : 'Become a Guest'}</span>
                           </Link>
                           <Link
                             to="/bookings"
@@ -1031,7 +1031,7 @@ const Header: React.FC = () => {
                             className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs sm:text-sm text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium"
                           >
                             <CalendarIcon className="w-4 h-4 text-muted-foreground" />
-                            <span>My Bookings</span>
+                            <span>My Outings</span>
                           </Link>
                           <Link
                             to="/wallet"
@@ -1264,7 +1264,7 @@ const Header: React.FC = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
               >
-                Discover Companions
+                Discover Guests
               </Link>
               <Link
                 to="/how-it-works"
@@ -1290,14 +1290,14 @@ const Header: React.FC = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
                     >
-                      My Bookings
+                      My Outings
                     </Link>
                     <Link
                       to="/provider"
                       onClick={() => setMobileMenuOpen(false)}
                       className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
                     >
-                      Companion Hub
+                      Guest Dashboard
                     </Link>
                     <Link
                       to="/wallet"
@@ -1336,7 +1336,7 @@ const Header: React.FC = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     className="block px-3 py-2.5 rounded-xl text-base font-medium text-foreground hover:bg-muted"
                   >
-                    Become a Companion
+                    Become a Guest
                   </Link>
                   <div className="pt-2 flex flex-col gap-2 border-t border-border/60">
                     <Link

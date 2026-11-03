@@ -80,10 +80,10 @@ export const ProviderEarningsCard: React.FC = () => {
             Earnings & Payouts
           </span>
           <h2 className="text-xl font-bold font-serif text-foreground">
-            Earnings & Withdrawals
+            Guest Earnings & Withdrawals
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Your take-home earnings (85%) from completed meetups with transparent 15% platform service fees.
+            Your take-home earnings (85%) from completed outings with transparent 15% platform service fees.
           </p>
         </div>
 
@@ -279,7 +279,7 @@ export const ProviderEarningsCard: React.FC = () => {
                   onChange={(e) => setDestination(e.target.value)}
                   placeholder={
                     payoutType === 'Upi'
-                      ? 'e.g. companion@okhdfcbank or 9876543210@paytm'
+                      ? 'e.g. guest@okhdfcbank or 9876543210@paytm'
                       : 'e.g. 123456789012, HDFC0001234'
                   }
                   required

@@ -81,7 +81,7 @@ export const LeaveReviewModal: React.FC<LeaveReviewModalProps> = ({
               </span>
             </div>
             <h2 className="font-serif text-2xl font-bold tracking-tight text-foreground mt-1">
-              {isProviderViewing ? `Rate Client Experience` : `Review Your Experience`}
+              {isProviderViewing ? `Rate Host Experience` : `Review Your Outing`}
             </h2>
             <p className="text-xs text-muted-foreground mt-0.5">
               With <span className="font-semibold text-foreground">{counterpartName}</span> &bull; Order{' '}
@@ -207,8 +207,8 @@ export const LeaveReviewModal: React.FC<LeaveReviewModalProps> = ({
               onChange={(e) => setComment(e.target.value)}
               placeholder={
                 isProviderViewing
-                  ? 'Share notes on client etiquette, punctuality, and meeting experience...'
-                  : 'Describe your experience with your companion, conversational flow, venue atmosphere, and overall professionalism...'
+                  ? 'Share notes on host etiquette, punctuality, and outing experience...'
+                  : 'Describe your experience with your guest, conversational flow, venue atmosphere, and overall professionalism...'
               }
               className="w-full px-4 py-3 rounded-2xl bg-muted/30 border border-border/60 text-sm text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-accent resize-none transition-all"
             />

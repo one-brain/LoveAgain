@@ -154,8 +154,8 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const providerInfo = resolveProviderInfo(booking.providerId, liveProviders);
 
   const displayName = isCompanionView
-    ? (booking.seekerName || 'Verified Seeker')
-    : (booking.providerName || providerInfo.displayName || 'Verified Companion');
+    ? (booking.seekerName || 'Verified Host')
+    : (booking.providerName || providerInfo.displayName || 'Verified Guest');
 
   const photoUrl = isCompanionView
     ? (booking.seekerPhoto || undefined)
@@ -229,7 +229,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                     : 'bg-accent/10 text-accent border border-accent/20'
                 }`}
               >
-                {isCompanionView ? 'Client Request' : 'Your Outing'}
+                {isCompanionView ? 'Attending as Guest' : 'Hosting Outing'}
               </span>
             )}
           </div>
@@ -290,7 +290,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                   type="button"
                   onClick={handleViewProfile}
                   className="text-[11px] font-medium text-accent hover:text-accent-hover inline-flex items-center gap-0.5 shrink-0 transition-colors cursor-pointer"
-                  title="View full companion profile"
+                  title="View full guest profile"
                 >
                   <span>Profile</span>
                   <ArrowUpRightIcon className="w-3 h-3" />
@@ -337,7 +337,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           <div className="flex items-start gap-2 pt-0.5">
             <MapPinIcon className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
             <span className="text-muted-foreground line-clamp-1">
-              {booking.meetingAddress || 'Venue details confirmed with companion'}
+              {booking.meetingAddress || 'Venue details confirmed with guest'}
             </span>
           </div>
 
@@ -373,14 +373,14 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               </span>
               <span className="text-[10px] text-muted-foreground leading-tight block">
                 {booking.checkInPin
-                  ? 'Present this 6-digit PIN to companion upon arrival to begin your outing.'
+                  ? 'Present this 6-digit PIN to guest upon arrival to begin your outing.'
                   : 'PIN generated securely upon arrival check-in.'}
               </span>
             </div>
           </div>
         )}
 
-        {/* In-Progress Outing Completion Voucher (Companion holds Completion PIN to disclose to Seeker) */}
+        {/* In-Progress Outing Completion Voucher (Guest holds Completion PIN to disclose to Host) */}
         {isInProgress && isCompanionView && (
           <div className="mt-3 p-3.5 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-between gap-3">
             <div>
@@ -393,11 +393,11 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             </div>
             <div className="text-right max-w-[180px]">
               <span className="text-[11px] font-semibold text-foreground block">
-                {booking.completionPin ? 'Provide to Seeker' : 'Escrow Release Code'}
+                {booking.completionPin ? 'Provide to Host' : 'Escrow Release Code'}
               </span>
               <span className="text-[10px] text-muted-foreground leading-tight block">
                 {booking.completionPin
-                  ? 'Disclose this PIN to client when outing concludes to authorize escrow release.'
+                  ? 'Disclose this PIN to host when outing concludes to authorize escrow release.'
                   : 'PIN available during active session.'}
               </span>
             </div>
@@ -537,7 +537,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
           {/* Secondary Actions Group */}
           <div className="flex items-center gap-1.5 ml-auto">
-            {/* Edit Booking (Only seeker can edit requirements/venue while pending or confirmed) */}
+            {/* Edit Booking (Only host can edit requirements/venue while pending or confirmed) */}
             {(isPendingPayment || isConfirmed) && !isCompanionView && onEdit && (
               <button
                 type="button"
@@ -569,7 +569,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               </button>
             )}
 
-            {/* Chat with companion / seeker */}
+            {/* Chat with guest / host */}
             <button
               type="button"
               onClick={handleOpenChat}

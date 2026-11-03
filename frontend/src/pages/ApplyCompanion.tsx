@@ -38,12 +38,12 @@ export const ApplyCompanion: React.FC = () => {
     }
   }, [providerProfile]);
 
-  // Fallback defaults if user came directly without saving Companion tab yet
+  // Fallback defaults if user came directly without saving Guest tab yet
   const hourlyRate = providerProfile?.hourlyRate || 1500;
   const maxRadiusKm = providerProfile?.maxRadiusKm || 25;
   const bio =
     providerProfile?.bio ||
-    'Friendly, punctual, and engaging companion for social outings, cafe catchups, and local events.';
+    'Engaging, respectful, and verified guest for dining outings, cafe catchups, shopping, and local events.';
   const specialties =
     providerProfile?.specialties && providerProfile.specialties.length > 0
       ? providerProfile.specialties
@@ -112,7 +112,7 @@ export const ApplyCompanion: React.FC = () => {
             </div>
 
             <h1 className="text-3xl font-extrabold tracking-tight text-foreground mb-3">
-              Your Companion Verification is In Progress
+              Your Guest Verification is In Progress
             </h1>
             <p className="text-muted-foreground text-sm leading-relaxed mb-8">
               Our safety team is reviewing your verification documents and payout details. Turnaround time is typically under <strong>24 hours</strong>.
@@ -127,7 +127,7 @@ export const ApplyCompanion: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <CheckCircleIcon className="w-5 h-5 text-emerald-500 shrink-0" />
                   <span className="text-xs sm:text-sm text-foreground/90 font-medium">
-                    Companion Settings Linked ({formatRate(hourlyRate)} • {specialties.length} specialties)
+                    Guest Settings Linked ({formatRate(hourlyRate)} • {specialties.length} specialties)
                   </span>
                 </div>
                 <div className="flex items-center gap-3">
@@ -182,20 +182,20 @@ export const ApplyCompanion: React.FC = () => {
             <CheckCircleIcon className="w-12 h-12" />
           </div>
           <span className="px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold uppercase tracking-wider">
-            Verified Companion
+            Verified Guest
           </span>
           <h1 className="text-3xl font-extrabold text-foreground mt-3 mb-2">
             You Are Officially Live on Discovery!
           </h1>
           <p className="text-sm text-muted-foreground mb-8">
-            Your identity and companion profile are verified. You can update your hourly rate, bio, and activities anytime from your Unified Profile.
+            Your identity and guest profile are verified. You can update your hourly rate, bio, and activities anytime from your Unified Profile.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <button
               onClick={() => navigate('/profile?tab=provider')}
               className="px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-lg hover:opacity-95 transition-all cursor-pointer"
             >
-              Manage Companion Settings
+              Manage Guest Settings
             </button>
             <button
               onClick={() => navigate('/discovery')}
@@ -214,13 +214,13 @@ export const ApplyCompanion: React.FC = () => {
       {/* Header Banner */}
       <div className="text-center max-w-xl mx-auto">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-bold uppercase tracking-wider mb-3">
-          <SparklesIcon className="w-4 h-4" /> Fast-Track Companion Verification
+          <SparklesIcon className="w-4 h-4" /> Fast-Track Guest Verification
         </div>
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
           Verify Identity & Payouts
         </h1>
         <p className="text-muted-foreground text-sm mt-2">
-          Your rates and activities are automatically synced from your Companion Settings. Complete identity verification and payout setup below to go live.
+          Your rates and activities are automatically synced from your Guest Settings. Complete identity verification and payout setup below to go live.
         </p>
       </div>
 
@@ -235,12 +235,12 @@ export const ApplyCompanion: React.FC = () => {
         </div>
       )}
 
-      {/* Linked Companion Settings Summary Card (No Duplicate Inputs!) */}
+      {/* Linked Guest Settings Summary Card (No Duplicate Inputs!) */}
       <div className="bg-card border border-border rounded-3xl p-5 sm:p-6 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-bold uppercase tracking-wider text-accent">
-              Synced Companion Profile
+              Synced Guest Profile
             </span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
               {formatRate(hourlyRate)} • {maxRadiusKm} km radius

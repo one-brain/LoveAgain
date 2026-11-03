@@ -15,6 +15,7 @@ interface CompleteOutingModalProps {
   onClose: () => void;
   orderId: string;
   companionName?: string;
+  guestName?: string;
   meetingAddress?: string;
   onSuccess?: () => void;
 }
@@ -23,10 +24,12 @@ export const CompleteOutingModal: React.FC<CompleteOutingModalProps> = ({
   isOpen,
   onClose,
   orderId,
-  companionName = 'Companion',
+  companionName,
+  guestName,
   meetingAddress,
   onSuccess,
 }) => {
+  const displayName = guestName || companionName || 'Guest';
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [completeBooking, { isLoading: isCompleting }] = useCompleteBookingMutation();
@@ -54,7 +57,7 @@ export const CompleteOutingModal: React.FC<CompleteOutingModalProps> = ({
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
-      setErrorMsg(err?.data?.error || err?.message || 'Invalid completion PIN. Please ask your companion to verify.');
+      setErrorMsg(err?.data?.error || err?.message || 'Invalid completion PIN. Please ask your guest to verify.');
     }
   };
 
@@ -72,7 +75,7 @@ export const CompleteOutingModal: React.FC<CompleteOutingModalProps> = ({
             </div>
             <div>
               <h2 className="text-xl font-bold font-serif text-foreground">Complete Outing & Settle</h2>
-              <p className="text-xs text-muted-foreground">Verify safe conclusion with {companionName}</p>
+              <p className="text-xs text-muted-foreground">Verify safe conclusion with {displayName}</p>
             </div>
           </div>
           <button
@@ -99,7 +102,7 @@ export const CompleteOutingModal: React.FC<CompleteOutingModalProps> = ({
             <span>Mutual Verification Handshake</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Ask {companionName} for their <strong>6-digit Outing Completion PIN</strong>. Entering this PIN verifies that your meetup concluded safely and initiates the release of escrow funds.
+            Ask {displayName} for their <strong>6-digit Outing Completion PIN</strong>. Entering this PIN verifies that your meetup concluded safely and initiates the release of escrow funds.
           </p>
         </div>
 
@@ -107,7 +110,7 @@ export const CompleteOutingModal: React.FC<CompleteOutingModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 text-center">
-              Enter Companion's Completion PIN
+              Enter Guest's Completion PIN
             </label>
             <input
               type="text"

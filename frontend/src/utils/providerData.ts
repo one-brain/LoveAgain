@@ -444,7 +444,7 @@ export function resolveProviderInfo(
     if (found) {
       return {
         providerId: found.providerId || found.userId || found.id,
-        displayName: found.displayName || (found.firstName ? (found.firstName + ' ' + (found.lastName || '')).trim() : 'Verified Companion'),
+        displayName: found.displayName || (found.firstName ? (found.firstName + ' ' + (found.lastName || '')).trim() : 'Verified Guest'),
         photoUrl: found.photoUrl || (found.profileImages && found.profileImages[0]) || (found.photoUrls && found.photoUrls[0]),
         profileImages: found.profileImages || found.photoUrls || [],
         hourlyRate: found.hourlyRate,
@@ -466,7 +466,7 @@ export function resolveProviderInfo(
   // Fallback for unknown provider IDs
   return {
     providerId,
-    displayName: 'Verified Companion',
+    displayName: 'Verified Guest',
   };
 }
 

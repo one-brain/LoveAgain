@@ -13,6 +13,7 @@ interface CheckInModalProps {
   onClose: () => void;
   orderId: string;
   clientName?: string;
+  hostName?: string;
   meetingAddress?: string;
   onSuccess?: () => void;
 }
@@ -21,10 +22,12 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   isOpen,
   onClose,
   orderId,
-  clientName = 'Client',
+  clientName,
+  hostName,
   meetingAddress,
   onSuccess,
 }) => {
+  const displayName = hostName || clientName || 'Host';
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [checkInBooking, { isLoading }] = useCheckInBookingMutation();
@@ -44,7 +47,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
       if (onSuccess) onSuccess();
       onClose();
     } catch (err: any) {
-      setErrorMsg(err?.data?.error || err?.message || 'Invalid check-in PIN. Please ask your client to verify.');
+      setErrorMsg(err?.data?.error || err?.message || 'Invalid check-in PIN. Please ask your host to verify.');
     }
   };
 
@@ -62,7 +65,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
             </div>
             <div>
               <h2 className="text-lg font-bold text-foreground">Venue Check-In Handshake</h2>
-              <p className="text-xs text-muted-foreground">Verify physical presence with {clientName}</p>
+              <p className="text-xs text-muted-foreground">Verify physical presence with {displayName}</p>
             </div>
           </div>
           <button
@@ -88,7 +91,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
             <span>2-Way Cryptographic Handshake</span>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Ask {clientName} to open their Cue Bookings screen and read or show the 6-digit Meeting PIN.
+            Ask {displayName} to open their Cue Bookings screen and read or show the 6-digit Meeting PIN.
           </p>
         </div>
 
@@ -96,7 +99,7 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 text-center">
-              Enter 6-Digit Meeting PIN
+              Enter Host's 6-Digit Meeting PIN
             </label>
             <input
               type="text"

@@ -173,7 +173,7 @@ const Chat: React.FC = () => {
 
             <div>
               <h2 className="text-sm font-bold text-foreground">
-                Companion Coordination
+                Outing Coordination
               </h2>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="text-emerald-500 font-medium">Online</span>

@@ -31,7 +31,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const CITY_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All India', icon: '🇮🇳', description: 'Show companions nationwide' },
+  { value: 'all', label: 'All India', icon: '🇮🇳', description: 'Show guests nationwide' },
   { value: 'blr', label: 'Bengaluru', icon: '📍', description: 'Indiranagar, Koramangala, Whitefield' },
   { value: 'mum', label: 'Mumbai', icon: '📍', description: 'Bandra, BKC, Colaba, Andheri' },
   { value: 'del', label: 'Delhi-NCR', icon: '📍', description: 'Connaught Place, Gurgaon, Noida' },
@@ -42,10 +42,10 @@ const CITY_OPTIONS: DropdownOption[] = [
 ];
 
 const GENDER_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All Genders', icon: '👥', description: 'Show all companions' },
-  { value: 'female', label: 'Women', icon: '👩', description: 'Female companions' },
-  { value: 'male', label: 'Men', icon: '👨', description: 'Male companions' },
-  { value: 'non-binary', label: 'Non-Binary', icon: '⚧', description: 'Non-binary companions' },
+  { value: 'all', label: 'All Genders', icon: '👥', description: 'Show all guests' },
+  { value: 'female', label: 'Women', icon: '👩', description: 'Female guests' },
+  { value: 'male', label: 'Men', icon: '👨', description: 'Male guests' },
+  { value: 'non-binary', label: 'Non-Binary', icon: '⚧', description: 'Non-binary guests' },
 ];
 
 const SORT_OPTIONS: DropdownOption[] = [
@@ -95,7 +95,7 @@ const Discovery: React.FC = () => {
   const [selectedProviderForBooking, setSelectedProviderForBooking] = useState<any | null>(null);
   const [activeCheckoutOrderId, setActiveCheckoutOrderId] = useState<string | null>(null);
   const [checkoutTotalAmount, setCheckoutTotalAmount] = useState<number>(0);
-  const [checkoutProviderName, setCheckoutProviderName] = useState<string>('Companion');
+  const [checkoutProviderName, setCheckoutProviderName] = useState<string>('Guest');
 
   useEffect(() => {
     const paramLens = searchParams.get('lens');
@@ -195,7 +195,7 @@ const Discovery: React.FC = () => {
 
       return {
         providerId: String(item.providerId),
-        displayName: String(item.displayName || 'Verified Companion'),
+        displayName: String(item.displayName || 'Verified Guest'),
         photoUrl: imgs[0],
         profileImages: imgs,
         gender: String(item.gender || 'Female'),
@@ -559,7 +559,7 @@ const Discovery: React.FC = () => {
               <div className="flex items-center gap-1.5 text-accent font-medium">
                 <MapPinIcon className="w-3.5 h-3.5" />
                 <span>
-                  Filtering companions within <strong>{radiusKm} km</strong> of <strong>{userLocation.label}</strong>
+                  Filtering guests within <strong>{radiusKm} km</strong> of <strong>{userLocation.label}</strong>
                 </span>
               </div>
               <button
@@ -818,7 +818,7 @@ const Discovery: React.FC = () => {
                         )}
                         {provider.lenses?.includes('companions') && (
                           <span className="px-2 py-0.5 rounded-md bg-emerald-900/80 backdrop-blur-md text-[10px] font-semibold text-emerald-200 border border-emerald-400/30">
-                            🤝 Companion
+                            🤝 Guest
                           </span>
                         )}
                         {provider.lenses?.includes('lifestyle') && (
@@ -950,10 +950,10 @@ const Discovery: React.FC = () => {
               Public Preview Limit (24 Profiles)
             </div>
             <h3 className="text-2xl font-bold font-serif text-foreground tracking-tight">
-              Looking for more verified companions?
+              Looking for more verified guests?
             </h3>
             <p className="text-muted-foreground text-sm mt-2 max-w-xl mx-auto leading-relaxed">
-              You are currently viewing a curated preview of 24 companions. Sign in or create a free account to unlock our entire community of verified companions, full photo galleries, and instant booking with escrow protection.
+              You are currently viewing a curated preview of 24 guests. Sign in or create a free account to unlock our entire community of verified guests, full photo galleries, and instant booking with escrow protection.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
               <Link
@@ -977,7 +977,7 @@ const Discovery: React.FC = () => {
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/60">
             <p className="text-xs text-muted-foreground order-2 sm:order-1">
               Showing page <strong className="text-foreground">{currentPage}</strong> of{' '}
-              <strong className="text-foreground">{totalPages}</strong> ({totalCount} verified companions)
+              <strong className="text-foreground">{totalPages}</strong> ({totalCount} verified guests)
             </p>
             <div className="flex items-center gap-1.5 order-1 sm:order-2">
               <button
@@ -1056,7 +1056,7 @@ const Discovery: React.FC = () => {
                   }
                 } catch (err: any) {
                   console.error('Booking API error:', err);
-                  alert(err?.data?.error || 'Failed to create booking. Please check companion availability.');
+                  alert(err?.data?.error || 'Failed to create booking. Please check guest availability.');
                   return;
                 }
               }
@@ -1094,7 +1094,7 @@ const Discovery: React.FC = () => {
                 Sign In to Unlock Pricing & Reserve
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                To guarantee companion privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
+                To guarantee guest privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
               </p>
               <div className="pt-2 flex flex-col gap-2">
                 <Link

@@ -63,7 +63,7 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
   const rating = apiProvider?.averageRating ?? provider.averageRating ?? 4.95;
   const trustScore = apiProvider?.trustScore ?? provider.trustScore ?? 98;
   const isVerified = apiProvider?.isVerified ?? provider.isVerified ?? true;
-  const bio = apiProvider?.bio || provider.bio || 'Verified platform companion offering engaging platonic outings, city tours, and shared experiences.';
+  const bio = apiProvider?.bio || provider.bio || 'Verified platform guest offering engaging platonic outings, dining companionships, and shared experiences.';
   const specialties = apiProvider?.specialties || provider.specialties || (provider.specialty ? [provider.specialty] : ['Companionship']);
   const maxRadiusKm = apiProvider?.maxRadiusKm ?? provider.maxRadiusKm ?? 25;
 
@@ -122,7 +122,7 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
                 {displayName}
               </h2>
               <span className="text-xs text-muted-foreground block">
-                Companion Profile Details
+                Guest Profile Details
               </span>
             </div>
           </div>
@@ -131,7 +131,7 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
             type="button"
             onClick={onClose}
             className="w-10 h-10 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-            aria-label="Close companion preview"
+            aria-label="Close guest preview"
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
@@ -210,7 +210,7 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
                   {displayName}
                 </h3>
                 {isVerified && (
-                  <CheckBadgeIcon className="w-6 h-6 text-accent shrink-0" title="Verified Companion" />
+                  <CheckBadgeIcon className="w-6 h-6 text-accent shrink-0" title="Verified Guest" />
                 )}
               </div>
               <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">

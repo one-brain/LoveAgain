@@ -68,16 +68,16 @@ const ProviderDashboard: React.FC = () => {
       <div className="min-h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading Companion Hub...</p>
+          <p className="text-sm text-muted-foreground">Loading Guest Hub...</p>
         </div>
       </div>
     );
   }
 
   const kpis = [
-    { label: 'Awaiting payment', value: pendingCount, hint: 'Requests clients have not paid yet', icon: InboxArrowDownIcon, tone: 'text-amber-500' },
+    { label: 'Awaiting payment', value: pendingCount, hint: 'Requests hosts have not paid yet', icon: InboxArrowDownIcon, tone: 'text-amber-500' },
     { label: 'Upcoming sessions', value: upcomingCount, hint: 'Confirmed or in progress', icon: CalendarDaysIcon, tone: 'text-accent' },
-    { label: 'Completed meetups', value: completedCount, hint: 'Lifetime finished sessions', icon: SparklesIcon, tone: 'text-emerald-500' },
+    { label: 'Completed outings', value: completedCount, hint: 'Lifetime finished outings', icon: SparklesIcon, tone: 'text-emerald-500' },
   ];
 
   return (
@@ -86,11 +86,11 @@ const ProviderDashboard: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
-            Companion Management Hub
+            Guest Management Hub
           </span>
-          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">Companion Dashboard</h1>
+          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">Guest Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Your performance and earnings at a glance.
+            Your guest performance and earnings at a glance.
           </p>
         </div>
       </div>

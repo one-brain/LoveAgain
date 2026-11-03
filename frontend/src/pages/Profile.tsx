@@ -426,7 +426,7 @@ const Profile: React.FC = () => {
     setProviderSuccess(false);
 
     if (!displayName.trim()) {
-      setProviderError('Please provide a Companion Display Name for Browse Profiles.');
+      setProviderError('Please provide a Guest Display Name for Browse Profiles.');
       return;
     }
 
@@ -450,7 +450,7 @@ const Profile: React.FC = () => {
       setProviderSuccess(true);
       setTimeout(() => setProviderSuccess(false), 4000);
     } catch (err: any) {
-      setProviderError(err?.data?.error || 'Failed to update companion settings.');
+      setProviderError(err?.data?.error || 'Failed to update guest settings.');
     }
   };
 
@@ -582,7 +582,7 @@ const Profile: React.FC = () => {
           }`}
         >
           <BriefcaseIcon className="w-4 h-4" />
-          <span>2. Companion Settings</span>
+          <span>2. Guest Settings</span>
         </button>
 
         <button
@@ -774,7 +774,7 @@ const Profile: React.FC = () => {
         <div className="bg-card rounded-3xl border border-border p-6 sm:p-8 shadow-xs space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-bold font-serif text-foreground">Companion Settings</h2>
+              <h2 className="text-xl font-bold font-serif text-foreground">Guest Settings</h2>
               <p className="text-xs text-muted-foreground mt-1">
                 Configure your public Display Name, 3 Browse Profile photos, hourly rate, GPS service area, public bio, and offered specialties.
               </p>
@@ -783,7 +783,7 @@ const Profile: React.FC = () => {
             {companionStatus === 'Approved' ? (
               <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                 <span className="px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-bold w-fit">
-                  ✓ Approved Companion
+                  ✓ Approved Guest
                 </span>
                 <DiscoveryVisibilityCard
                   compact={true}
@@ -801,7 +801,7 @@ const Profile: React.FC = () => {
                 to="/apply-companion"
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent/90 transition-colors whitespace-nowrap shrink-0 self-start sm:self-auto shadow-xs"
               >
-                <span>Apply for Companion Verification</span>
+                <span>Apply for Guest Verification</span>
                 <ArrowRightIcon className="w-3.5 h-3.5 shrink-0" />
               </Link>
             )}
@@ -810,7 +810,7 @@ const Profile: React.FC = () => {
           {providerSuccess && (
             <div className="p-4 rounded-xl bg-success/10 border border-success/20 text-success text-xs font-semibold flex items-center gap-2">
               <CheckCircleIcon className="w-5 h-5 shrink-0" />
-              <span>Companion settings saved successfully!</span>
+              <span>Guest settings saved successfully!</span>
             </div>
           )}
 
@@ -846,7 +846,7 @@ const Profile: React.FC = () => {
             {/* 1. Public Display Name */}
             <div>
               <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Companion Display Name (Shown on Browse Profiles) *
+                Guest Display Name (Shown on Browse Profiles) *
               </label>
               <input
                 type="text"
@@ -857,7 +857,7 @@ const Profile: React.FC = () => {
                 required
               />
               <span className="text-[11px] text-muted-foreground mt-1 block">
-                This name is displayed publicly on your Discovery card and companion profile page.
+                This name is displayed publicly on your Discovery card and guest profile page.
               </span>
             </div>
 
@@ -1030,7 +1030,7 @@ const Profile: React.FC = () => {
                 disabled={isUpdatingProvider}
                 className="px-6 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 cursor-pointer"
               >
-                {isUpdatingProvider ? 'Saving Settings...' : 'Save Companion Settings'}
+                {isUpdatingProvider ? 'Saving Settings...' : 'Save Guest Settings'}
               </button>
             </div>
           </form>
@@ -1099,7 +1099,7 @@ const Profile: React.FC = () => {
                       Identity Verified Successfully
                     </h3>
                     <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                      Your identity has been verified. You have full access to explore, message, and book experience companions. A +20 Trust Score boost is active on your profile.
+                      Your identity has been verified. You have full access to explore, message, and host verified guests. A +20 Trust Score boost is active on your profile.
                     </p>
                   </div>
                 </div>

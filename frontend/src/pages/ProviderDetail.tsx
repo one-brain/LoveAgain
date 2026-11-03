@@ -80,7 +80,7 @@ const ProviderDetail: React.FC = () => {
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading companion profile...</p>
+          <p className="text-sm text-muted-foreground">Loading guest profile...</p>
         </div>
       </div>
     );
@@ -92,16 +92,16 @@ const ProviderDetail: React.FC = () => {
         <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center text-rose-500 mb-4">
           <ShieldCheckIcon className="w-8 h-8" />
         </div>
-        <h2 className="text-2xl font-serif text-foreground font-semibold mb-2">Companion Not Found</h2>
+        <h2 className="text-2xl font-serif text-foreground font-semibold mb-2">Guest Not Found</h2>
         <p className="text-muted-foreground max-w-md mb-6">
-          The companion profile you are looking for does not exist or may have been unlisted.
+          The guest profile you are looking for does not exist or may have been unlisted.
         </p>
         <button
           onClick={() => navigate('/discovery')}
           className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-medium hover:bg-accent/90 transition-colors cursor-pointer"
         >
           <ArrowLeftIcon className="w-4 h-4" />
-          <span>Browse Active Companions</span>
+          <span>Browse Active Guests</span>
         </button>
       </div>
     );
@@ -156,7 +156,7 @@ const ProviderDetail: React.FC = () => {
         }
       } catch (err: any) {
         console.error('Booking API error:', err);
-        alert(err?.data?.error || 'Failed to create booking. Please check companion availability.');
+        alert(err?.data?.error || 'Failed to create booking. Please check guest availability.');
         return;
       }
     }
@@ -176,7 +176,7 @@ const ProviderDetail: React.FC = () => {
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
         >
           <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Back to all companions</span>
+          <span>Back to all guests</span>
         </button>
       </div>
 
@@ -483,7 +483,7 @@ const ProviderDetail: React.FC = () => {
             {/* Rate & Escrow Guarantee Summary */}
             <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2.5 text-xs">
               <div className="flex justify-between items-center text-foreground">
-                <span className="text-muted-foreground">Companion Rate:</span>
+                <span className="text-muted-foreground">Guest Rate:</span>
                 {isAuthenticated ? (
                   <span className="text-base font-bold font-serif text-accent">{formatRate(provider.hourlyRate)}</span>
                 ) : (
@@ -661,7 +661,7 @@ const ProviderDetail: React.FC = () => {
               Sign In to Unlock Pricing & Reserve
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              To guarantee companion privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
+              To guarantee guest privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
             </p>
             <div className="pt-2 flex flex-col gap-2">
               <Link

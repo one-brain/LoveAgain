@@ -32,7 +32,7 @@ interface BookingCheckoutModalProps {
 export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   orderId,
   totalAmount,
-  providerName = 'Companion',
+  providerName = 'Guest',
   isOpen,
   onClose,
   onSuccess,
@@ -65,7 +65,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
 
   const availableBalance = walletData?.availableBalance ?? 0;
   const platformFee = Math.round(totalAmount * 0.15 * 100) / 100;
-  const companionEarnings = Math.round((totalAmount - platformFee) * 100) / 100;
+  const guestEarnings = Math.round((totalAmount - platformFee) * 100) / 100;
   const hasSufficientBalance = availableBalance >= totalAmount;
   const shortage = Math.max(0, totalAmount - availableBalance);
 
@@ -150,11 +150,11 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             key: order.keyId,
             amount: order.amount * 100,
             currency: order.currency,
-            name: 'Cue Companion Platform',
+            name: 'Cue Escrow Platform',
             description: `Escrow Hold for Booking #${orderId.slice(0, 8)}`,
             order_id: order.orderId,
             prefill: {
-              name: 'Seeker',
+              name: 'Host',
             },
             theme: {
               color: '#E11D48',
@@ -218,7 +218,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto animate-in zoom-in-75 duration-300 ease-out" />
             <h4 className="text-lg font-bold text-foreground">Payment Safely Protected!</h4>
             <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              {formatINR(totalAmount)} is held safely. Payment will only be released to {providerName} after your meetup is completed.
+              {formatINR(totalAmount)} is held safely. Payment will only be released to {providerName} after your outing is completed.
             </p>
           </div>
         ) : (
@@ -226,7 +226,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
             {/* Price Breakdown */}
             <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 space-y-2 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Meetup Total:</span>
+                <span>Outing Total:</span>
                 <span className="font-semibold text-foreground">{formatINR(totalAmount)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
@@ -234,8 +234,8 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                 <span>{formatINR(platformFee)}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Companion Earnings (85%):</span>
-                <span>{formatINR(companionEarnings)}</span>
+                <span>Guest Earnings (85%):</span>
+                <span>{formatINR(guestEarnings)}</span>
               </div>
               <div className="pt-2 border-t border-border/40 flex justify-between font-bold text-foreground text-base">
                 <span>Total Payable:</span>
@@ -275,7 +275,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
               <div>
                 <p className="font-bold">Protected Payment Guarantee</p>
                 <p className="mt-0.5 opacity-90 leading-relaxed">
-                  Your payment is held safely by the platform. The companion receives payment only after your meetup has ended successfully.
+                  Your payment is held safely in escrow. The guest receives payment only after your outing has ended successfully.
                 </p>
               </div>
             </div>

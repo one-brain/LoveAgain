@@ -76,8 +76,8 @@ const DRESS_CODES = [
 
 const TRANSPORT_MODES = [
   'Meet independently at venue',
-  'Client books Uber for companion',
-  'Client will provide pickup',
+  'Host books Uber for Guest',
+  'Host will provide pickup',
 ];
 
 const DURATION_PRESETS = [1, 2, 3, 4, 5];
@@ -218,10 +218,10 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
               Identity Verification Required
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Identity verification required to book companions. Complete KYC now.
+              Identity verification required to host outings with verified guests. Complete KYC now.
             </p>
             <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1">
-              For community trust and member safety, government identity card submission is mandatory before initiating bookings with verified companions.
+              For community trust and member safety, government identity card submission is mandatory before inviting verified guests.
             </p>
           </div>
 
@@ -242,7 +242,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
               onClick={onClose}
               className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold transition-all cursor-pointer"
             >
-              Back to Companion Profile
+              Back to Guest Profile
             </button>
           </div>
         </div>
@@ -269,7 +269,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     }
 
     if (slotsForSelectedDate.length === 0) {
-      setErrorMsg('Companion has no availability on this date. Please pick another date.');
+      setErrorMsg('Guest has no availability on this date. Please pick another date.');
       return;
     }
 
@@ -320,9 +320,9 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   id="booking-sheet-title"
                   className="text-base sm:text-lg font-bold text-foreground font-serif truncate"
                 >
-                  Book with Escrow: {provider.displayName}
+                  Host an Outing: {provider.displayName}
                 </h2>
-                <CheckBadgeIcon className="w-4 h-4 text-amber-500 shrink-0" title="Verified Companion" />
+                <CheckBadgeIcon className="w-4 h-4 text-amber-500 shrink-0" title="Verified Guest" />
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="font-mono text-xs font-bold text-accent tabular-nums">
@@ -588,7 +588,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                 required
               />
               <span className="text-[11px] text-muted-foreground leading-relaxed">
-                I agree to Cue's <strong>Platonic Companionship Policy</strong> and public venue safety rules. Booking fee is held in protected escrow and only released after mutual PIN completion.
+                I agree to Cue's <strong>Platonic Outing Policy</strong> and public venue safety rules. Outing fee is held in protected escrow and only released after mutual PIN completion.
               </span>
             </label>
 

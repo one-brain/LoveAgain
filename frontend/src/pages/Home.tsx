@@ -38,7 +38,7 @@ const PILLAR_CARDS: LensCard[] = [
   {
     id: 'companions',
     name: 'Cue Social & Events',
-    tagline: 'Connect with verified companions for coffee dates, restaurant visits, shopping, movies, weekend activities, and special events.',
+    tagline: 'Connect with verified guests for coffee dates, restaurant visits, shopping, movies, weekend activities, and special events.',
     badge: '100% Platonic & Escrowed',
     icon: UserGroupIcon,
     accentColor: 'text-emerald-500',
@@ -58,7 +58,7 @@ const PILLAR_CARDS: LensCard[] = [
   {
     id: 'pro_work',
     name: 'Cue Skills & Creative Walks',
-    tagline: 'Hire companion mentors for golden-hour street photography walks, foreign language practice, and hobby masterclasses.',
+    tagline: 'Invite guest mentors for golden-hour street photography walks, foreign language practice, and hobby masterclasses.',
     badge: '1-on-1 Skill Sharing',
     icon: BriefcaseIcon,
     accentColor: 'text-sky-500',
@@ -78,13 +78,13 @@ const PILLAR_CARDS: LensCard[] = [
 ];
 
 const METROS = [
-  { name: 'Bengaluru', count: '28+ companions' },
-  { name: 'Mumbai', count: '24+ companions' },
-  { name: 'Delhi-NCR', count: '18+ companions' },
-  { name: 'Hyderabad', count: '14+ companions' },
-  { name: 'Chennai', count: '8+ companions' },
-  { name: 'Pune', count: '6+ companions' },
-  { name: 'Kolkata', count: '6+ companions' },
+  { name: 'Bengaluru', count: '28+ guests' },
+  { name: 'Mumbai', count: '24+ guests' },
+  { name: 'Delhi-NCR', count: '18+ guests' },
+  { name: 'Hyderabad', count: '14+ guests' },
+  { name: 'Chennai', count: '8+ guests' },
+  { name: 'Pune', count: '6+ guests' },
+  { name: 'Kolkata', count: '6+ guests' },
 ];
 
 const FEATURED_PROFILES = [
@@ -176,28 +176,28 @@ const FEATURED_PROFILES = [
 
 const FAQS = [
   {
-    question: 'Is LoveAgain (Cue) a dating or romance service?',
-    answer: 'No. LoveAgain is strictly an activity, event, and social companionship platform. All reservations are platonic, must take place in public venues (cafes, courts, galleries, markets), and are governed by strict safety rules. Any solicitation or inappropriate conduct results in immediate account termination and forfeiture of escrow funds.',
+    question: 'Is Cue a dating or romance service?',
+    answer: 'No. Cue is strictly a platonic experience platform where Hosts invite verified Guests for shared activities. All outings must take place in public venues (cafes, courts, galleries, markets), and are governed by strict safety rules. Any solicitation or inappropriate conduct results in immediate account termination and forfeiture of escrow funds.',
   },
   {
-    question: 'How does the Escrow Payment Guarantee protect me?',
-    answer: 'When you book an outing, your payment is held securely in an isolated platform escrow ledger. The companion does not receive the funds until the outing is complete and both parties verify check-in using a private 4-digit PIN. If the companion cancels or fails to show up, 100% of your deposit is instantly refunded to your platform wallet.',
+    question: 'How does the Escrow Payment Guarantee protect Hosts and Guests?',
+    answer: 'When a Host reserves an outing, the payment is held securely in an isolated platform escrow ledger. The Guest does not receive the funds until the outing is complete and both parties verify check-in using a private PIN. If the Guest cancels or fails to show up, 100% of the deposit is instantly refunded to the Host wallet.',
   },
   {
-    question: 'How do you verify companions and ensure safety?',
-    answer: 'Every companion applicant must submit Government ID proof (Aadhaar, Passport, or Driving License) along with a live camera selfie verification audited by our compliance operations team. In addition, every active outing is protected with an in-app Emergency SOS beacon that dispatches geolocation coordinates to our 24/7 trust & safety dispatch.',
+    question: 'How do you verify Guests and ensure safety?',
+    answer: 'Every Guest applicant must submit Government ID proof (Aadhaar, Passport, or Driving License) along with a live camera selfie verification audited by our compliance operations team. In addition, every active outing is protected with an in-app Emergency SOS beacon that dispatches geolocation coordinates to our 24/7 trust & safety dispatch.',
   },
   {
     question: 'Can I cancel an outing reservation?',
-    answer: 'Yes. You can cancel any reservation free of charge before the agreed start time directly from your bookings dashboard. Funds held in escrow are instantly credited back to your available wallet balance with zero penalty.',
+    answer: 'Yes. You can cancel any reservation free of charge before the agreed start time directly from your outings dashboard. Funds held in escrow are instantly credited back to your available wallet balance with zero penalty.',
   },
   {
     question: 'Can outings take place at private residences or hotels?',
-    answer: 'No. Platform safety policy requires all first-time outings to occur in public, commercial, or licensed sports/arts venues. Private residential visits are prohibited for member safety.',
+    answer: 'No. Platform safety policy requires all first-time outings to occur in public, commercial, or licensed sports/arts venues. Private residential visits are prohibited for mutual safety.',
   },
   {
-    question: 'How do companion earnings and withdrawals work?',
-    answer: 'Companions set their own hourly rates and keep 85% of each booking fee (15% platform escrow commission). Cleared balances can be withdrawn instantly via UPI (GPay, PhonePe, Paytm, or BHIM) with zero withdrawal fees.',
+    question: 'How do Guest earnings and withdrawals work?',
+    answer: 'Guests set their own transparent hourly rates and receive 85% of each outing fee (15% platform escrow commission). Cleared balances can be withdrawn instantly via UPI (GPay, PhonePe, Paytm, or BHIM) with zero withdrawal fees.',
   },
 ];
 
@@ -274,7 +274,7 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const isAdmin = Boolean(user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local');
-  const seekerFirstName = user?.firstName || 'Seeker';
+  const hostFirstName = user?.firstName || 'Host';
   const [selectedLens, setSelectedLens] = useState<PlatformLens>('companions');
   const [searchQuery, setSearchQuery] = useState('');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
@@ -294,14 +294,14 @@ const Home: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-foreground">
-                  Welcome back, {seekerFirstName}! 👋
+                  Welcome back, {hostFirstName}! 👋
                 </span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  Verified Seeker
+                  Verified Host
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Browse companions for upcoming activities or view your active reservation timeline.
+                Browse verified guests for upcoming outings or view your hosted outing timeline.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -310,13 +310,13 @@ const Home: React.FC = () => {
                 className="px-3.5 py-2 rounded-xl bg-muted/80 hover:bg-muted text-foreground text-xs font-semibold border border-border/80 transition-all shadow-2xs hover:shadow-xs flex items-center gap-1.5"
               >
                 <ClockIcon className="w-3.5 h-3.5 text-accent" />
-                <span>My Bookings</span>
+                <span>My Outings</span>
               </Link>
               <Link
                 to="/discovery"
                 className="px-4 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-bold shadow-xs hover:bg-accent-hover transition-all"
               >
-                <span>Find Companions &rarr;</span>
+                <span>Find Guests &rarr;</span>
               </Link>
             </div>
           </div>
@@ -331,15 +331,15 @@ const Home: React.FC = () => {
           {/* Trust Pill */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-wider mb-6">
             <SparklesIcon className="w-4 h-4" />
-            <span>Verified Social Companionship Across India</span>
+            <span>Verified Social Experiences Across India</span>
           </div>
 
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground font-serif max-w-4xl mx-auto leading-[1.12] text-balance">
-            Meet Verified Companions for <span className="text-gradient">Coffee, Dining & Activities</span>
+            Meet Verified Guests for <span className="text-gradient">Coffee, Dining & Activities</span>
           </h1>
 
           <p className="mt-5 text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed text-pretty">
-            Connect with verified local partners for coffee dates, restaurant visits, shopping outings, movies, weekend activities, and special events. 100% platonic, protected by platform escrow, and verified with government ID.
+            As a Host, connect with verified local guests for coffee dates, restaurant visits, shopping outings, movies, weekend activities, and special events. 100% platonic, protected by platform escrow, and verified with government ID.
           </p>
 
           {/* Primary Search Form */}
@@ -440,7 +440,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 3. Featured Verified Companions (Real Flagship Showcase) */}
+      {/* 3. Featured Verified Guests (Real Flagship Showcase) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-card rounded-3xl border border-border p-6 sm:p-10 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
@@ -449,17 +449,17 @@ const Home: React.FC = () => {
                 Vetted & Active This Week
               </span>
               <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-serif">
-                Featured Verified Companions
+                Featured Verified Guests
               </h2>
               <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-                Every companion has completed biometric verification and accepts reservations exclusively in public venues.
+                Every guest has completed biometric verification and accepts invitations exclusively in public venues.
               </p>
             </div>
             <Link
               to="/discovery"
               className="px-4 py-2 rounded-xl border border-border hover:border-accent text-xs sm:text-sm font-semibold text-foreground hover:text-accent transition-colors self-start sm:self-auto"
             >
-              Browse All 100+ Companions &rarr;
+              Browse All 100+ Guests &rarr;
             </Link>
           </div>
 
@@ -556,7 +556,7 @@ const Home: React.FC = () => {
                 Reserve & Escrow Deposit
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Choose an available slot, specify the public meeting spot, and confirm. Your booking fee is held in an isolated platform escrow ledger — the companion does not receive payment upfront.
+                Choose an available slot, specify the public meeting spot, and confirm. Your booking fee is held in an isolated platform escrow ledger — the guest does not receive payment upfront.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -574,12 +574,12 @@ const Home: React.FC = () => {
                 Meet at Public Venue & Exchange PIN
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Meet your companion at the agreed cafe, sports club, or gallery. Exchange your private 4-digit check-in PIN to start the outing timer and verify both parties are present.
+                Meet your guest at the agreed cafe, sports club, or gallery. Exchange your private check-in PIN to start the outing timer and verify both parties are present.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-accent flex items-center gap-1.5">
               <KeyIcon className="w-4 h-4" />
-              <span>Mutual 4-Digit Security PIN</span>
+              <span>Mutual Security PIN Exchange</span>
             </div>
           </div>
 
@@ -592,7 +592,7 @@ const Home: React.FC = () => {
                 Outing Completed & Escrow Released
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Once the scheduled time finishes, the outing is marked completed. Escrow funds are automatically released to the companion's wallet for instant UPI withdrawal, and both parties leave verified reviews.
+                Once the scheduled time finishes, the outing is marked completed. Escrow funds are automatically released to the guest's wallet for instant UPI withdrawal, and both parties leave verified reviews.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
@@ -603,7 +603,7 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 5. Companion Monetization Callout */}
+      {/* 5. Guest Monetization Callout */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-primary via-primary-light to-primary text-primary-foreground border border-border/80 shadow-xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
@@ -623,7 +623,7 @@ const Home: React.FC = () => {
                   to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
                   className="px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-xs sm:text-sm shadow-md hover:bg-accent-hover transition-all"
                 >
-                  Apply as a Companion / Partner
+                  Apply as a Verified Guest
                 </Link>
                 <Link
                   to="/how-it-works"
@@ -639,14 +639,14 @@ const Home: React.FC = () => {
                 <CheckCircleIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
                 <div>
                   <h4 className="font-semibold text-xs sm:text-sm text-white">Guaranteed Payment Security</h4>
-                  <p className="text-[11px] sm:text-xs text-white/80">Clients deposit funds in escrow prior to meeting. No chasing invoices or unpaid outings.</p>
+                  <p className="text-[11px] sm:text-xs text-white/80">Hosts deposit funds in escrow prior to meeting. No chasing invoices or unpaid outings.</p>
                 </div>
               </div>
               <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 flex items-center gap-3">
                 <ShieldCheckIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
                 <div>
                   <h4 className="font-semibold text-xs sm:text-sm text-white">Strict Identity & Safety Vetting</h4>
-                  <p className="text-[11px] sm:text-xs text-white/80">Every seeker and companion must complete biometric verification and government ID checks.</p>
+                  <p className="text-[11px] sm:text-xs text-white/80">Every host and guest must complete biometric verification and government ID checks.</p>
                 </div>
               </div>
               <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 flex items-center gap-3">
@@ -713,17 +713,17 @@ const Home: React.FC = () => {
         <div className="p-8 sm:p-12 rounded-3xl bg-card border border-accent/30 shadow-lg text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-accent/10 to-accent/5 pointer-events-none" />
           <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif mb-3 text-balance">
-            Ready to Explore Life with Verified Companions?
+            Ready to Explore Life with Verified Guests?
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto text-xs sm:text-base mb-6 text-pretty">
-            Join hundreds of urban professionals across Bengaluru, Mumbai, Delhi, and Hyderabad. No commitments, zero pre-payment risk.
+            Join hundreds of urban hosts across Bengaluru, Mumbai, Delhi, and Hyderabad. No commitments, zero pre-payment risk.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to="/discovery"
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-sm transition-all hover:scale-[1.02]"
             >
-              Explore Companions Now &rarr;
+              Explore Guests Now &rarr;
             </Link>
             <Link
               to="/register"
