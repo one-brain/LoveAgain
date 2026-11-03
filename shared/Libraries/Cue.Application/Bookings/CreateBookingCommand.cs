@@ -72,8 +72,10 @@ public sealed class CreateBookingCommandHandler(
             throw new InvalidOperationException("The requested booking duration exceeds the companion's available time slot.");
         }
 
+        var effectiveProviderId = slot.ProviderId;
+
         // Enforce authoritative provider hourly rate from DB to prevent client price tampering
-        var authoritativeRate = await bookingRepository.GetProviderHourlyRateAsync(command.ProviderId, cancellationToken);
+        var authoritativeRate = await bookingRepository.GetProviderHourlyRateAsync(effectiveProviderId, cancellationToken);
         var effectiveRate = authoritativeRate.HasValue && authoritativeRate.Value > 0
             ? authoritativeRate.Value
             : command.HourlyRate;
@@ -81,7 +83,7 @@ public sealed class CreateBookingCommandHandler(
         var totalAmount = decimal.Round(effectiveRate * command.DurationHours, 2);
         var platformFee = decimal.Round(totalAmount * 0.15m, 2);
         var order = new ServiceOrder(
-            command.ProviderId,
+            effectiveProviderId,
             command.SeekerId,
             command.StartTime,
             command.EndTime,
@@ -90,7 +92,7 @@ public sealed class CreateBookingCommandHandler(
             command.MeetingAddress,
             command.Requirements);
 
-        slot?.Hold(order.Id);
+        slot.Hold(order.Id);
         await bookingRepository.AddAsync(order, cancellationToken);
         await bookingRepository.SaveChangesAsync(cancellationToken);
         await eventPublisher.PublishAsync(

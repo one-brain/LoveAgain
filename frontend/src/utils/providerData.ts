@@ -339,34 +339,38 @@ export const SAMPLE_PROVIDERS_MAP: Record<string, CuratedProvider> = SAMPLE_PROV
   {} as Record<string, CuratedProvider>
 );
 
-export function generateDemoSlots() {
+export function generateDemoSlots(providerId: string = '00000000-0000-0000-0000-000000000001') {
   const slots = [];
   const now = new Date();
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 14; i++) {
     const d = new Date(now);
     d.setDate(d.getDate() + i);
 
-    // Morning slot
+    // Morning / Daytime slot (09:30 to 15:30 = 6 hours)
     const startM = new Date(d);
-    startM.setHours(10, 0, 0, 0);
+    startM.setHours(9, 30, 0, 0);
     const endM = new Date(d);
-    endM.setHours(12, 0, 0, 0);
+    endM.setHours(15, 30, 0, 0);
     slots.push({
       slotId: `slot-${i}-m`,
+      providerId,
       startTime: startM.toISOString(),
       endTime: endM.toISOString(),
+      durationHours: 6,
       isBooked: false,
     });
 
-    // Afternoon slot
+    // Afternoon / Evening slot (15:30 to 22:30 = 7 hours)
     const startA = new Date(d);
-    startA.setHours(14, 30, 0, 0);
+    startA.setHours(15, 30, 0, 0);
     const endA = new Date(d);
-    endA.setHours(16, 30, 0, 0);
+    endA.setHours(22, 30, 0, 0);
     slots.push({
       slotId: `slot-${i}-a`,
+      providerId,
       startTime: startA.toISOString(),
       endTime: endA.toISOString(),
+      durationHours: 7,
       isBooked: false,
     });
   }

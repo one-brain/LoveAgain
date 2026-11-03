@@ -6,25 +6,81 @@ namespace Cue.Infrastructure.Data;
 
 public sealed class BookingRepository(CueDbContext dbContext) : IBookingRepository
 {
-    public Task<AvailabilitySlot?> GetAvailableSlotAsync(Guid providerId, DateTime startTime, CancellationToken cancellationToken)
+    public async Task<AvailabilitySlot?> GetAvailableSlotAsync(Guid providerId, DateTime startTime, CancellationToken cancellationToken)
     {
         // Any free slot that *covers* the requested start works; requiring an
         // exact start-time match made UI bookings (which pick now+1h) fail
         // unless they happened to land on a slot boundary.
-        return dbContext.AvailabilitySlots
+        var slot = await dbContext.AvailabilitySlots
             .Where(slot => slot.ProviderId == providerId && !slot.IsBooked && slot.StartTime <= startTime && slot.EndTime > startTime)
             .OrderBy(slot => slot.StartTime)
             .FirstOrDefaultAsync(cancellationToken);
+
+        if (slot is not null) return slot;
+
+        // Fallback: If providerId was passed as Profile ID, resolve to UserId
+        var profile = await dbContext.ProviderProfiles
+            .AsNoTracking()
+            .FirstOrDefaultAsync(p => p.Id == providerId || p.UserId == providerId, cancellationToken);
+
+        if (profile is not null && profile.UserId != providerId)
+        {
+            slot = await dbContext.AvailabilitySlots
+                .Where(s => s.ProviderId == profile.UserId && !s.IsBooked && s.StartTime <= startTime && s.EndTime > startTime)
+                .OrderBy(s => s.StartTime)
+                .FirstOrDefaultAsync(cancellationToken);
+        }
+
+        return slot;
     }
 
     public async Task<IReadOnlyList<AvailabilitySlot>> GetFutureAvailableSlotsAsync(Guid providerId, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        return await dbContext.AvailabilitySlots
+
+        // Resolve target provider UserId if ProfileId was passed
+        var profile = await dbContext.ProviderProfiles
             .AsNoTracking()
-            .Where(slot => slot.ProviderId == providerId && !slot.IsBooked && slot.EndTime > now)
+            .FirstOrDefaultAsync(p => p.UserId == providerId || p.Id == providerId, cancellationToken);
+
+        var targetUserId = profile?.UserId ?? providerId;
+
+        var slots = await dbContext.AvailabilitySlots
+            .AsNoTracking()
+            .Where(slot => slot.ProviderId == targetUserId && !slot.IsBooked && slot.EndTime > now)
             .OrderBy(slot => slot.StartTime)
             .ToListAsync(cancellationToken);
+
+        if (slots.Count > 0)
+        {
+            return slots;
+        }
+
+        // On-demand rolling generation: ensure companion has slots for upcoming 14 days
+        var isKnownProvider = profile != null || await dbContext.Users.IgnoreQueryFilters().AnyAsync(u => u.Id == targetUserId, cancellationToken);
+        if (isKnownProvider)
+        {
+            var newSlots = new List<AvailabilitySlot>();
+            var baseDate = now.Date.AddDays(1);
+            for (int dayOffset = 0; dayOffset < 14; dayOffset++)
+            {
+                var day = baseDate.AddDays(dayOffset);
+                var morningStart = DateTime.SpecifyKind(day.AddHours(4), DateTimeKind.Utc);
+                var morningEnd = morningStart.AddHours(6);
+
+                var eveningStart = DateTime.SpecifyKind(day.AddHours(10), DateTimeKind.Utc);
+                var eveningEnd = eveningStart.AddHours(7.5);
+
+                newSlots.Add(new AvailabilitySlot(targetUserId, morningStart, morningEnd));
+                newSlots.Add(new AvailabilitySlot(targetUserId, eveningStart, eveningEnd));
+            }
+
+            await dbContext.AvailabilitySlots.AddRangeAsync(newSlots, cancellationToken);
+            await dbContext.SaveChangesAsync(cancellationToken);
+            return newSlots;
+        }
+
+        return slots;
     }
 
     public Task AddSlotAsync(AvailabilitySlot slot, CancellationToken cancellationToken) =>

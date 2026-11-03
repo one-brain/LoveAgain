@@ -167,7 +167,10 @@ public static class SyntheticDataSeeder
         // 1. Always repair legacy corrupted rows first
         await RepairLegacyDataAsync(dbContext, cancellationToken);
 
-        // 2. Check if our 100 synthetic profiles are already seeded
+        // 2. Always ensure rolling availability slots exist for active companions
+        await EnsureRollingAvailabilitySlotsAsync(dbContext, cancellationToken);
+
+        // 3. Check if our 100 synthetic profiles are already seeded
         var markerUserId = BuildDeterministicGuid(100);
         var alreadySeeded = await dbContext.Users
             .IgnoreQueryFilters()
@@ -640,6 +643,63 @@ public static class SyntheticDataSeeder
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public static async Task EnsureRollingAvailabilitySlotsAsync(CueDbContext dbContext, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+
+            var activeProviderIds = await dbContext.ProviderProfiles
+                .IgnoreQueryFilters()
+                .Where(p => p.Status == VerificationStatus.Approved && p.IsActive)
+                .Select(p => p.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (activeProviderIds.Count == 0) return;
+
+            var providerSlotCounts = await dbContext.AvailabilitySlots
+                .IgnoreQueryFilters()
+                .Where(s => s.StartTime > now)
+                .GroupBy(s => s.ProviderId)
+                .Select(g => new { ProviderId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.ProviderId, g => g.Count, cancellationToken);
+
+            var newSlots = new List<AvailabilitySlot>();
+            var baseDate = now.Date.AddDays(1);
+
+            foreach (var providerId in activeProviderIds)
+            {
+                var existingCount = providerSlotCounts.GetValueOrDefault(providerId, 0);
+                if (existingCount >= 8) continue;
+
+                for (int dayOffset = 0; dayOffset < 14; dayOffset++)
+                {
+                    var day = baseDate.AddDays(dayOffset);
+                    var morningStart = DateTime.SpecifyKind(day.AddHours(4), DateTimeKind.Utc);
+                    var morningEnd = morningStart.AddHours(6);
+
+                    var eveningStart = DateTime.SpecifyKind(day.AddHours(10), DateTimeKind.Utc);
+                    var eveningEnd = eveningStart.AddHours(7.5);
+
+                    newSlots.Add(new AvailabilitySlot(providerId, morningStart, morningEnd));
+                    newSlots.Add(new AvailabilitySlot(providerId, eveningStart, eveningEnd));
+                }
+            }
+
+            if (newSlots.Count > 0)
+            {
+                await dbContext.AvailabilitySlots.AddRangeAsync(newSlots, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
+                Console.WriteLine($"[SyntheticDataSeeder] Ensured {newSlots.Count} rolling availability slots across active companions.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SyntheticDataSeeder] Notice during EnsureRollingAvailabilitySlotsAsync: {ex.Message}");
+        }
+    }
+
     private static async Task SeedAvailabilitySlotsAsync(
         CueDbContext dbContext,
         List<(Guid UserId, decimal Rate, string DisplayName, string City, string Area, string[] Specialties)> activeProviders,
@@ -657,28 +717,22 @@ public static class SyntheticDataSeeder
         var newSlots = new List<AvailabilitySlot>();
         var baseDate = now.Date.AddDays(1);
 
-        // Create 6 upcoming slots over the next 6 days for every active provider
         for (int idx = 0; idx < activeProviders.Count; idx++)
         {
             var providerId = activeProviders[idx].UserId;
             if (existingSlotProviders.Contains(providerId)) continue;
 
-            for (int dayOffset = 0; dayOffset < 4; dayOffset++)
+            for (int dayOffset = 0; dayOffset < 14; dayOffset++)
             {
                 var day = baseDate.AddDays(dayOffset);
-                var morningStart = DateTime.SpecifyKind(day.AddHours(5), DateTimeKind.Utc); // 10:30 IST
-                var afternoonStart = DateTime.SpecifyKind(day.AddHours(9).AddMinutes(30), DateTimeKind.Utc); // 15:00 IST
-                var eveningStart = DateTime.SpecifyKind(day.AddHours(13), DateTimeKind.Utc); // 18:30 IST
+                var morningStart = DateTime.SpecifyKind(day.AddHours(4), DateTimeKind.Utc);
+                var morningEnd = morningStart.AddHours(6);
 
-                newSlots.Add(new AvailabilitySlot(providerId, morningStart, morningStart.AddHours(2)));
-                if ((idx + dayOffset) % 2 == 0)
-                {
-                    newSlots.Add(new AvailabilitySlot(providerId, afternoonStart, afternoonStart.AddHours(2)));
-                }
-                else
-                {
-                    newSlots.Add(new AvailabilitySlot(providerId, eveningStart, eveningStart.AddHours(2)));
-                }
+                var eveningStart = DateTime.SpecifyKind(day.AddHours(10), DateTimeKind.Utc);
+                var eveningEnd = eveningStart.AddHours(7.5);
+
+                newSlots.Add(new AvailabilitySlot(providerId, morningStart, morningEnd));
+                newSlots.Add(new AvailabilitySlot(providerId, eveningStart, eveningEnd));
             }
         }
 

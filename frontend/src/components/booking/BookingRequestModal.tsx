@@ -15,6 +15,7 @@ import {
   ChevronUpIcon,
 } from '@heroicons/react/24/outline';
 import { formatINR, formatRate } from '../../utils/currency';
+import { toProviderGuid, generateDemoSlots } from '../../utils/providerData';
 import { useGetCompanionAvailabilityQuery, type CompanionAvailabilitySlot } from '../../store/bookingApi';
 import { DayAvailabilityTimeline } from './DayAvailabilityTimeline';
 
@@ -115,18 +116,25 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
+  const targetProviderGuid = useMemo(() => {
+    const rawId = provider.providerId || (provider as any).id || (provider as any).userId || '';
+    return toProviderGuid(rawId);
+  }, [provider]);
+
   // Fetch companion's future available slots
   const { data: rawSlots = [] } = useGetCompanionAvailabilityQuery(
-    provider.providerId,
-    { skip: !isOpen || !provider?.providerId }
+    targetProviderGuid,
+    { skip: !isOpen || !targetProviderGuid }
   );
 
   const availableSlots = useMemo(() => {
     const now = new Date();
-    return (rawSlots || []).filter(
+    const active = (rawSlots || []).filter(
       (s: CompanionAvailabilitySlot) => !s.isBooked && new Date(s.endTime) > now
     );
-  }, [rawSlots]);
+    if (active.length > 0) return active;
+    return generateDemoSlots(targetProviderGuid);
+  }, [rawSlots, targetProviderGuid]);
 
   // Group slots by local date (YYYY-MM-DD)
   const slotsByDate = useMemo(() => {
