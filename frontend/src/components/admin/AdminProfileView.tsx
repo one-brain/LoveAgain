@@ -324,7 +324,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
               {photoUrl ? (
                 <img src={photoUrl} alt="Admin Avatar" className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-amber-600/20 to-amber-700/20 text-amber-500 font-extrabold text-3xl font-serif flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-amber-600/20 to-amber-700/20 text-amber-500 font-extrabold text-3xl font-sans flex items-center justify-center">
                   {userInitials}
                 </div>
               )}
@@ -381,7 +381,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
               </span>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground font-serif">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground font-sans">
               {firstName || 'Administrator'} {lastName}
             </h2>
             <p className="text-xs text-muted-foreground font-mono flex items-center justify-center sm:justify-start gap-2">
@@ -423,7 +423,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
               <UserCircleIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-foreground font-serif">Administrative Identity</h3>
+              <h3 className="font-bold text-base text-foreground font-sans">Administrative Identity</h3>
               <p className="text-xs text-muted-foreground">Update your official administrator contact coordinates.</p>
             </div>
           </div>
@@ -521,7 +521,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
               <KeyIcon className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base text-foreground font-serif">Security & Credentials</h3>
+              <h3 className="font-bold text-base text-foreground font-sans">Security & Credentials</h3>
               <p className="text-xs text-muted-foreground">Rotate your back-office master console password.</p>
             </div>
           </div>
@@ -621,7 +621,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
             <BuildingLibraryIcon className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="font-bold text-base text-foreground font-serif">Administrative Clearance & Access Matrix</h3>
+            <h3 className="font-bold text-base text-foreground font-sans">Administrative Clearance & Access Matrix</h3>
             <p className="text-xs text-muted-foreground">Active security policies and role grants bound to this account.</p>
           </div>
         </div>

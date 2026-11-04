@@ -421,19 +421,19 @@ const Home: React.FC = () => {
           {/* Trust Strip */}
           <div className="mt-12 pt-8 border-t border-border/60 max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif">100%</div>
+              <div className="text-2xl sm:text-3xl font-extrabold text-foreground font-mono tabular-nums">100%</div>
               <div className="text-xs text-muted-foreground mt-0.5">Government ID & Selfie KYC</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif">Escrow Hold</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-sans tracking-tight">Escrow Hold</div>
               <div className="text-xs text-muted-foreground mt-0.5">Zero Pre-payment Risk</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif">4-Digit PIN</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-sans tracking-tight">4-Digit PIN</div>
               <div className="text-xs text-muted-foreground mt-0.5">In-Person Meeting Check-In</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif">24/7 SOS</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-sans tracking-tight">24/7 SOS</div>
               <div className="text-xs text-muted-foreground mt-0.5">Emergency Outing Dispatch</div>
             </div>
           </div>

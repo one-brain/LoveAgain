@@ -237,7 +237,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-bold font-serif text-foreground">
+            <h3 className="text-xl font-bold font-sans text-foreground">
               Identity Verification Required
             </h3>
             <p className="text-xs text-muted-foreground leading-relaxed">
@@ -333,7 +333,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
               <div className="flex items-center gap-2">
                 <h2
                   id="booking-sheet-title"
-                  className="text-base sm:text-lg font-bold text-foreground font-serif truncate"
+                  className="text-base sm:text-lg font-bold text-foreground font-sans truncate"
                 >
                   Host an Outing: {provider.displayName}
                 </h2>

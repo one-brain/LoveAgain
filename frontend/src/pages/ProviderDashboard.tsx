@@ -88,7 +88,7 @@ const ProviderDashboard: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
             Guest Management Hub
           </span>
-          <h1 className="text-3xl sm:text-4xl font-normal font-serif text-foreground tracking-tight">Guest Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-sans text-foreground tracking-tight">Guest Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Your guest performance and earnings at a glance.
           </p>
@@ -116,7 +116,7 @@ const ProviderDashboard: React.FC = () => {
         {/* Bookings signpost */}
         <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
           <div className="space-y-2">
-            <h2 className="text-xl font-normal font-serif text-foreground">Booking requests</h2>
+            <h2 className="text-lg sm:text-xl font-bold font-sans text-foreground">Booking requests</h2>
             {nextSession ? (
               <p className="text-sm text-muted-foreground">
                 Next session{' '}
@@ -150,7 +150,7 @@ const ProviderDashboard: React.FC = () => {
         <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-xl font-normal font-serif text-foreground">Public profile</h2>
+              <h2 className="text-lg sm:text-xl font-bold font-sans text-foreground">Public profile</h2>
               <span
                 className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                   !isApproved

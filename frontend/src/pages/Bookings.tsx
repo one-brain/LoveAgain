@@ -425,7 +425,7 @@ const Bookings: React.FC = () => {
           <div className="w-14 h-14 rounded-2xl bg-accent/15 text-accent flex items-center justify-center mx-auto">
             <ClockIcon className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold font-serif text-foreground">Sign In to View Bookings</h2>
+          <h2 className="text-2xl font-bold font-sans text-foreground">Sign In to View Bookings</h2>
           <p className="text-sm text-muted-foreground">
             Please log in to your Cue account to view your scheduled outings and active chat orders.
           </p>
@@ -521,7 +521,7 @@ const Bookings: React.FC = () => {
       {/* Page Title & Context */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
+          <h1 className="text-3xl sm:text-4xl font-bold font-sans text-foreground">
             My Experience Bookings
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
@@ -733,7 +733,7 @@ const Bookings: React.FC = () => {
                     <CalendarDaysIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground font-serif">
+                    <h3 className="text-lg font-bold text-foreground font-sans">
                       {statusFilter !== 'all' ? 'No Bookings Match Filter' : 'No Upcoming Bookings'}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
@@ -792,7 +792,7 @@ const Bookings: React.FC = () => {
                     <CheckCircleIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground font-serif">No Completed Outings Yet</h3>
+                    <h3 className="text-lg font-bold text-foreground font-sans">No Completed Outings Yet</h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {roleMode === 'companion'
                         ? 'Successfully fulfilled hosted outings, payment disbursements, and ratings will appear here.'
@@ -836,7 +836,7 @@ const Bookings: React.FC = () => {
                     <ShieldCheckIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground font-serif">
+                    <h3 className="text-lg font-bold text-foreground font-sans">
                       {statusFilter !== 'all' ? 'No Bookings Match Filter' : 'No Cancelled or Disputed Outings'}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
@@ -895,7 +895,7 @@ const Bookings: React.FC = () => {
                   >
                     <ChevronLeftIcon className="w-5 h-5" />
                   </button>
-                  <h2 className="text-xl sm:text-2xl font-bold font-serif text-foreground min-w-[200px]">
+                  <h2 className="text-xl sm:text-2xl font-bold font-sans text-foreground min-w-[200px]">
                     {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </h2>
                   <button
@@ -1019,7 +1019,7 @@ const Bookings: React.FC = () => {
               {/* Selected Day Schedule Inspector */}
               <div className="pt-6 border-t border-border space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h3 className="text-base sm:text-lg font-bold font-serif text-foreground">
+                  <h3 className="text-base sm:text-lg font-bold font-sans text-foreground">
                     Outings on {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                   </h3>
                   <span className="text-xs font-mono text-muted-foreground tabular-nums">

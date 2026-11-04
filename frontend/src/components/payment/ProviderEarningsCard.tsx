@@ -79,7 +79,7 @@ export const ProviderEarningsCard: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-wider text-accent mb-0.5 block">
             Earnings & Payouts
           </span>
-          <h2 className="text-2xl font-normal font-serif text-foreground tracking-tight">
+          <h2 className="text-xl sm:text-2xl font-bold font-sans text-foreground tracking-tight">
             Guest Earnings & Withdrawals
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -183,7 +183,7 @@ export const ProviderEarningsCard: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
           <div className="relative w-full max-w-md bg-card text-card-foreground rounded-3xl border border-border shadow-2xl p-6 sm:p-8 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-border/60">
-              <h3 className="text-lg font-bold font-serif text-foreground">Withdraw Cleared Earnings</h3>
+              <h3 className="text-lg font-bold font-sans text-foreground">Withdraw Cleared Earnings</h3>
               <button
                 onClick={() => {
                   setIsPayoutModalOpen(false);
@@ -197,11 +197,10 @@ export const ProviderEarningsCard: React.FC = () => {
 
             {statusMessage && (
               <div
-                className={`flex items-center gap-2 p-3 rounded-xl text-xs border ${
-                  statusMessage.type === 'success'
+                className={`flex items-center gap-2 p-3 rounded-xl text-xs border ${statusMessage.type === 'success'
                     ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                     : 'bg-destructive/10 text-destructive border-destructive/20'
-                }`}
+                  }`}
               >
                 {statusMessage.type === 'success' ? (
                   <CheckCircleIcon className="w-4 h-4 flex-shrink-0" />
@@ -221,22 +220,20 @@ export const ProviderEarningsCard: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setPayoutType('Upi')}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                      payoutType === 'Upi'
+                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${payoutType === 'Upi'
                         ? 'border-accent bg-accent/15 text-accent'
                         : 'border-border bg-muted/30 text-foreground'
-                    }`}
+                      }`}
                   >
                     UPI ID (VPA)
                   </button>
                   <button
                     type="button"
                     onClick={() => setPayoutType('BankTransfer')}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${
-                      payoutType === 'BankTransfer'
+                    className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all ${payoutType === 'BankTransfer'
                         ? 'border-accent bg-accent/15 text-accent'
                         : 'border-border bg-muted/30 text-foreground'
-                    }`}
+                      }`}
                   >
                     Bank (NEFT / IMPS)
                   </button>
