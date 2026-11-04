@@ -473,10 +473,10 @@ const ProviderDetail: React.FC = () => {
                 Protected Experience
               </span>
               <h2 className="text-2xl font-bold font-serif text-foreground">
-                Book a Meetup
+                Host an Outing
               </h2>
               <p className="text-xs text-muted-foreground mt-1">
-                100% of your payment is held safely by the platform and released only after your meetup concludes safely.
+                100% of your payment is held safely in escrow and released only after your outing concludes safely.
               </p>
             </div>
 
@@ -591,7 +591,7 @@ const ProviderDetail: React.FC = () => {
                 <span>Cue Safety Standard</span>
               </div>
               <p className="text-muted-foreground leading-relaxed">
-                Meetups occur exclusively at public venues (cafes, sports clubs, art plazas). Platonic conduct boundaries strictly guaranteed.
+                Meetups occur exclusively at public venues (cafes, restaurants, sports clubs, art plazas). Platonic conduct boundaries strictly guaranteed.
               </p>
             </div>
 
@@ -609,10 +609,10 @@ const ProviderDetail: React.FC = () => {
                 className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all cursor-pointer hover:scale-[1.01] flex items-center justify-center gap-2"
               >
                 <ShieldCheckIcon className="w-5 h-5" />
-                <span>{isAuthenticated ? 'Book a Meetup \u2192' : 'Sign In to Book a Meetup \u2192'}</span>
+                <span>{isAuthenticated ? 'Book Outing with Escrow \u2192' : 'Sign In to Book Outing \u2192'}</span>
               </button>
               <p className="text-[11px] text-muted-foreground text-center mt-2">
-                🔒 Protected Payment: Released only after your meetup concludes safely.
+                🔒 Protected Payment: Released only after mutual session PIN check-in.
               </p>
             </div>
           </div>

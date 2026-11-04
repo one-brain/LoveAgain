@@ -57,16 +57,31 @@ interface BookingRequestModalProps {
   onProceedToPayment: (bookingData: BookingRequirementData) => void | Promise<void>;
 }
 
-const VENUE_SUGGESTIONS = [
-  '☕ Specialty Cafe / Coffee Date',
-  '🍽️ Fine Dining / Restaurant Visit',
-  '🛍️ City Mall / Shopping District',
-  '🎬 Cinema / Multiplex Outing',
-  '🌄 Scenic Spot / Weekend Activity',
-  '🎟️ Concert / Special Event Gala',
-  '🌳 Public Park / Garden',
-  '🎾 Sports Club / Tennis Courts',
-];
+const ACTIVITY_VENUE_MAP: Record<string, string[]> = {
+  'Coffee': ['Blue Tokai Coffee, Indiranagar', 'Third Wave Coffee, Koramangala', 'Araku Coffee, 12th Main', 'Starbucks Reserve'],
+  'Restaurant': ['Olive Beach, Richmond Town', 'The Smoke House Deli, Lavelle Rd', 'The Fatty Bao, Indiranagar', 'Toit Brewpub'],
+  'Dining': ['Olive Beach, Richmond Town', 'The Smoke House Deli, Lavelle Rd', 'The Fatty Bao, Indiranagar', 'Toit Brewpub'],
+  'Shopping': ['UB City Luxury Mall', 'Phoenix Marketcity, Whitefield', '100ft Road Boutiques, Indiranagar', 'Commercial Street'],
+  'Movies': ['PVR Director\'s Cut, Forum Rex', 'INOX Megaplex, Mall of Asia', 'PVR Gold Class, Phoenix', 'Cinepolis VIP'],
+  'Weekend': ['Cubbon Park (Bamboo Grove)', 'Nandi Hills Sunrise Point', 'Lalbagh Botanical Gardens', 'Sankey Tank Promenade'],
+  'Special Events': ['National Gallery of Modern Art (NGMA)', 'Bangalore Club Lawn', 'Chowdiah Memorial Hall', 'Ranga Shankara'],
+  'Tennis': ['KSLTA Tennis Stadium, Cubbon Park', 'Bowring Institute Courts', 'Topspin Tennis Academy'],
+  'Cooking': ['Kitchen Studio, Indiranagar', 'Culinary Lab, Koramangala', 'Slurp Cooking Studio'],
+};
+
+function getSuggestedVenues(currentActivity: string): string[] {
+  for (const [key, venues] of Object.entries(ACTIVITY_VENUE_MAP)) {
+    if (currentActivity.toLowerCase().includes(key.toLowerCase())) {
+      return venues;
+    }
+  }
+  return [
+    'Blue Tokai Coffee, Indiranagar',
+    'Third Wave Coffee, Koramangala',
+    'UB City Promenade',
+    'Cubbon Park Gate 2',
+  ];
+}
 
 const DRESS_CODES = [
   'Smart Casual',
@@ -100,18 +115,18 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
 
-  // Core booking state
-  const [activity, setActivity] = useState(
-    initialActivity || provider.specialties[0] || 'Companionship / Activity'
-  );
+  // Core booking state with high-quality smart defaults
+  const initialAct = initialActivity || provider.specialties[0] || 'Coffee Dates';
+  const defaultVenues = getSuggestedVenues(initialAct);
+
+  const [activity, setActivity] = useState(initialAct);
   const [startDate, setStartDate] = useState(initialDate || defaultDateStr);
   const [startTime, setStartTime] = useState(initialTime || '11:00');
   const [durationHours, setDurationHours] = useState(initialDuration || 2);
-  const [meetingVenue, setMeetingVenue] = useState('');
+  const [meetingVenue, setMeetingVenue] = useState(defaultVenues[0] || '');
   const [dressCode, setDressCode] = useState(DRESS_CODES[0]);
   const [transportMode, setTransportMode] = useState(TRANSPORT_MODES[0]);
   const [specialNotes, setSpecialNotes] = useState('');
-  const [agreedToPlatonicPolicy, setAgreedToPlatonicPolicy] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
@@ -266,15 +281,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     if (isSubmitting) return;
     setErrorMsg('');
 
-    if (!meetingVenue.trim()) {
-      setErrorMsg('Please specify a public meeting venue (e.g. cafe, sports club, mall).');
-      return;
-    }
-
-    if (!agreedToPlatonicPolicy) {
-      setErrorMsg('Please confirm agreement with the safety guidelines and protected escrow terms.');
-      return;
-    }
+    const finalVenue = meetingVenue.trim() || getSuggestedVenues(activity)[0] || 'Central Public Venue';
 
     if (slotsForSelectedDate.length === 0) {
       setErrorMsg('Guest has no availability on this date. Please pick another date.');
@@ -288,7 +295,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
         startDate,
         startTime,
         durationHours,
-        meetingVenue: meetingVenue.trim(),
+        meetingVenue: finalVenue,
         dressCode,
         transportMode,
         dietPreference: 'Standard / Casual',
@@ -350,6 +357,21 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
           >
             <XMarkIcon className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* 2-Step Hospitality Journey Progress */}
+        <div className="px-5 py-2.5 bg-accent/5 border-b border-border/70 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-accent text-accent-foreground font-bold text-[10px] flex items-center justify-center font-mono">1</span>
+            <span className="font-semibold text-foreground">Step 1: Outing Details & Venue</span>
+          </div>
+          <div className="flex items-center gap-1.5 text-muted-foreground text-[11px]">
+            <span>Step 2:</span>
+            <span className="inline-flex items-center gap-1 text-accent font-bold">
+              <ShieldCheckIcon className="w-3.5 h-3.5" />
+              <span>100% Escrow Hold</span>
+            </span>
+          </div>
         </div>
 
         {/* Unified Single Sheet Body */}
@@ -490,28 +512,36 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
 
           {/* Section 4: Public Meeting Venue */}
           <div className="space-y-2 pt-2 border-t border-border/60">
-            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-              <MapPinIcon className="w-4 h-4 text-accent" />
-              <span>4. Public Meeting Venue <span className="text-destructive">*</span></span>
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
+                <MapPinIcon className="w-4 h-4 text-accent" />
+                <span>4. Public Meeting Venue <span className="text-destructive">*</span></span>
+              </label>
+              <span className="text-[11px] text-muted-foreground">Tap any popular spot below:</span>
+            </div>
             <input
               type="text"
               value={meetingVenue}
               onChange={(e) => setMeetingVenue(e.target.value)}
               placeholder="e.g. Blue Tokai Coffee, Indiranagar / Cubbon Park Gate 2"
-              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs sm:text-sm focus:ring-1 focus:ring-accent"
               required
             />
-            {/* Quick Venue Chips */}
-            <div className="flex flex-wrap gap-1.5 pt-0.5">
-              {VENUE_SUGGESTIONS.map((v) => (
+            {/* Contextual 1-Click Venue Chips */}
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {getSuggestedVenues(activity).map((v) => (
                 <button
                   key={v}
                   type="button"
-                  onClick={() => setMeetingVenue(v.replace(/^[^\w\s]+/, '').trim())}
-                  className="px-2.5 py-1 min-h-[32px] rounded-lg bg-muted text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
+                  onClick={() => setMeetingVenue(v)}
+                  className={`px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-1 border ${
+                    meetingVenue === v
+                      ? 'bg-accent/15 border-accent text-accent font-semibold shadow-2xs'
+                      : 'bg-muted/60 hover:bg-muted text-foreground border-border/70 hover:border-accent/40'
+                  }`}
                 >
-                  {v}
+                  <span>📍</span>
+                  <span>{v}</span>
                 </button>
               ))}
             </div>
@@ -545,7 +575,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                     <select
                       value={dressCode}
                       onChange={(e) => setDressCode(e.target.value)}
-                      className="w-full px-3 py-2 min-h-[40px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+                      className="w-full px-3 py-2 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
                     >
                       {DRESS_CODES.map((dc) => (
                         <option key={dc} value={dc}>{dc}</option>
@@ -560,7 +590,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                     <select
                       value={transportMode}
                       onChange={(e) => setTransportMode(e.target.value)}
-                      className="w-full px-3 py-2 min-h-[40px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+                      className="w-full px-3 py-2 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
                     >
                       {TRANSPORT_MODES.map((tm) => (
                         <option key={tm} value={tm}>{tm}</option>
@@ -578,54 +608,51 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                     value={specialNotes}
                     onChange={(e) => setSpecialNotes(e.target.value)}
                     placeholder="e.g. Please bring comfortable walking shoes / beginner tennis player"
-                    className="w-full px-3 py-2 min-h-[40px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+                    className="w-full px-3 py-2 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
                   />
                 </div>
               </div>
             )}
           </div>
 
-          {/* Section 5: Safety Policy & Escrow Guarantee */}
+          {/* Section 5: Trust Reassurance & Escrow Vault Total */}
           <div className="space-y-3 pt-2">
-            <label className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/40 border border-border/80 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreedToPlatonicPolicy}
-                onChange={(e) => setAgreedToPlatonicPolicy(e.target.checked)}
-                className="mt-0.5 rounded border-border text-accent focus:ring-accent cursor-pointer"
-                required
-              />
-              <span className="text-[11px] text-muted-foreground leading-relaxed">
-                I agree to Cue's <strong>Platonic Outing Policy</strong> and public venue safety rules. Outing fee is held in protected escrow and only released after mutual PIN completion.
-              </span>
-            </label>
-
             {/* Escrow Ledger Card */}
             <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <ShieldCheckIcon className="w-5 h-5 text-accent shrink-0" />
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shrink-0">
+                  <ShieldCheckIcon className="w-6 h-6" />
+                </div>
                 <div>
-                  <span className="text-[11px] font-bold text-foreground block">
-                    Escrow Protected Total
+                  <span className="text-xs font-bold text-foreground block">
+                    100% Escrow Protection
                   </span>
-                  <span className="text-[10px] text-muted-foreground block">
-                    {durationHours} hrs @ {formatRate(provider.hourlyRate)}
+                  <span className="text-[11px] text-muted-foreground block">
+                    {durationHours} hrs × {formatRate(provider.hourlyRate)} • Held until mutual PIN check-in
                   </span>
                 </div>
               </div>
-              <span className="font-mono text-xl font-bold text-foreground tabular-nums">
-                {formatINR(totalAmount)}
-              </span>
+              <div className="text-right">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block font-mono">Total Deposit</span>
+                <span className="font-mono text-xl sm:text-2xl font-bold text-foreground tabular-nums">
+                  {formatINR(totalAmount)}
+                </span>
+              </div>
             </div>
+
+            {/* Seamless Legal Agreement Notice */}
+            <p className="text-[11px] text-muted-foreground leading-relaxed text-center px-2">
+              By confirming, you agree to Cue&apos;s <strong>Platonic Outing Policy</strong> and public venue safety rules. Funds are released only after mutual session completion.
+            </p>
 
             {/* Primary Action Button */}
             <button
               type="submit"
               disabled={isSubmitting || slotsForSelectedDate.length === 0}
-              className="w-full min-h-[48px] py-3 px-6 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full min-h-[50px] py-3.5 px-6 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <ShieldCheckIcon className="w-4 h-4" />
-              <span>{isSubmitting ? 'Initiating Escrow Hold...' : `Deposit Escrow & Lock Outing (${formatINR(totalAmount)})`}</span>
+              <ShieldCheckIcon className="w-5 h-5" />
+              <span>{isSubmitting ? 'Initiating Escrow Hold...' : `Lock Outing & Deposit Escrow (${formatINR(totalAmount)}) \u2192`}</span>
             </button>
           </div>
         </form>
