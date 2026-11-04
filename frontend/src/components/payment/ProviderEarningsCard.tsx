@@ -79,7 +79,7 @@ export const ProviderEarningsCard: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-wider text-accent mb-0.5 block">
             Earnings & Payouts
           </span>
-          <h2 className="text-xl font-bold font-serif text-foreground">
+          <h2 className="text-2xl font-normal font-serif text-foreground tracking-tight">
             Guest Earnings & Withdrawals
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">

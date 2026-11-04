@@ -88,7 +88,7 @@ const ProviderDashboard: React.FC = () => {
           <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
             Guest Management Hub
           </span>
-          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">Guest Dashboard</h1>
+          <h1 className="text-3xl sm:text-4xl font-normal font-serif text-foreground tracking-tight">Guest Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Your guest performance and earnings at a glance.
           </p>
@@ -103,7 +103,7 @@ const ProviderDashboard: React.FC = () => {
               <span>{label}</span>
               <Icon className={`w-5 h-5 ${tone}`} />
             </div>
-            <div className="text-3xl font-bold font-serif text-foreground tabular-nums">
+            <div className="text-3xl font-extrabold font-mono text-foreground tabular-nums">
               {isLoadingBookings ? '–' : value}
             </div>
             <p className="text-xs text-muted-foreground">{hint}</p>
@@ -116,7 +116,7 @@ const ProviderDashboard: React.FC = () => {
         {/* Bookings signpost */}
         <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
           <div className="space-y-2">
-            <h2 className="text-lg font-bold font-serif text-foreground">Booking requests</h2>
+            <h2 className="text-xl font-normal font-serif text-foreground">Booking requests</h2>
             {nextSession ? (
               <p className="text-sm text-muted-foreground">
                 Next session{' '}
@@ -129,7 +129,7 @@ const ProviderDashboard: React.FC = () => {
                     minute: '2-digit',
                   })}
                 </strong>
-                {nextSession.totalAmount ? <> · {formatINR(nextSession.totalAmount)}</> : null}
+                {nextSession.totalAmount ? <> · <span className="font-mono tabular-nums">{formatINR(nextSession.totalAmount)}</span></> : null}
               </p>
             ) : (
               <p className="text-sm text-muted-foreground">
@@ -150,7 +150,7 @@ const ProviderDashboard: React.FC = () => {
         <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg font-bold font-serif text-foreground">Public profile</h2>
+              <h2 className="text-xl font-normal font-serif text-foreground">Public profile</h2>
               <span
                 className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
                   !isApproved
@@ -166,17 +166,17 @@ const ProviderDashboard: React.FC = () => {
             <dl className="grid grid-cols-3 gap-3 text-sm">
               <div>
                 <dt className="text-xs text-muted-foreground">Hourly rate</dt>
-                <dd className="font-semibold text-foreground tabular-nums">{hourlyRate ? formatINR(hourlyRate) : '—'}</dd>
+                <dd className="font-semibold font-mono text-foreground tabular-nums">{hourlyRate ? formatINR(hourlyRate) : '—'}</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Specialties</dt>
-                <dd className="font-semibold text-foreground tabular-nums">{specialties.length}</dd>
+                <dd className="font-semibold font-mono text-foreground tabular-nums">{specialties.length}</dd>
               </div>
               <div>
                 <dt className="text-xs text-muted-foreground">Service area</dt>
                 <dd className="font-semibold text-foreground flex items-center gap-1">
                   <MapPinIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                  {hasLocation ? `${radiusKm || 25} km` : 'Not set'}
+                  <span className="font-mono tabular-nums">{hasLocation ? `${radiusKm || 25} km` : 'Not set'}</span>
                 </dd>
               </div>
             </dl>
