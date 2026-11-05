@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   useGetAdminUsersQuery,
+  useGetAdminUserStatsQuery,
   useToggleUserSuspendMutation,
 } from '../../store/adminApi';
 import {
@@ -22,13 +23,22 @@ export const AdminUsersPage: React.FC = () => {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [role, setRole] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
+  const [search, setSearch] = useState('');
+
+  const { data: userStats } = useGetAdminUserStatsQuery();
 
   const {
     data: usersData,
     isLoading: isLoadingUsers,
     refetch: refetchUsers,
     isFetching,
-  } = useGetAdminUsersQuery({ page, pageSize });
+  } = useGetAdminUsersQuery({
+    page,
+    pageSize,
+    role: role === 'All' ? undefined : role,
+    search: search.trim() || undefined,
+  });
 
   const [toggleUserSuspend, { isLoading: isTogglingSuspend }] = useToggleUserSuspendMutation();
 
@@ -42,8 +52,8 @@ export const AdminUsersPage: React.FC = () => {
     }
   };
 
-  const totalUsers = usersData?.totalCount ?? 0;
-  const suspendedCount = usersData?.items?.filter((u) => u.trustScore < 0).length ?? 0;
+  const totalUsers = userStats?.total ?? (usersData?.totalCount ?? 0);
+  const suspendedCount = userStats?.suspended ?? (usersData?.items?.filter((u) => u.trustScore < 0).length ?? 0);
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
@@ -113,6 +123,17 @@ export const AdminUsersPage: React.FC = () => {
             setPageSize(sz);
             setPage(1);
           }}
+          roleFilter={role}
+          onRoleFilterChange={(r) => {
+            setRole(r);
+            setPage(1);
+          }}
+          search={search}
+          onSearchChange={(s) => {
+            setSearch(s);
+            setPage(1);
+          }}
+          stats={userStats}
         />
       </main>
     </div>

@@ -5,6 +5,7 @@ import {
   useApproveVerificationMutation,
   useRejectVerificationMutation,
   useGetAdminUsersQuery,
+  useGetAdminUserStatsQuery,
   useToggleUserSuspendMutation,
   useGetAdminMisQuery,
   useGetAdminPayoutsQuery,
@@ -67,9 +68,13 @@ export const AdminDashboard: React.FC = () => {
 
   const [usersPage, setUsersPage] = useState(1);
   const [usersPageSize, setUsersPageSize] = useState(20);
+  const [usersRole, setUsersRole] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
+  const [usersSearch, setUsersSearch] = useState('');
 
   const [payoutsPage, setPayoutsPage] = useState(1);
   const [payoutsPageSize, setPayoutsPageSize] = useState(20);
+
+  const { data: userStats } = useGetAdminUserStatsQuery();
 
   const {
     data: verificationsData,
@@ -87,7 +92,12 @@ export const AdminDashboard: React.FC = () => {
     data: usersData,
     isLoading: isLoadingUsers,
     refetch: refetchUsers,
-  } = useGetAdminUsersQuery({ page: usersPage, pageSize: usersPageSize });
+  } = useGetAdminUsersQuery({
+    page: usersPage,
+    pageSize: usersPageSize,
+    role: usersRole === 'All' ? undefined : usersRole,
+    search: usersSearch.trim() || undefined,
+  });
 
   const {
     data: payoutsData,
@@ -532,6 +542,17 @@ export const AdminDashboard: React.FC = () => {
                 setUsersPageSize(sz);
                 setUsersPage(1);
               }}
+              roleFilter={usersRole}
+              onRoleFilterChange={(r) => {
+                setUsersRole(r);
+                setUsersPage(1);
+              }}
+              search={usersSearch}
+              onSearchChange={(s) => {
+                setUsersSearch(s);
+                setUsersPage(1);
+              }}
+              stats={userStats}
             />
           </section>
         )}

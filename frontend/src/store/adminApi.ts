@@ -108,6 +108,13 @@ export interface PlatformMisReport {
   }[];
 }
 
+export interface AdminUserStats {
+  total: number;
+  companions: number;
+  clients: number;
+  suspended: number;
+}
+
 export interface PagedResult<T> {
   items: T[];
   totalCount: number;
@@ -285,12 +292,17 @@ export const adminApi = createApi({
       },
     }),
 
-    getAdminUsers: builder.query<PagedResult<AdminUserItem>, { search?: string; page?: number; pageSize?: number } | void>({
+    getAdminUsers: builder.query<PagedResult<AdminUserItem>, { search?: string; role?: string; page?: number; pageSize?: number } | void>({
       query: (params) => ({
         url: '/admin/users',
         params: params || undefined,
       }),
       transformResponse: (response: any) => normalizePagedResult<AdminUserItem>(response),
+      providesTags: ['AdminUsers'],
+    }),
+
+    getAdminUserStats: builder.query<AdminUserStats, void>({
+      query: () => '/admin/users/stats',
       providesTags: ['AdminUsers'],
     }),
 
@@ -366,6 +378,7 @@ export const {
   useApproveVerificationMutation,
   useRejectVerificationMutation,
   useGetAdminUsersQuery,
+  useGetAdminUserStatsQuery,
   useToggleUserSuspendMutation,
   useGetAdminMisQuery,
   useGetAdminPayoutsQuery,

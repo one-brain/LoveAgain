@@ -5,7 +5,7 @@ import {
   EyeIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import type { AdminUserItem } from '../../store/adminApi';
+import type { AdminUserItem, AdminUserStats } from '../../store/adminApi';
 import { Pagination } from '../ui/Pagination';
 
 interface AdminUsersDirectoryProps {
@@ -19,6 +19,11 @@ interface AdminUsersDirectoryProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
+  roleFilter?: 'All' | 'Companions' | 'Clients' | 'Suspended';
+  onRoleFilterChange?: (role: 'All' | 'Companions' | 'Clients' | 'Suspended') => void;
+  search?: string;
+  onSearchChange?: (search: string) => void;
+  stats?: AdminUserStats;
 }
 
 const isUserCompanion = (u: AdminUserItem) =>
@@ -41,16 +46,44 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   totalPages,
   onPageChange,
   onPageSizeChange,
+  roleFilter,
+  onRoleFilterChange,
+  search,
+  onSearchChange,
+  stats,
 }) => {
-  const [roleFilter, setRoleFilter] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
-  const [search, setSearch] = useState('');
+  const [localRoleFilter, setLocalRoleFilter] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
+  const [localSearch, setLocalSearch] = useState('');
   const [actionUserId, setActionUserId] = useState<string | null>(null);
   const [localPage, setLocalPage] = useState(1);
   const [localPageSize, setLocalPageSize] = useState(20);
 
+  const activeRoleFilter = roleFilter ?? localRoleFilter;
+  const activeSearch = search !== undefined ? search : localSearch;
+
   const isServerPaged = Boolean(onPageChange);
   const activePage = isServerPaged ? (page ?? 1) : localPage;
   const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  const handleRoleSelect = (newRole: 'All' | 'Companions' | 'Clients' | 'Suspended') => {
+    if (onRoleFilterChange) {
+      onRoleFilterChange(newRole);
+      onPageChange?.(1);
+    } else {
+      setLocalRoleFilter(newRole);
+      setLocalPage(1);
+    }
+  };
+
+  const handleSearchInput = (val: string) => {
+    if (onSearchChange) {
+      onSearchChange(val);
+      onPageChange?.(1);
+    } else {
+      setLocalSearch(val);
+      setLocalPage(1);
+    }
+  };
 
   const handlePageChange = (p: number) => {
     if (onPageChange) {
@@ -69,23 +102,36 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     }
   };
 
+  const isServerFiltered = Boolean(onRoleFilterChange);
   const filteredUsers = users.filter((user) => {
+    if (isServerFiltered) {
+      if (!onSearchChange && activeSearch) {
+        const q = activeSearch.trim().toLowerCase();
+        return (
+          user.firstName?.toLowerCase().includes(q) ||
+          user.lastName?.toLowerCase().includes(q) ||
+          user.email?.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    }
+
     const suspended = isUserSuspended(user);
     const companion = isUserCompanion(user);
     const client = isUserClient(user);
 
     const matchesRole =
-      roleFilter === 'All'
+      activeRoleFilter === 'All'
         ? true
-        : roleFilter === 'Companions'
+        : activeRoleFilter === 'Companions'
         ? companion
-        : roleFilter === 'Clients'
+        : activeRoleFilter === 'Clients'
         ? client
-        : roleFilter === 'Suspended'
+        : activeRoleFilter === 'Suspended'
         ? suspended
         : true;
 
-    const q = search.trim().toLowerCase();
+    const q = activeSearch.trim().toLowerCase();
     const matchesSearch =
       !q ||
       user.firstName?.toLowerCase().includes(q) ||
@@ -104,6 +150,13 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
     : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
+  const pillCounts = {
+    All: stats?.total ?? users.length,
+    Companions: stats?.companions ?? users.filter(isUserCompanion).length,
+    Clients: stats?.clients ?? users.filter(isUserClient).length,
+    Suspended: stats?.suspended ?? users.filter(isUserSuspended).length,
+  };
+
   const handleSuspendAction = async (userId: string) => {
     setActionUserId(userId);
     try {
@@ -119,29 +172,29 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/80 p-3 sm:p-4 rounded-2xl shadow-2xs">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           {[
-            { key: 'All', label: 'All Accounts', count: users.length },
+            { key: 'All', label: 'All Accounts', count: pillCounts.All },
             {
               key: 'Companions',
               label: 'Companions',
-              count: users.filter(isUserCompanion).length,
+              count: pillCounts.Companions,
             },
             {
               key: 'Clients',
               label: 'Clients',
-              count: users.filter(isUserClient).length,
+              count: pillCounts.Clients,
             },
             {
               key: 'Suspended',
               label: 'Suspended',
-              count: users.filter(isUserSuspended).length,
+              count: pillCounts.Suspended,
             },
           ].map((pill) => {
-            const isActive = roleFilter === pill.key;
+            const isActive = activeRoleFilter === pill.key;
             return (
               <button
                 key={pill.key}
                 type="button"
-                onClick={() => setRoleFilter(pill.key as any)}
+                onClick={() => handleRoleSelect(pill.key as any)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
                   isActive
                     ? 'bg-accent text-accent-foreground border-accent shadow-xs'
@@ -155,7 +208,7 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                       isActive
                         ? 'bg-background/20 text-accent-foreground'
                         : pill.key === 'Suspended' && pill.count > 0
-                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold'
                         : 'bg-muted text-muted-foreground'
                     }`}
                   >
@@ -171,15 +224,15 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
           <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={activeSearch}
+            onChange={(e) => handleSearchInput(e.target.value)}
             placeholder="Search by name or email..."
             className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border/80 bg-background text-foreground text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
           />
-          {search && (
+          {activeSearch && (
             <button
               type="button"
-              onClick={() => setSearch('')}
+              onClick={() => handleSearchInput('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
             >
               ×

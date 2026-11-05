@@ -16,3 +16,4 @@ public sealed record PagedResult<T>(
         return new PagedResult<T>(items, totalCount, safePage, safePageSize, Math.Max(1, totalPages));
     }
 }
+

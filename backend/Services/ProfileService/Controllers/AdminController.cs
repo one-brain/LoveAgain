@@ -279,13 +279,14 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     [ProducesResponseType(typeof(PagedResult<AdminUserItemResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResult<AdminUserItemResponse>>> GetUsers(
         [FromQuery] string? search,
+        [FromQuery] string? role,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
 
-        var query = dbContext.Users.AsNoTracking().Where(u => u.DeletedAt == null);
+        var query = dbContext.Users.IgnoreQueryFilters().AsNoTracking().Where(u => u.DeletedAt == null);
 
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -293,12 +294,33 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             query = query.Where(u => u.FirstName.ToLower().Contains(s) || u.LastName.ToLower().Contains(s) || u.Email.ToLower().Contains(s));
         }
 
+        if (!string.IsNullOrWhiteSpace(role) && !string.Equals(role, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            var companionUserIds = dbContext.ProviderProfiles.AsNoTracking().Select(p => p.UserId);
+
+            if (string.Equals(role, "Suspended", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(u => u.TrustScore < 0);
+            }
+            else if (string.Equals(role, "Companions", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(u => u.TrustScore >= 0 && companionUserIds.Contains(u.Id));
+            }
+            else if (string.Equals(role, "Clients", StringComparison.OrdinalIgnoreCase))
+            {
+                query = query.Where(u => u.TrustScore >= 0 && !companionUserIds.Contains(u.Id) && u.Email != "admin@cue.local");
+            }
+        }
+
         var totalCount = await query.CountAsync(cancellationToken);
         var safePage = Math.Max(1, page);
         var safePageSize = Math.Clamp(pageSize, 1, 100);
 
-        var users = await query
-            .OrderByDescending(u => u.CreatedAt)
+        var orderedQuery = string.Equals(role, "Suspended", StringComparison.OrdinalIgnoreCase)
+            ? query.OrderByDescending(u => u.UpdatedAt)
+            : query.OrderByDescending(u => u.CreatedAt);
+
+        var users = await orderedQuery
             .Skip((safePage - 1) * safePageSize)
             .Take(safePageSize)
             .ToListAsync(cancellationToken);
@@ -329,6 +351,27 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         }).ToList();
 
         return Ok(PagedResult<AdminUserItemResponse>.Create(result, totalCount, safePage, safePageSize));
+    }
+
+    [HttpGet("users/stats")]
+    public async Task<ActionResult> GetUserStats(CancellationToken cancellationToken = default)
+    {
+        if (!await IsAdminAsync(cancellationToken)) return Forbid();
+
+        var baseQuery = dbContext.Users.IgnoreQueryFilters().AsNoTracking().Where(u => u.DeletedAt == null);
+        var total = await baseQuery.CountAsync(cancellationToken);
+        var suspended = await baseQuery.CountAsync(u => u.TrustScore < 0, cancellationToken);
+        var companionUserIds = dbContext.ProviderProfiles.AsNoTracking().Select(p => p.UserId);
+        var companions = await baseQuery.CountAsync(u => u.TrustScore >= 0 && companionUserIds.Contains(u.Id), cancellationToken);
+        var clients = Math.Max(0, total - suspended - companions);
+
+        return Ok(new
+        {
+            total,
+            companions,
+            clients,
+            suspended
+        });
     }
 
     [HttpGet("verifications/{profileId:guid}")]
@@ -446,6 +489,13 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         {
             user.Reinstate(50);
             isNowSuspended = false;
+
+            // Also re-activate companion profile if they have an approved profile
+            var profile = await dbContext.ProviderProfiles.SingleOrDefaultAsync(p => p.UserId == userId, cancellationToken);
+            if (profile != null && profile.Status == VerificationStatus.Approved)
+            {
+                profile.Activate();
+            }
         }
         else
         {
