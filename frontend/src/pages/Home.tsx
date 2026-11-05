@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 import { RateBadge } from '../components/ui/RateBadge';
-import { usePretextHeight } from '../hooks/usePretext';
 import { ArchetypeQuizSection } from '../components/home/ArchetypeQuizSection';
 import {
   MagnifyingGlassIcon,
@@ -14,88 +13,82 @@ import {
   MapPinIcon,
   CheckBadgeIcon,
   ArrowRightIcon,
-  BriefcaseIcon,
-  UserGroupIcon,
   CheckCircleIcon,
-  HomeModernIcon,
   KeyIcon,
   ChevronDownIcon,
   ArrowPathIcon,
+  BriefcaseIcon,
+  BuildingLibraryIcon,
+  MusicalNoteIcon,
+  CakeIcon,
 } from '@heroicons/react/24/outline';
-import type { PlatformLens } from '../types/platform';
 
-interface LensCard {
-  id: PlatformLens;
-  name: string;
-  tagline: string;
+interface CuratedOccasion {
+  id: string;
+  title: string;
+  subtitle: string;
+  query: string;
   badge: string;
-  icon: React.ComponentType<{ className?: string }>;
-  accentColor: string;
-  bgGradient: string;
-  popularItems: string[];
+  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
+  tags: string[];
 }
 
-const PILLAR_CARDS: LensCard[] = [
+const OCCASIONS: CuratedOccasion[] = [
   {
-    id: 'companions',
-    name: 'Cue Social & Events',
-    tagline: 'Connect with verified guests for coffee dates, restaurant visits, shopping, movies, weekend activities, and special events.',
-    badge: '100% Platonic & Escrowed',
-    icon: UserGroupIcon,
-    accentColor: 'text-emerald-500',
-    bgGradient: 'from-emerald-500/10 via-emerald-500/5 to-transparent',
-    popularItems: ['Coffee Dates', 'Restaurant Visits', 'Shopping Outings', 'Movie Dates', 'Weekend Activities', 'Special Events'],
+    id: 'coffee-dialogue',
+    title: 'Specialty Coffee & Literary Dialogue',
+    subtitle: 'Quiet roasteries, boutique bookshops, and unhurried intellectual banter with well-read companions.',
+    query: 'Coffee',
+    badge: 'Thoughtful & Calm',
+    icon: BuildingLibraryIcon,
+    tags: ['Third-Wave Roasteries', 'Bookshop Cafés', 'Quiet Banter', 'Intellectual Sparks'],
   },
   {
-    id: 'wellness',
-    name: 'Cue Active & Fitness',
-    tagline: 'Partner up for weekend tennis matches, gym spotting, morning lake runs, hiking trails, and mindfulness yoga sessions.',
-    badge: 'Fitness & Outdoor Buddies',
+    id: 'fine-dining',
+    title: 'Fine Dining & Culinary Walks',
+    subtitle: 'Artisanal tasting menus, heritage night food trails, and articulate plus-ones for culinary explorations.',
+    query: 'Restaurant',
+    badge: 'Sensory & Refined',
+    icon: CakeIcon,
+    tags: ['Tasting Menus', 'Heritage Food Walks', 'Jazz Lounges', 'Boutique Bistros'],
+  },
+  {
+    id: 'art-culture',
+    title: 'Art Previews & Cultural Galas',
+    subtitle: 'Contemporary gallery openings, architectural walks, classical music concerts, and theater evenings.',
+    query: 'Art Gallery',
+    badge: 'Aesthetic & Inspiring',
     icon: SparklesIcon,
-    accentColor: 'text-amber-500',
-    bgGradient: 'from-amber-500/10 via-amber-500/5 to-transparent',
-    popularItems: ['Tennis Partner', 'Hiking Trails', 'Gym Spotter', 'Morning Run', 'Yoga Buddy'],
+    tags: ['Gallery Previews', 'Heritage Architecture', 'Classical Recitals', 'Museum Walks'],
   },
   {
-    id: 'pro_work',
-    name: 'Cue Skills & Creative Walks',
-    tagline: 'Invite guest mentors for golden-hour street photography walks, foreign language practice, and hobby masterclasses.',
-    badge: '1-on-1 Skill Sharing',
-    icon: BriefcaseIcon,
-    accentColor: 'text-sky-500',
-    bgGradient: 'from-sky-500/10 via-sky-500/5 to-transparent',
-    popularItems: ['Photography Walk', 'Language Practice', 'Culinary Walk', 'Creative Hobbies'],
-  },
-  {
-    id: 'lifestyle',
-    name: 'Cue Domestic & Lifestyle',
-    tagline: 'Find regional homestyle cooks, festive floral & pooja artists, patient senior escorts, and local bazaar shopping guides.',
-    badge: 'Ghar Ka Khana & Care',
-    icon: HomeModernIcon,
-    accentColor: 'text-rose-500',
-    bgGradient: 'from-rose-500/10 via-rose-500/5 to-transparent',
-    popularItems: ['Homestyle Cooking', 'Festival & Pooja Prep', 'Senior Companion', 'Mandi Guide', 'Saree Styling'],
+    id: 'music-exploration',
+    title: 'Live Music & Urban Discovery',
+    subtitle: 'Intimate acoustic sets, hidden speakeasies, street photography trails, and weekend explorations.',
+    query: 'Weekend',
+    badge: 'Spontaneous & Lively',
+    icon: MusicalNoteIcon,
+    tags: ['Acoustic Gigs', 'Vinyl Bars', 'Street Photography', 'Active Weekend Outings'],
   },
 ];
 
 const METROS = [
-  { name: 'Bengaluru', count: '28+ guests' },
-  { name: 'Mumbai', count: '24+ guests' },
-  { name: 'Delhi-NCR', count: '18+ guests' },
-  { name: 'Hyderabad', count: '14+ guests' },
-  { name: 'Chennai', count: '8+ guests' },
-  { name: 'Pune', count: '6+ guests' },
-  { name: 'Kolkata', count: '6+ guests' },
+  { name: 'Bengaluru', count: '28+ companions' },
+  { name: 'Mumbai', count: '24+ companions' },
+  { name: 'Delhi-NCR', count: '18+ companions' },
+  { name: 'Hyderabad', count: '14+ companions' },
+  { name: 'Pune', count: '8+ companions' },
+  { name: 'Chennai', count: '6+ companions' },
 ];
 
-const FEATURED_PROFILES = [
+const FEATURED_COMPANIONS = [
   {
     id: '158b9ff7-19de-49ce-a57c-b37738591285',
     name: 'Elena Rostova',
-    headline: 'Semi-Pro Tennis Player & Art Gallery Plus-One',
+    headline: 'Contemporary Art Curator & Semi-Pro Tennis Coach',
     city: 'Bengaluru',
     area: 'Indiranagar',
-    tags: ['Tennis Coaching', 'Art Gallery', 'City Tour'],
+    tags: ['Art Gallery Walk', 'Tennis', 'Boutique Coffee'],
     rate: 1500,
     rating: 4.98,
     reviews: 64,
@@ -106,10 +99,10 @@ const FEATURED_PROFILES = [
   {
     id: '6d187ed5-aff0-4fa3-856c-9beb89264b15',
     name: 'Marcus Vance',
-    headline: 'Commercial Photographer & Street Foodie Guide',
+    headline: 'Commercial Photographer & Heritage Foodie Guide',
     city: 'Bengaluru',
     area: 'Koramangala',
-    tags: ['Photography Gigs', 'Culinary Walk', 'Italian Cooking'],
+    tags: ['Street Photography', 'Culinary Walk', 'Night Trails'],
     rate: 1800,
     rating: 4.95,
     reviews: 82,
@@ -123,7 +116,7 @@ const FEATURED_PROFILES = [
     headline: 'Cardiologist · Classical Violinist & Nature Trail Guide',
     city: 'Bengaluru',
     area: 'Lavelle Road',
-    tags: ['Hiking Partner', 'Violin Music', 'City Tour'],
+    tags: ['Violin Recitals', 'Nature Trails', 'Mindful Walks'],
     rate: 1200,
     rating: 4.92,
     reviews: 47,
@@ -134,10 +127,10 @@ const FEATURED_PROFILES = [
   {
     id: '00000000-0000-0000-0000-000000000007',
     name: 'Ananya Sharma',
-    headline: 'Regional Homestyle Cook & Festive Floral Decor Artist',
+    headline: 'Regional Homestyle Culinary Artist & Tea Specialist',
     city: 'Bengaluru',
     area: 'Jayanagar',
-    tags: ['Regional Homestyle Cook', 'Festival & Pooja Decor', 'Gardening'],
+    tags: ['Regional Culinary', 'Traditional Tea', 'Floral Art'],
     rate: 1200,
     rating: 4.96,
     reviews: 58,
@@ -151,7 +144,7 @@ const FEATURED_PROFILES = [
     headline: 'Senior Companion, Temple Escort & Society Chess Partner',
     city: 'Bengaluru',
     area: 'Malleswaram',
-    tags: ['Senior Companion', 'Temple Escort', 'Carrom & Chess'],
+    tags: ['Senior Companion', 'Chess Partner', 'Heritage Escort'],
     rate: 1000,
     rating: 4.99,
     reviews: 73,
@@ -162,10 +155,10 @@ const FEATURED_PROFILES = [
   {
     id: '00000000-0000-0000-0000-000000000006',
     name: 'Naveen Kumar',
-    headline: 'Sanskrit & Kannada Scholar, Heritage Temple Walk Guide',
+    headline: 'Sanskrit & History Scholar, Temple Architecture Guide',
     city: 'Bengaluru',
     area: 'Basavanagudi',
-    tags: ['Heritage Walk', 'Language Practice', 'Cultural Tours'],
+    tags: ['Heritage Walks', 'Architecture', 'Philosophy'],
     rate: 1100,
     rating: 4.94,
     reviews: 39,
@@ -177,106 +170,42 @@ const FEATURED_PROFILES = [
 
 const FAQS = [
   {
-    question: 'Is Cue a dating or romance service?',
-    answer: 'No. Cue is strictly a platonic experience platform where Hosts invite verified Guests for shared activities. All outings must take place in public venues (cafes, courts, galleries, markets), and are governed by strict safety rules. Any solicitation or inappropriate conduct results in immediate account termination and forfeiture of escrow funds.',
+    question: 'Is Cue strictly a platonic companionship service?',
+    answer:
+      'Yes, absolutely. Cue is dedicated solely to verified, dignified, and platonic social companionship (such as coffee conversations, restaurant outings, gallery walks, and event plus-ones). All meetups must take place strictly in licensed public venues. Any romantic or inappropriate solicitation is strictly prohibited and results in immediate, permanent account termination.',
   },
   {
-    question: 'How does the Escrow Payment Guarantee protect Hosts and Guests?',
-    answer: 'When a Host reserves an outing, the payment is held securely in an isolated platform escrow ledger. The Guest does not receive the funds until the outing is complete and both parties verify check-in using a private PIN. If the Guest cancels or fails to show up, 100% of the deposit is instantly refunded to the Host wallet.',
+    question: 'How does the Escrow Payment Guarantee protect members and companions?',
+    answer:
+      'When you reserve an outing, your payment is held securely in an isolated platform escrow vault. The companion never receives payment upfront. Funds are released only after the meetup concludes and both parties verify check-in using a mutual 4-digit security PIN. If a companion cancels or fails to show up, 100% of your deposit is refunded immediately to your wallet.',
   },
   {
-    question: 'How do you verify Guests and ensure safety?',
-    answer: 'Every Guest applicant must submit Government ID proof (Aadhaar, Passport, or Driving License) along with a live camera selfie verification audited by our compliance operations team. In addition, every active outing is protected with an in-app Emergency SOS beacon that dispatches geolocation coordinates to our 24/7 trust & safety dispatch.',
+    question: 'How are companions vetted before being accepted?',
+    answer:
+      'Every companion applicant must submit Government ID proof (Aadhaar, Passport, or Driving License) along with live liveness biometric verification audited by our compliance operations team. In addition, every active outing is protected with an in-app Emergency SOS beacon that can dispatch live coordinates to our 24/7 trust & safety dispatch.',
   },
   {
-    question: 'Can I cancel an outing reservation?',
-    answer: 'Yes. You can cancel any reservation free of charge before the agreed start time directly from your outings dashboard. Funds held in escrow are instantly credited back to your available wallet balance with zero penalty.',
+    question: 'Can outings take place at private residences or hotel rooms?',
+    answer:
+      'No. Platform safety policy requires all first-time outings to occur strictly in public, commercial venues (such as licensed cafés, restaurants, sports clubs, art galleries, and public concert halls). Private residential or hotel room visits are prohibited for mutual safety.',
   },
   {
-    question: 'Can outings take place at private residences or hotels?',
-    answer: 'No. Platform safety policy requires all first-time outings to occur in public, commercial, or licensed sports/arts venues. Private residential visits are prohibited for mutual safety.',
+    question: 'Can I cancel an outing reservation if my plans change?',
+    answer:
+      'Yes. You can cancel any reservation directly from your dashboard before the agreed start time. Funds held in escrow are credited back to your wallet balance with zero penalty in accordance with our transparent cancellation policy.',
   },
   {
-    question: 'How do Guest earnings and withdrawals work?',
-    answer: 'Guests set their own transparent hourly rates and receive 85% of each outing fee (15% platform escrow commission). Cleared balances can be withdrawn instantly via UPI (GPay, PhonePe, Paytm, or BHIM) with zero withdrawal fees.',
+    question: 'How do companion earnings and payouts work?',
+    answer:
+      'Companions set their own transparent hourly rates and receive 85% of each booking fee (15% platform escrow commission). Cleared balances can be withdrawn instantly via UPI (GPay, PhonePe, Paytm, or BHIM) directly to your bank account with zero withdrawal delays.',
   },
 ];
 
-// Pretext-native category card with dynamic text reflow measurement
-const PretextPillarCard: React.FC<{
-  card: LensCard;
-  isSelected: boolean;
-  onSelect: () => void;
-}> = ({ card, isSelected, onSelect }) => {
-  const Icon = card.icon;
-  const { containerRef, height } = usePretextHeight(
-    card.tagline,
-    '14px Inter, sans-serif',
-    20
-  );
-
-  return (
-    <div
-      onClick={onSelect}
-      className={`relative p-6 sm:p-7 rounded-3xl border bg-card/90 backdrop-blur-md transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:-translate-y-1 hover:shadow-xl ${
-        isSelected
-          ? 'border-accent shadow-md ring-2 ring-accent/30'
-          : 'border-border/80 hover:border-accent/50'
-      }`}
-    >
-      <div className={`absolute top-0 right-0 w-32 h-32 rounded-full bg-gradient-to-br ${card.bgGradient} blur-2xl pointer-events-none -z-10`} />
-
-      <div>
-        <div className="flex items-center justify-between mb-4">
-          <div className="w-12 h-12 rounded-2xl bg-muted/60 border border-border flex items-center justify-center shadow-2xs group-hover:scale-105 transition-transform">
-            <Icon className={`w-6 h-6 ${card.accentColor}`} />
-          </div>
-          <span className="px-2.5 py-1 rounded-full bg-muted/80 text-[11px] font-semibold text-muted-foreground border border-border/40">
-            {card.badge}
-          </span>
-        </div>
-
-        <h3 className="text-xl font-bold text-foreground font-serif mb-2 group-hover:text-accent transition-colors">
-          {card.name}
-        </h3>
-
-        {/* Pretext-controlled reflow paragraph */}
-        <div
-          ref={containerRef}
-          style={{ height: height ? `${height}px` : 'auto' }}
-          className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4 overflow-hidden transition-[height] duration-150"
-        >
-          <p className="text-pretty">{card.tagline}</p>
-        </div>
-      </div>
-
-      <div className="pt-4 border-t border-border/60">
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {card.popularItems.map((item) => (
-            <span
-              key={item}
-              className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-foreground/80 border border-border/40"
-            >
-              {item}
-            </span>
-          ))}
-        </div>
-
-        <div className="flex items-center justify-between text-xs font-semibold text-accent">
-          <span>Explore companions</span>
-          <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const Home: React.FC = () => {
+export const Home: React.FC = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const isAdmin = Boolean(user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local');
-  const hostFirstName = user?.firstName || 'Host';
-  const [selectedLens, setSelectedLens] = useState<PlatformLens>('companions');
+  const memberName = user?.firstName || 'Member';
   const [searchQuery, setSearchQuery] = useState('');
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
@@ -286,102 +215,109 @@ const Home: React.FC = () => {
     navigate(`/discovery${query ? `?q=${encodeURIComponent(query)}` : ''}`);
   };
 
+  const scrollToQuiz = () => {
+    const el = document.getElementById('archetype-quiz');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   return (
-    <div className="space-y-16 sm:space-y-24 pb-20">
-      {/* 1. Authenticated Welcome Bar */}
+    <div className="space-y-16 sm:space-y-28 pb-24">
+      {/* 1. Authenticated Welcome Ribbon */}
       {isAuthenticated && !isAdmin && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 -mb-8 pt-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border/80 shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 -mb-6 pt-4">
+          <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-200">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-bold text-foreground">
-                  Welcome back, {hostFirstName}! 👋
+                  Welcome back, {memberName}!
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                  Verified Host
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C5A059]/15 text-[#C5A059] border border-[#C5A059]/30">
+                  Verified Member
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Browse verified guests for upcoming outings or view your hosted outing timeline.
+                Explore verified companions for upcoming outings or review your active schedule.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <Link
                 to="/bookings"
-                className="px-3.5 py-2 rounded-xl bg-muted/80 hover:bg-muted text-foreground text-xs font-semibold border border-border/80 transition-all shadow-2xs hover:shadow-xs flex items-center gap-1.5"
+                className="min-h-[44px] px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold border border-border transition-all flex items-center gap-1.5 cursor-pointer"
               >
-                <ClockIcon className="w-3.5 h-3.5 text-accent" />
+                <ClockIcon className="w-3.5 h-3.5 text-[#881337] dark:text-rose-400" aria-hidden="true" />
                 <span>My Outings</span>
               </Link>
               <Link
                 to="/discovery"
-                className="px-4 py-2 rounded-xl bg-accent text-accent-foreground text-xs font-bold shadow-xs hover:bg-accent-hover transition-all"
+                className="min-h-[44px] px-5 py-2 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
               >
-                <span>Find Guests &rarr;</span>
+                <span>Find Companions &rarr;</span>
               </Link>
             </div>
           </div>
         </div>
       )}
 
-      {/* 2. Hero Section (Persuade Billboard: One Offer, One Primary CTA, Zero CLS) */}
-      <section className="relative overflow-hidden pt-10 pb-12 sm:pt-20 sm:pb-20">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-96 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent blur-3xl pointer-events-none -z-10" />
-
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Trust Pill */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-accent/10 border border-accent/20 text-accent text-xs font-semibold uppercase tracking-wider mb-6">
-            <SparklesIcon className="w-4 h-4" />
-            <span>Verified Social Experiences Across India</span>
+      {/* 2. Hero Section: Refined Editorial Luxury */}
+      <section className="relative overflow-hidden pt-12 pb-14 sm:pt-24 sm:pb-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          {/* Trust Eyebrow */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/25 text-[#C5A059] text-xs font-semibold uppercase tracking-wider mb-6">
+            <SparklesIcon className="w-3.5 h-3.5" aria-hidden="true" />
+            <span>Discreet Verification • Escrow-Backed Integrity</span>
           </div>
 
+          {/* Canonical Headline */}
           <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground font-serif max-w-4xl mx-auto leading-[1.12] text-balance">
-            Meet Verified Guests for <span className="text-gradient">Coffee, Dining & Activities</span>
+            Curated Companionship for <span className="text-[#881337] dark:text-rose-400">Cultured Outings</span>
           </h1>
 
-          <p className="mt-5 text-base sm:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed text-pretty">
-            As a Host, connect with verified local guests for coffee dates, restaurant visits, shopping outings, movies, weekend activities, and special events. 100% platonic, protected by platform escrow, and verified with government ID.
+          {/* Clean Subtitle */}
+          <p className="mt-5 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
+            Connect with verified, articulate companions for coffee conversations, fine dining, art previews, and cultural events across India's premier metropolitan cities. 100% platonic, discreet, and protected by platform escrow.
           </p>
 
-          {/* Primary Search Form */}
+          {/* Unified Search & Discovery Bar */}
           <form
             onSubmit={handleSearchSubmit}
-            className="mt-8 max-w-2xl mx-auto p-2 bg-card rounded-2xl border border-border shadow-xl flex flex-col sm:flex-row items-center gap-2 focus-within:ring-2 focus-within:ring-accent/40"
+            className="mt-10 max-w-2xl mx-auto p-2 bg-card rounded-2xl border border-border shadow-xl flex flex-col sm:flex-row items-center gap-2 focus-within:ring-2 focus-within:ring-[#881337]/30 transition-all"
           >
             <div className="flex-1 flex items-center gap-3 px-3 w-full">
-              <MagnifyingGlassIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+              <MagnifyingGlassIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Try 'Coffee date in Indiranagar', 'Restaurant visit', 'Movie outing', 'Shopping'..."
+                placeholder="Search by occasion, interest, or neighborhood (e.g. 'Coffee in Indiranagar', 'Art Gallery')..."
                 className="w-full bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none text-sm sm:text-base py-2.5"
               />
             </div>
             <button
               type="submit"
-              className="w-full sm:w-auto px-7 py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm transition-all shadow-sm hover:scale-[1.02] flex items-center justify-center gap-2 flex-shrink-0 cursor-pointer"
+              className="w-full sm:w-auto min-h-[48px] px-8 py-3 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white font-bold text-sm transition-all shadow-sm hover:scale-[1.02] flex items-center justify-center gap-2 flex-shrink-0 cursor-pointer"
             >
               <span>Explore</span>
-              <ArrowRightIcon className="w-4 h-4" />
+              <ArrowRightIcon className="w-4 h-4" aria-hidden="true" />
             </button>
           </form>
 
-          {/* Curated Service Quick-Pills & Quiz Trigger */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
+          {/* Curated Service Quick Pills & Quiz Trigger */}
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
             {[
-              { label: '☕ Coffee Dates', q: 'Coffee' },
-              { label: '🍽️ Restaurant Visits', q: 'Restaurant' },
-              { label: '🛍️ Shopping Companion', q: 'Shopping' },
-              { label: '🎬 Movie Outings', q: 'Movies' },
-              { label: '🌄 Weekend Activities', q: 'Weekend' },
-              { label: '🎟️ Special Events', q: 'Special Events' },
+              { label: '☕ Specialty Coffee', q: 'Coffee' },
+              { label: '🍽️ Fine Dining', q: 'Restaurant' },
+              { label: '🎨 Art Previews', q: 'Art Gallery' },
+              { label: '🎬 Theater & Cinema', q: 'Movies' },
+              { label: '🎾 Tennis & Active', q: 'Tennis' },
+              { label: '🎟️ Event Plus-One', q: 'Special Events' },
             ].map((srv) => (
               <button
                 key={srv.label}
                 type="button"
                 onClick={() => navigate(`/discovery?q=${encodeURIComponent(srv.q)}`)}
-                className="px-3 py-1.5 rounded-full bg-card hover:bg-accent/10 border border-border/80 hover:border-accent text-xs font-medium text-foreground transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
+                className="min-h-[44px] px-3.5 py-1.5 rounded-full bg-card hover:bg-[#881337]/5 border border-border/80 hover:border-[#881337]/40 text-xs font-medium text-foreground transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
               >
                 <span>{srv.label}</span>
               </button>
@@ -389,26 +325,23 @@ const Home: React.FC = () => {
 
             <button
               type="button"
-              onClick={() => {
-                const el = document.getElementById('archetype-quiz');
-                el?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="px-3.5 py-1.5 rounded-full bg-[#881337]/10 hover:bg-[#881337]/20 border border-[#881337]/30 text-xs font-bold text-[#881337] dark:text-rose-400 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+              onClick={scrollToQuiz}
+              className="min-h-[44px] px-4 py-1.5 rounded-full bg-[#881337]/10 hover:bg-[#881337]/20 border border-[#881337]/30 text-xs font-bold text-[#881337] dark:text-rose-400 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
             >
-              <SparklesIcon className="w-3.5 h-3.5 text-[#C5A059]" />
+              <SparklesIcon className="w-3.5 h-3.5 text-[#C5A059]" aria-hidden="true" />
               <span>Take Archetype Quiz ✨</span>
             </button>
           </div>
 
-          {/* Quick Metro Filter Chips */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-4xl mx-auto">
-            <span className="text-xs font-semibold text-muted-foreground mr-1">Popular Metros:</span>
+          {/* Popular Metros Row */}
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
+            <span className="text-xs font-semibold text-muted-foreground mr-1">Metros:</span>
             {METROS.map((metro) => (
               <button
                 key={metro.name}
                 type="button"
                 onClick={() => navigate(`/discovery?city=${encodeURIComponent(metro.name)}`)}
-                className="px-3 py-1 rounded-full bg-card hover:bg-accent/10 border border-border/70 hover:border-accent/40 text-xs text-foreground/90 font-medium transition-all shadow-2xs flex items-center gap-1.5"
+                className="min-h-[44px] px-3.5 py-1 rounded-full bg-card hover:bg-muted border border-border/70 hover:border-border text-xs text-foreground/90 font-medium transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
               >
                 <span>{metro.name}</span>
                 <span className="text-[10px] text-muted-foreground">({metro.count.split(' ')[0]})</span>
@@ -416,77 +349,128 @@ const Home: React.FC = () => {
             ))}
           </div>
 
-          {/* Pretext-Native Experience Pillar Cards */}
-          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 text-left">
-            {PILLAR_CARDS.map((card) => (
-              <PretextPillarCard
-                key={card.id}
-                card={card}
-                isSelected={selectedLens === card.id}
-                onSelect={() => {
-                  setSelectedLens(card.id);
-                  navigate(`/discovery?q=${encodeURIComponent(card.name)}`);
-                }}
-              />
-            ))}
-          </div>
-
           {/* Trust Strip */}
-          <div className="mt-12 pt-8 border-t border-border/60 max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          <div className="mt-14 pt-8 border-t border-border/60 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-2xl sm:text-3xl font-extrabold text-foreground font-mono tabular-nums">100%</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Government ID & Selfie KYC</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Government ID Verified</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-sans tracking-tight">Escrow Hold</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif tracking-tight">Escrow Vault</div>
               <div className="text-xs text-muted-foreground mt-0.5">Zero Pre-payment Risk</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-sans tracking-tight">4-Digit PIN</div>
-              <div className="text-xs text-muted-foreground mt-0.5">In-Person Meeting Check-In</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-mono tabular-nums">4-Digit PIN</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Mutual Check-In</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-sans tracking-tight">24/7 SOS</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Emergency Outing Dispatch</div>
+              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif tracking-tight">24/7 SOS</div>
+              <div className="text-xs text-muted-foreground mt-0.5">Safety Dispatch</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 2.5 Interactive Archetype Quiz (Customer Attraction & Vibe Diagnosis) */}
+      {/* 3. Interactive Archetype Quiz (Lead Magnet & Wavelength Matcher) */}
       <div id="archetype-quiz">
         <ArchetypeQuizSection />
       </div>
 
-      {/* 3. Featured Verified Guests (Real Flagship Showcase) */}
+      {/* 4. Curated Outing Occasions (Clean Editorial Pillars) */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
+            Tailored Experiences
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
+            Curated Outing Occasions
+          </h2>
+          <p className="text-muted-foreground mt-2 text-xs sm:text-sm">
+            Whether exploring an art preview or sharing a quiet coffee, choose the setting that matches your mood.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {OCCASIONS.map((occ) => {
+            const Icon = occ.icon;
+            return (
+              <div
+                key={occ.id}
+                onClick={() => navigate(`/discovery?q=${encodeURIComponent(occ.query)}`)}
+                className="p-6 sm:p-8 rounded-3xl border border-border/80 bg-card hover:border-[#881337]/50 shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:-translate-y-1"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center group-hover:bg-[#881337]/10 transition-colors">
+                      <Icon className="w-6 h-6 text-[#881337] dark:text-rose-400" aria-hidden="true" />
+                    </div>
+                    <span className="px-3 py-1 rounded-full bg-muted/80 text-[11px] font-semibold text-muted-foreground border border-border/60">
+                      {occ.badge}
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold text-foreground font-serif mb-2 group-hover:text-[#881337] dark:group-hover:text-rose-400 transition-colors">
+                    {occ.title}
+                  </h3>
+
+                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">
+                    {occ.subtitle}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-border/60">
+                  <div className="flex flex-wrap gap-1.5 mb-3">
+                    {occ.tags.map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-foreground/80 border border-border/40"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs font-bold text-[#881337] dark:text-rose-400">
+                    <span>Browse Companions</span>
+                    <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* 5. Featured Verified Companions Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-card rounded-3xl border border-border p-6 sm:p-10 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
                 Vetted & Active This Week
               </span>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-serif">
-                Featured Verified Guests
+              <h2 className="text-2xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
+                Featured Verified Companions
               </h2>
               <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
-                Every guest has completed biometric verification and accepts invitations exclusively in public venues.
+                Every companion has completed government ID & biometric verification and accepts invitations exclusively in public venues.
               </p>
             </div>
             <Link
               to="/discovery"
-              className="px-4 py-2 rounded-xl border border-border hover:border-accent text-xs sm:text-sm font-semibold text-foreground hover:text-accent transition-colors self-start sm:self-auto"
+              className="min-h-[44px] px-4 py-2 rounded-xl border border-border hover:border-[#881337] text-xs sm:text-sm font-semibold text-foreground hover:text-[#881337] dark:hover:text-rose-400 transition-colors flex items-center gap-1 self-start sm:self-auto cursor-pointer"
             >
-              Browse All 100+ Guests &rarr;
+              <span>Browse All 100+ Companions</span>
+              <ArrowRightIcon className="w-3.5 h-3.5" aria-hidden="true" />
             </Link>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {FEATURED_PROFILES.map((comp) => (
+            {FEATURED_COMPANIONS.map((comp) => (
               <div
                 key={comp.id}
-                onClick={() => navigate(`/discovery?q=${encodeURIComponent(comp.name)}`)}
-                className="rounded-3xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 cursor-pointer flex flex-col group hover:-translate-y-1"
+                onClick={() => navigate(`/providers/${comp.id}`)}
+                className="rounded-3xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col group hover:-translate-y-1"
               >
                 <div className="relative h-64 overflow-hidden bg-muted">
                   <img
@@ -503,8 +487,8 @@ const Home: React.FC = () => {
                       onAuthPrompt={() => navigate('/login?redirect=/discovery')}
                     />
                   </div>
-                  <div className="absolute top-3 left-3 bg-emerald-500/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-white flex items-center gap-1 shadow-xs">
-                    <CheckBadgeIcon className="w-3.5 h-3.5" />
+                  <div className="absolute top-3 left-3 bg-[#C5A059]/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white flex items-center gap-1 shadow-xs">
+                    <CheckBadgeIcon className="w-3.5 h-3.5" aria-hidden="true" />
                     <span>Verified</span>
                   </div>
                 </div>
@@ -512,15 +496,15 @@ const Home: React.FC = () => {
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-bold text-lg text-foreground group-hover:text-accent transition-colors">
+                      <h3 className="font-bold text-lg text-foreground font-serif group-hover:text-[#881337] dark:group-hover:text-rose-400 transition-colors">
                         {comp.name}
                       </h3>
                       <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
-                        <StarIcon className="w-4 h-4 fill-amber-400" />
-                        <span>{comp.rating}</span>
+                        <StarIcon className="w-4 h-4 fill-amber-400" aria-hidden="true" />
+                        <span className="font-mono tabular-nums">{comp.rating}</span>
                       </div>
                     </div>
-                    <p className="text-xs text-accent font-medium mb-3 line-clamp-1">{comp.headline}</p>
+                    <p className="text-xs text-[#881337] dark:text-rose-400 font-medium mb-3 line-clamp-1">{comp.headline}</p>
 
                     <div className="flex flex-wrap gap-1.5 mb-4">
                       {comp.tags.map((tag) => (
@@ -536,11 +520,11 @@ const Home: React.FC = () => {
 
                   <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                      <MapPinIcon className="w-3.5 h-3.5 text-accent" />
+                      <MapPinIcon className="w-3.5 h-3.5 text-[#C5A059]" aria-hidden="true" />
                       {comp.distance}
                     </span>
-                    <span className="font-semibold text-accent group-hover:translate-x-1 transition-transform">
-                      {isAuthenticated ? 'Book with Escrow \u2192' : 'Login to Book \u2192'}
+                    <span className="font-bold text-[#881337] dark:text-rose-400 group-hover:translate-x-1 transition-transform">
+                      {isAuthenticated ? 'Book with Escrow \u2192' : 'View Profile \u2192'}
                     </span>
                   </div>
                 </div>
@@ -550,102 +534,107 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 4. The 3-Step Trust Architecture (How It Works) */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* 6. The 3-Step Trust Architecture (How Escrow Protects You) */}
+      <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
-            Safe, Transparent & Platonic
+          <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
+            Safe, Transparent & Escrow-Protected
           </span>
-          <h2 className="text-2xl sm:text-4xl font-bold text-foreground font-serif">
-            How LoveAgain Protects Every Outing
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
+            How Cue Protects Every Outing
           </h2>
-          <p className="text-muted-foreground mt-2 text-sm sm:text-base">
-            No unexpected cancellations, no awkward cash exchanges, and no safety compromises.
+          <p className="text-muted-foreground mt-2 text-xs sm:text-sm">
+            Zero cash exchanges, zero upfront payment risk, and guaranteed mutual security.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="p-6 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+          <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold text-lg mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#881337]/10 border border-[#881337]/20 flex items-center justify-center text-[#881337] dark:text-rose-400 font-bold text-lg mb-4 font-mono">
                 1
               </div>
               <h3 className="text-lg font-bold text-foreground font-serif mb-2">
-                Reserve & Escrow Deposit
+                Select & Escrow Hold
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Choose an available slot, specify the public meeting spot, and confirm. Your booking fee is held in an isolated platform escrow ledger — the guest does not receive payment upfront.
+                Choose your companion and specify the public meeting spot. Your payment is held securely in an isolated platform escrow vault — the companion never receives money upfront.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <ShieldCheckIcon className="w-4 h-4" />
+              <ShieldCheckIcon className="w-4 h-4" aria-hidden="true" />
               <span>100% Refundable Before Outing</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold text-lg mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#881337]/10 border border-[#881337]/20 flex items-center justify-center text-[#881337] dark:text-rose-400 font-bold text-lg mb-4 font-mono">
                 2
               </div>
               <h3 className="text-lg font-bold text-foreground font-serif mb-2">
-                Meet at Public Venue & Exchange PIN
+                Public Meetup & 4-Digit Handshake
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Meet your guest at the agreed cafe, sports club, or gallery. Exchange your private check-in PIN to start the outing timer and verify both parties are present.
+                Meet at the agreed public venue (café, gallery, or restaurant). Exchange your private 4-digit PIN to confirm check-in and verify that both parties have arrived safely.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-accent flex items-center gap-1.5">
-              <KeyIcon className="w-4 h-4" />
-              <span>Mutual Security PIN Exchange</span>
+            <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-[#881337] dark:text-rose-400 flex items-center gap-1.5">
+              <KeyIcon className="w-4 h-4" aria-hidden="true" />
+              <span>Mutual 4-Digit Security PIN</span>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold text-lg mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-[#881337]/10 border border-[#881337]/20 flex items-center justify-center text-[#881337] dark:text-rose-400 font-bold text-lg mb-4 font-mono">
                 3
               </div>
               <h3 className="text-lg font-bold text-foreground font-serif mb-2">
-                Outing Completed & Escrow Released
+                Outing Concluded & Instant Settlement
               </h3>
               <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                Once the scheduled time finishes, the outing is marked completed. Escrow funds are automatically released to the guest's wallet for instant UPI withdrawal, and both parties leave verified reviews.
+                Once the scheduled time finishes, the outing is completed. Escrow funds transfer directly to the companion's wallet with instant UPI payout, and both parties leave verified feedback.
               </p>
             </div>
             <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <CheckCircleIcon className="w-4 h-4" />
+              <CheckCircleIcon className="w-4 h-4" aria-hidden="true" />
               <span>Instant Payout & Verified Review</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 5. Guest Monetization Callout */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-12 rounded-3xl bg-gradient-to-br from-primary via-primary-light to-primary text-primary-foreground border border-border/80 shadow-xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      {/* 7. Companion Monetization (Become a Verified Companion) */}
+      <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="p-8 sm:p-12 rounded-3xl bg-[#140B12] text-white border border-[#2A1824] shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-gradient-to-br from-[#881337]/20 via-[#C5A059]/10 to-transparent blur-3xl pointer-events-none" />
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary-foreground/10 text-primary-foreground text-xs font-semibold uppercase tracking-wider mb-4 border border-primary-foreground/15">
-                <BriefcaseIcon className="w-4 h-4 text-emerald-400" />
-                <span>Monetize Your Time & Knowledge</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#C5A059] text-xs font-semibold uppercase tracking-wider mb-4 border border-white/15">
+                <BriefcaseIcon className="w-4 h-4" aria-hidden="true" />
+                <span>Earn With Dignity & Protection</span>
               </div>
-              <h2 className="text-2xl sm:text-4xl font-bold tracking-tight font-serif mb-4 text-primary-foreground text-balance">
-                Earn on your own terms with guaranteed escrow payouts
+
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight font-serif mb-4 text-white leading-tight">
+                Share your time, culture, and interests with guaranteed escrow payouts
               </h2>
-              <p className="text-primary-foreground/85 text-xs sm:text-base leading-relaxed mb-6 text-pretty">
-                Whether you are a certified tennis coach, heritage walk curator, commercial photographer, or homestyle chef, Cue lets you publish your schedule, set your hourly rate, and get paid with zero payment defaults.
+
+              <p className="text-white/80 text-xs sm:text-base leading-relaxed mb-6">
+                Whether you are an art curator, certified sports coach, language mentor, or cultural enthusiast, Cue allows you to publish your schedule, set your hourly rate, and receive guaranteed payouts with zero risk of unpaid invoices.
               </p>
+
               <div className="flex flex-wrap gap-3">
                 <Link
                   to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
-                  className="px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-xs sm:text-sm shadow-md hover:bg-accent-hover transition-all"
+                  className="min-h-[44px] px-6 py-3 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center cursor-pointer"
                 >
-                  Apply as a Verified Guest
+                  Apply as a Verified Companion
                 </Link>
                 <Link
                   to="/how-it-works"
-                  className="px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm transition-all border border-white/20"
+                  className="min-h-[44px] px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm transition-all border border-white/20 flex items-center cursor-pointer"
                 >
                   Learn About Payouts
                 </Link>
@@ -653,25 +642,25 @@ const Home: React.FC = () => {
             </div>
 
             <div className="space-y-3 sm:space-y-4">
-              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 flex items-center gap-3">
-                <CheckCircleIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-3">
+                <CheckCircleIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" aria-hidden="true" />
                 <div>
-                  <h4 className="font-semibold text-xs sm:text-sm text-white">Guaranteed Payment Security</h4>
-                  <p className="text-[11px] sm:text-xs text-white/80">Hosts deposit funds in escrow prior to meeting. No chasing invoices or unpaid outings.</p>
+                  <h4 className="font-semibold text-xs sm:text-sm text-white">Guaranteed Escrow Security</h4>
+                  <p className="text-[11px] sm:text-xs text-white/70">Clients deposit funds in escrow prior to meeting. No chasing payments or defaults.</p>
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 flex items-center gap-3">
-                <ShieldCheckIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-3">
+                <ShieldCheckIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" aria-hidden="true" />
                 <div>
                   <h4 className="font-semibold text-xs sm:text-sm text-white">Strict Identity & Safety Vetting</h4>
-                  <p className="text-[11px] sm:text-xs text-white/80">Every host and guest must complete biometric verification and government ID checks.</p>
+                  <p className="text-[11px] sm:text-xs text-white/70">Every member completes biometric verification and government ID checks for mutual safety.</p>
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/15 flex items-center gap-3">
-                <ArrowPathIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
+              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-3">
+                <ArrowPathIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" aria-hidden="true" />
                 <div>
                   <h4 className="font-semibold text-xs sm:text-sm text-white">Instant UPI Disbursements</h4>
-                  <p className="text-[11px] sm:text-xs text-white/80">Withdraw earnings straight to your GPay, PhonePe, Paytm, or bank account with 0 delay.</p>
+                  <p className="text-[11px] sm:text-xs text-white/70">Withdraw earnings straight to your GPay, PhonePe, or Paytm with zero delay.</p>
                 </div>
               </div>
             </div>
@@ -679,13 +668,13 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. Persuasive FAQ (Friction & Objection Killer) */}
+      {/* 8. Frequently Asked Questions (Friction Eliminator) */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-10">
-          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
+          <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
             Clear Answers
           </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-foreground font-serif">
+          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
             Frequently Asked Questions
           </h2>
           <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
@@ -704,15 +693,16 @@ const Home: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                  className="w-full p-4 sm:p-5 flex items-center justify-between text-left gap-4 hover:bg-muted/30 transition-colors"
+                  className="w-full min-h-[56px] p-4 sm:p-5 flex items-center justify-between text-left gap-4 hover:bg-muted/40 transition-colors cursor-pointer"
                 >
                   <span className="text-sm sm:text-base font-bold text-foreground">
                     {faq.question}
                   </span>
                   <ChevronDownIcon
                     className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-accent' : ''
+                      isOpen ? 'rotate-180 text-[#881337] dark:text-rose-400' : ''
                     }`}
+                    aria-hidden="true"
                   />
                 </button>
                 {isOpen && (
@@ -726,29 +716,33 @@ const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 7. Final Conversion Invitation Billboard */}
+      {/* 9. Final Conversion Invitation */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-12 rounded-3xl bg-card border border-accent/30 shadow-lg text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-accent/10 to-accent/5 pointer-events-none" />
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif mb-3 text-balance">
-            Ready to Explore Life with Verified Guests?
+        <div className="p-8 sm:p-14 rounded-3xl bg-card border border-[#C5A059]/30 shadow-xl text-center relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#881337]/5 via-[#C5A059]/10 to-[#881337]/5 pointer-events-none" />
+
+          <h2 className="text-3xl sm:text-5xl font-bold text-foreground font-serif mb-3 text-balance">
+            Experience Connection on Your Own Terms
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-xs sm:text-base mb-6 text-pretty">
-            Join hundreds of urban hosts across Bengaluru, Mumbai, Delhi, and Hyderabad. No commitments, zero pre-payment risk.
+          <p className="text-muted-foreground max-w-xl mx-auto text-xs sm:text-base mb-8 text-pretty">
+            Join hundreds of verified urban members across Bengaluru, Mumbai, Delhi-NCR, and Hyderabad. Discreet, escrow-backed, and 100% platonic.
           </p>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               to="/discovery"
-              className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-sm transition-all hover:scale-[1.02]"
+              className="w-full sm:w-auto min-h-[48px] px-8 py-3.5 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white font-bold text-sm shadow-md transition-all hover:scale-[1.02] flex items-center justify-center cursor-pointer"
             >
-              Explore Guests Now &rarr;
+              Explore Verified Companions &rarr;
             </Link>
-            <Link
-              to="/register"
-              className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground font-semibold text-sm border border-border/80 transition-all"
+            <button
+              type="button"
+              onClick={scrollToQuiz}
+              className="w-full sm:w-auto min-h-[48px] px-6 py-3.5 rounded-xl bg-card hover:bg-muted text-foreground font-semibold text-sm border border-border transition-all flex items-center justify-center gap-1.5 cursor-pointer"
             >
-              Create Free Account
-            </Link>
+              <SparklesIcon className="w-4 h-4 text-[#C5A059]" aria-hidden="true" />
+              <span>Take Archetype Quiz</span>
+            </button>
           </div>
         </div>
       </section>
