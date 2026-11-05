@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import type { RootState } from '../store';
 import { RateBadge } from '../components/ui/RateBadge';
 import { usePretextHeight } from '../hooks/usePretext';
+import { ArchetypeQuizSection } from '../components/home/ArchetypeQuizSection';
 import {
   MagnifyingGlassIcon,
   ShieldCheckIcon,
@@ -366,7 +367,7 @@ const Home: React.FC = () => {
             </button>
           </form>
 
-          {/* Curated Service Quick-Pills */}
+          {/* Curated Service Quick-Pills & Quiz Trigger */}
           <div className="mt-4 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
             {[
               { label: '☕ Coffee Dates', q: 'Coffee' },
@@ -385,6 +386,18 @@ const Home: React.FC = () => {
                 <span>{srv.label}</span>
               </button>
             ))}
+
+            <button
+              type="button"
+              onClick={() => {
+                const el = document.getElementById('archetype-quiz');
+                el?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="px-3.5 py-1.5 rounded-full bg-[#881337]/10 hover:bg-[#881337]/20 border border-[#881337]/30 text-xs font-bold text-[#881337] dark:text-rose-400 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
+            >
+              <SparklesIcon className="w-3.5 h-3.5 text-[#C5A059]" />
+              <span>Take Archetype Quiz ✨</span>
+            </button>
           </div>
 
           {/* Quick Metro Filter Chips */}
@@ -439,6 +452,11 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* 2.5 Interactive Archetype Quiz (Customer Attraction & Vibe Diagnosis) */}
+      <div id="archetype-quiz">
+        <ArchetypeQuizSection />
+      </div>
 
       {/* 3. Featured Verified Guests (Real Flagship Showcase) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
