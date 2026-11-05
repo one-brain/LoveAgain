@@ -210,7 +210,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
             <h3 className="text-sm font-bold text-foreground">No payout records in this queue</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               {filter === 'Pending'
-                ? 'All companion payout requests have been settled.'
+                ? 'All guest payout requests have been settled.'
                 : 'No payout records match this filter.'}
             </p>
           </div>
@@ -219,7 +219,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="px-5 py-3.5">Companion</th>
+                  <th className="px-5 py-3.5">Guest</th>
                   <th className="px-4 py-3.5">Net Disbursal Amount</th>
                   <th className="px-4 py-3.5">UPI Destination VPA</th>
                   <th className="px-4 py-3.5">Settlement Status</th>
@@ -353,7 +353,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
               Confirm UPI Payout Settlement
             </h3>
             <p className="text-xs text-muted-foreground mb-4">
-              Disbursing <strong>{formatINR(selectedPayout.amount)}</strong> to companion{' '}
+              Disbursing <strong>{formatINR(selectedPayout.amount)}</strong> to guest{' '}
               <strong>{selectedPayout.userName}</strong> ({selectedPayout.destination}).
             </p>
 

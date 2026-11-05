@@ -402,7 +402,7 @@ const Discovery: React.FC = () => {
             <div className="flex items-center gap-2 font-medium">
               <span className="w-2 h-2 rounded-full bg-accent-champagne animate-pulse shrink-0" />
               <span className="font-bold text-accent-champagne font-mono uppercase tracking-wider text-[11px]">Administrator Preview</span>
-              <span className="hidden sm:inline text-white/80">• Browsing live public directory as guest seeker</span>
+              <span className="hidden sm:inline text-white/80">• Browsing live public directory as host</span>
             </div>
             <Link
               to="/admin"

@@ -224,7 +224,7 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
       ) : filteredItems.length === 0 ? (
         <div className="text-center py-16 bg-card border border-border/80 rounded-2xl p-8">
           <ShieldCheckIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-          <h3 className="text-sm font-bold text-foreground">No companion applications in this queue</h3>
+          <h3 className="text-sm font-bold text-foreground">No guest applications in this queue</h3>
           <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
             {search
               ? 'No applicants matched your search criteria. Try a different keyword.'
@@ -452,7 +452,7 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                 </div>
                 <div>
                   <h3 id="kyc-modal-title" className="text-base sm:text-lg font-bold text-foreground">
-                    Companion Application & ID Verification
+                    Guest Application & Identity Verification
                   </h3>
                   <p className="text-xs text-muted-foreground">
                     {selectedItem.displayName ? `${selectedItem.displayName} • Legal: ` : ''}
@@ -718,7 +718,7 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                 rows={3}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Explain what needs to be fixed for the companion application to be approved..."
+                placeholder="Explain what needs to be fixed for the guest application to be approved..."
                 className="w-full p-3 rounded-xl border border-border/80 bg-background text-foreground text-xs focus:ring-2 focus:ring-accent focus:outline-hidden"
               />
             </div>

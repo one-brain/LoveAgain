@@ -68,7 +68,7 @@ export const AdminDashboard: React.FC = () => {
 
   const [usersPage, setUsersPage] = useState(1);
   const [usersPageSize, setUsersPageSize] = useState(20);
-  const [usersRole, setUsersRole] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
+  const [usersRole, setUsersRole] = useState<'All' | 'Guests' | 'Hosts' | 'Suspended'>('All');
   const [usersSearch, setUsersSearch] = useState('');
 
   const [payoutsPage, setPayoutsPage] = useState(1);
@@ -244,7 +244,7 @@ export const AdminDashboard: React.FC = () => {
         key: 'users',
         label: 'Users',
         shortLabel: 'Users',
-        description: 'Seeker and companion account directory, trust score moderation and role controls',
+        description: 'Host and guest account directory, trust score moderation and role controls',
         icon: UsersIcon,
         shortcut: '3',
         count: userStats?.total ?? (usersRole === 'All' ? usersData?.totalCount : undefined),
@@ -254,7 +254,7 @@ export const AdminDashboard: React.FC = () => {
         key: 'payouts',
         label: 'Settlements',
         shortLabel: 'Payouts',
-        description: 'Companion banking disbursements, UPI transfers and settlement reconciliation',
+        description: 'Guest banking disbursements, UPI transfers and settlement reconciliation',
         icon: CurrencyRupeeIcon,
         shortcut: '4',
         count: pendingPayoutsCount > 0 ? pendingPayoutsCount : undefined,

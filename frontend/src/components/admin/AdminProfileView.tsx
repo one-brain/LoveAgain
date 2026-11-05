@@ -635,7 +635,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Approve, reject, or request changes on companion ID and selfie verifications.
+              Approve, reject, or request changes on guest ID and selfie verifications.
             </p>
           </div>
 
@@ -659,7 +659,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground">
-              Audit registered users, inspect companion profiles, and toggle account suspensions.
+              Audit registered accounts, inspect guest profiles, and toggle account suspensions.
             </p>
           </div>
 

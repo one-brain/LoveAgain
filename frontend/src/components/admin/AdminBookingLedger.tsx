@@ -162,7 +162,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by ID, seeker, companion..."
+              placeholder="Search by ID, host, guest..."
               className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border/80 bg-background text-foreground text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
             />
             {search && (
@@ -211,7 +211,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
         </div>
         <div>
           <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
-            Companion Earnings (85%)
+            Guest Earnings (85%)
           </span>
           <p className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
             {formatINR(totalProviderNet)}
@@ -240,11 +240,11 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
               <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="px-5 py-3.5">Booking ID</th>
-                  <th className="px-4 py-3.5">Client</th>
-                  <th className="px-4 py-3.5">Companion</th>
+                  <th className="px-4 py-3.5">Host</th>
+                  <th className="px-4 py-3.5">Guest</th>
                   <th className="px-4 py-3.5 text-right">Total Amount</th>
                   <th className="px-4 py-3.5 text-right">Platform Fee (15%)</th>
-                  <th className="px-4 py-3.5 text-right">Companion Earnings (85%)</th>
+                  <th className="px-4 py-3.5 text-right">Guest Earnings (85%)</th>
                   <th className="px-4 py-3.5">Status</th>
                   <th className="px-5 py-3.5">Created At</th>
                 </tr>
@@ -286,7 +286,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
                           <span className="text-foreground">{b.providerName}</span>
                           <Link
                             to={`/provider/${b.providerId}`}
-                            title="View Companion Discovery Profile"
+                            title="View Guest Profile"
                             className="p-1 rounded text-accent hover:bg-accent/10 transition-colors"
                           >
                             <EyeIcon className="w-3.5 h-3.5" />

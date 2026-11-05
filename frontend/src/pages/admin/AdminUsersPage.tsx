@@ -23,7 +23,7 @@ export const AdminUsersPage: React.FC = () => {
 
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
-  const [role, setRole] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
+  const [role, setRole] = useState<'All' | 'Guests' | 'Hosts' | 'Suspended'>('All');
   const [search, setSearch] = useState('');
 
   const { data: userStats } = useGetAdminUserStatsQuery();
@@ -80,7 +80,7 @@ export const AdminUsersPage: React.FC = () => {
       {/* Page Header */}
       <AdminPageHeader
         title="User Directory"
-        description="View registered clients, companions, and platform administrators. Check verification status, trust ratings, and manage account access."
+        description="View registered hosts, guests, and platform administrators. Check verification status, trust ratings, and manage account access."
         badge={
           suspendedCount > 0 ? (
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/30">

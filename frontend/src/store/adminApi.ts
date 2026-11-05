@@ -110,6 +110,8 @@ export interface PlatformMisReport {
 
 export interface AdminUserStats {
   total: number;
+  guests?: number;
+  hosts?: number;
   companions: number;
   clients: number;
   suspended: number;

@@ -19,19 +19,19 @@ interface AdminUsersDirectoryProps {
   totalPages?: number;
   onPageChange?: (page: number) => void;
   onPageSizeChange?: (pageSize: number) => void;
-  roleFilter?: 'All' | 'Companions' | 'Clients' | 'Suspended';
-  onRoleFilterChange?: (role: 'All' | 'Companions' | 'Clients' | 'Suspended') => void;
+  roleFilter?: 'All' | 'Guests' | 'Hosts' | 'Suspended' | 'Companions' | 'Clients';
+  onRoleFilterChange?: (role: 'All' | 'Guests' | 'Hosts' | 'Suspended') => void;
   search?: string;
   onSearchChange?: (search: string) => void;
   stats?: AdminUserStats;
 }
 
-const isUserCompanion = (u: AdminUserItem) =>
-  Boolean(u.hasCompanionProfile || u.roles?.includes('Companion') || u.roles?.includes('Provider'));
+const isUserGuest = (u: AdminUserItem) =>
+  Boolean(u.hasCompanionProfile || u.roles?.includes('Companion') || u.roles?.includes('Provider') || u.roles?.includes('Guest'));
 const isUserAdmin = (u: AdminUserItem) =>
   Boolean(u.roles?.includes('Admin') || u.email?.toLowerCase() === 'admin@cue.local');
-const isUserClient = (u: AdminUserItem) =>
-  !isUserCompanion(u) && !isUserAdmin(u);
+const isUserHost = (u: AdminUserItem) =>
+  !isUserGuest(u) && !isUserAdmin(u);
 const isUserSuspended = (u: AdminUserItem) =>
   u.trustScore < 0;
 
@@ -52,7 +52,7 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   onSearchChange,
   stats,
 }) => {
-  const [localRoleFilter, setLocalRoleFilter] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
+  const [localRoleFilter, setLocalRoleFilter] = useState<'All' | 'Guests' | 'Hosts' | 'Suspended'>('All');
   const [localSearch, setLocalSearch] = useState('');
   const [actionUserId, setActionUserId] = useState<string | null>(null);
   const [localPage, setLocalPage] = useState(1);
@@ -64,7 +64,14 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   });
   const effectiveStats = stats || queryStats;
 
-  const activeRoleFilter = roleFilter ?? localRoleFilter;
+  // Normalize role filter to canon Host/Guest values
+  const activeRoleFilter: 'All' | 'Guests' | 'Hosts' | 'Suspended' =
+    roleFilter === 'Companions'
+      ? 'Guests'
+      : roleFilter === 'Clients'
+      ? 'Hosts'
+      : roleFilter ?? localRoleFilter;
+
   const activeSearch = search !== undefined ? search : localSearch;
 
   const isServerPaged = Boolean(onPageChange);
@@ -75,8 +82,8 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   // Stable counts cache to prevent flickers during tab transitions
   const [cachedCounts, setCachedCounts] = useState<{
     All?: number;
-    Companions?: number;
-    Clients?: number;
+    Guests?: number;
+    Hosts?: number;
     Suspended?: number;
   }>({});
 
@@ -84,8 +91,8 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     if (effectiveStats) {
       setCachedCounts({
         All: effectiveStats.total,
-        Companions: effectiveStats.companions,
-        Clients: effectiveStats.clients,
+        Guests: effectiveStats.guests ?? effectiveStats.companions,
+        Hosts: effectiveStats.hosts ?? effectiveStats.clients,
         Suspended: effectiveStats.suspended,
       });
     } else if (isServerFiltered && totalCount !== undefined) {
@@ -96,7 +103,7 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     }
   }, [effectiveStats, isServerFiltered, activeRoleFilter, totalCount]);
 
-  const handleRoleSelect = (newRole: 'All' | 'Companions' | 'Clients' | 'Suspended') => {
+  const handleRoleSelect = (newRole: 'All' | 'Guests' | 'Hosts' | 'Suspended') => {
     if (onRoleFilterChange) {
       onRoleFilterChange(newRole);
       onPageChange?.(1);
@@ -147,16 +154,16 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     }
 
     const suspended = isUserSuspended(user);
-    const companion = isUserCompanion(user);
-    const client = isUserClient(user);
+    const guest = isUserGuest(user);
+    const host = isUserHost(user);
 
     const matchesRole =
       activeRoleFilter === 'All'
         ? true
-        : activeRoleFilter === 'Companions'
-        ? companion
-        : activeRoleFilter === 'Clients'
-        ? client
+        : activeRoleFilter === 'Guests'
+        ? guest
+        : activeRoleFilter === 'Hosts'
+        ? host
         : activeRoleFilter === 'Suspended'
         ? suspended
         : true;
@@ -180,16 +187,18 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
     : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
-  const pillCounts: Record<'All' | 'Companions' | 'Clients' | 'Suspended', number | undefined> = {
+  const pillCounts: Record<'All' | 'Guests' | 'Hosts' | 'Suspended', number | undefined> = {
     All: effectiveStats?.total ?? cachedCounts.All ?? (isServerPaged || isServerFiltered ? undefined : users.length),
-    Companions:
+    Guests:
+      effectiveStats?.guests ??
       effectiveStats?.companions ??
-      cachedCounts.Companions ??
-      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserCompanion).length),
-    Clients:
+      cachedCounts.Guests ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserGuest).length),
+    Hosts:
+      effectiveStats?.hosts ??
       effectiveStats?.clients ??
-      cachedCounts.Clients ??
-      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserClient).length),
+      cachedCounts.Hosts ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserHost).length),
     Suspended:
       effectiveStats?.suspended ??
       cachedCounts.Suspended ??
@@ -213,14 +222,14 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
           {[
             { key: 'All', label: 'All Accounts', count: pillCounts.All },
             {
-              key: 'Companions',
-              label: 'Companions',
-              count: pillCounts.Companions,
+              key: 'Guests',
+              label: 'Guests',
+              count: pillCounts.Guests,
             },
             {
-              key: 'Clients',
-              label: 'Clients',
-              count: pillCounts.Clients,
+              key: 'Hosts',
+              label: 'Hosts',
+              count: pillCounts.Hosts,
             },
             {
               key: 'Suspended',
@@ -304,7 +313,7 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                 <tr>
                   <th className="px-5 py-3.5">User Identity</th>
                   <th className="px-4 py-3.5">Assigned Roles</th>
-                  <th className="px-4 py-3.5">Companion Status</th>
+                  <th className="px-4 py-3.5">Guest Status</th>
                   <th className="px-4 py-3.5">Trust Score</th>
                   <th className="px-4 py-3.5">Registered</th>
                   <th className="px-5 py-3.5 text-right">Moderation Action</th>
@@ -383,11 +392,19 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                                   : 'bg-amber-500'
                               }`}
                             />
-                            <span>{user.companionStatus}</span>
+                            <span>
+                              {user.companionStatus === 'Approved'
+                                ? 'Verified Guest'
+                                : user.companionStatus === 'PendingReview'
+                                ? 'Review Pending'
+                                : user.companionStatus === 'Suspended'
+                                ? 'Guest Suspended'
+                                : user.companionStatus}
+                            </span>
                           </span>
                         ) : (
-                          <span className="text-muted-foreground text-[11px]">
-                            {isUserAnAdmin ? 'Superuser Admin' : 'Client Account'}
+                          <span className="text-muted-foreground text-[11px] font-medium">
+                            {isUserAnAdmin ? 'Administrator' : 'Host Account'}
                           </span>
                         )}
                       </td>

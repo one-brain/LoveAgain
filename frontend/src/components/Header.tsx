@@ -247,7 +247,7 @@ const Header: React.FC = () => {
                   Cue {isInAdminPortal && <span className="text-[10px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-accent-champagne/20 text-accent-champagne border border-accent-champagne/40">Command</span>}
                 </span>
                 <span className="text-[11px] font-medium tracking-wide uppercase text-muted-foreground -mt-1 hidden sm:inline font-sans">
-                  {isInAdminPortal ? 'Back-Office Operations' : 'Companion Experiences'}
+                  {isInAdminPortal ? 'Back-Office Operations' : 'Curated Outings'}
                 </span>
               </div>
             </Link>

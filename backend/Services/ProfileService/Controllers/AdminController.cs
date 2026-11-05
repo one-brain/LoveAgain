@@ -302,11 +302,11 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             {
                 query = query.Where(u => u.TrustScore < 0);
             }
-            else if (string.Equals(role, "Companions", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(role, "Guests", StringComparison.OrdinalIgnoreCase) || string.Equals(role, "Companions", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(u => u.TrustScore >= 0 && companionUserIds.Contains(u.Id));
             }
-            else if (string.Equals(role, "Clients", StringComparison.OrdinalIgnoreCase))
+            else if (string.Equals(role, "Hosts", StringComparison.OrdinalIgnoreCase) || string.Equals(role, "Clients", StringComparison.OrdinalIgnoreCase))
             {
                 query = query.Where(u => u.TrustScore >= 0 && !companionUserIds.Contains(u.Id) && u.Email != "admin@cue.local");
             }
@@ -368,6 +368,8 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
         return Ok(new
         {
             total,
+            guests = companions,
+            hosts = clients,
             companions,
             clients,
             suspended
