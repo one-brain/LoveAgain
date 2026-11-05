@@ -345,13 +345,13 @@ export const AdminDashboard: React.FC = () => {
       {/* KPI Cards Strip */}
       <AdminKpiStrip misData={misData} isLoading={isLoadingMis} />
 
-      {/* Redesigned High-Density Command Tab Ribbon */}
-      <div className="mb-6">
+      {/* Modernized Architectural Tab Command Bar */}
+      <div className="mb-6 space-y-2.5">
         <div
           role="tablist"
           aria-label="Admin Operations Navigation"
           onKeyDown={handleTabListKeyDown}
-          className="flex items-center gap-1.5 p-1.5 rounded-2xl bg-muted/40 border border-border/80 shadow-2xs overflow-x-auto no-scrollbar scroll-smooth"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-1.5 rounded-2xl bg-muted/40 border border-border/80 shadow-2xs backdrop-blur-sm"
         >
           {tabs.map((tab) => {
             const isActive = activeTab === tab.key;
@@ -367,50 +367,61 @@ export const AdminDashboard: React.FC = () => {
                 tabIndex={isActive ? 0 : -1}
                 type="button"
                 onClick={() => handleTabChange(tab.key)}
-                className={`group relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl whitespace-nowrap text-xs sm:text-sm font-semibold transition-all duration-150 shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent ${isActive
-                  ? 'bg-card text-foreground shadow-xs ring-1 ring-border/80 font-bold'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
-                  }`}
+                className={`group relative flex items-center justify-between sm:justify-center lg:justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent ${
+                  isActive
+                    ? 'bg-card text-foreground shadow-xs ring-1 ring-border/80 font-bold'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
+                }`}
               >
-                <Icon
-                  className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${isActive
-                    ? 'text-accent'
-                    : tab.badgeTone === 'amber' && tab.count
-                      ? 'text-accent-champagne'
-                      : 'text-muted-foreground'
+                <div className="flex items-center gap-2 min-w-0">
+                  <div
+                    className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                      isActive
+                        ? 'bg-accent/15 text-accent'
+                        : tab.badgeTone === 'amber' && tab.count
+                        ? 'bg-accent-champagne/15 text-accent-champagne'
+                        : 'bg-muted/70 text-muted-foreground group-hover:text-foreground'
                     }`}
-                />
-                <span className="hidden sm:inline font-sans">{tab.label}</span>
-                <span className="sm:hidden font-sans">{tab.shortLabel}</span>
-
-                {/* Counter Badges */}
-                {tab.count !== undefined && tab.count > 0 && (
-                  <span
-                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold tabular-nums transition-colors ${isActive
-                      ? 'bg-accent/15 text-accent'
-                      : tab.badgeTone === 'amber'
-                        ? 'bg-accent-champagne/20 text-accent-champagne'
-                        : 'bg-muted text-muted-foreground'
-                      }`}
                   >
-                    {tab.count}
+                    <Icon className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
+                  </div>
+                  <span className="truncate font-sans font-medium text-xs sm:text-sm">
+                    {tab.label}
                   </span>
-                )}
+                </div>
 
-                {/* Keyboard Shortcut Indicator Chip */}
-                <kbd
-                  aria-hidden="true"
-                  className={`hidden xl:inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-mono tabular-nums border transition-opacity ${isActive
-                    ? 'bg-accent/10 border-accent/30 text-accent font-bold'
-                    : 'bg-muted/70 border-border/70 text-muted-foreground/80 opacity-60 group-hover:opacity-100'
+                <div className="flex items-center gap-1.5 shrink-0 ml-1">
+                  {/* Counter Badges */}
+                  {tab.count !== undefined && tab.count > 0 && (
+                    <span
+                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold tabular-nums transition-colors ${
+                        isActive
+                          ? 'bg-accent/15 text-accent'
+                          : tab.badgeTone === 'amber'
+                          ? 'bg-accent-champagne/20 text-accent-champagne'
+                          : 'bg-muted text-muted-foreground'
+                      }`}
+                    >
+                      {tab.count}
+                    </span>
+                  )}
+
+                  {/* Keyboard Shortcut Indicator Chip */}
+                  <kbd
+                    aria-hidden="true"
+                    className={`hidden xl:inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-mono tabular-nums border transition-opacity ${
+                      isActive
+                        ? 'bg-accent/10 border-accent/30 text-accent font-bold'
+                        : 'bg-muted/60 border-border/70 text-muted-foreground/70 opacity-60 group-hover:opacity-100'
                     }`}
-                >
-                  {tab.shortcut}
-                </kbd>
+                  >
+                    {tab.shortcut}
+                  </kbd>
+                </div>
 
-                {/* Subtle active indicator pill */}
+                {/* Subtle active indicator underline */}
                 {isActive && (
-                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-accent rounded-full animate-in fade-in-0 duration-150" />
+                  <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent rounded-full animate-in fade-in-0 duration-150" />
                 )}
               </button>
             );
@@ -418,14 +429,14 @@ export const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Operational Context Ribbon */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-3.5 py-2.5 rounded-xl bg-muted/20 border border-border/50 mt-3 text-xs text-muted-foreground">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2 rounded-xl bg-card/60 border border-border/60 text-xs text-muted-foreground shadow-2xs">
           <div className="flex items-center gap-2 truncate">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0 animate-pulse" />
-            <span className="font-semibold text-foreground">{currentTabConfig.label}:</span>
-            <span className="truncate">{currentTabConfig.description}</span>
+            <span className="w-2 h-2 rounded-full bg-accent shrink-0 animate-pulse" />
+            <span className="font-semibold text-foreground font-sans">{currentTabConfig.label}:</span>
+            <span className="truncate font-sans text-muted-foreground">{currentTabConfig.description}</span>
           </div>
-          <div className="hidden md:flex items-center gap-3 shrink-0 text-[11px] text-muted-foreground/80 font-mono">
-            <span>Keys <kbd className="px-1 py-0.5 rounded bg-muted border border-border/70 text-[10px]">1-6</kbd> switch</span>
+          <div className="hidden md:flex items-center gap-2.5 shrink-0 text-[11px] text-muted-foreground/80 font-mono">
+            <span>Keys <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/70 text-[10px]">1-6</kbd></span>
             <span>•</span>
             <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border/70 text-[10px]">←</kbd> <kbd className="px-1 py-0.5 rounded bg-muted border border-border/70 text-[10px]">→</kbd> navigate</span>
           </div>
