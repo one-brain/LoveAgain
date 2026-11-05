@@ -20,12 +20,15 @@ export const AdminUsersPage: React.FC = () => {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
   const {
     data: usersData,
     isLoading: isLoadingUsers,
     refetch: refetchUsers,
     isFetching,
-  } = useGetAdminUsersQuery({});
+  } = useGetAdminUsersQuery({ page, pageSize });
 
   const [toggleUserSuspend, { isLoading: isTogglingSuspend }] = useToggleUserSuspendMutation();
 
@@ -39,8 +42,8 @@ export const AdminUsersPage: React.FC = () => {
     }
   };
 
-  const totalUsers = usersData?.length ?? 0;
-  const suspendedCount = usersData?.filter((u) => u.trustScore < 0).length ?? 0;
+  const totalUsers = usersData?.totalCount ?? 0;
+  const suspendedCount = usersData?.items?.filter((u) => u.trustScore < 0).length ?? 0;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
@@ -97,10 +100,19 @@ export const AdminUsersPage: React.FC = () => {
       {/* Full-Bleed Users Directory */}
       <main>
         <AdminUsersDirectory
-          users={usersData ?? []}
+          users={usersData?.items ?? []}
           isLoading={isLoadingUsers}
           onToggleSuspend={handleToggleSuspendUser}
           isTogglingSuspend={isTogglingSuspend}
+          page={page}
+          pageSize={pageSize}
+          totalCount={usersData?.totalCount ?? 0}
+          totalPages={usersData?.totalPages ?? 1}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setPageSize(sz);
+            setPage(1);
+          }}
         />
       </main>
     </div>

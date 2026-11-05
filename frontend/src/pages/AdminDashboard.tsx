@@ -59,29 +59,41 @@ export const AdminDashboard: React.FC = () => {
   }, []);
 
   // RTK Queries
+  const [verificationsPage, setVerificationsPage] = useState(1);
+  const [verificationsPageSize, setVerificationsPageSize] = useState(20);
+
+  const [bookingsPage, setBookingsPage] = useState(1);
+  const [bookingsPageSize, setBookingsPageSize] = useState(20);
+
+  const [usersPage, setUsersPage] = useState(1);
+  const [usersPageSize, setUsersPageSize] = useState(20);
+
+  const [payoutsPage, setPayoutsPage] = useState(1);
+  const [payoutsPageSize, setPayoutsPageSize] = useState(20);
+
   const {
     data: verificationsData,
     isLoading: isLoadingVerifications,
     refetch: refetchVerifications,
-  } = useGetAdminVerificationsQuery({});
+  } = useGetAdminVerificationsQuery({ page: verificationsPage, pageSize: verificationsPageSize });
 
   const {
     data: bookingsData,
     isLoading: isLoadingBookings,
     refetch: refetchBookings,
-  } = useGetAdminBookingsQuery({});
+  } = useGetAdminBookingsQuery({ page: bookingsPage, pageSize: bookingsPageSize });
 
   const {
     data: usersData,
     isLoading: isLoadingUsers,
     refetch: refetchUsers,
-  } = useGetAdminUsersQuery({});
+  } = useGetAdminUsersQuery({ page: usersPage, pageSize: usersPageSize });
 
   const {
     data: payoutsData,
     isLoading: isLoadingPayouts,
     refetch: refetchPayouts,
-  } = useGetAdminPayoutsQuery();
+  } = useGetAdminPayoutsQuery({ page: payoutsPage, pageSize: payoutsPageSize });
 
   const {
     data: misData,
@@ -185,8 +197,8 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const pendingVerificationsCount = verificationsData?.filter((v) => v.status === 'PendingReview').length ?? 0;
-  const pendingPayoutsCount = payoutsData?.filter((p) => p.status === 'Pending').length ?? 0;
+  const pendingVerificationsCount = verificationsData?.items?.filter((v) => v.status === 'PendingReview').length ?? verificationsData?.totalCount ?? 0;
+  const pendingPayoutsCount = payoutsData?.items?.filter((p) => p.status === 'Pending').length ?? payoutsData?.totalCount ?? 0;
 
   const tabs: {
     key: TabKey;
@@ -215,7 +227,7 @@ export const AdminDashboard: React.FC = () => {
         description: 'Escrow vault holds, booking lifecycle transitions and financial audit trail',
         icon: BanknotesIcon,
         shortcut: '2',
-        count: bookingsData?.length,
+        count: bookingsData?.totalCount,
         badgeTone: 'accent',
       },
       {
@@ -225,7 +237,7 @@ export const AdminDashboard: React.FC = () => {
         description: 'Seeker and companion account directory, trust score moderation and role controls',
         icon: UsersIcon,
         shortcut: '3',
-        count: usersData?.length,
+        count: usersData?.totalCount,
         badgeTone: 'accent',
       },
       {
@@ -454,12 +466,21 @@ export const AdminDashboard: React.FC = () => {
             className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminVerificationStudio
-              verifications={verificationsData ?? []}
+              verifications={verificationsData?.items ?? []}
               isLoading={isLoadingVerifications}
               onApprove={handleApproveVerification}
               onReject={handleRejectVerification}
               isApproving={isApproving}
               isRejecting={isRejecting}
+              page={verificationsPage}
+              pageSize={verificationsPageSize}
+              totalCount={verificationsData?.totalCount ?? 0}
+              totalPages={verificationsData?.totalPages ?? 1}
+              onPageChange={setVerificationsPage}
+              onPageSizeChange={(sz) => {
+                setVerificationsPageSize(sz);
+                setVerificationsPage(1);
+              }}
             />
           </section>
         )}
@@ -473,9 +494,18 @@ export const AdminDashboard: React.FC = () => {
             className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminBookingLedger
-              bookings={bookingsData ?? []}
+              bookings={bookingsData?.items ?? []}
               isLoading={isLoadingBookings}
               onRefresh={refetchBookings}
+              page={bookingsPage}
+              pageSize={bookingsPageSize}
+              totalCount={bookingsData?.totalCount ?? 0}
+              totalPages={bookingsData?.totalPages ?? 1}
+              onPageChange={setBookingsPage}
+              onPageSizeChange={(sz) => {
+                setBookingsPageSize(sz);
+                setBookingsPage(1);
+              }}
             />
           </section>
         )}
@@ -489,10 +519,19 @@ export const AdminDashboard: React.FC = () => {
             className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminUsersDirectory
-              users={usersData ?? []}
+              users={usersData?.items ?? []}
               isLoading={isLoadingUsers}
               onToggleSuspend={handleToggleSuspendUser}
               isTogglingSuspend={isTogglingSuspend}
+              page={usersPage}
+              pageSize={usersPageSize}
+              totalCount={usersData?.totalCount ?? 0}
+              totalPages={usersData?.totalPages ?? 1}
+              onPageChange={setUsersPage}
+              onPageSizeChange={(sz) => {
+                setUsersPageSize(sz);
+                setUsersPage(1);
+              }}
             />
           </section>
         )}
@@ -506,11 +545,20 @@ export const AdminDashboard: React.FC = () => {
             className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminPayoutHub
-              payouts={payoutsData ?? []}
+              payouts={payoutsData?.items ?? []}
               isLoading={isLoadingPayouts}
               onProcessPayout={handleProcessPayout}
               isProcessing={isProcessingPayout}
               onRefresh={refetchPayouts}
+              page={payoutsPage}
+              pageSize={payoutsPageSize}
+              totalCount={payoutsData?.totalCount ?? 0}
+              totalPages={payoutsData?.totalPages ?? 1}
+              onPageChange={setPayoutsPage}
+              onPageSizeChange={(sz) => {
+                setPayoutsPageSize(sz);
+                setPayoutsPage(1);
+              }}
             />
           </section>
         )}

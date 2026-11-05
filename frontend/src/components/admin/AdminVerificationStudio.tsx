@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/outline';
 import type { AdminVerificationItem } from '../../store/adminApi';
 import { formatRate } from '../../utils/currency';
+import { Pagination } from '../ui/Pagination';
 
 interface AdminVerificationStudioProps {
   verifications: AdminVerificationItem[];
@@ -19,6 +20,12 @@ interface AdminVerificationStudioProps {
   onReject: (profileId: string, reason: string) => Promise<void>;
   isApproving: boolean;
   isRejecting: boolean;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 const REJECTION_TEMPLATES = [
@@ -36,6 +43,12 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
   onReject,
   isApproving,
   isRejecting,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }) => {
   const [filter, setFilter] = useState<'All' | 'PendingReview' | 'Approved' | 'Rejected'>('PendingReview');
   const [search, setSearch] = useState('');
@@ -43,6 +56,29 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [activeImagePreview, setActiveImagePreview] = useState<{ url: string; label: string } | null>(null);
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(20);
+
+  const isServerPaged = Boolean(onPageChange);
+  const activePage = isServerPaged ? (page ?? 1) : localPage;
+  const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setLocalPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (ps: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(ps);
+    } else {
+      setLocalPageSize(ps);
+      setLocalPage(1);
+    }
+  };
 
   const normalizeStatus = (status: any): 'Draft' | 'PendingReview' | 'Approved' | 'Rejected' | 'Suspended' => {
     if (status === 1 || status === '1' || status === 'Draft') return 'Draft';
@@ -66,6 +102,15 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
       item.specialties?.some((s) => s.toLowerCase().includes(q));
     return matchesFilter && matchesSearch;
   });
+
+  const displayedItems = isServerPaged
+    ? filteredItems
+    : filteredItems.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+
+  const activeTotalCount = isServerPaged ? (totalCount ?? filteredItems.length) : filteredItems.length;
+  const activeTotalPages = isServerPaged
+    ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
+    : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const pendingCount = verifications.filter((v) => normalizeStatus(v.status) === 'PendingReview').length;
   const approvedCount = verifications.filter((v) => normalizeStatus(v.status) === 'Approved').length;
@@ -190,7 +235,7 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredItems.map((item) => {
+          {displayedItems.map((item) => {
             const galleryImages =
               item.profileImages && item.profileImages.length > 0
                 ? item.profileImages
@@ -377,6 +422,18 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
           })}
         </div>
       )}
+
+      <div className="mt-4 rounded-2xl overflow-hidden border border-border/80 bg-card shadow-2xs">
+        <Pagination
+          currentPage={activePage}
+          totalPages={activeTotalPages}
+          totalCount={activeTotalCount}
+          pageSize={activePageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isLoading}
+        />
+      </div>
 
       {/* Side-by-Side KYC & Gallery Modal */}
       {selectedItem && !showRejectModal && (

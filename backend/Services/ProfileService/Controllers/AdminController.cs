@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Cue.Common;
 using Cue.Domain;
 using Cue.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -51,11 +52,11 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     }
 
     [HttpGet("verifications")]
-    [ProducesResponseType(typeof(IReadOnlyList<AdminVerificationItemResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<AdminVerificationItemResponse>>> GetVerifications(
+    [ProducesResponseType(typeof(PagedResult<AdminVerificationItemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AdminVerificationItemResponse>>> GetVerifications(
         [FromQuery] VerificationStatus? status,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 200,
+        [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
@@ -72,10 +73,14 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             query = query.Where(x => x.p.Status == status.Value);
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
+
         var items = await query
             .OrderByDescending(x => x.p.CreatedAt)
-            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
-            .Take(Math.Clamp(pageSize, 1, 500))
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .Select(x => new AdminVerificationItemResponse(
                 x.p.Id,
                 x.u.Id,
@@ -97,7 +102,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             ))
             .ToListAsync(cancellationToken);
 
-        return Ok(items);
+        return Ok(PagedResult<AdminVerificationItemResponse>.Create(items, totalCount, safePage, safePageSize));
     }
 
     [HttpPost("verifications/{profileId:guid}/approve")]
@@ -160,11 +165,11 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     }
 
     [HttpGet("kyc-verifications")]
-    [ProducesResponseType(typeof(IReadOnlyList<AdminKycVerificationItemResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<AdminKycVerificationItemResponse>>> GetKycVerifications(
+    [ProducesResponseType(typeof(PagedResult<AdminKycVerificationItemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AdminKycVerificationItemResponse>>> GetKycVerifications(
         [FromQuery] KycStatus? status,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 200,
+        [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
@@ -181,10 +186,14 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             query = query.Where(x => x.k.Status == status.Value);
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
+
         var items = await query
             .OrderByDescending(x => x.k.SubmittedAt)
-            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
-            .Take(Math.Clamp(pageSize, 1, 500))
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .Select(x => new AdminKycVerificationItemResponse(
                 x.k.Id,
                 x.u.Id,
@@ -204,7 +213,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             ))
             .ToListAsync(cancellationToken);
 
-        return Ok(items);
+        return Ok(PagedResult<AdminKycVerificationItemResponse>.Create(items, totalCount, safePage, safePageSize));
     }
 
     [HttpPost("kyc-verifications/{id:guid}/approve")]
@@ -267,11 +276,11 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     }
 
     [HttpGet("users")]
-    [ProducesResponseType(typeof(IReadOnlyList<AdminUserItemResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<AdminUserItemResponse>>> GetUsers(
+    [ProducesResponseType(typeof(PagedResult<AdminUserItemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AdminUserItemResponse>>> GetUsers(
         [FromQuery] string? search,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 200,
+        [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
@@ -284,10 +293,14 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             query = query.Where(u => u.FirstName.ToLower().Contains(s) || u.LastName.ToLower().Contains(s) || u.Email.ToLower().Contains(s));
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
+
         var users = await query
             .OrderByDescending(u => u.CreatedAt)
-            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
-            .Take(Math.Clamp(pageSize, 1, 500))
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .ToListAsync(cancellationToken);
 
         var userIds = users.Select(u => u.Id).ToList();
@@ -315,7 +328,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             );
         }).ToList();
 
-        return Ok(result);
+        return Ok(PagedResult<AdminUserItemResponse>.Create(result, totalCount, safePage, safePageSize));
     }
 
     [HttpGet("verifications/{profileId:guid}")]
@@ -359,11 +372,11 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
     }
 
     [HttpGet("bookings")]
-    [ProducesResponseType(typeof(IReadOnlyList<AdminBookingLedgerItemResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<AdminBookingLedgerItemResponse>>> GetBookings(
+    [ProducesResponseType(typeof(PagedResult<AdminBookingLedgerItemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AdminBookingLedgerItemResponse>>> GetBookings(
         [FromQuery] string? status,
         [FromQuery] int page = 1,
-        [FromQuery] int pageSize = 200,
+        [FromQuery] int pageSize = 20,
         CancellationToken cancellationToken = default)
     {
         if (!await IsAdminAsync(cancellationToken)) return Forbid();
@@ -374,10 +387,14 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             query = query.Where(o => o.Status == orderStatus);
         }
 
+        var totalCount = await query.CountAsync(cancellationToken);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
+
         var orders = await query
             .OrderByDescending(o => o.CreatedAt)
-            .Skip((Math.Max(1, page) - 1) * Math.Clamp(pageSize, 1, 500))
-            .Take(Math.Clamp(pageSize, 1, 500))
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .ToListAsync(cancellationToken);
 
         var userIds = orders.Select(o => o.SeekerId).Concat(orders.Select(o => o.ProviderId)).Distinct().ToList();
@@ -403,7 +420,7 @@ public sealed class AdminController(CueDbContext dbContext) : ControllerBase
             );
         }).ToList();
 
-        return Ok(result);
+        return Ok(PagedResult<AdminBookingLedgerItemResponse>.Create(result, totalCount, safePage, safePageSize));
     }
 
     [HttpPost("users/{userId:guid}/toggle-suspend")]

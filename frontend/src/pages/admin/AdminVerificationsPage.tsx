@@ -28,19 +28,25 @@ export const AdminVerificationsPage: React.FC = () => {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  const [companionPage, setCompanionPage] = useState(1);
+  const [companionPageSize, setCompanionPageSize] = useState(20);
+
+  const [kycPage, setKycPage] = useState(1);
+  const [kycPageSize, setKycPageSize] = useState(20);
+
   const {
     data: verificationsData,
     isLoading: isLoadingVerifications,
     refetch: refetchVerifications,
     isFetching: isFetchingVerifications,
-  } = useGetAdminVerificationsQuery({});
+  } = useGetAdminVerificationsQuery({ page: companionPage, pageSize: companionPageSize });
 
   const {
     data: kycData,
     isLoading: isLoadingKyc,
     refetch: refetchKyc,
     isFetching: isFetchingKyc,
-  } = useGetAdminKycVerificationsQuery();
+  } = useGetAdminKycVerificationsQuery({ page: kycPage, pageSize: kycPageSize });
 
   const [approveVerification, { isLoading: isApproving }] = useApproveVerificationMutation();
   const [rejectVerification, { isLoading: isRejecting }] = useRejectVerificationMutation();
@@ -88,8 +94,8 @@ export const AdminVerificationsPage: React.FC = () => {
     }
   };
 
-  const pendingCompanionCount = verificationsData?.filter((v) => v.status === 'PendingReview').length ?? 0;
-  const pendingKycCount = kycData?.filter((k) => k.status === 'PendingReview').length ?? 0;
+  const pendingCompanionCount = verificationsData?.items?.filter((v) => v.status === 'PendingReview').length ?? verificationsData?.totalCount ?? 0;
+  const pendingKycCount = kycData?.items?.filter((k) => k.status === 'PendingReview').length ?? kycData?.totalCount ?? 0;
   const isFetching = isFetchingVerifications || isFetchingKyc;
 
   return (
@@ -193,21 +199,39 @@ export const AdminVerificationsPage: React.FC = () => {
       <main>
         {activeQueue === 'companions' ? (
           <AdminVerificationStudio
-            verifications={verificationsData ?? []}
+            verifications={verificationsData?.items ?? []}
             isLoading={isLoadingVerifications}
             onApprove={handleApprove}
             onReject={handleReject}
             isApproving={isApproving}
             isRejecting={isRejecting}
+            page={companionPage}
+            pageSize={companionPageSize}
+            totalCount={verificationsData?.totalCount ?? 0}
+            totalPages={verificationsData?.totalPages ?? 1}
+            onPageChange={setCompanionPage}
+            onPageSizeChange={(sz) => {
+              setCompanionPageSize(sz);
+              setCompanionPage(1);
+            }}
           />
         ) : (
           <AdminKycVerificationStudio
-            kycItems={kycData ?? []}
+            kycItems={kycData?.items ?? []}
             isLoading={isLoadingKyc}
             onApprove={handleApproveKyc}
             onReject={handleRejectKyc}
             isApproving={isApprovingKyc}
             isRejecting={isRejectingKyc}
+            page={kycPage}
+            pageSize={kycPageSize}
+            totalCount={kycData?.totalCount ?? 0}
+            totalPages={kycData?.totalPages ?? 1}
+            onPageChange={setKycPage}
+            onPageSizeChange={(sz) => {
+              setKycPageSize(sz);
+              setKycPage(1);
+            }}
           />
         )}
       </main>

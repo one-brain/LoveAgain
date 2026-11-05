@@ -6,12 +6,19 @@ import {
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 import type { AdminUserItem } from '../../store/adminApi';
+import { Pagination } from '../ui/Pagination';
 
 interface AdminUsersDirectoryProps {
   users: AdminUserItem[];
   isLoading: boolean;
   onToggleSuspend: (userId: string) => Promise<void>;
   isTogglingSuspend: boolean;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 const isUserCompanion = (u: AdminUserItem) =>
@@ -28,10 +35,39 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   isLoading,
   onToggleSuspend,
   isTogglingSuspend,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }) => {
   const [roleFilter, setRoleFilter] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
   const [search, setSearch] = useState('');
   const [actionUserId, setActionUserId] = useState<string | null>(null);
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(20);
+
+  const isServerPaged = Boolean(onPageChange);
+  const activePage = isServerPaged ? (page ?? 1) : localPage;
+  const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setLocalPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (ps: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(ps);
+    } else {
+      setLocalPageSize(ps);
+      setLocalPage(1);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
     const suspended = isUserSuspended(user);
@@ -58,6 +94,15 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
 
     return matchesRole && matchesSearch;
   });
+
+  const displayedUsers = isServerPaged
+    ? filteredUsers
+    : filteredUsers.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+
+  const activeTotalCount = isServerPaged ? (totalCount ?? filteredUsers.length) : filteredUsers.length;
+  const activeTotalPages = isServerPaged
+    ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
+    : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const handleSuspendAction = async (userId: string) => {
     setActionUserId(userId);
@@ -172,7 +217,7 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredUsers.map((user) => {
+                {displayedUsers.map((user) => {
                   const isSuspended = user.trustScore < 0;
                   const isUserAnAdmin =
                     user.roles?.includes('Admin') || user.email?.toLowerCase() === 'admin@cue.local';
@@ -331,6 +376,16 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={activePage}
+          totalPages={activeTotalPages}
+          totalCount={activeTotalCount}
+          pageSize={activePageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isLoading}
+        />
       </div>
     </section>
   );

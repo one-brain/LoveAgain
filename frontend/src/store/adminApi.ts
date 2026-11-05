@@ -108,6 +108,35 @@ export interface PlatformMisReport {
   }[];
 }
 
+export interface PagedResult<T> {
+  items: T[];
+  totalCount: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+export function normalizePagedResult<T>(response: any, defaultPage = 1, defaultPageSize = 20): PagedResult<T> {
+  if (!response) {
+    return { items: [], totalCount: 0, page: defaultPage, pageSize: defaultPageSize, totalPages: 1 };
+  }
+  if (Array.isArray(response)) {
+    return {
+      items: response,
+      totalCount: response.length,
+      page: defaultPage,
+      pageSize: defaultPageSize,
+      totalPages: Math.max(1, Math.ceil(response.length / defaultPageSize)),
+    };
+  }
+  const items = Array.isArray(response.items) ? response.items : [];
+  const totalCount = typeof response.totalCount === 'number' ? response.totalCount : items.length;
+  const page = typeof response.page === 'number' ? response.page : defaultPage;
+  const pageSize = typeof response.pageSize === 'number' ? response.pageSize : defaultPageSize;
+  const totalPages = typeof response.totalPages === 'number' ? response.totalPages : Math.max(1, Math.ceil(totalCount / pageSize));
+  return { items, totalCount, page, pageSize, totalPages };
+}
+
 export interface AdminPayoutItem {
   id: string;
   userId: string;
@@ -128,11 +157,12 @@ export const adminApi = createApi({
   baseQuery: baseQueryWithReauth,
   tagTypes: ['Verifications', 'KycVerifications', 'AdminUsers', 'AdminMis', 'AdminPayouts', 'AdminBookings', 'Profile'],
   endpoints: (builder) => ({
-    getAdminKycVerifications: builder.query<AdminKycVerificationItem[], { status?: number } | void>({
+    getAdminKycVerifications: builder.query<PagedResult<AdminKycVerificationItem>, { status?: number; page?: number; pageSize?: number } | void>({
       query: (params) => ({
         url: '/admin/kyc-verifications',
         params: params || undefined,
       }),
+      transformResponse: (response: any) => normalizePagedResult<AdminKycVerificationItem>(response),
       providesTags: ['KycVerifications'],
     }),
 
@@ -180,12 +210,13 @@ export const adminApi = createApi({
       },
     }),
 
-    getAdminVerifications: builder.query<AdminVerificationItem[], { status?: string } | void>({
+    getAdminVerifications: builder.query<PagedResult<AdminVerificationItem>, { status?: string; page?: number; pageSize?: number } | void>({
       query: (params) => ({
         url: '/admin/verifications',
         params: params || undefined,
       }),
-      transformResponse: (response: any[]) => {
+      transformResponse: (response: any) => {
+        const paged = normalizePagedResult<AdminVerificationItem>(response);
         const STATUS_MAP: Record<string, AdminVerificationItem['status']> = {
           '1': 'Draft',
           '2': 'PendingReview',
@@ -198,10 +229,14 @@ export const adminApi = createApi({
           Rejected: 'Rejected',
           Suspended: 'Suspended',
         };
-        return (response || []).map((item) => ({
+        const mappedItems = paged.items.map((item) => ({
           ...item,
           status: STATUS_MAP[String(item.status)] || (item.status as any) || 'PendingReview',
         }));
+        return {
+          ...paged,
+          items: mappedItems,
+        };
       },
       providesTags: ['Verifications'],
     }),
@@ -250,11 +285,12 @@ export const adminApi = createApi({
       },
     }),
 
-    getAdminUsers: builder.query<AdminUserItem[], { search?: string }>({
+    getAdminUsers: builder.query<PagedResult<AdminUserItem>, { search?: string; page?: number; pageSize?: number } | void>({
       query: (params) => ({
         url: '/admin/users',
-        params,
+        params: params || undefined,
       }),
+      transformResponse: (response: any) => normalizePagedResult<AdminUserItem>(response),
       providesTags: ['AdminUsers'],
     }),
 
@@ -271,8 +307,12 @@ export const adminApi = createApi({
       providesTags: ['AdminMis'],
     }),
 
-    getAdminPayouts: builder.query<AdminPayoutItem[], void>({
-      query: () => '/payments/admin/payouts',
+    getAdminPayouts: builder.query<PagedResult<AdminPayoutItem>, { page?: number; pageSize?: number } | void>({
+      query: (params) => ({
+        url: '/payments/admin/payouts',
+        params: params || undefined,
+      }),
+      transformResponse: (response: any) => normalizePagedResult<AdminPayoutItem>(response),
       providesTags: ['AdminPayouts'],
     }),
 
@@ -285,19 +325,24 @@ export const adminApi = createApi({
       invalidatesTags: ['AdminPayouts', 'AdminMis'],
     }),
 
-    getAdminBookings: builder.query<AdminBookingLedgerItem[], { status?: string } | void>({
+    getAdminBookings: builder.query<PagedResult<AdminBookingLedgerItem>, { status?: string; page?: number; pageSize?: number } | void>({
       query: (params) => ({
         url: '/admin/bookings',
         params: params || {},
       }),
-      transformResponse: (response: (AdminBookingLedgerItem & { id?: string })[]) => {
-        return (response || []).map((item) => ({
+      transformResponse: (response: any) => {
+        const paged = normalizePagedResult<AdminBookingLedgerItem & { id?: string }>(response);
+        const mappedItems: AdminBookingLedgerItem[] = paged.items.map((item) => ({
           ...item,
           bookingId: item.bookingId || item.id || '',
           status: item.status || 'Pending',
           seekerName: item.seekerName || 'Seeker',
           providerName: item.providerName || 'Companion',
         }));
+        return {
+          ...paged,
+          items: mappedItems,
+        };
       },
       providesTags: ['AdminBookings'],
     }),

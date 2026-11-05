@@ -10,21 +10,57 @@ import {
 } from '@heroicons/react/24/outline';
 import type { AdminBookingLedgerItem } from '../../store/adminApi';
 import { formatINR } from '../../utils/currency';
+import { Pagination } from '../ui/Pagination';
 
 interface AdminBookingLedgerProps {
   bookings: AdminBookingLedgerItem[];
   isLoading: boolean;
   onRefresh: () => void;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
   bookings,
   isLoading,
   onRefresh,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }) => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(20);
+
+  const isServerPaged = Boolean(onPageChange);
+  const activePage = isServerPaged ? (page ?? 1) : localPage;
+  const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setLocalPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (ps: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(ps);
+    } else {
+      setLocalPageSize(ps);
+      setLocalPage(1);
+    }
+  };
 
   const isEscrowStatus = (status?: string) => {
     if (!status) return false;
@@ -56,6 +92,15 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
 
     return matchesFilter && matchesSearch;
   });
+
+  const displayedBookings = isServerPaged
+    ? filteredBookings
+    : filteredBookings.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+
+  const activeTotalCount = isServerPaged ? (totalCount ?? filteredBookings.length) : filteredBookings.length;
+  const activeTotalPages = isServerPaged
+    ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
+    : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const totalGmv = filteredBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
   const totalPlatformFee = filteredBookings.reduce((sum, b) => sum + (b.platformFee || 0), 0);
@@ -205,7 +250,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredBookings.map((b) => {
+                {displayedBookings.map((b) => {
                   const displayId = b.bookingId || b.id || 'N/A';
                   const isCompleted = b.status === 'Completed';
                   const isCancelled = b.status === 'Cancelled';
@@ -306,6 +351,16 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={activePage}
+          totalPages={activeTotalPages}
+          totalCount={activeTotalCount}
+          pageSize={activePageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isLoading}
+        />
       </div>
     </section>
   );

@@ -20,12 +20,15 @@ export const AdminPayoutsPage: React.FC = () => {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
   const {
     data: payoutsData,
     isLoading: isLoadingPayouts,
     refetch: refetchPayouts,
     isFetching,
-  } = useGetAdminPayoutsQuery();
+  } = useGetAdminPayoutsQuery({ page, pageSize });
 
   const [processPayout, { isLoading: isProcessingPayout }] = useProcessAdminPayoutMutation();
 
@@ -39,7 +42,7 @@ export const AdminPayoutsPage: React.FC = () => {
     }
   };
 
-  const pendingCount = payoutsData?.filter((p) => p.status === 'Pending').length ?? 0;
+  const pendingCount = payoutsData?.items?.filter((p) => p.status === 'Pending').length ?? payoutsData?.totalCount ?? 0;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
@@ -91,11 +94,20 @@ export const AdminPayoutsPage: React.FC = () => {
       {/* Full-Bleed Payout Hub */}
       <main>
         <AdminPayoutHub
-          payouts={payoutsData ?? []}
+          payouts={payoutsData?.items ?? []}
           isLoading={isLoadingPayouts}
           onProcessPayout={handleProcessPayout}
           isProcessing={isProcessingPayout}
           onRefresh={refetchPayouts}
+          page={page}
+          pageSize={pageSize}
+          totalCount={payoutsData?.totalCount ?? 0}
+          totalPages={payoutsData?.totalPages ?? 1}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setPageSize(sz);
+            setPage(1);
+          }}
         />
       </main>
     </div>

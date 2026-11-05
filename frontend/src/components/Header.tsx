@@ -50,11 +50,11 @@ const Header: React.FC = () => {
   const { data: myProfileData } = useGetMyProfileQuery(undefined, { skip: !isAuthenticated || isAdmin });
 
   // Admin telemetry for badge counters
-  const { data: adminVerificationsData } = useGetAdminVerificationsQuery({}, { skip: !isAuthenticated || !isAdmin });
-  const { data: adminPayoutsData } = useGetAdminPayoutsQuery(undefined, { skip: !isAuthenticated || !isAdmin });
+  const { data: adminVerificationsData } = useGetAdminVerificationsQuery({ status: 'PendingReview', pageSize: 1 }, { skip: !isAuthenticated || !isAdmin });
+  const { data: adminPayoutsData } = useGetAdminPayoutsQuery({ pageSize: 1 }, { skip: !isAuthenticated || !isAdmin });
 
-  const pendingAdminVerificationsCount = adminVerificationsData?.filter((v) => v.status === 'PendingReview').length ?? 0;
-  const pendingAdminPayoutsCount = adminPayoutsData?.filter((p) => p.status === 'Pending').length ?? 0;
+  const pendingAdminVerificationsCount = adminVerificationsData?.totalCount ?? 0;
+  const pendingAdminPayoutsCount = adminPayoutsData?.totalCount ?? 0;
 
   const companionStatus = myProfileData?.profile?.status;
 
