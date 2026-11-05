@@ -198,63 +198,63 @@ export const AdminDashboard: React.FC = () => {
     count?: number;
     badgeTone?: 'accent' | 'amber';
   }[] = [
-    {
-      key: 'verifications',
-      label: 'Companion Verifications',
-      shortLabel: 'Verifications',
-      description: 'KYC identity review, government ID inspection and public profile approval',
-      icon: ShieldCheckIcon,
-      shortcut: '1',
-      count: pendingVerificationsCount > 0 ? pendingVerificationsCount : undefined,
-      badgeTone: 'amber',
-    },
-    {
-      key: 'bookings',
-      label: 'Bookings & Escrow Ledger',
-      shortLabel: 'Bookings',
-      description: 'Escrow vault holds, booking lifecycle transitions and financial audit trail',
-      icon: BanknotesIcon,
-      shortcut: '2',
-      count: bookingsData?.length,
-      badgeTone: 'accent',
-    },
-    {
-      key: 'users',
-      label: 'Users Directory',
-      shortLabel: 'Users',
-      description: 'Seeker and companion account directory, trust score moderation and role controls',
-      icon: UsersIcon,
-      shortcut: '3',
-      count: usersData?.length,
-      badgeTone: 'accent',
-    },
-    {
-      key: 'payouts',
-      label: 'UPI Payout Settlements',
-      shortLabel: 'Payouts',
-      description: 'Companion banking disbursements, UPI transfers and settlement reconciliation',
-      icon: CurrencyRupeeIcon,
-      shortcut: '4',
-      count: pendingPayoutsCount > 0 ? pendingPayoutsCount : undefined,
-      badgeTone: 'amber',
-    },
-    {
-      key: 'mis',
-      label: 'Platform Performance & Analytics',
-      shortLabel: 'Analytics',
-      description: 'Gross Merchandise Value (GMV), 15% platform take, volume trends and specialty performance',
-      icon: ChartBarIcon,
-      shortcut: '5',
-    },
-    {
-      key: 'profile',
-      label: 'Admin Identity & Security',
-      shortLabel: 'Admin Security',
-      description: 'Administrator credentials, password rotation, contact information and audit session telemetry',
-      icon: UserCircleIcon,
-      shortcut: '6',
-    },
-  ];
+      {
+        key: 'verifications',
+        label: 'Verifications',
+        shortLabel: 'Verifications',
+        description: 'KYC identity review, government ID inspection and public profile approval',
+        icon: ShieldCheckIcon,
+        shortcut: '1',
+        count: pendingVerificationsCount > 0 ? pendingVerificationsCount : undefined,
+        badgeTone: 'amber',
+      },
+      {
+        key: 'bookings',
+        label: 'Bookings',
+        shortLabel: 'Bookings',
+        description: 'Escrow vault holds, booking lifecycle transitions and financial audit trail',
+        icon: BanknotesIcon,
+        shortcut: '2',
+        count: bookingsData?.length,
+        badgeTone: 'accent',
+      },
+      {
+        key: 'users',
+        label: 'Users',
+        shortLabel: 'Users',
+        description: 'Seeker and companion account directory, trust score moderation and role controls',
+        icon: UsersIcon,
+        shortcut: '3',
+        count: usersData?.length,
+        badgeTone: 'accent',
+      },
+      {
+        key: 'payouts',
+        label: 'Settlements',
+        shortLabel: 'Payouts',
+        description: 'Companion banking disbursements, UPI transfers and settlement reconciliation',
+        icon: CurrencyRupeeIcon,
+        shortcut: '4',
+        count: pendingPayoutsCount > 0 ? pendingPayoutsCount : undefined,
+        badgeTone: 'amber',
+      },
+      {
+        key: 'mis',
+        label: 'Analytics',
+        shortLabel: 'Analytics',
+        description: 'Gross Merchandise Value (GMV), 15% platform take, volume trends and specialty performance',
+        icon: ChartBarIcon,
+        shortcut: '5',
+      },
+      {
+        key: 'profile',
+        label: 'Admin Identity',
+        shortLabel: 'Admin Security',
+        description: 'Administrator credentials, password rotation, contact information and audit session telemetry',
+        icon: UserCircleIcon,
+        shortcut: '6',
+      },
+    ];
 
   const currentTabConfig = tabs.find((t) => t.key === activeTab) ?? tabs[0];
 
@@ -321,11 +321,10 @@ export const AdminDashboard: React.FC = () => {
         <div
           role="status"
           aria-live="polite"
-          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-xs sm:text-sm font-semibold transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${
-            toast.type === 'success'
-              ? 'bg-card border-emerald-500/40 text-foreground ring-2 ring-emerald-500/20'
-              : 'bg-card border-rose-500/40 text-foreground ring-2 ring-rose-500/20'
-          }`}
+          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-xs sm:text-sm font-semibold transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${toast.type === 'success'
+            ? 'bg-card border-emerald-500/40 text-foreground ring-2 ring-emerald-500/20'
+            : 'bg-card border-rose-500/40 text-foreground ring-2 ring-rose-500/20'
+            }`}
         >
           {toast.type === 'success' ? (
             <CheckCircleIcon className="w-5 h-5 text-emerald-500 shrink-0" />
@@ -368,20 +367,18 @@ export const AdminDashboard: React.FC = () => {
                 tabIndex={isActive ? 0 : -1}
                 type="button"
                 onClick={() => handleTabChange(tab.key)}
-                className={`group relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl whitespace-nowrap text-xs sm:text-sm font-semibold transition-all duration-150 shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent ${
-                  isActive
-                    ? 'bg-card text-foreground shadow-xs ring-1 ring-border/80 font-bold'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
-                }`}
+                className={`group relative flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl whitespace-nowrap text-xs sm:text-sm font-semibold transition-all duration-150 shrink-0 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent ${isActive
+                  ? 'bg-card text-foreground shadow-xs ring-1 ring-border/80 font-bold'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-card/40'
+                  }`}
               >
                 <Icon
-                  className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${
-                    isActive
-                      ? 'text-accent'
-                      : tab.badgeTone === 'amber' && tab.count
+                  className={`w-4 h-4 transition-transform duration-150 group-hover:scale-110 ${isActive
+                    ? 'text-accent'
+                    : tab.badgeTone === 'amber' && tab.count
                       ? 'text-accent-champagne'
                       : 'text-muted-foreground'
-                  }`}
+                    }`}
                 />
                 <span className="hidden sm:inline font-sans">{tab.label}</span>
                 <span className="sm:hidden font-sans">{tab.shortLabel}</span>
@@ -389,13 +386,12 @@ export const AdminDashboard: React.FC = () => {
                 {/* Counter Badges */}
                 {tab.count !== undefined && tab.count > 0 && (
                   <span
-                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold tabular-nums transition-colors ${
-                      isActive
-                        ? 'bg-accent/15 text-accent'
-                        : tab.badgeTone === 'amber'
+                    className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold tabular-nums transition-colors ${isActive
+                      ? 'bg-accent/15 text-accent'
+                      : tab.badgeTone === 'amber'
                         ? 'bg-accent-champagne/20 text-accent-champagne'
                         : 'bg-muted text-muted-foreground'
-                    }`}
+                      }`}
                   >
                     {tab.count}
                   </span>
@@ -404,11 +400,10 @@ export const AdminDashboard: React.FC = () => {
                 {/* Keyboard Shortcut Indicator Chip */}
                 <kbd
                   aria-hidden="true"
-                  className={`hidden xl:inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-mono tabular-nums border transition-opacity ${
-                    isActive
-                      ? 'bg-accent/10 border-accent/30 text-accent font-bold'
-                      : 'bg-muted/70 border-border/70 text-muted-foreground/80 opacity-60 group-hover:opacity-100'
-                  }`}
+                  className={`hidden xl:inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-mono tabular-nums border transition-opacity ${isActive
+                    ? 'bg-accent/10 border-accent/30 text-accent font-bold'
+                    : 'bg-muted/70 border-border/70 text-muted-foreground/80 opacity-60 group-hover:opacity-100'
+                    }`}
                 >
                   {tab.shortcut}
                 </kbd>
