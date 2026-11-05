@@ -2,6 +2,7 @@ using System.Text;
 using Cue.Application;
 using Cue.Application.Abstractions;
 using Cue.Infrastructure.Data;
+using Cue.Infrastructure.Email;
 using Cue.Infrastructure.Messaging;
 using Cue.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -20,6 +21,7 @@ builder.Services.AddMemoryCache();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddCueApplication();
+builder.Services.AddMailjetEmail();
 builder.Services.AddDbContext<CueDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("CueDatabase"))
         .UseSnakeCaseNamingConvention());

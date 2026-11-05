@@ -23,6 +23,7 @@ public sealed class CueDbContext(DbContextOptions<CueDbContext> options) : DbCon
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<TrustEvent> TrustEvents => Set<TrustEvent>();
     public DbSet<UserKycDocument> UserKycDocuments => Set<UserKycDocument>();
+    public DbSet<VerificationOtp> VerificationOtps => Set<VerificationOtp>();
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {

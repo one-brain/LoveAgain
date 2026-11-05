@@ -11,6 +11,7 @@
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Application\Cue.Application.csproj" />
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Infrastructure.Messaging\Cue.Infrastructure.Messaging.csproj" />
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Infrastructure.Data\Cue.Infrastructure.Data.csproj" />
+    <ProjectReference Include="..\..\..\shared\Libraries\Cue.Infrastructure.Email\Cue.Infrastructure.Email.csproj" />
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Infrastructure.Storage\Cue.Infrastructure.Storage.csproj" />
     <ProjectReference Include="..\..\..\shared\Libraries\Cue.Common\Cue.Common.csproj" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.0" />

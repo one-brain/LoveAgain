@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Cue.Domain;
 using Cue.Infrastructure.Data;
+using Cue.Infrastructure.Email;
 using Cue.Infrastructure.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +12,12 @@ namespace ProfileService.Controllers;
 
 [ApiController]
 [Route("api/v1/profiles")]
-public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobStorage, IMemoryCache cache, IHostEnvironment environment) : ControllerBase
+public sealed class ProfileController(
+    CueDbContext dbContext,
+    IBlobStorage blobStorage,
+    IMemoryCache cache,
+    IHostEnvironment environment,
+    IEmailSender emailSender) : ControllerBase
 {
     private static UserProfileResponse MapUserProfile(User user) => new(
         user.Id,
@@ -266,15 +272,102 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             return NotFound(new { error = "User profile not found." });
         }
 
+        var normalizedEmail = user.Email.Trim().ToLowerInvariant();
+
+        // Invalidate prior active OTPs for this user and email
+        var priorOtps = await dbContext.VerificationOtps
+            .Where(o => o.Target == normalizedEmail && o.Purpose == OtpPurposes.EmailVerification && o.UsedAt == null)
+            .ToListAsync(cancellationToken);
+        foreach (var old in priorOtps)
+        {
+            old.Invalidate();
+        }
+
         var otp = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 999999).ToString("D6");
+        var expiresAt = DateTime.UtcNow.AddMinutes(10);
+
+        var verificationOtp = new VerificationOtp(
+            user.Id,
+            normalizedEmail,
+            otp,
+            OtpPurposes.EmailVerification,
+            expiresAt);
+
+        dbContext.VerificationOtps.Add(verificationOtp);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         var cacheKey = $"profile_email_otp_{user.Id}";
-        cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
-        Console.WriteLine($"[EMAIL-OTP] Generated OTP for user {user.Email}: {otp}");
+        cache.Set(cacheKey, otp, TimeSpan.FromMinutes(10));
+        Console.WriteLine($"[EMAIL-OTP] Generated and saved OTP for user {user.Email}: {otp}");
+
+        // Send email via Mailjet
+        try
+        {
+            var subject = $"{otp} is your Cue verification code";
+            var textBody = $"""
+                Hi {user.FirstName},
+
+                Your Cue email verification code is: {otp}
+
+                This code will expire in 10 minutes.
+
+                If you did not request this verification code, you can safely ignore this email.
+
+                — The Cue Team
+                """;
+
+            var htmlBody = $"""
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="utf-8">
+                  <title>Cue Verification Code</title>
+                </head>
+                <body style="margin: 0; padding: 0; background-color: #FAF7F2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1c1917;">
+                  <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e7e5e4; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                    <tr>
+                      <td style="padding: 32px 40px; background-color: #881337; text-align: left;">
+                        <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #FAF7F2; letter-spacing: -0.5px;">Cue</h1>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 40px;">
+                        <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #1c1917;">Confirm your email address</h2>
+                        <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5; color: #44403c;">
+                          Hi {user.FirstName},<br><br>
+                          Use the one-time verification code below to verify your email address. This code is valid for <strong>10 minutes</strong>.
+                        </p>
+                        <div style="background-color: #FAF7F2; border: 1px solid #e7e5e4; border-radius: 8px; padding: 24px; text-align: center; margin: 24px 0;">
+                          <span style="font-family: 'JetBrains Mono', monospace, Courier; font-size: 36px; font-weight: 700; letter-spacing: 8px; color: #881337; display: inline-block;">
+                            {otp}
+                          </span>
+                        </div>
+                        <p style="margin: 24px 0 0; font-size: 13px; line-height: 1.5; color: #78716c;">
+                          If you did not request this verification code, please ignore this email or contact support if you suspect unauthorized activity.
+                        </p>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td style="padding: 24px 40px; background-color: #FAF7F2; border-top: 1px solid #e7e5e4; text-align: center; font-size: 12px; color: #a8a29e;">
+                        &copy; {DateTime.UtcNow.Year} Cue. All rights reserved.
+                      </td>
+                    </tr>
+                  </table>
+                </body>
+                </html>
+                """;
+
+            await emailSender.SendAsync(new EmailMessage(user.Email, subject, textBody, htmlBody), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[EMAIL-OTP] Failed to send email to {user.Email}: {ex.Message}");
+        }
 
         return Ok(new
         {
             message = $"Verification code sent to {user.Email}",
-            expiresInSeconds = 300,
+            expiresInSeconds = 600,
             devOtp = environment.IsDevelopment() ? otp : null
         });
     }
@@ -300,19 +393,31 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             return BadRequest(new { error = "Verification OTP code is required." });
         }
 
-        var cacheKey = $"profile_email_otp_{user.Id}";
+        var normalizedEmail = user.Email.Trim().ToLowerInvariant();
+        var otpRecord = await dbContext.VerificationOtps
+            .Where(o => o.Target == normalizedEmail && o.Purpose == OtpPurposes.EmailVerification && o.UsedAt == null)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
         bool isValid = false;
-        if (cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+        if (otpRecord != null)
+        {
+            isValid = otpRecord.Verify(request.Otp);
+        }
+
+        var cacheKey = $"profile_email_otp_{user.Id}";
+        if (!isValid && cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
         {
             isValid = true;
-            cache.Remove(cacheKey);
         }
 
         if (!isValid)
         {
+            await dbContext.SaveChangesAsync(cancellationToken);
             return BadRequest(new { error = "Invalid or expired verification code." });
         }
 
+        cache.Remove(cacheKey);
         user.VerifyEmail();
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -338,10 +443,33 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             return BadRequest(new { error = "Please provide and save your mobile phone number first." });
         }
 
+        var normalizedPhone = user.Phone.Trim();
+
+        // Invalidate prior active OTPs
+        var priorOtps = await dbContext.VerificationOtps
+            .Where(o => o.Target == normalizedPhone.ToLowerInvariant() && o.Purpose == OtpPurposes.PhoneVerification && o.UsedAt == null)
+            .ToListAsync(cancellationToken);
+        foreach (var old in priorOtps)
+        {
+            old.Invalidate();
+        }
+
         var otp = System.Security.Cryptography.RandomNumberGenerator.GetInt32(100000, 999999).ToString("D6");
+        var expiresAt = DateTime.UtcNow.AddMinutes(5);
+
+        var verificationOtp = new VerificationOtp(
+            user.Id,
+            normalizedPhone,
+            otp,
+            OtpPurposes.PhoneVerification,
+            expiresAt);
+
+        dbContext.VerificationOtps.Add(verificationOtp);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
         var cacheKey = $"profile_phone_otp_{user.Id}";
         cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
-        Console.WriteLine($"[PHONE-OTP] Generated OTP for phone {user.Phone}: {otp}");
+        Console.WriteLine($"[PHONE-OTP] Generated and saved OTP for phone {user.Phone}: {otp}");
 
         return Ok(new
         {
@@ -372,19 +500,31 @@ public sealed class ProfileController(CueDbContext dbContext, IBlobStorage blobS
             return BadRequest(new { error = "Verification OTP code is required." });
         }
 
-        var cacheKey = $"profile_phone_otp_{user.Id}";
+        var normalizedPhone = (user.Phone ?? string.Empty).Trim().ToLowerInvariant();
+        var otpRecord = await dbContext.VerificationOtps
+            .Where(o => o.Target == normalizedPhone && o.Purpose == OtpPurposes.PhoneVerification && o.UsedAt == null)
+            .OrderByDescending(o => o.CreatedAt)
+            .FirstOrDefaultAsync(cancellationToken);
+
         bool isValid = false;
-        if (cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+        if (otpRecord != null)
+        {
+            isValid = otpRecord.Verify(request.Otp);
+        }
+
+        var cacheKey = $"profile_phone_otp_{user.Id}";
+        if (!isValid && cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
         {
             isValid = true;
-            cache.Remove(cacheKey);
         }
 
         if (!isValid)
         {
+            await dbContext.SaveChangesAsync(cancellationToken);
             return BadRequest(new { error = "Invalid or expired SMS verification code." });
         }
 
+        cache.Remove(cacheKey);
         user.VerifyPhone();
         await dbContext.SaveChangesAsync(cancellationToken);
 
