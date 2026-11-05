@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   MagnifyingGlassIcon,
   EyeIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import type { AdminUserItem, AdminUserStats } from '../../store/adminApi';
+import { useGetAdminUserStatsQuery, type AdminUserItem, type AdminUserStats } from '../../store/adminApi';
 import { Pagination } from '../ui/Pagination';
 
 interface AdminUsersDirectoryProps {
@@ -58,12 +58,43 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   const [localPage, setLocalPage] = useState(1);
   const [localPageSize, setLocalPageSize] = useState(20);
 
+  // Self-sufficient stats fetch if parent doesn't provide them
+  const { data: queryStats } = useGetAdminUserStatsQuery(undefined, {
+    skip: Boolean(stats),
+  });
+  const effectiveStats = stats || queryStats;
+
   const activeRoleFilter = roleFilter ?? localRoleFilter;
   const activeSearch = search !== undefined ? search : localSearch;
 
   const isServerPaged = Boolean(onPageChange);
+  const isServerFiltered = Boolean(onRoleFilterChange);
   const activePage = isServerPaged ? (page ?? 1) : localPage;
   const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  // Stable counts cache to prevent flickers during tab transitions
+  const [cachedCounts, setCachedCounts] = useState<{
+    All?: number;
+    Companions?: number;
+    Clients?: number;
+    Suspended?: number;
+  }>({});
+
+  useEffect(() => {
+    if (effectiveStats) {
+      setCachedCounts({
+        All: effectiveStats.total,
+        Companions: effectiveStats.companions,
+        Clients: effectiveStats.clients,
+        Suspended: effectiveStats.suspended,
+      });
+    } else if (isServerFiltered && totalCount !== undefined) {
+      setCachedCounts((prev) => ({
+        ...prev,
+        [activeRoleFilter]: totalCount,
+      }));
+    }
+  }, [effectiveStats, isServerFiltered, activeRoleFilter, totalCount]);
 
   const handleRoleSelect = (newRole: 'All' | 'Companions' | 'Clients' | 'Suspended') => {
     if (onRoleFilterChange) {
@@ -102,7 +133,6 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     }
   };
 
-  const isServerFiltered = Boolean(onRoleFilterChange);
   const filteredUsers = users.filter((user) => {
     if (isServerFiltered) {
       if (!onSearchChange && activeSearch) {
@@ -150,11 +180,20 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
     : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
-  const pillCounts = {
-    All: stats?.total ?? users.length,
-    Companions: stats?.companions ?? users.filter(isUserCompanion).length,
-    Clients: stats?.clients ?? users.filter(isUserClient).length,
-    Suspended: stats?.suspended ?? users.filter(isUserSuspended).length,
+  const pillCounts: Record<'All' | 'Companions' | 'Clients' | 'Suspended', number | undefined> = {
+    All: effectiveStats?.total ?? cachedCounts.All ?? (isServerPaged || isServerFiltered ? undefined : users.length),
+    Companions:
+      effectiveStats?.companions ??
+      cachedCounts.Companions ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserCompanion).length),
+    Clients:
+      effectiveStats?.clients ??
+      cachedCounts.Clients ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserClient).length),
+    Suspended:
+      effectiveStats?.suspended ??
+      cachedCounts.Suspended ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserSuspended).length),
   };
 
   const handleSuspendAction = async (userId: string) => {
@@ -202,11 +241,11 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                 }`}
               >
                 <span>{pill.label}</span>
-                {pill.count !== undefined && (
+                {pill.count !== undefined ? (
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono tabular-nums leading-none ${
                       isActive
-                        ? 'bg-background/20 text-accent-foreground'
+                        ? 'bg-background/25 text-accent-foreground'
                         : pill.key === 'Suspended' && pill.count > 0
                         ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold'
                         : 'bg-muted text-muted-foreground'
@@ -214,6 +253,8 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                   >
                     {pill.count}
                   </span>
+                ) : (
+                  <span className="w-3.5 h-3 bg-muted/60 rounded-full animate-pulse inline-block" />
                 )}
               </button>
             );

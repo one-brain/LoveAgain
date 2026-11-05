@@ -247,7 +247,7 @@ export const AdminDashboard: React.FC = () => {
         description: 'Seeker and companion account directory, trust score moderation and role controls',
         icon: UsersIcon,
         shortcut: '3',
-        count: usersData?.totalCount,
+        count: userStats?.total ?? (usersRole === 'All' ? usersData?.totalCount : undefined),
         badgeTone: 'accent',
       },
       {
