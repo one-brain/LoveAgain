@@ -1,21 +1,19 @@
 import React from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 
 export const AdminIndexRedirect: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const tab = searchParams.get('tab');
+  const location = useLocation();
+  const path = location.pathname;
 
-  const routeMap: Record<string, string> = {
-    profile: '/admin/profile',
-    bookings: '/admin/bookings',
-    users: '/admin/users',
-    payouts: '/admin/payouts',
-    mis: '/admin/mis',
-    verifications: '/admin/verifications',
-  };
+  let tab = 'verifications';
+  if (path.includes('/bookings')) tab = 'bookings';
+  else if (path.includes('/users')) tab = 'users';
+  else if (path.includes('/payouts')) tab = 'payouts';
+  else if (path.includes('/mis')) tab = 'mis';
+  else if (path.includes('/profile')) tab = 'profile';
+  else if (path.includes('/verifications')) tab = 'verifications';
 
-  const target = tab && routeMap[tab] ? routeMap[tab] : '/admin/verifications';
-  return <Navigate to={target} replace />;
+  return <Navigate to={`/admin?tab=${tab}`} replace />;
 };
 
 export default AdminIndexRedirect;

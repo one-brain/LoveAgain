@@ -69,20 +69,22 @@ export const AdminKpiStrip: React.FC<AdminKpiStripProps> = ({
             key={kpi.id}
             className={`p-4 sm:p-5 rounded-2xl bg-card border transition-all shadow-2xs hover:shadow-xs relative overflow-hidden group ${
               isAccent
-                ? 'border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60'
+                ? 'border-accent/40 bg-accent/5 hover:border-accent/60'
+                : isWarning
+                ? 'border-accent-champagne/40 bg-accent-champagne/5 hover:border-accent-champagne/60'
                 : 'border-border/80 hover:border-border'
             }`}
           >
             <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate font-sans">
                 {kpi.title}
               </span>
               <div
                 className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
                   isAccent
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                    ? 'bg-accent/15 text-accent'
                     : isWarning
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                    ? 'bg-accent-champagne/15 text-accent-champagne'
                     : isSuccess
                     ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
                     : 'bg-muted text-muted-foreground'
@@ -97,9 +99,11 @@ export const AdminKpiStrip: React.FC<AdminKpiStripProps> = ({
                 <div className="h-7 w-24 bg-muted/60 animate-pulse rounded-md" />
               ) : (
                 <span
-                  className={`text-xl sm:text-2xl font-black font-mono tracking-tight tabular-nums ${
+                  className={`text-xl sm:text-2xl font-bold font-mono tracking-tight tabular-nums ${
                     isAccent
-                      ? 'text-amber-600 dark:text-amber-400'
+                      ? 'text-accent'
+                      : isWarning
+                      ? 'text-accent-champagne'
                       : 'text-foreground'
                   }`}
                 >
@@ -109,13 +113,15 @@ export const AdminKpiStrip: React.FC<AdminKpiStripProps> = ({
             </div>
 
             <div className="flex items-center justify-between gap-2 mt-1.5">
-              <span className="text-[11px] text-muted-foreground font-medium truncate">
+              <span className="text-[11px] text-muted-foreground font-medium truncate font-sans">
                 {kpi.subtitle}
               </span>
               <span
-                className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider font-mono ${
                   isAccent
-                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                    ? 'bg-accent/15 text-accent'
+                    : isWarning
+                    ? 'bg-accent-champagne/20 text-accent-champagne'
                     : isSuccess
                     ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
                     : 'bg-muted text-muted-foreground'

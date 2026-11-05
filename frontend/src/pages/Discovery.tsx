@@ -389,10 +389,34 @@ const Discovery: React.FC = () => {
     return count;
   }, [genderFilter, selectedCity, userLocation, minRate, maxRate, sortBy]);
 
+  const isAdmin = Boolean(
+    isAuthenticated && (user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local')
+  );
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
+      {/* Administrator Context Continuity Ribbon */}
+      {isAdmin && (
+        <aside aria-label="Administrator Preview Ribbon" className="bg-gradient-to-r from-accent/90 via-accent to-accent-hover text-white text-xs py-2 px-4 shadow-sm border-b border-accent/40 sticky top-16 z-30 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-medium">
+              <span className="w-2 h-2 rounded-full bg-accent-champagne animate-pulse shrink-0" />
+              <span className="font-bold text-accent-champagne font-mono uppercase tracking-wider text-[11px]">Administrator Preview</span>
+              <span className="hidden sm:inline text-white/80">• Browsing live public directory as guest seeker</span>
+            </div>
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 shrink-0"
+            >
+              <ShieldCheckIcon className="w-3.5 h-3.5 text-accent-champagne" />
+              <span>Return to Dashboard &rarr;</span>
+            </Link>
+          </div>
+        </aside>
+      )}
+
       {/* Top Header & Search Bar */}
-      <section className="bg-card border-b border-border sticky top-16 z-20 backdrop-blur-md bg-card/95 transition-all shadow-2xs">
+      <section className={`bg-card border-b border-border sticky ${isAdmin ? 'top-25' : 'top-16'} z-20 backdrop-blur-md bg-card/95 transition-all shadow-2xs`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
           {/* Main Controls Row */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">

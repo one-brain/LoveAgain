@@ -18,9 +18,6 @@ import {
   ArrowRightOnRectangleIcon,
   BanknotesIcon,
   ShieldCheckIcon,
-  UsersIcon,
-  CurrencyRupeeIcon,
-  ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { ChevronDownIcon, CheckIcon } from '@heroicons/react/20/solid';
 import { useGetWalletBalanceQuery } from '../store/paymentApi';
@@ -45,10 +42,8 @@ const Header: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [themeDropdownOpen, setThemeDropdownOpen] = useState(false);
-  const [opsDropdownOpen, setOpsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const themeDropdownRef = useRef<HTMLDivElement>(null);
-  const opsDropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync profile data from REST API whenever authenticated
   const { data: seekerProfileData } = useGetSeekerProfileQuery(undefined, { skip: !isAuthenticated });
@@ -60,17 +55,6 @@ const Header: React.FC = () => {
 
   const pendingAdminVerificationsCount = adminVerificationsData?.filter((v) => v.status === 'PendingReview').length ?? 0;
   const pendingAdminPayoutsCount = adminPayoutsData?.filter((p) => p.status === 'Pending').length ?? 0;
-
-  const currentAdminSection = useMemo(() => {
-    const p = location.pathname;
-    if (p.startsWith('/admin/verifications')) return { key: 'verifications', label: 'Guest Verifications' };
-    if (p.startsWith('/admin/bookings')) return { key: 'bookings', label: 'Bookings & Escrow' };
-    if (p.startsWith('/admin/users')) return { key: 'users', label: 'Users Directory' };
-    if (p.startsWith('/admin/payouts')) return { key: 'payouts', label: 'UPI Payouts' };
-    if (p.startsWith('/admin/mis')) return { key: 'mis', label: 'MIS Analytics' };
-    if (p.startsWith('/admin/profile')) return { key: 'profile', label: 'Admin Security' };
-    return { key: 'verifications', label: 'Back-Office Operations' };
-  }, [location.pathname]);
 
   const companionStatus = myProfileData?.profile?.status;
 
@@ -170,16 +154,12 @@ const Header: React.FC = () => {
       if (themeDropdownRef.current && !themeDropdownRef.current.contains(event.target as Node)) {
         setThemeDropdownOpen(false);
       }
-      if (opsDropdownRef.current && !opsDropdownRef.current.contains(event.target as Node)) {
-        setOpsDropdownOpen(false);
-      }
     };
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         setUserDropdownOpen(false);
         setThemeDropdownOpen(false);
         setMobileMenuOpen(false);
-        setOpsDropdownOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -195,7 +175,6 @@ const Header: React.FC = () => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
     setThemeDropdownOpen(false);
-    setOpsDropdownOpen(false);
   }, [location.pathname, location.search]);
 
   const cycleTheme = () => {
@@ -259,16 +238,16 @@ const Header: React.FC = () => {
         <div className="flex h-18 items-center justify-between">
           {/* Logo & Brand */}
           <div className="flex items-center gap-3">
-            <Link to={isInAdminPortal ? "/admin/verifications" : "/"} className="flex items-center gap-3 group">
-              <div className={`w-10 h-10 rounded-xl ${isInAdminPortal ? 'bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 shadow-amber-500/20' : 'bg-gradient-to-br from-accent via-accent-hover to-accent/90'} flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:scale-105 transition-transform duration-200`}>
-                {isInAdminPortal ? <ShieldCheckIcon className="w-6 h-6" /> : <SparklesIcon className="w-6 h-6" />}
+            <Link to={isInAdminPortal ? "/admin" : "/"} className="flex items-center gap-3 group">
+              <div className={`w-10 h-10 rounded-xl ${isInAdminPortal ? 'bg-gradient-to-br from-accent-champagne via-[#A47E3B] to-accent shadow-accent-champagne/20' : 'bg-gradient-to-br from-accent via-accent-hover to-accent/90'} flex items-center justify-center text-white font-bold text-xl shadow-sm group-hover:scale-105 transition-transform duration-200`}>
+                {isInAdminPortal ? <ShieldCheckIcon className="w-6 h-6 text-white" /> : <SparklesIcon className="w-6 h-6" />}
               </div>
               <div className="flex flex-col">
                 <span className="text-xl font-bold tracking-tight text-foreground group-hover:text-accent transition-colors font-serif flex items-center gap-1.5">
-                  Cue {isInAdminPortal && <span className="text-[11px] font-sans font-extrabold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30">Admin</span>}
+                  Cue {isInAdminPortal && <span className="text-[10px] font-sans font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-accent-champagne/20 text-accent-champagne border border-accent-champagne/40">Command</span>}
                 </span>
-                <span className="text-[11px] font-medium tracking-wide uppercase text-muted-foreground -mt-1 hidden sm:inline">
-                  {isInAdminPortal ? 'Back-Office Portal' : 'Companion Experiences'}
+                <span className="text-[11px] font-medium tracking-wide uppercase text-muted-foreground -mt-1 hidden sm:inline font-sans">
+                  {isInAdminPortal ? 'Back-Office Operations' : 'Companion Experiences'}
                 </span>
               </div>
             </Link>
@@ -277,162 +256,33 @@ const Header: React.FC = () => {
           {/* Desktop Navigation */}
           {isInAdminPortal ? (
             <nav className="hidden md:flex items-center gap-2">
-              {/* Operations Dropdown Switcher */}
-              <div className="relative" ref={opsDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setOpsDropdownOpen(!opsDropdownOpen)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
-                    location.pathname.startsWith('/admin')
-                      ? 'bg-amber-500/20 border border-amber-500/40 text-amber-500 shadow-xs'
-                      : 'border border-amber-500/20 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10'
-                  }`}
-                  aria-expanded={opsDropdownOpen}
-                  aria-haspopup="true"
-                >
-                  <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
-                  <span>{currentAdminSection.label}</span>
-                  {(pendingAdminVerificationsCount > 0 || pendingAdminPayoutsCount > 0) && (
-                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-                  )}
-                  <ChevronDownIcon
-                    className={`w-3.5 h-3.5 text-muted-foreground transition-transform duration-200 ${
-                      opsDropdownOpen ? 'rotate-180 text-amber-500' : ''
-                    }`}
-                  />
-                </button>
-
-                {opsDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-72 rounded-2xl bg-popover/95 text-popover-foreground border border-border/90 shadow-2xl backdrop-blur-md p-1.5 z-50 animate-in fade-in-0 zoom-in-95 duration-150">
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                      Switch Operation Workspace
-                    </div>
-                    <div className="space-y-0.5 mt-0.5">
-                      <Link
-                        to="/admin/verifications"
-                        onClick={() => setOpsDropdownOpen(false)}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                          location.pathname.startsWith('/admin/verifications') || location.pathname === '/admin'
-                            ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                            : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                            <ShieldCheckIcon className="w-3.5 h-3.5 text-amber-500" />
-                          </div>
-                          <span className="truncate">Companion Verifications</span>
-                        </div>
-                        {pendingAdminVerificationsCount > 0 && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 tabular-nums">
-                            {pendingAdminVerificationsCount}
-                          </span>
-                        )}
-                      </Link>
-
-                      <Link
-                        to="/admin/bookings"
-                        onClick={() => setOpsDropdownOpen(false)}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                          location.pathname.startsWith('/admin/bookings')
-                            ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                            : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                            <BanknotesIcon className="w-3.5 h-3.5 text-emerald-500" />
-                          </div>
-                          <span className="truncate">Bookings & Escrow</span>
-                        </div>
-                      </Link>
-
-                      <Link
-                        to="/admin/users"
-                        onClick={() => setOpsDropdownOpen(false)}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                          location.pathname.startsWith('/admin/users')
-                            ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                            : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                            <UsersIcon className="w-3.5 h-3.5 text-blue-500" />
-                          </div>
-                          <span className="truncate">Users Directory</span>
-                        </div>
-                      </Link>
-
-                      <Link
-                        to="/admin/payouts"
-                        onClick={() => setOpsDropdownOpen(false)}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                          location.pathname.startsWith('/admin/payouts')
-                            ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                            : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                            <CurrencyRupeeIcon className="w-3.5 h-3.5 text-amber-500" />
-                          </div>
-                          <span className="truncate">UPI Payout Settlements</span>
-                        </div>
-                        {pendingAdminPayoutsCount > 0 && (
-                          <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 tabular-nums">
-                            {pendingAdminPayoutsCount}
-                          </span>
-                        )}
-                      </Link>
-
-                      <Link
-                        to="/admin/mis"
-                        onClick={() => setOpsDropdownOpen(false)}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                          location.pathname.startsWith('/admin/mis')
-                            ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                            : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                            <ChartBarIcon className="w-3.5 h-3.5 text-purple-500" />
-                          </div>
-                          <span className="truncate">Platform Performance</span>
-                        </div>
-                      </Link>
-
-                      <Link
-                        to="/admin/profile"
-                        onClick={() => setOpsDropdownOpen(false)}
-                        className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                          location.pathname.startsWith('/admin/profile')
-                            ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                            : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-6 h-6 rounded-md flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                            <UserCircleIcon className="w-3.5 h-3.5 text-amber-500" />
-                          </div>
-                          <span className="truncate">Admin Identity & Security</span>
-                        </div>
-                      </Link>
-                    </div>
-                  </div>
-                )}
-              </div>
-
               <Link
-                to="/discovery"
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all ${
-                  isActive('/discovery')
-                    ? 'bg-accent/15 text-accent font-semibold shadow-xs'
+                to="/admin"
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ${
+                  location.pathname === '/admin'
+                    ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30 shadow-xs'
                     : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
                 }`}
               >
-                Browse Profiles
+                <ShieldCheckIcon className="w-4 h-4 text-accent-champagne" />
+                <span>Dashboard Overview</span>
+                {(pendingAdminVerificationsCount > 0 || pendingAdminPayoutsCount > 0) && (
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-accent-champagne/20 text-accent-champagne tabular-nums">
+                    {pendingAdminVerificationsCount + pendingAdminPayoutsCount}
+                  </span>
+                )}
+              </Link>
+
+              <Link
+                to="/discovery"
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                  isActive('/discovery')
+                    ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30 shadow-xs'
+                    : 'text-foreground/80 hover:text-foreground hover:bg-muted/60'
+                }`}
+              >
+                <SparklesIcon className="w-4 h-4 text-accent" />
+                <span>Guest Directory</span>
               </Link>
             </nav>
           ) : isAuthenticated && !isAdmin ? (
@@ -797,7 +647,7 @@ const Header: React.FC = () => {
                         {/* Admin Identity Card */}
                         <div className="p-3 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent rounded-xl mb-2 border border-amber-500/25">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-500 border border-amber-500/30 font-bold flex items-center justify-center text-xs tracking-wider shrink-0 font-sans">
+                            <div className="w-8 h-8 rounded-lg bg-accent-champagne/20 text-accent-champagne border border-accent-champagne/30 font-bold flex items-center justify-center text-xs tracking-wider shrink-0 font-sans">
                               {userInitials}
                             </div>
                             <div className="min-w-0 flex-1">
@@ -809,172 +659,58 @@ const Header: React.FC = () => {
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-amber-500/15">
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-extrabold uppercase tracking-wide bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30">
-                              <ShieldCheckIcon className="w-3 h-3 text-amber-500" />
-                              Super Admin
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">
-                              • Back-Office Operations Hub
+                          <div className="flex items-center gap-1.5 mt-2.5 pt-2 border-t border-accent-champagne/20">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wide bg-accent-champagne/20 text-accent-champagne border border-accent-champagne/40">
+                              <ShieldCheckIcon className="w-3 h-3 text-accent-champagne" />
+                              Platform Administrator
                             </span>
                           </div>
                         </div>
 
-                        {/* Back-Office Operations Group */}
-                        <div>
-                          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                            Back-Office Operations
-                          </div>
-                          <div className="space-y-0.5 mt-0.5">
-                            <Link
-                              to="/admin/verifications"
-                              onClick={() => setUserDropdownOpen(false)}
-                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                                location.pathname.startsWith('/admin/verifications') || location.pathname === '/admin'
-                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                                  <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
-                                </div>
-                                <div className="truncate">
-                                  <p className="truncate leading-tight">Guest Verifications</p>
-                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    KYC review & credential approval
-                                  </p>
-                                </div>
+                        {/* Direct Admin Quick Navigation */}
+                        <div className="space-y-0.5 mt-1">
+                          <Link
+                            to="/admin"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center justify-between px-2.5 py-2 rounded-xl text-xs text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium group"
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-accent-champagne/15 text-accent-champagne group-hover:bg-accent-champagne/25 transition-colors shrink-0">
+                                <ShieldCheckIcon className="w-4 h-4" />
                               </div>
-                              {pendingAdminVerificationsCount > 0 && (
-                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 tabular-nums">
-                                  {pendingAdminVerificationsCount}
-                                </span>
-                              )}
-                            </Link>
+                              <div className="truncate">
+                                <p className="truncate font-semibold leading-tight">Command Dashboard</p>
+                                <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                  Full back-office cockpit
+                                </p>
+                              </div>
+                            </div>
+                            {(pendingAdminVerificationsCount > 0 || pendingAdminPayoutsCount > 0) && (
+                              <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-accent-champagne/20 text-accent-champagne shrink-0 tabular-nums">
+                                {pendingAdminVerificationsCount + pendingAdminPayoutsCount}
+                              </span>
+                            )}
+                          </Link>
 
-                            <Link
-                              to="/admin/bookings"
-                              onClick={() => setUserDropdownOpen(false)}
-                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                                location.pathname.startsWith('/admin/bookings')
-                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                                  <BanknotesIcon className="w-4 h-4 text-emerald-500" />
-                                </div>
-                                <div className="truncate">
-                                  <p className="truncate leading-tight">Bookings & Escrow Ledger</p>
-                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    Escrow vault release & audit trail
-                                  </p>
-                                </div>
-                              </div>
-                            </Link>
-
-                            <Link
-                              to="/admin/users"
-                              onClick={() => setUserDropdownOpen(false)}
-                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                                location.pathname.startsWith('/admin/users')
-                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                                  <UsersIcon className="w-4 h-4 text-blue-500" />
-                                </div>
-                                <div className="truncate">
-                                  <p className="truncate leading-tight">Users Directory</p>
-                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    Trust scoring & account moderation
-                                  </p>
-                                </div>
-                              </div>
-                            </Link>
-
-                            <Link
-                              to="/admin/payouts"
-                              onClick={() => setUserDropdownOpen(false)}
-                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                                location.pathname.startsWith('/admin/payouts')
-                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                                  <CurrencyRupeeIcon className="w-4 h-4 text-amber-500" />
-                                </div>
-                                <div className="truncate">
-                                  <p className="truncate leading-tight">UPI Payout Settlements</p>
-                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    Guest banking disbursements
-                                  </p>
-                                </div>
-                              </div>
-                              {pendingAdminPayoutsCount > 0 && (
-                                <span className="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0 tabular-nums">
-                                  {pendingAdminPayoutsCount}
-                                </span>
-                              )}
-                            </Link>
-
-                            <Link
-                              to="/admin/mis"
-                              onClick={() => setUserDropdownOpen(false)}
-                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                                location.pathname.startsWith('/admin/mis')
-                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                                  <ChartBarIcon className="w-4 h-4 text-purple-500" />
-                                </div>
-                                <div className="truncate">
-                                  <p className="truncate leading-tight">Platform Performance</p>
-                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    Revenue & booking performance trends
-                                  </p>
-                                </div>
-                              </div>
-                            </Link>
-
-                            <Link
-                              to="/admin/profile"
-                              onClick={() => setUserDropdownOpen(false)}
-                              className={`flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition-colors group ${
-                                location.pathname.startsWith('/admin/profile')
-                                  ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
-                                  : 'text-foreground/90 hover:bg-muted hover:text-foreground font-medium'
-                              }`}
-                            >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
-                                  <UserCircleIcon className="w-4 h-4 text-amber-500" />
-                                </div>
-                                <div className="truncate">
-                                  <p className="truncate leading-tight">Admin Identity & Security</p>
-                                  <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                    Credentials, password & session
-                                  </p>
-                                </div>
-                              </div>
-                            </Link>
-                          </div>
+                          <Link
+                            to="/admin?tab=profile"
+                            onClick={() => setUserDropdownOpen(false)}
+                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-xs text-foreground/90 hover:bg-muted hover:text-foreground transition-colors font-medium group"
+                          >
+                            <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-muted/80 group-hover:bg-accent/20 group-hover:text-accent transition-colors shrink-0">
+                              <UserCircleIcon className="w-4 h-4 text-muted-foreground group-hover:text-accent" />
+                            </div>
+                            <div className="truncate">
+                              <p className="truncate leading-tight">Admin Credentials & Security</p>
+                              <p className="text-[10px] text-muted-foreground font-normal truncate">
+                                Password rotation & identity
+                              </p>
+                            </div>
+                          </Link>
                         </div>
 
-                        {/* Marketplace Section */}
+                        {/* Marketplace Preview Link */}
                         <div className="border-t border-border/60 pt-1.5 mt-2">
-                          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                            Public Marketplace
-                          </div>
                           <Link
                             to="/discovery"
                             onClick={() => setUserDropdownOpen(false)}
@@ -984,9 +720,9 @@ const Header: React.FC = () => {
                               <SparklesIcon className="w-4 h-4 text-accent" />
                             </div>
                             <div className="truncate">
-                              <p className="truncate leading-tight">Browse Public Profiles</p>
+                              <p className="truncate leading-tight">Guest Catalog Preview</p>
                               <p className="text-[10px] text-muted-foreground font-normal truncate">
-                                Explore guest directory
+                                Explore public member listings
                               </p>
                             </div>
                           </Link>
@@ -1113,113 +849,44 @@ const Header: React.FC = () => {
           {isInAdminPortal ? (
             <>
               <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                Back-Office Operations
+                Admin Command
               </div>
               <div className="space-y-1">
                 <Link
-                  to="/admin/verifications"
+                  to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    location.pathname.startsWith('/admin/verifications') || location.pathname === '/admin'
-                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 font-bold'
+                    location.pathname === '/admin'
+                      ? 'bg-accent/15 text-accent font-bold ring-1 ring-accent/30'
                       : 'text-foreground hover:bg-muted'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <ShieldCheckIcon className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span>Companion Verifications</span>
+                    <ShieldCheckIcon className="w-5 h-5 text-accent-champagne shrink-0" />
+                    <span>Command Dashboard</span>
                   </div>
-                  {pendingAdminVerificationsCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                      {pendingAdminVerificationsCount}
+                  {(pendingAdminVerificationsCount > 0 || pendingAdminPayoutsCount > 0) && (
+                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-accent-champagne/20 text-accent-champagne">
+                      {pendingAdminVerificationsCount + pendingAdminPayoutsCount}
                     </span>
                   )}
                 </Link>
 
                 <Link
-                  to="/admin/bookings"
+                  to="/admin?tab=profile"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    location.pathname.startsWith('/admin/bookings')
-                      ? 'bg-accent/15 text-accent font-bold'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
+                  className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors"
                 >
                   <div className="flex items-center gap-2.5">
-                    <BanknotesIcon className="w-5 h-5 text-emerald-500 shrink-0" />
-                    <span>Bookings & Escrow Ledger</span>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/admin/users"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    location.pathname.startsWith('/admin/users')
-                      ? 'bg-accent/15 text-accent font-bold'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <UsersIcon className="w-5 h-5 text-blue-500 shrink-0" />
-                    <span>Users Directory</span>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/admin/payouts"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    location.pathname.startsWith('/admin/payouts')
-                      ? 'bg-accent/15 text-accent font-bold'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <CurrencyRupeeIcon className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span>UPI Payout Settlements</span>
-                  </div>
-                  {pendingAdminPayoutsCount > 0 && (
-                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
-                      {pendingAdminPayoutsCount}
-                    </span>
-                  )}
-                </Link>
-
-                <Link
-                  to="/admin/mis"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    location.pathname.startsWith('/admin/mis')
-                      ? 'bg-accent/15 text-accent font-bold'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <ChartBarIcon className="w-5 h-5 text-purple-500 shrink-0" />
-                    <span>Platform Performance</span>
-                  </div>
-                </Link>
-
-                <Link
-                  to="/admin/profile"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-semibold transition-colors ${
-                    location.pathname.startsWith('/admin/profile')
-                      ? 'bg-accent/15 text-accent font-bold'
-                      : 'text-foreground hover:bg-muted'
-                  }`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <UserCircleIcon className="w-5 h-5 text-amber-500 shrink-0" />
-                    <span>Admin Identity & Security</span>
+                    <UserCircleIcon className="w-5 h-5 text-muted-foreground shrink-0" />
+                    <span>Admin Security</span>
                   </div>
                 </Link>
               </div>
 
               <div className="border-t border-border/60 pt-2 mt-2">
                 <div className="px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground font-mono">
-                  Public Marketplace
+                  Catalog
                 </div>
                 <Link
                   to="/discovery"
@@ -1227,7 +894,7 @@ const Header: React.FC = () => {
                   className="flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted"
                 >
                   <SparklesIcon className="w-5 h-5 text-accent shrink-0" />
-                  <span>Browse Public Profiles</span>
+                  <span>Guest Directory</span>
                 </Link>
               </div>
 

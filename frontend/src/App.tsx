@@ -28,14 +28,9 @@ const CommunityGuidelines = lazy(() => import('./pages/legal/CommunityGuidelines
 const CancellationPolicy = lazy(() => import('./pages/legal/CancellationPolicy'));
 const SupportContact = lazy(() => import('./pages/legal/SupportContact'));
 
-// Admin Multi-Page Architecture (Zero-Tabs Dedicated Workspaces)
+// Admin Multi-Page Architecture (Unified Modern Dashboard)
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const AdminIndexRedirect = lazy(() => import('./pages/admin/AdminIndexRedirect'));
-const AdminVerificationsPage = lazy(() => import('./pages/admin/AdminVerificationsPage'));
-const AdminBookingsPage = lazy(() => import('./pages/admin/AdminBookingsPage'));
-const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage'));
-const AdminPayoutsPage = lazy(() => import('./pages/admin/AdminPayoutsPage'));
-const AdminMisPage = lazy(() => import('./pages/admin/AdminMisPage'));
-const AdminProfilePage = lazy(() => import('./pages/admin/AdminProfilePage'));
 
 const RouteLoader: React.FC = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
@@ -284,13 +279,13 @@ function App() {
               </Suspense>
             }
           />
-          {/* Admin Dedicated Full-Bleed Workspaces (Zero-Tabs Multi-Page Architecture) */}
+          {/* Admin Command Dashboard Architecture */}
           <Route
             path="admin"
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminIndexRedirect />
+                  <AdminDashboard />
                 </AdminRoute>
               </Suspense>
             }
@@ -300,7 +295,7 @@ function App() {
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminVerificationsPage />
+                  <AdminIndexRedirect />
                 </AdminRoute>
               </Suspense>
             }
@@ -310,7 +305,7 @@ function App() {
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminBookingsPage />
+                  <AdminIndexRedirect />
                 </AdminRoute>
               </Suspense>
             }
@@ -320,7 +315,7 @@ function App() {
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminUsersPage />
+                  <AdminIndexRedirect />
                 </AdminRoute>
               </Suspense>
             }
@@ -330,7 +325,7 @@ function App() {
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminPayoutsPage />
+                  <AdminIndexRedirect />
                 </AdminRoute>
               </Suspense>
             }
@@ -340,7 +335,7 @@ function App() {
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminMisPage />
+                  <AdminIndexRedirect />
                 </AdminRoute>
               </Suspense>
             }
@@ -350,7 +345,7 @@ function App() {
             element={
               <Suspense fallback={<RouteLoader />}>
                 <AdminRoute>
-                  <AdminProfilePage />
+                  <AdminIndexRedirect />
                 </AdminRoute>
               </Suspense>
             }

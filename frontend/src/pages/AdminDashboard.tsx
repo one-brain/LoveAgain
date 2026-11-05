@@ -379,12 +379,12 @@ export const AdminDashboard: React.FC = () => {
                     isActive
                       ? 'text-accent'
                       : tab.badgeTone === 'amber' && tab.count
-                      ? 'text-amber-500'
+                      ? 'text-accent-champagne'
                       : 'text-muted-foreground'
                   }`}
                 />
-                <span className="hidden sm:inline">{tab.label}</span>
-                <span className="sm:hidden">{tab.shortLabel}</span>
+                <span className="hidden sm:inline font-sans">{tab.label}</span>
+                <span className="sm:hidden font-sans">{tab.shortLabel}</span>
 
                 {/* Counter Badges */}
                 {tab.count !== undefined && tab.count > 0 && (
@@ -393,7 +393,7 @@ export const AdminDashboard: React.FC = () => {
                       isActive
                         ? 'bg-accent/15 text-accent'
                         : tab.badgeTone === 'amber'
-                        ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                        ? 'bg-accent-champagne/20 text-accent-champagne'
                         : 'bg-muted text-muted-foreground'
                     }`}
                   >

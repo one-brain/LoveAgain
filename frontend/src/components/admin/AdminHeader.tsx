@@ -21,22 +21,22 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
     <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-6 border-b border-border/70">
       <div>
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold tracking-tight">
-            <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
-            <span>Cue Admin Workspace</span>
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent-champagne/15 text-accent-champagne text-xs font-bold tracking-tight border border-accent-champagne/30">
+            <ShieldCheckIcon className="w-4 h-4 text-accent-champagne" />
+            <span>Cue Back-Office Command</span>
           </div>
 
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
             <SignalIcon className="w-3 h-3 text-emerald-500 animate-pulse" />
-            <span>System Active • Real-time Updates</span>
+            <span className="font-mono">Live Telemetry</span>
           </div>
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-sans">
-          Platform Management & Operations
+        <h1 className="text-3xl sm:text-4xl font-normal tracking-tight text-foreground font-serif">
+          Back-Office Command Dashboard
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed">
-          Manage companion approvals, platform bookings, payouts, and user accounts in one place.
+        <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed font-sans">
+          Centralized supervision for companion trust verification, escrow settlement, and user safety governance.
         </p>
       </div>
 
