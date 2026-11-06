@@ -9,13 +9,13 @@ import {
   MessageBarBody,
 } from '@fluentui/react-components';
 import {
-  Sparkle16Regular,
   Mail20Regular,
   ArrowLeft16Regular,
   CheckmarkCircle24Regular,
   ShieldCheckmark16Regular,
 } from '@fluentui/react-icons';
 import { useForgotPasswordMutation } from '../store/authApi';
+import { BrandLogo } from '../components/ui/BrandLogo';
 
 const ForgotPassword: React.FC = () => {
   const navigate = useNavigate();
@@ -51,11 +51,9 @@ const ForgotPassword: React.FC = () => {
             className="inline-flex items-center gap-1.5 text-caption1 font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft16Regular />
-            <span>Back to Sign In</span>
+            <span>Sign in</span>
           </Link>
-          <div className="w-7 h-7 rounded-md bg-accent-light flex items-center justify-center text-brand-fg">
-            <Sparkle16Regular />
-          </div>
+          <BrandLogo size="sm" />
         </div>
 
         {isSubmitted ? (

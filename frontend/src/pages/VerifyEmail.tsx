@@ -6,12 +6,12 @@ import {
   Spinner,
 } from '@fluentui/react-components';
 import {
-  Sparkle16Regular,
   CheckmarkCircle24Regular,
   ErrorCircle24Regular,
   ShieldCheckmark16Regular,
 } from '@fluentui/react-icons';
 import { useVerifyEmailMutation } from '../store/authApi';
+import { BrandLogo } from '../components/ui/BrandLogo';
 
 const VerifyEmail: React.FC = () => {
   const navigate = useNavigate();
@@ -49,14 +49,9 @@ const VerifyEmail: React.FC = () => {
     <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12 bg-background">
       <Card className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm text-center space-y-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-semibold">
-              <Sparkle16Regular />
-            </div>
-            <span className="text-subtitle2 font-semibold text-foreground">Cue</span>
-          </div>
-          <div className="flex items-center gap-1 text-caption1 text-muted-foreground">
-            <ShieldCheckmark16Regular className="text-success" />
+          <BrandLogo size="sm" subtitle="Curated outings" />
+          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-trust-light border border-trust-border text-caption2 font-semibold text-trust">
+            <ShieldCheckmark16Regular className="shrink-0" />
             <span>Email Vetting</span>
           </div>
         </div>

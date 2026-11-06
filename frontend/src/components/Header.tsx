@@ -43,6 +43,7 @@ import {
   useGetAdminVerificationsQuery,
   useGetAdminPayoutsQuery,
 } from '../store/adminApi';
+import { BrandLogo } from './ui/BrandLogo';
 import { useTheme, type ThemePreference } from '../theme/ThemeProvider';
 
 const Header: React.FC = () => {
@@ -220,26 +221,11 @@ const Header: React.FC = () => {
             {/* Logo & Brand */}
             <div className="flex items-center gap-2.5">
               <Link to={isInAdminPortal ? '/admin' : '/'} className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-semibold">
-                  {isInAdminPortal ? (
-                    <ShieldCheckmark20Regular />
-                  ) : (
-                    <Sparkle20Regular />
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-subtitle1 font-semibold text-foreground">
-                    Cue
-                  </span>
-                  {isInAdminPortal && (
-                    <Badge appearance="tint" color="brand" size="small">
-                      Command
-                    </Badge>
-                  )}
-                  <span className="text-caption1 text-muted-foreground hidden sm:inline">
-                    {isInAdminPortal ? 'Back-office operations' : 'Curated outings'}
-                  </span>
-                </div>
+                <BrandLogo
+                  size="md"
+                  isAdmin={isInAdminPortal}
+                  subtitle={isInAdminPortal ? 'Back-office operations' : 'Curated outings'}
+                />
               </Link>
             </div>
 
@@ -591,7 +577,7 @@ const Header: React.FC = () => {
                 />
               }
             >
-              <span className="text-subtitle2 font-semibold text-foreground">Cue</span>
+              <BrandLogo size="sm" subtitle="Curated outings" isAdmin={isInAdminPortal} />
             </DrawerHeaderTitle>
           </DrawerHeader>
 

@@ -1,6 +1,6 @@
 /**
  * Pure date calculation utilities for legal age verification (18+)
- * and boundary calculations across LoveAgain platform.
+ * and boundary calculations across the Cue platform.
  */
 
 /**
@@ -47,4 +47,3 @@ export function getMaxLegalBirthdate(legalAge = 18, asOfDate: Date = new Date())
   const day = String(asOfDate.getUTCDate()).padStart(2, '0');
   return `${maxYear}-${month}-${day}`;
 }
-

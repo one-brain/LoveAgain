@@ -219,6 +219,8 @@ Cue adopts **Microsoft Fluent 2** ([fluent2.microsoft.design](https://fluent2.mi
 
 ## Product patterns
 
+- **Brand lockup & monogram:** Use `<BrandLogo />` (`frontend/src/components/ui/BrandLogo.tsx`, `/cue-mark.svg`) on web and `CueBrandLogo` (`mobile/lib/core/widgets/cue_brand_logo.dart`) on mobile. The emblem pairs a Cue Bordeaux (`#881337`) rounded shield with a white open `"C"` dialogue arc and a Warm Trust Gold (`#FBBF24`) verification spark + nexus dot, followed by the `Cue.` wordmark (with a gold period) and optional hairline-separated descriptor (`Curated outings` or `Command` in admin).
+- **Action button voice:** Keep CTA labels short, crisp, and domain-aligned (`Explore`, `Reserve`, `Fund escrow`, `Verify PIN`, `Release escrow`, `Become a host`, `Submit ID`, `Settle UPI`), with `white-space: nowrap` enforced so button titles never wrap onto two lines.
 - **Booking:** keep the single canonical two-step escrow booking flow (select slot → confirm & pay into escrow), rendered as a Fluent Dialog on web and a bottom sheet / screen on mobile.
 - **Escrow & wallet:** ledger rows use tabular numerals, right-aligned amounts, status Badges (success / warning / danger).
 - **Verification:** verified identity shows a gold trust Badge with a shield-checkmark icon.

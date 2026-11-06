@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
+import '../../core/widgets/cue_brand_logo.dart';
 import '../../models/provider.dart';
 import '../widgets/rating_stars.dart';
 import '../widgets/trust_score_badge.dart';
@@ -43,29 +44,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: FluentSpacing.s,
-                vertical: FluentSpacing.xs,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(FluentRadius.medium),
-              ),
-              child: Text(
-                'Cue',
-                style: FluentType.body2Strong.copyWith(color: Colors.white),
-              ),
-            ),
-            const SizedBox(width: FluentSpacing.mNudge),
-            Text(
-              'Companion',
-              style: FluentType.title3.copyWith(color: AppColors.textPrimary),
-            ),
-          ],
-        ),
+        title: const CueBrandLogo(subtitle: 'Companion'),
         actions: [
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
@@ -148,14 +127,14 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                       ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
-                              icon: const Icon(Icons.clear, size: 18),
-                              onPressed: () {
-                                _searchController.clear();
-                                ref
-                                    .read(discoveryFilterProvider.notifier)
-                                    .update((s) => s.copyWith(query: ''));
-                              },
-                            )
+                                icon: const Icon(Icons.clear, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  ref
+                                      .read(discoveryFilterProvider.notifier)
+                                      .update((s) => s.copyWith(query: ''));
+                                },
+                              )
                           : null,
                     ),
                   ),

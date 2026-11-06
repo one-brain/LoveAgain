@@ -9,7 +9,6 @@ import {
   MessageBarBody,
 } from '@fluentui/react-components';
 import {
-  Sparkle16Regular,
   LockClosed20Regular,
   CheckmarkCircle24Regular,
   ErrorCircle24Regular,
@@ -18,6 +17,7 @@ import {
   ShieldCheckmark16Regular,
 } from '@fluentui/react-icons';
 import { useResetPasswordMutation } from '../store/authApi';
+import { BrandLogo } from '../components/ui/BrandLogo';
 
 const ResetPassword: React.FC = () => {
   const navigate = useNavigate();
@@ -88,15 +88,10 @@ const ResetPassword: React.FC = () => {
     <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12 bg-background">
       <Card className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-semibold">
-              <Sparkle16Regular />
-            </div>
-            <span className="text-subtitle2 font-semibold text-foreground">Cue</span>
-          </div>
-          <div className="flex items-center gap-1 text-caption1 text-muted-foreground">
-            <ShieldCheckmark16Regular className="text-success" />
-            <span>Secure 256-bit</span>
+          <BrandLogo size="sm" subtitle="Curated outings" />
+          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-trust-light border border-trust-border text-caption2 font-semibold text-trust">
+            <ShieldCheckmark16Regular className="shrink-0" />
+            <span>256-bit Encrypted</span>
           </div>
         </div>
 

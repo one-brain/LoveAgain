@@ -1,9 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { ShieldCheckmark16Regular, Sparkle16Regular, Heart16Regular } from '@fluentui/react-icons';
+import { ShieldCheckmark16Regular, Heart16Regular } from '@fluentui/react-icons';
 import type { RootState } from '../store';
 import { openCookiePreferences } from './CookieConsentBanner';
+import { BrandLogo } from './ui/BrandLogo';
 
 const Footer: React.FC = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
@@ -14,21 +15,18 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-8 mb-10">
           {/* Brand info */}
-          <div className="col-span-2 md:col-span-1 space-y-3">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-semibold">
-                <Sparkle16Regular />
-              </div>
-              <span className="text-subtitle1 font-semibold text-foreground">
-                Cue
-              </span>
+          <div className="col-span-2 md:col-span-1 space-y-3.5">
+            <Link to="/" className="inline-flex items-center">
+              <BrandLogo size="md" subtitle="Curated outings" />
             </Link>
             <p className="text-body1 text-muted-foreground leading-relaxed">
-              Meaningful shared experiences. Host verified guests for coffee, dining, shopping, arts, and city activities with mutual escrow trust.
+              Curated companionship for cultured city moments. Reserve verified companions for coffee, dining, galleries, and events with 100% escrow protection.
             </p>
-            <div className="flex items-center gap-1.5 text-caption1 text-muted-foreground pt-1">
-              <ShieldCheckmark16Regular className="text-success shrink-0" />
-              <span>Identity verified & safe escrow</span>
+            <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-trust-light border border-trust-border text-trust text-caption2 font-semibold">
+                <ShieldCheckmark16Regular className="shrink-0" />
+                <span>Govt. ID + Escrow Verified</span>
+              </span>
             </div>
           </div>
 
@@ -221,7 +219,7 @@ const Footer: React.FC = () => {
                 <>
                   <li>
                     <Link to="/discovery" className="text-muted-foreground hover:text-foreground font-semibold">
-                      Discover Guests
+                      Explore Companions
                     </Link>
                   </li>
                   <li>
@@ -254,7 +252,7 @@ const Footer: React.FC = () => {
                 <>
                   <li>
                     <Link to="/discovery" className="text-muted-foreground hover:text-foreground font-semibold">
-                      Discover Guests
+                      Explore Companions
                     </Link>
                   </li>
                   <li>
@@ -264,12 +262,12 @@ const Footer: React.FC = () => {
                   </li>
                   <li>
                     <Link to="/register?redirect=/apply-companion" className="text-muted-foreground hover:text-foreground">
-                      Become a Guest
+                      Become a Host
                     </Link>
                   </li>
                   <li>
                     <Link to="/register" className="text-muted-foreground hover:text-foreground">
-                      Create Account
+                      Join Cue
                     </Link>
                   </li>
                   <li>

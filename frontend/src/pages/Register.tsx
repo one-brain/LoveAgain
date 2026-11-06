@@ -32,6 +32,7 @@ import {
 import { loginSuccess } from '../store/slices/authSlice';
 import { resetAllApiCaches } from '../utils/sessionManager';
 import { isLegalAge, getMaxLegalBirthdate } from '../utils/dateUtils';
+import { BrandLogo } from '../components/ui/BrandLogo';
 
 const Register: React.FC = () => {
   const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile');
@@ -107,7 +108,7 @@ const Register: React.FC = () => {
       return;
     }
     if (!isLegalAge(mobileDateOfBirth)) {
-      setErrors({ mobileDateOfBirth: `You must be at least 18 years old to join LoveAgain (born on or before ${maxLegalDate})` });
+      setErrors({ mobileDateOfBirth: `You must be at least 18 years old to join Cue (born on or before ${maxLegalDate})` });
       return;
     }
     if (!phoneNumber.trim() || phoneNumber.trim().length < 8) {
@@ -193,7 +194,7 @@ const Register: React.FC = () => {
     if (!formData.dateOfBirth) {
       validationErrors.dateOfBirth = 'Date of birth is required to verify legal age';
     } else if (!isLegalAge(formData.dateOfBirth)) {
-      validationErrors.dateOfBirth = `You must be at least 18 years old to join LoveAgain (born on or before ${maxLegalDate})`;
+      validationErrors.dateOfBirth = `You must be at least 18 years old to join Cue (born on or before ${maxLegalDate})`;
     }
     if (!formData.email.trim()) {
       validationErrors.email = 'Email is required';
@@ -262,14 +263,11 @@ const Register: React.FC = () => {
     <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12 bg-background">
       <Card className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-semibold">
-              <Sparkle16Regular />
-            </div>
-            <span className="text-subtitle2 font-semibold text-foreground">Cue</span>
-          </div>
-          <div className="flex items-center gap-1 text-caption1 text-muted-foreground">
-            <ShieldCheckmark16Regular className="text-success" />
+          <Link to="/">
+            <BrandLogo size="sm" subtitle="Curated outings" />
+          </Link>
+          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-trust-light border border-trust-border text-caption2 font-semibold text-trust">
+            <ShieldCheckmark16Regular className="shrink-0" />
             <span>Identity Verified</span>
           </div>
         </div>
