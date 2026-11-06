@@ -2,15 +2,10 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-  Card,
-  CardPreview,
-  CardHeader,
-  CardFooter,
   Input,
   Button,
   ToggleButton,
   Badge,
-  Tag,
   Dialog,
   DialogSurface,
   DialogBody,
@@ -31,7 +26,6 @@ import {
   ChevronRight20Regular,
   LockClosed16Regular,
   ShieldCheckmark24Regular,
-  ShieldCheckmark20Regular,
   ShieldCheckmark16Regular,
   People24Regular,
   CheckmarkStarburst16Filled,
@@ -424,7 +418,7 @@ const Discovery: React.FC = () => {
     <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Administrator Context Continuity Ribbon */}
       {isAdmin && (
-        <aside aria-label="Administrator Preview Ribbon" className="bg-accent text-accent-foreground text-caption1 py-2 px-4 shadow-sm border-b border-border sticky top-16 z-30 flex items-center justify-between">
+        <aside aria-label="Administrator Preview Ribbon" className="bg-accent text-accent-foreground text-caption1 py-2 px-4 shadow-xs border-b border-border sticky top-14 z-30 flex items-center justify-between">
           <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
             <div className="flex items-center gap-2 font-semibold">
               <span className="w-2 h-2 rounded-full bg-accent-foreground shrink-0" />
@@ -443,14 +437,14 @@ const Discovery: React.FC = () => {
       )}
 
       {/* Top Header & Fluent Filter Bar */}
-      <section className={`bg-card border-b border-border sticky ${isAdmin ? 'top-25' : 'top-16'} z-20 acrylic transition-all shadow-sm`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
+      <section className={`bg-card border-b border-border sticky ${isAdmin ? 'top-23' : 'top-14'} z-20 acrylic transition-all`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-2.5">
           {/* Main Controls Row */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
             {/* Primary Unified Search Bar */}
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <Input
-                size="large"
+                size="medium"
                 value={q}
                 onChange={(_, data) => {
                   const val = data.value;
@@ -462,7 +456,7 @@ const Discovery: React.FC = () => {
                     return next;
                   });
                 }}
-                placeholder="Search by activity (e.g. Coffee dates, Restaurant visits, Shopping, Movies, Elena)..."
+                placeholder="Search by activity, companion name, or neighborhood (e.g. Coffee dates, Indiranagar)..."
                 contentBefore={<Search20Regular className="text-muted-foreground" />}
                 contentAfter={
                   q ? (
@@ -482,7 +476,7 @@ const Discovery: React.FC = () => {
                     />
                   ) : undefined
                 }
-                className="w-full"
+                className="w-full h-9"
               />
             </div>
 
@@ -494,20 +488,22 @@ const Discovery: React.FC = () => {
                   options={CITY_OPTIONS}
                   value={selectedCity === 'gps' ? 'all' : selectedCity}
                   onChange={(val) => handleCityChange(val)}
-                  className="w-full text-caption1 font-semibold"
-                  triggerClassName="w-full min-h-11 bg-muted hover:bg-subtle border border-border px-2.5 py-2 rounded-md text-caption1"
+                  size="md"
+                  className="w-full"
+                  triggerClassName="h-9"
                 />
               </div>
 
               {/* GPS Near Me Button */}
               <ToggleButton
+                size="medium"
                 checked={selectedCity === 'gps'}
                 appearance={selectedCity === 'gps' ? 'primary' : 'outline'}
                 onClick={handleNearMeGps}
                 disabled={isLocating}
                 icon={isLocating ? <Spinner size="tiny" /> : <Location16Regular />}
                 title="Use Current Device Location (GPS)"
-                className="min-h-11 shrink-0"
+                className="h-9 shrink-0"
               >
                 Near me
               </ToggleButton>
@@ -526,23 +522,25 @@ const Discovery: React.FC = () => {
                       return next;
                     });
                   }}
-                  className="w-full text-caption1 font-semibold"
-                  triggerClassName="w-full min-h-11 bg-muted hover:bg-subtle border border-border px-2.5 py-2 rounded-md text-caption1"
+                  size="md"
+                  className="w-full"
+                  triggerClassName="h-9"
                 />
               </div>
 
               {/* Advanced Filters Button */}
               <ToggleButton
+                size="medium"
                 checked={showFilters || activeFilterCount > 0}
                 appearance={showFilters || activeFilterCount > 0 ? 'primary' : 'outline'}
                 onClick={() => setShowFilters(!showFilters)}
                 icon={<Filter16Regular />}
                 title="More Filters"
-                className="min-h-11 shrink-0"
+                className="h-9 shrink-0"
               >
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
-                  <Badge appearance="filled" color="brand" className="ml-1 tabular">
+                  <Badge appearance="filled" color="brand" size="small" className="ml-1 tabular">
                     {activeFilterCount}
                   </Badge>
                 )}
@@ -551,18 +549,16 @@ const Discovery: React.FC = () => {
           </div>
 
           {/* Quick Curated Services Strip */}
-          <div className="flex items-center gap-1.5 overflow-x-auto py-1 text-caption1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-caption1">
             <span className="text-caption1 text-muted-foreground font-semibold shrink-0 mr-1">
               Services:
             </span>
             {SERVICE_TAGS.map((tag) => {
               const isSelected = (!tag.query && !q.trim()) || Boolean(tag.query && q.toLowerCase().includes(tag.query.toLowerCase()));
               return (
-                <ToggleButton
+                <button
                   key={tag.label}
-                  size="small"
-                  checked={isSelected}
-                  appearance={isSelected ? 'primary' : 'subtle'}
+                  type="button"
                   onClick={() => {
                     setQ(tag.query);
                     setSearchParams((prev) => {
@@ -572,10 +568,14 @@ const Discovery: React.FC = () => {
                       return next;
                     });
                   }}
-                  className="shrink-0"
+                  className={`px-3 py-1 rounded-full text-caption1 font-semibold transition-colors shrink-0 cursor-pointer border ${
+                    isSelected
+                      ? 'bg-accent text-accent-foreground border-accent'
+                      : 'bg-muted/70 hover:bg-subtle text-foreground border-border'
+                  }`}
                 >
                   {tag.label}
-                </ToggleButton>
+                </button>
               );
             })}
           </div>
@@ -754,7 +754,7 @@ const Discovery: React.FC = () => {
               const currentPhoto = images[activeIdx] || images[0] || '';
 
               return (
-                <Card
+                <article
                   key={provider.providerId}
                   role="button"
                   tabIndex={0}
@@ -766,10 +766,10 @@ const Discovery: React.FC = () => {
                       navigate(`/provider/${provider.providerId}`);
                     }
                   }}
-                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 cursor-pointer flex flex-col justify-between p-0"
+                  className="group fluent-card card-hover-effect overflow-hidden cursor-pointer flex flex-col justify-between"
                 >
-                  {/* 4:3 Companion Portrait Preview with Touch-Friendly Carousel */}
-                  <CardPreview className="relative aspect-[4/3] overflow-hidden bg-muted rounded-t-2xl">
+                  {/* 4:3 Companion Portrait Preview with Hover Carousel */}
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted border-b border-border">
                     <img
                       src={currentPhoto}
                       alt={`${provider.displayName} photo ${activeIdx + 1}`}
@@ -778,37 +778,21 @@ const Discovery: React.FC = () => {
                       className="w-full h-full object-cover"
                     />
 
-                    {/* Top Right Rate Badge */}
-                    <div className="absolute top-3 right-3 z-10 tabular">
-                      <RateBadge
-                        variant="card-badge"
-                        rate={provider.hourlyRate}
-                        isAuthenticated={isAuthenticated}
-                        onAuthPrompt={() => setAuthPromptModal(true)}
-                      />
+                    {/* Top Left Verified Trust Pill */}
+                    <div className="absolute top-3 left-3 z-10">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-trust-light text-trust border border-trust-border text-caption1 font-semibold shadow-xs">
+                        <CheckmarkStarburst16Filled className="shrink-0" />
+                        <span>Verified</span>
+                      </span>
                     </div>
 
-                    {/* Top Left Verified Trust & Rating Badge */}
-                    <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
-                      <Badge
-                        appearance="filled"
-                        icon={<CheckmarkStarburst16Filled />}
-                        className="bg-trust-light text-trust border border-trust-border tabular"
-                      >
-                        <Star16Filled className="mr-1" />
-                        <span>{Number(provider.averageRating || 4.9).toFixed(1)}</span>
-                        <span className="mx-1">•</span>
-                        <span>Verified guest</span>
-                      </Badge>
-                    </div>
-
-                    {/* Touch & Click Friendly Prev / Next Controls */}
+                    {/* Subtle Prev / Next Controls on Hover */}
                     {images.length > 1 && (
                       <>
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, -1, e)}
-                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-card/85 hover:bg-card text-foreground border border-border flex items-center justify-center transition-colors cursor-pointer"
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/90 hover:bg-card text-foreground border border-border shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
                           aria-label={`Previous photo of ${provider.displayName}`}
                         >
                           <ChevronLeft20Regular />
@@ -816,21 +800,21 @@ const Discovery: React.FC = () => {
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, 1, e)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-card/85 hover:bg-card text-foreground border border-border flex items-center justify-center transition-colors cursor-pointer"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/90 hover:bg-card text-foreground border border-border shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
                           aria-label={`Next photo of ${provider.displayName}`}
                         >
                           <ChevronRight20Regular />
                         </button>
 
                         {/* Centered Photo Indicator Dots */}
-                        <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
+                        <div className="absolute bottom-2.5 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
                           {images.map((_: any, idx: number) => (
                             <button
                               key={idx}
                               type="button"
                               onClick={(e) => handleSelectPhoto(provider.providerId, idx, e)}
                               className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                activeIdx === idx ? 'w-5 bg-card shadow-xs' : 'w-1.5 bg-card/60 hover:bg-card'
+                                activeIdx === idx ? 'w-5 bg-card shadow-xs' : 'w-1.5 bg-card/65 hover:bg-card'
                               }`}
                               aria-label={`Go to photo ${idx + 1}`}
                             />
@@ -838,52 +822,66 @@ const Discovery: React.FC = () => {
                         </div>
                       </>
                     )}
-                  </CardPreview>
+                  </div>
 
-                  {/* Card Header & Body */}
-                  <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                  {/* Card Body */}
+                  <div className="p-4 flex-1 flex flex-col justify-between gap-3">
                     <div className="space-y-2">
-                      <CardHeader
-                        header={
-                          <div className="flex items-baseline justify-between gap-2 w-full">
-                            <h3 className="text-subtitle2 font-semibold text-foreground truncate">
-                              {provider.displayName}
-                            </h3>
-                            <span className="text-caption1 font-mono text-muted-foreground whitespace-nowrap tabular">
-                              {provider.distanceKm != null ? `${provider.distanceKm} km` : (provider.city || 'Central Hub')}
-                            </span>
-                          </div>
-                        }
-                        description={
-                          <span className="text-caption1 text-muted-foreground">
-                            {provider.area ? `${provider.area}, ` : ''}{provider.city || 'Metro'}
-                          </span>
-                        }
-                      />
+                      {/* Title & Rating Row */}
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-subtitle2 font-semibold text-foreground group-hover:text-brand-fg transition-colors truncate">
+                          {provider.displayName}
+                        </h3>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground text-caption1 font-semibold tabular shrink-0">
+                          <Star16Filled className="text-trust" />
+                          <span>{Number(provider.averageRating || 4.9).toFixed(1)}</span>
+                        </span>
+                      </div>
 
-                      <p className="text-caption1 text-muted-foreground line-clamp-2">
+                      {/* Single Clean Location Subtitle */}
+                      <div className="flex items-center gap-1 text-caption1 text-muted-foreground truncate">
+                        <Location16Regular className="shrink-0" />
+                        <span className="truncate">
+                          {provider.area ? `${provider.area}, ` : ''}{provider.city || 'Metro'}
+                        </span>
+                        {provider.distanceKm != null && (
+                          <span className="tabular font-semibold text-foreground shrink-0">
+                            • {provider.distanceKm} km
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bio */}
+                      <p className="text-body1 text-muted-foreground line-clamp-2 pt-0.5">
                         {provider.bio}
                       </p>
 
                       {/* Curated Outing Experiences / Specialties */}
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {(provider.specialties || []).slice(0, 3).map((spec: string) => (
-                          <Tag key={spec} size="extra-small" appearance="outline">
+                          <span
+                            key={spec}
+                            className="px-2.5 py-0.5 rounded-md bg-muted text-foreground border border-border text-caption1 truncate max-w-full"
+                          >
                             {spec}
-                          </Tag>
+                          </span>
                         ))}
                       </div>
                     </div>
 
-                    <CardFooter className="pt-3 border-t border-border flex items-center justify-between gap-2">
-                      <div className="text-caption1 text-muted-foreground truncate">
-                        <span>{provider.area ? `${provider.area}, ` : ''}{provider.city || 'Metro'}</span>
-                      </div>
+                    {/* Card Footer */}
+                    <div className="pt-3 mt-1 border-t border-border flex items-center justify-between gap-2">
+                      <RateBadge
+                        variant="row-item"
+                        rate={provider.hourlyRate}
+                        isAuthenticated={isAuthenticated}
+                        onAuthPrompt={() => setAuthPromptModal(true)}
+                      />
 
                       <Button
                         appearance="primary"
-                        size="large"
-                        icon={<ShieldCheckmark20Regular />}
+                        size="medium"
+                        icon={<ShieldCheckmark16Regular />}
                         onClick={(e) => {
                           e.stopPropagation();
                           if (!isAuthenticated) {
@@ -892,13 +890,13 @@ const Discovery: React.FC = () => {
                           }
                           setSelectedProviderForBooking(provider);
                         }}
-                        className="min-h-11 shrink-0"
+                        className="shrink-0"
                       >
-                        Book outing →
+                        Book outing
                       </Button>
-                    </CardFooter>
+                    </div>
                   </div>
-                </Card>
+                </article>
               );
             })}
           </div>

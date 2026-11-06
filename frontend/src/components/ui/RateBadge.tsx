@@ -48,7 +48,7 @@ export const RateBadge: React.FC<RateBadgeProps> = ({
     // Default: 'card-badge'
     return (
       <div
-        className={`bg-card px-2.5 py-1 rounded-full text-caption1 font-semibold font-mono tabular text-foreground border border-border shadow-2xs ${className}`}
+        className={`inline-flex items-center bg-card/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-caption1 font-semibold font-mono tabular text-foreground border border-border shadow-xs ${className}`}
       >
         {formatRate(rate)}
       </div>
@@ -124,7 +124,7 @@ export const RateBadge: React.FC<RateBadgeProps> = ({
         }
       }}
       title="Sign in to view hourly rate"
-      className={`group bg-card px-2.5 py-1 rounded-full text-caption1 font-semibold text-foreground border border-border hover:border-border-strong shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5 ${className}`}
+      className={`group inline-flex items-center gap-1.5 bg-card/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-caption1 font-semibold text-foreground border border-border hover:border-border-strong shadow-xs transition-colors cursor-pointer ${className}`}
     >
       <LockClosed16Regular className="text-brand-fg shrink-0" />
       <span className="font-mono tabular text-caption1 font-semibold text-foreground group-hover:text-brand-fg transition-colors">
