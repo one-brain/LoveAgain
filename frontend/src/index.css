@@ -282,6 +282,12 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Fluent buttons must never wrap their label onto 2 lines */
+  .fui-Button,
+  button {
+    white-space: nowrap;
+  }
+
   input, textarea {
     color: var(--foreground);
     background-color: var(--card);

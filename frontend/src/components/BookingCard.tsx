@@ -190,6 +190,12 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const isCancelled = booking.status === 'Cancelled';
   const isDisputed = booking.status === 'Disputed';
 
+  const hasPrimaryAction =
+    (isPendingPayment && !isCompanionView && Boolean(onPay)) ||
+    (isConfirmed && isCompanionView && Boolean(onCheckIn)) ||
+    (isInProgress && !isCompanionView && Boolean(onComplete)) ||
+    isCompleted;
+
   const tags: string[] = [];
   if (booking.requirements?.dressCode) {
     tags.push(booking.requirements.dressCode);
@@ -452,18 +458,18 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           </Badge>
         </div>
 
-        {/* Action Controls Matrix: strictly compliant 44px touch targets */}
-        <div className="flex flex-wrap items-center gap-2 pt-1">
+        {/* Action Controls Matrix: single-line crisp buttons */}
+        <div className="flex items-center justify-between gap-2 pt-1">
           {isPendingPayment && !isCompanionView && onPay && (
             <Button
               appearance="primary"
-              size="large"
+              size="medium"
               icon={<Payment20Regular />}
               onClick={(e) => {
                 e.stopPropagation();
                 onPay(booking);
               }}
-              className="flex-1 min-w-[130px] min-h-11"
+              className="flex-1 min-h-11 whitespace-nowrap"
             >
               Fund escrow
             </Button>
@@ -472,13 +478,13 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           {isConfirmed && isCompanionView && onCheckIn && (
             <Button
               appearance="primary"
-              size="large"
+              size="medium"
               icon={<ShieldCheckmark20Regular />}
               onClick={(e) => {
                 e.stopPropagation();
                 onCheckIn(booking);
               }}
-              className="flex-1 min-w-[130px] min-h-11"
+              className="flex-1 min-h-11 whitespace-nowrap"
             >
               Verify PIN
             </Button>
@@ -487,13 +493,13 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           {isInProgress && !isCompanionView && onComplete && (
             <Button
               appearance="primary"
-              size="large"
+              size="medium"
               icon={<CheckmarkCircle20Regular />}
               onClick={(e) => {
                 e.stopPropagation();
                 onComplete(booking);
               }}
-              className="flex-1 min-w-[150px] min-h-11"
+              className="flex-1 min-h-11 whitespace-nowrap"
             >
               Release escrow
             </Button>
@@ -501,68 +507,70 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
           {isCompleted && (
             reviewStatus?.hasReviewed ? (
-              <div className="flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-md bg-trust-light border border-trust-border text-trust text-caption1 font-semibold tabular">
+              <div className="flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-md bg-trust-light border border-trust-border text-trust text-caption1 font-semibold tabular whitespace-nowrap">
                 <Star16Filled />
                 <span>Reviewed ({reviewStatus.myReview?.rating || 5}/5)</span>
               </div>
             ) : (
               <Button
                 appearance="primary"
-                size="large"
+                size="medium"
                 icon={<Star16Filled />}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsReviewModalOpen(true);
                 }}
-                className="flex-1 min-w-[130px] min-h-11"
+                className="flex-1 min-h-11 whitespace-nowrap"
               >
                 Review
               </Button>
             )
           )}
 
-          <div className="flex items-center gap-1.5 ml-auto">
+          <div className="flex items-center gap-1.5 ml-auto shrink-0">
             {(isPendingPayment || isConfirmed) && !isCompanionView && onEdit && (
               <Button
                 appearance="outline"
-                size="large"
+                size="medium"
                 icon={<Edit16Regular />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(booking);
                 }}
                 title="Edit venue, requirements, or schedule"
-                className="min-h-11"
+                aria-label="Edit booking"
+                className="min-h-11 min-w-11 whitespace-nowrap"
               >
-                <span className="hidden sm:inline">Edit</span>
+                {!hasPrimaryAction ? <span className="hidden sm:inline">Edit</span> : null}
               </Button>
             )}
 
             {onCancel && !isCancelled && !isDisputed && !isCompleted && !isInProgress && (
               <Button
                 appearance="outline"
-                size="large"
+                size="medium"
                 icon={<Dismiss16Regular />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onCancel(booking);
                 }}
                 title="Cancel booking"
-                className="min-h-11 text-destructive border-border"
+                aria-label="Cancel booking"
+                className="min-h-11 min-w-11 text-destructive border-border whitespace-nowrap"
               >
-                <span className="hidden sm:inline">Cancel</span>
+                {!hasPrimaryAction ? <span className="hidden sm:inline">Cancel</span> : null}
               </Button>
             )}
 
             <Button
               appearance="outline"
-              size="large"
+              size="medium"
               icon={<Chat20Regular className="text-brand-fg" />}
               onClick={handleOpenChat}
               title="Open secure chat"
-              className="min-h-11"
+              className="min-h-11 whitespace-nowrap"
             >
-              <span className="hidden sm:inline">Chat</span>
+              <span>Chat</span>
             </Button>
           </div>
         </div>
