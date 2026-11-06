@@ -5,6 +5,7 @@ import 'core/theme.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/otp_verification_screen.dart';
+import 'features/auth/profile_setup_screen.dart';
 import 'features/booking/booking_screen.dart';
 import 'features/chat/chat_screen.dart';
 import 'features/discovery/discovery_controller.dart';
@@ -27,7 +28,8 @@ class RouterNotifier extends ChangeNotifier {
   String? redirect(BuildContext context, GoRouterState state) {
     final auth = _ref.read(authControllerProvider);
     final isAuthRoute = state.matchedLocation == '/login' ||
-        state.matchedLocation == '/otp-verify';
+        state.matchedLocation == '/otp-verify' ||
+        state.matchedLocation == '/profile-setup';
 
     if (!auth.isAuthenticated) {
       return isAuthRoute ? null : '/login';
@@ -83,6 +85,15 @@ final routerProvider = Provider<GoRouter>((ref) {
               (state.extra as String?) ??
               'alex.rivera@example.com';
           return OtpVerificationScreen(email: target);
+        },
+      ),
+      GoRoute(
+        path: '/profile-setup',
+        builder: (context, state) {
+          final phone = state.uri.queryParameters['phone'] ??
+              (state.extra as String?) ??
+              '';
+          return ProfileSetupScreen(phone: phone);
         },
       ),
       GoRoute(

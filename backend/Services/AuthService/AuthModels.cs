@@ -28,7 +28,7 @@ public sealed record RegisterRequest(string Email, string Password, string First
 public sealed record LoginRequest(string Email, string Password);
 public sealed record SendMobileOtpRequest(string Phone, string? Purpose = "login");
 public sealed record SendMobileOtpResponse(string Message, int ExpiresInSeconds, string? DevOtp = null);
-public sealed record VerifyMobileOtpRequest(string Phone, string Otp, string? FirstName = null, string? LastName = null, DateOnly? DateOfBirth = null);
+public sealed record VerifyMobileOtpRequest(string Phone, string? Otp = null, string? FirstName = null, string? LastName = null, DateOnly? DateOfBirth = null);
 public sealed record VerifyMobileOtpResponse(bool IsNewUser, string? Message = null, TokenResponse? Tokens = null);
 public sealed record ForgotPasswordRequest(string Email);
 public sealed record ResetPasswordRequest(string Token, string NewPassword);

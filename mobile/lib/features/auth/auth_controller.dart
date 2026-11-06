@@ -349,6 +349,16 @@ class AuthController extends StateNotifier<AuthState> {
     SharedPreferences.getInstance().then((p) => p.setString(AppConstants.userRoleKey, newRole));
   }
 
+  void setRole(String role) {
+    final newRole = (role == 'Host' || role == 'Provider') ? 'Host' : 'Guest';
+    state = AuthState(
+      token: state.token,
+      user: state.user,
+      activeRole: newRole,
+    );
+    SharedPreferences.getInstance().then((p) => p.setString(AppConstants.userRoleKey, newRole));
+  }
+
   void resetOtp() {
     state = state.copyWith(isOtpSent: false, pendingEmail: null, error: null);
   }

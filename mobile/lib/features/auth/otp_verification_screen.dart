@@ -26,11 +26,6 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
   final List<FocusNode> _focusNodes =
       List.generate(_otpLength, (_) => FocusNode());
 
-  final _firstNameController = TextEditingController();
-  final _lastNameController = TextEditingController();
-  final _firstNameFocusNode = FocusNode();
-
-  bool _isNewUser = false;
   int _resendCountdown = 30;
   Timer? _timer;
 
@@ -63,9 +58,6 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     for (final f in _focusNodes) {
       f.dispose();
     }
-    _firstNameController.dispose();
-    _lastNameController.dispose();
-    _firstNameFocusNode.dispose();
     super.dispose();
   }
 
@@ -81,31 +73,22 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       return;
     }
 
-    if (_isNewUser) {
-      final first = _firstNameController.text.trim();
-      if (first.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please enter your first name to finish setup.')),
-        );
-        return;
-      }
-    }
-
     if (_isPhone) {
       final result = await ref
           .read(authControllerProvider.notifier)
           .verifyMobileOtp(
             phone: widget.email,
             otp: code,
-            firstName: _isNewUser ? _firstNameController.text.trim() : null,
-            lastName: _isNewUser ? _lastNameController.text.trim() : null,
           );
 
-      if (result != null && result.isNewUser && !_isNewUser) {
-        setState(() {
-          _isNewUser = true;
-        });
-        _firstNameFocusNode.requestFocus();
+      if (result != null && result.isNewUser && mounted) {
+        HapticFeedback.mediumImpact();
+        try {
+          context.push(
+            '/profile-setup?phone=${Uri.encodeComponent(widget.email)}',
+            extra: widget.email,
+          );
+        } catch (_) {}
         return;
       }
 
@@ -234,10 +217,10 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            Text(
-              _isNewUser ? 'Almost Done!' : 'Enter 6-Digit Code',
+            const Text(
+              'Enter 6-Digit Code',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.w800,
                 color: AppColors.textPrimary,
@@ -326,94 +309,6 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
             ),
             const SizedBox(height: 16),
 
-            // Inline New User Onboarding Section
-            if (_isNewUser) ...[
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                margin: const EdgeInsets.only(bottom: 16),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.5),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.04),
-                      blurRadius: 10,
-                      offset: const Offset(0, 3),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppColors.gold.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.check_circle_outline,
-                            size: 16,
-                            color: AppColors.gold,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Expanded(
-                          child: Text(
-                            'Mobile verified! Tell us your name to finish setup:',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 14),
-                    TextField(
-                      controller: _firstNameController,
-                      focusNode: _firstNameFocusNode,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        labelText: 'First Name',
-                        hintText: 'e.g. Maya',
-                        prefixIcon: const Icon(
-                          Icons.person_outline,
-                          color: AppColors.textSecondary,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: _lastNameController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                        labelText: 'Last Name',
-                        hintText: 'e.g. Chen',
-                        prefixIcon: const Icon(
-                          Icons.badge_outlined,
-                          color: AppColors.textSecondary,
-                        ),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-
             // Error notice
             if (auth.error != null) ...[
               Container(
@@ -465,9 +360,9 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : Text(
-                      _isNewUser ? 'Complete Account Setup' : 'Verify & Continue',
-                      style: const TextStyle(
+                  : const Text(
+                      'Verify & Continue',
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                       ),

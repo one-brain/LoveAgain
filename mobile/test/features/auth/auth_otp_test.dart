@@ -9,6 +9,7 @@ import 'package:cue_mobile/data/repositories/auth_repository.dart';
 import 'package:cue_mobile/features/auth/auth_controller.dart';
 import 'package:cue_mobile/features/auth/login_screen.dart';
 import 'package:cue_mobile/features/auth/otp_verification_screen.dart';
+import 'package:cue_mobile/features/auth/profile_setup_screen.dart';
 
 class FakeAuthApiClient extends ApiClient {
   FakeAuthApiClient({this.simulateNewUser = false}) : super(dio: Dio());
@@ -119,7 +120,7 @@ void main() {
 
       final completedResult = await newUserRepo.verifyMobileOtp(
         phone: '+919900000099',
-        otp: '123456',
+        otp: '', // Phone already validated
         firstName: 'Maya',
         lastName: 'Chen',
       );
@@ -209,39 +210,39 @@ void main() {
       // Verify countdown timer text starts with 30s
       expect(find.textContaining('Resend in 30s'), findsOneWidget);
     });
+  });
 
-    testWidgets('prompts for First and Last Name inline when new user is detected',
+  group('ProfileSetupScreen Widget Tests', () {
+    testWidgets('renders profile fields with verified phone and completes onboarding',
         (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1080, 2400);
+      tester.view.devicePixelRatio = 2.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
       SharedPreferences.setMockInitialValues({});
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            apiClientProvider.overrideWithValue(FakeAuthApiClient(simulateNewUser: true)),
+            apiClientProvider.overrideWithValue(FakeAuthApiClient()),
           ],
           child: const MaterialApp(
-            home: OtpVerificationScreen(email: '+91 99000 00099'),
+            home: ProfileSetupScreen(phone: '+91 99000 00099'),
           ),
         ),
       );
       await tester.pump();
       await tester.pump();
 
-      // Enter 6 digits (the 6th digit automatically submits)
-      final textFields = find.byType(TextField);
-      expect(textFields, findsNWidgets(6));
+      // Check verified badge and phone
+      expect(find.text('+91 99000 00099'), findsOneWidget);
+      expect(find.text('VERIFIED'), findsOneWidget);
 
-      for (int i = 0; i < 6; i++) {
-        await tester.enterText(textFields.at(i), '${i + 1}');
-      }
-      await tester.pumpAndSettle();
-
-      // Check that inline name capture is shown
-      expect(find.textContaining('Tell us your name to finish setup'), findsOneWidget);
+      // Check form fields
       expect(find.text('First Name'), findsOneWidget);
       expect(find.text('Last Name'), findsOneWidget);
       expect(find.text('Complete Account Setup'), findsOneWidget);
 
-      // Fill in First Name and Last Name
+      // Enter First Name and Last Name
       await tester.enterText(find.widgetWithText(TextField, 'First Name'), 'Maya');
       await tester.enterText(find.widgetWithText(TextField, 'Last Name'), 'Chen');
       await tester.pumpAndSettle();

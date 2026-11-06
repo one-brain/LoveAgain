@@ -50,3 +50,4 @@ Re-architect mobile authentication to achieve feature parity with the Web client
 - [ ] Email & password authentication functions with password visibility toggle.
 - [ ] Zero mock data used; real tokens saved to secure storage and validated against backend.
 - [ ] All Flutter widget and regression tests pass (`flutter test`).
+

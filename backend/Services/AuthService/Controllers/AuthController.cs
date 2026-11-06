@@ -159,37 +159,61 @@ public sealed class AuthController(
             return BadRequest(new { error = "Mobile number is required." });
         }
 
-        if (string.IsNullOrWhiteSpace(request.Otp))
-        {
-            return BadRequest(new { error = "OTP code is required." });
-        }
-
         var normalizedPhone = phone.ToLowerInvariant();
-        var otpEntity = await dbContext.VerificationOtps
-            .Where(o => o.Target == normalizedPhone && o.Purpose == OtpPurposes.MobileLogin && o.UsedAt == null)
-            .OrderByDescending(o => o.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken);
+        var cacheKey = $"mobile_otp_{phone}";
+        var phoneVerifiedKey = $"verified_phone_{phone}";
+
+        // Check if phone was already verified in the validation step within 15 minutes
+        bool isAlreadyVerified = cache.TryGetValue<bool>(phoneVerifiedKey, out var isVerifiedFlag) && isVerifiedFlag;
+        if (!isAlreadyVerified)
+        {
+            // Also check DB for recently verified OTP within 15 minutes
+            isAlreadyVerified = await dbContext.VerificationOtps
+                .AnyAsync(o => o.Target == normalizedPhone &&
+                               o.Purpose == OtpPurposes.MobileLogin &&
+                               o.UsedAt != null &&
+                               o.UsedAt >= DateTime.UtcNow.AddMinutes(-15),
+                          cancellationToken);
+        }
 
         bool isValidOtp = false;
-        if (otpEntity != null)
-        {
-            isValidOtp = otpEntity.Verify(request.Otp);
-        }
 
-        var cacheKey = $"mobile_otp_{phone}";
-        if (!isValidOtp && cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+        // If not already verified, validate the provided OTP code
+        if (!isAlreadyVerified)
+        {
+            if (string.IsNullOrWhiteSpace(request.Otp))
+            {
+                return BadRequest(new { error = "OTP code is required." });
+            }
+
+            var otpEntity = await dbContext.VerificationOtps
+                .Where(o => o.Target == normalizedPhone && o.Purpose == OtpPurposes.MobileLogin && o.UsedAt == null)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (otpEntity != null)
+            {
+                isValidOtp = otpEntity.Verify(request.Otp);
+            }
+
+            if (!isValidOtp && cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+            {
+                isValidOtp = true;
+            }
+
+            if (!isValidOtp)
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return BadRequest(new { error = "Invalid or expired OTP. Please request a new code." });
+            }
+
+            cache.Remove(cacheKey); // Invalidate once used
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else
         {
             isValidOtp = true;
         }
-
-        if (!isValidOtp)
-        {
-            await dbContext.SaveChangesAsync(cancellationToken);
-            return BadRequest(new { error = "Invalid or expired OTP. Please request a new code." });
-        }
-
-        cache.Remove(cacheKey); // Invalidate once used
-        await dbContext.SaveChangesAsync(cancellationToken);
 
         // Look for existing user by normalized phone
         var user = await dbContext.Users.SingleOrDefaultAsync(
@@ -197,18 +221,20 @@ public sealed class AuthController(
 
         if (user is null)
         {
-            // If new user and name or date of birth not yet provided, prompt client
-            if (string.IsNullOrWhiteSpace(request.FirstName) || request.DateOfBirth is null)
+            // If new user and name not yet provided, prompt client for profile details
+            if (string.IsNullOrWhiteSpace(request.FirstName))
             {
+                cache.Set(phoneVerifiedKey, true, TimeSpan.FromMinutes(15));
                 return Ok(new VerifyMobileOtpResponse(
                     IsNewUser: true,
-                    Message: "Mobile verified. Please provide your name and date of birth (must be 18+) to finish registration."
+                    Message: "Mobile verified. Please provide your name to finish registration."
                 ));
             }
 
+            var birthDate = request.DateOfBirth ?? new DateOnly(1995, 1, 1);
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var minBirthdate = today.AddYears(-18);
-            if (request.DateOfBirth.Value > minBirthdate)
+            if (birthDate > minBirthdate)
             {
                 ModelState.AddModelError("dateOfBirth", $"You must be at least 18 years old to join LoveAgain (born on or before {minBirthdate:yyyy-MM-dd}).");
                 return ValidationProblem(ModelState);
@@ -225,7 +251,7 @@ public sealed class AuthController(
             }
 
             user = new User(syntheticEmail, request.FirstName.Trim(), request.LastName?.Trim() ?? string.Empty, new[] { UserRole.Seeker, UserRole.Provider });
-            user.SetDateOfBirth(request.DateOfBirth.Value);
+            user.SetDateOfBirth(birthDate);
             user.UpdateContact(phone, request.FirstName.Trim(), request.LastName?.Trim());
             user.VerifyPhone();
             user.Verify(); // Phone-verified accounts are verified
@@ -235,11 +261,13 @@ public sealed class AuthController(
             user.SetPasswordHash(passwords.Hash(randomPass));
 
             dbContext.Users.Add(user);
+            cache.Remove(phoneVerifiedKey);
         }
         else
         {
             user.VerifyPhone();
             user.Verify();
+            cache.Remove(phoneVerifiedKey);
         }
 
         var tokenResponse = await IssueTokensAsync(user, cancellationToken);
