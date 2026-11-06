@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text.Json;
 using Cue.Application.Abstractions;
+using Cue.Common;
 using Cue.Domain;
 using Cue.Infrastructure.Data;
 using Microsoft.AspNetCore.Authorization;
@@ -566,14 +567,23 @@ public sealed class PaymentsController(
     }
 
     [HttpGet("admin/payouts")]
-    [ProducesResponseType(typeof(IReadOnlyList<AdminPayoutItemResponse>), StatusCodes.Status200OK)]
-    public async Task<ActionResult<IReadOnlyList<AdminPayoutItemResponse>>> GetAdminPayouts(CancellationToken cancellationToken)
+    [ProducesResponseType(typeof(PagedResult<AdminPayoutItemResponse>), StatusCodes.Status200OK)]
+    public async Task<ActionResult<PagedResult<AdminPayoutItemResponse>>> GetAdminPayouts(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
     {
         if (!IsAdmin()) return Forbid();
-        var payouts = await dbContext.PayoutRequests
-            .AsNoTracking()
+
+        var query = dbContext.PayoutRequests.AsNoTracking();
+        var totalCount = await query.CountAsync(cancellationToken);
+        var safePage = Math.Max(1, page);
+        var safePageSize = Math.Clamp(pageSize, 1, 100);
+
+        var payouts = await query
             .OrderByDescending(p => p.CreatedAt)
-            .Take(100)
+            .Skip((safePage - 1) * safePageSize)
+            .Take(safePageSize)
             .ToListAsync(cancellationToken);
 
         var userIds = payouts.Select(p => p.UserId).Distinct().ToList();
@@ -601,7 +611,7 @@ public sealed class PaymentsController(
             );
         }).ToList();
 
-        return Ok(result);
+        return Ok(PagedResult<AdminPayoutItemResponse>.Create(result, totalCount, safePage, safePageSize));
     }
 
     [HttpPost("admin/payouts/{payoutId:guid}/process")]

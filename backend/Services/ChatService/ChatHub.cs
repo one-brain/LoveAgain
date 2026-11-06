@@ -10,15 +10,17 @@ namespace ChatService;
 [Authorize]
 public sealed class ChatHub(CueDbContext dbContext) : Hub
 {
-    public async Task JoinOrder(Guid orderId, CancellationToken cancellationToken)
+    public async Task JoinOrder(Guid orderId)
     {
+        var cancellationToken = Context.ConnectionAborted;
         var userId = GetUserId();
         await EnsureAuthorizedParticipantAndPaidOrderAsync(orderId, userId, "join this chat", cancellationToken);
         await Groups.AddToGroupAsync(Context.ConnectionId, GroupName(orderId), cancellationToken);
     }
 
-    public async Task SendMessage(Guid orderId, string content, MessageType messageType = MessageType.Text, CancellationToken cancellationToken = default)
+    public async Task SendMessage(Guid orderId, string content, MessageType messageType = MessageType.Text)
     {
+        var cancellationToken = Context.ConnectionAborted;
         var senderId = GetUserId();
         await EnsureAuthorizedParticipantAndPaidOrderAsync(orderId, senderId, "send messages", cancellationToken);
 

@@ -4,12 +4,13 @@ class User {
     required this.email,
     required this.firstName,
     required this.lastName,
-    this.roles = const ['Seeker'],
-    this.trustScore = 80,
+    this.roles = const ['Guest'],
+    this.trustScore = 85,
     this.isVerified = false,
     this.photoUrl,
     this.bio,
     this.phone,
+    this.city = 'Bengaluru',
   });
 
   final String id;
@@ -22,6 +23,7 @@ class User {
   final String? photoUrl;
   final String? bio;
   final String? phone;
+  final String city;
 
   String get fullName => '$firstName $lastName'.trim();
   String get initials {
@@ -30,8 +32,13 @@ class User {
     return '$first$last'.toUpperCase();
   }
 
-  bool get isProvider => roles.contains('Provider');
-  bool get isSeeker => roles.contains('Seeker');
+  // Canonical role getters
+  bool get isHost => roles.contains('Host') || roles.contains('Provider');
+  bool get isGuest => roles.contains('Guest') || roles.contains('Seeker');
+
+  // Compatibility aliases
+  bool get isProvider => isHost;
+  bool get isSeeker => isGuest;
 
   User copyWith({
     String? id,
@@ -44,6 +51,7 @@ class User {
     String? photoUrl,
     String? bio,
     String? phone,
+    String? city,
   }) {
     return User(
       id: id ?? this.id,
@@ -56,6 +64,7 @@ class User {
       photoUrl: photoUrl ?? this.photoUrl,
       bio: bio ?? this.bio,
       phone: phone ?? this.phone,
+      city: city ?? this.city,
     );
   }
 
@@ -71,25 +80,35 @@ class User {
       'photoUrl': photoUrl,
       'bio': bio,
       'phone': phone,
+      'city': city,
     };
   }
 
   factory User.fromJson(Map<String, dynamic> json) {
+    final rawRoles = (json['roles'] as List<dynamic>?)
+            ?.map((e) => e.toString())
+            .toList() ??
+        ['Guest'];
+
+    // Normalize legacy roles to canonical Host/Guest
+    final normalizedRoles = rawRoles.map((r) {
+      if (r == 'Provider') return 'Host';
+      if (r == 'Seeker') return 'Guest';
+      return r;
+    }).toList();
+
     return User(
       id: json['id'] as String? ?? json['userId'] as String? ?? '',
       email: json['email'] as String? ?? '',
       firstName: json['firstName'] as String? ?? '',
       lastName: json['lastName'] as String? ?? '',
-      roles: (json['roles'] as List<dynamic>?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          ['Seeker'],
-      trustScore: json['trustScore'] as int? ?? 80,
+      roles: normalizedRoles,
+      trustScore: json['trustScore'] as int? ?? 85,
       isVerified: json['isVerified'] as bool? ?? false,
       photoUrl: json['photoUrl'] as String?,
       bio: json['bio'] as String?,
       phone: json['phone'] as String?,
+      city: json['city'] as String? ?? 'Bengaluru',
     );
   }
 }
-

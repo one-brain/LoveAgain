@@ -290,3 +290,18 @@ internal sealed class UserKycDocumentConfiguration : IEntityTypeConfiguration<Us
         builder.HasIndex(d => d.Status);
     }
 }
+
+
+internal sealed class VerificationOtpConfiguration : IEntityTypeConfiguration<VerificationOtp>
+{
+    public void Configure(EntityTypeBuilder<VerificationOtp> builder)
+    {
+        builder.ToTable("verification_otps", "auth");
+        builder.HasKey(t => t.Id);
+        builder.Property(t => t.Target).HasMaxLength(255).IsRequired();
+        builder.Property(t => t.OtpCode).HasMaxLength(20).IsRequired();
+        builder.Property(t => t.Purpose).HasMaxLength(50).IsRequired();
+        builder.HasIndex(t => new { t.Target, t.Purpose, t.CreatedAt });
+        builder.HasIndex(t => t.UserId);
+    }
+}

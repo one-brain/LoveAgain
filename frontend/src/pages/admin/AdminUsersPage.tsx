@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import {
   useGetAdminUsersQuery,
+  useGetAdminUserStatsQuery,
   useToggleUserSuspendMutation,
 } from '../../store/adminApi';
 import {
@@ -20,12 +21,24 @@ export const AdminUsersPage: React.FC = () => {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [role, setRole] = useState<'All' | 'Guests' | 'Hosts' | 'Suspended'>('All');
+  const [search, setSearch] = useState('');
+
+  const { data: userStats } = useGetAdminUserStatsQuery();
+
   const {
     data: usersData,
     isLoading: isLoadingUsers,
     refetch: refetchUsers,
     isFetching,
-  } = useGetAdminUsersQuery({});
+  } = useGetAdminUsersQuery({
+    page,
+    pageSize,
+    role: role === 'All' ? undefined : role,
+    search: search.trim() || undefined,
+  });
 
   const [toggleUserSuspend, { isLoading: isTogglingSuspend }] = useToggleUserSuspendMutation();
 
@@ -39,8 +52,8 @@ export const AdminUsersPage: React.FC = () => {
     }
   };
 
-  const totalUsers = usersData?.length ?? 0;
-  const suspendedCount = usersData?.filter((u) => u.trustScore < 0).length ?? 0;
+  const totalUsers = userStats?.total ?? (role === 'All' ? usersData?.totalCount ?? 0 : 0);
+  const suspendedCount = userStats?.suspended ?? 0;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
@@ -67,7 +80,7 @@ export const AdminUsersPage: React.FC = () => {
       {/* Page Header */}
       <AdminPageHeader
         title="User Directory"
-        description="View registered clients, companions, and platform administrators. Check verification status, trust ratings, and manage account access."
+        description="View registered hosts, guests, and platform administrators. Check verification status, trust ratings, and manage account access."
         badge={
           suspendedCount > 0 ? (
             <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/30">
@@ -97,10 +110,30 @@ export const AdminUsersPage: React.FC = () => {
       {/* Full-Bleed Users Directory */}
       <main>
         <AdminUsersDirectory
-          users={usersData ?? []}
+          users={usersData?.items ?? []}
           isLoading={isLoadingUsers}
           onToggleSuspend={handleToggleSuspendUser}
           isTogglingSuspend={isTogglingSuspend}
+          page={page}
+          pageSize={pageSize}
+          totalCount={usersData?.totalCount ?? 0}
+          totalPages={usersData?.totalPages ?? 1}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setPageSize(sz);
+            setPage(1);
+          }}
+          roleFilter={role}
+          onRoleFilterChange={(r) => {
+            setRole(r);
+            setPage(1);
+          }}
+          search={search}
+          onSearchChange={(s) => {
+            setSearch(s);
+            setPage(1);
+          }}
+          stats={userStats}
         />
       </main>
     </div>

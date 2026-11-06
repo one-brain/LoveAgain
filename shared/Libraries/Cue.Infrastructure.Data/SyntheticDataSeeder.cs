@@ -167,7 +167,10 @@ public static class SyntheticDataSeeder
         // 1. Always repair legacy corrupted rows first
         await RepairLegacyDataAsync(dbContext, cancellationToken);
 
-        // 2. Check if our 100 synthetic profiles are already seeded
+        // 2. Always ensure rolling availability slots exist for active companions
+        await EnsureRollingAvailabilitySlotsAsync(dbContext, cancellationToken);
+
+        // 3. Check if our 100 synthetic profiles are already seeded
         var markerUserId = BuildDeterministicGuid(100);
         var alreadySeeded = await dbContext.Users
             .IgnoreQueryFilters()
@@ -640,6 +643,63 @@ public static class SyntheticDataSeeder
         await dbContext.SaveChangesAsync(cancellationToken);
     }
 
+    public static async Task EnsureRollingAvailabilitySlotsAsync(CueDbContext dbContext, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var now = DateTime.UtcNow;
+
+            var activeProviderIds = await dbContext.ProviderProfiles
+                .IgnoreQueryFilters()
+                .Where(p => p.Status == VerificationStatus.Approved && p.IsActive)
+                .Select(p => p.UserId)
+                .Distinct()
+                .ToListAsync(cancellationToken);
+
+            if (activeProviderIds.Count == 0) return;
+
+            var providerSlotCounts = await dbContext.AvailabilitySlots
+                .IgnoreQueryFilters()
+                .Where(s => s.StartTime > now)
+                .GroupBy(s => s.ProviderId)
+                .Select(g => new { ProviderId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(g => g.ProviderId, g => g.Count, cancellationToken);
+
+            var newSlots = new List<AvailabilitySlot>();
+            var baseDate = now.Date.AddDays(1);
+
+            foreach (var providerId in activeProviderIds)
+            {
+                var existingCount = providerSlotCounts.GetValueOrDefault(providerId, 0);
+                if (existingCount >= 8) continue;
+
+                for (int dayOffset = 0; dayOffset < 14; dayOffset++)
+                {
+                    var day = baseDate.AddDays(dayOffset);
+                    var morningStart = DateTime.SpecifyKind(day.AddHours(4), DateTimeKind.Utc);
+                    var morningEnd = morningStart.AddHours(6);
+
+                    var eveningStart = DateTime.SpecifyKind(day.AddHours(10), DateTimeKind.Utc);
+                    var eveningEnd = eveningStart.AddHours(7.5);
+
+                    newSlots.Add(new AvailabilitySlot(providerId, morningStart, morningEnd));
+                    newSlots.Add(new AvailabilitySlot(providerId, eveningStart, eveningEnd));
+                }
+            }
+
+            if (newSlots.Count > 0)
+            {
+                await dbContext.AvailabilitySlots.AddRangeAsync(newSlots, cancellationToken);
+                await dbContext.SaveChangesAsync(cancellationToken);
+                Console.WriteLine($"[SyntheticDataSeeder] Ensured {newSlots.Count} rolling availability slots across active companions.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SyntheticDataSeeder] Notice during EnsureRollingAvailabilitySlotsAsync: {ex.Message}");
+        }
+    }
+
     private static async Task SeedAvailabilitySlotsAsync(
         CueDbContext dbContext,
         List<(Guid UserId, decimal Rate, string DisplayName, string City, string Area, string[] Specialties)> activeProviders,
@@ -657,28 +717,22 @@ public static class SyntheticDataSeeder
         var newSlots = new List<AvailabilitySlot>();
         var baseDate = now.Date.AddDays(1);
 
-        // Create 6 upcoming slots over the next 6 days for every active provider
         for (int idx = 0; idx < activeProviders.Count; idx++)
         {
             var providerId = activeProviders[idx].UserId;
             if (existingSlotProviders.Contains(providerId)) continue;
 
-            for (int dayOffset = 0; dayOffset < 4; dayOffset++)
+            for (int dayOffset = 0; dayOffset < 14; dayOffset++)
             {
                 var day = baseDate.AddDays(dayOffset);
-                var morningStart = DateTime.SpecifyKind(day.AddHours(5), DateTimeKind.Utc); // 10:30 IST
-                var afternoonStart = DateTime.SpecifyKind(day.AddHours(9).AddMinutes(30), DateTimeKind.Utc); // 15:00 IST
-                var eveningStart = DateTime.SpecifyKind(day.AddHours(13), DateTimeKind.Utc); // 18:30 IST
+                var morningStart = DateTime.SpecifyKind(day.AddHours(4), DateTimeKind.Utc);
+                var morningEnd = morningStart.AddHours(6);
 
-                newSlots.Add(new AvailabilitySlot(providerId, morningStart, morningStart.AddHours(2)));
-                if ((idx + dayOffset) % 2 == 0)
-                {
-                    newSlots.Add(new AvailabilitySlot(providerId, afternoonStart, afternoonStart.AddHours(2)));
-                }
-                else
-                {
-                    newSlots.Add(new AvailabilitySlot(providerId, eveningStart, eveningStart.AddHours(2)));
-                }
+                var eveningStart = DateTime.SpecifyKind(day.AddHours(10), DateTimeKind.Utc);
+                var eveningEnd = eveningStart.AddHours(7.5);
+
+                newSlots.Add(new AvailabilitySlot(providerId, morningStart, morningEnd));
+                newSlots.Add(new AvailabilitySlot(providerId, eveningStart, eveningEnd));
             }
         }
 
@@ -1072,31 +1126,31 @@ public static class SyntheticDataSeeder
             // 1..9: Flagship showcase profiles (1..3 are distinct regional companions since Elena/Marcus/Sophia live on their existing UUIDs, 4..9 match sample-4..sample-9)
             new(1, "Aarohi", "Deshmukh", "Female", 0, 1500m, 4.97m, 99,
                 "Former state-level tennis player & contemporary art curator in Indiranagar. Available for rally sessions, gallery walks, and specialty coffee trails.",
-                ["Tennis", "Yoga Partner", "Museum Walk", "Cafe & Chat"], VerificationStatus.Approved, true, IntroVideoUrl: "https://youtube.com"),
+                ["Coffee Dates & Cafe Chats", "Weekend Activities & Getaways", "Tennis", "Museum Walk"], VerificationStatus.Approved, true, IntroVideoUrl: "https://youtube.com"),
             new(2, "Vikramaditya", "Singhania", "Male", 5, 1800m, 4.95m, 98,
                 "Editorial portrait photographer and Bandra culinary historian. Let us capture timeless street portraits or explore Mumbai's hidden Irani cafes.",
-                ["Photography", "Cooking & Baking", "City Tour", "Fine Dining"], VerificationStatus.Approved, true),
+                ["Restaurant Visits & Dining", "Coffee Dates & Cafe Chats", "Photography", "City Tour"], VerificationStatus.Approved, true),
             new(3, "Dr. Meera", "Krishnan", "Female", 13, 1300m, 4.94m, 98,
                 "Clinical researcher & trained Carnatic violinist in South Delhi. Available for Lodhi Garden morning walks, classical music appreciation, and museum outings.",
-                ["Hiking", "Violin", "Museum Walk", "Yoga Partner"], VerificationStatus.Approved, true),
+                ["Movies & Cinema Outings", "Weekend Activities & Getaways", "Violin", "Museum Walk"], VerificationStatus.Approved, true),
             new(4, "Julian", "Alvarez", "Male", 15, 1600m, 4.88m, 96,
                 "Certified salsa dance instructor & architectural history guide in Hitec City. Available for events, dance coaching, and wedding plus-one.",
-                ["Dance", "Plus-One", "Event Host", "Architecture"], VerificationStatus.Approved, true),
+                ["Special Events & Plus-One", "Restaurant Visits & Dining", "Dance", "Event Host"], VerificationStatus.Approved, true),
             new(5, "Aria", "Thorne", "Female", 1, 1500m, 4.97m, 99,
                 "Principal Software Architect & avid book enthusiast in Koramangala. Available for system design mentorship, coffee chats, and bookstore crawls.",
-                ["Coding Mentorship", "Language Practice", "Museum Walk", "Cafe & Chat"], VerificationStatus.Approved, true),
+                ["Coffee Dates & Cafe Chats", "Movies & Cinema Outings", "Weekend Activities & Getaways", "Coding Mentorship"], VerificationStatus.Approved, true),
             new(6, "David", "Morales", "Male", 19, 2000m, 4.94m, 98,
                 "Certified sommelier and strength conditioning coach in Koregaon Park. Host for curated dining excursions and 1-on-1 gym workouts.",
-                ["Fine Dining", "Gym Spotter", "Tennis"], VerificationStatus.Approved, true),
+                ["Restaurant Visits & Dining", "Weekend Activities & Getaways", "Gym Spotter", "Tennis"], VerificationStatus.Approved, true),
             new(7, "Ananya", "Sharma", "Female", 0, 1200m, 4.96m, 99,
                 "Passionate regional home chef and urban botanist. Specializing in healthy regional homestyle meal prep, festive flower rangolis, and balcony herb gardens.",
-                ["Regional Homestyle Cook", "Festival & Pooja Decor", "Balcony Tulsi & Gardening"], VerificationStatus.Approved, true),
+                ["Regional Homestyle Cook", "Festival & Pooja Decor", "Weekend Activities & Getaways"], VerificationStatus.Approved, true),
             new(8, "Col. Rajeshwar", "Rao (Retd.)", "Male", 16, 1000m, 4.99m, 100,
                 "Retired defense officer & avid reader in Jubilee Hills. Providing dignified, warm companionship to senior citizens for temple visits, walks, and carrom.",
-                ["Senior Companion & Temple Escort", "Carrom & Society Sports", "Evening Chai & Gupshup"], VerificationStatus.Approved, true),
+                ["Senior Companion & Temple Escort", "Coffee Dates & Cafe Chats", "Evening Chai & Gupshup"], VerificationStatus.Approved, true),
             new(9, "Pooja", "Iyer", "Female", 10, 1400m, 4.93m, 97,
                 "NIFT graduate & Mumbai heritage enthusiast in Dadar West. Available for traditional saree draping, festive boutique shopping, and desi pantry organizing.",
-                ["Ethnic Styling & Saree Draping", "Sabzi Mandi & Bazaar Guide", "Pantry & Dabba Organization"], VerificationStatus.Approved, true),
+                ["Shopping & Styling Companion", "Special Events & Plus-One", "Coffee Dates & Cafe Chats", "Ethnic Styling & Saree Draping"], VerificationStatus.Approved, true),
 
             // 10..75: 66 Approved & Active Companions across all 7 cities, 25 hubs, 4 lenses, and genders
             new(10, "Kavya", "Menon", "Female", 2, 1400m, 4.91m, 97,

@@ -22,10 +22,10 @@ export const AdminKpiStrip: React.FC<AdminKpiStripProps> = ({
       id: 'gmv',
       title: 'Total Booking Value',
       value: formatINR(misData?.totalGmv ?? 0),
-      subtitle: 'All-time value of meetups booked',
+      subtitle: 'All-time value of outings booked',
       icon: CurrencyRupeeIcon,
       tone: 'neutral',
-      badge: 'Total Value',
+      badge: 'GMV Ledger',
     },
     {
       id: 'take',
@@ -34,30 +34,30 @@ export const AdminKpiStrip: React.FC<AdminKpiStripProps> = ({
       subtitle: 'Platform share supporting safety & support',
       icon: BanknotesIcon,
       tone: 'accent',
-      badge: 'Service Fee',
+      badge: 'Platform Take',
     },
     {
       id: 'escrow',
       title: 'Protected Payments Held',
       value: formatINR(misData?.activeEscrowLocked ?? 0),
-      subtitle: 'Held safely until meetups are completed',
+      subtitle: 'Held safely until outings are completed',
       icon: LockClosedIcon,
       tone: 'warning',
-      badge: 'Safe Escrow',
+      badge: 'Escrow Vault',
     },
     {
       id: 'fulfillment',
-      title: 'Completed Meetups',
+      title: 'Completed Outings',
       value: `${misData?.completionRatePercent ?? 100}%`,
       subtitle: `${misData?.completedBookings ?? 0} Completed / ${misData?.totalBookings ?? 0} Total`,
       icon: CheckBadgeIcon,
       tone: 'success',
-      badge: 'Success Rate',
+      badge: 'Completion',
     },
   ];
 
   return (
-    <section aria-label="Key Performance Indicators" className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+    <section aria-label="Key Performance Indicators" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       {kpis.map((kpi) => {
         const Icon = kpi.icon;
         const isAccent = kpi.tone === 'accent';
@@ -67,58 +67,55 @@ export const AdminKpiStrip: React.FC<AdminKpiStripProps> = ({
         return (
           <div
             key={kpi.id}
-            className={`p-4 sm:p-5 rounded-2xl bg-card border transition-all shadow-2xs hover:shadow-xs relative overflow-hidden group ${
-              isAccent
-                ? 'border-amber-500/40 bg-amber-500/5 hover:border-amber-500/60'
-                : 'border-border/80 hover:border-border'
-            }`}
+            className="p-5 rounded-2xl bg-card border border-border/80 hover:border-border transition-all duration-200 shadow-2xs hover:shadow-xs flex flex-col justify-between group"
           >
-            <div className="flex items-center justify-between gap-2 mb-2">
-              <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">
-                {kpi.title}
-              </span>
-              <div
-                className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 ${
-                  isAccent
-                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                    : isWarning
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
-                    : isSuccess
-                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                    : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
+            {/* Top Row: Title + Uniform Icon Box */}
+            <div>
+              <div className="flex items-start justify-between gap-3 mb-2.5">
+                <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider font-sans leading-snug">
+                  {kpi.title}
+                </span>
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
+                    isAccent
+                      ? 'bg-accent/10 text-accent border border-accent/20'
+                      : isWarning
+                      ? 'bg-accent-champagne/15 text-accent-champagne border border-accent-champagne/30'
+                      : isSuccess
+                      ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                      : 'bg-muted/70 text-muted-foreground border border-border/60'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                </div>
+              </div>
+
+              {/* Main Metric Value */}
+              <div className="flex items-baseline gap-2 mb-1">
+                {isLoading ? (
+                  <div className="h-8 w-28 bg-muted/60 animate-pulse rounded-md" />
+                ) : (
+                  <span className="text-2xl sm:text-3xl font-bold font-mono tracking-tight text-foreground tabular-nums">
+                    {kpi.value}
+                  </span>
+                )}
               </div>
             </div>
 
-            <div className="flex items-baseline gap-1.5">
-              {isLoading ? (
-                <div className="h-7 w-24 bg-muted/60 animate-pulse rounded-md" />
-              ) : (
-                <span
-                  className={`text-xl sm:text-2xl font-black font-mono tracking-tight tabular-nums ${
-                    isAccent
-                      ? 'text-amber-600 dark:text-amber-400'
-                      : 'text-foreground'
-                  }`}
-                >
-                  {kpi.value}
-                </span>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between gap-2 mt-1.5">
-              <span className="text-[11px] text-muted-foreground font-medium truncate">
+            {/* Bottom Row: Subtitle + Uniform Subtly Pill Badge */}
+            <div className="flex items-center justify-between gap-2 pt-3 mt-2 border-t border-border/50">
+              <span className="text-xs text-muted-foreground font-sans truncate" title={kpi.subtitle}>
                 {kpi.subtitle}
               </span>
               <span
-                className={`text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider font-mono shrink-0 whitespace-nowrap border ${
                   isAccent
-                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                    ? 'bg-accent/10 text-accent border-accent/25'
+                    : isWarning
+                    ? 'bg-accent-champagne/15 text-accent-champagne border-accent-champagne/30'
                     : isSuccess
-                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300'
-                    : 'bg-muted text-muted-foreground'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                    : 'bg-muted/80 text-muted-foreground border-border/70'
                 }`}
               >
                 {kpi.badge}

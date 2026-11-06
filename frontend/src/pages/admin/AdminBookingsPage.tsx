@@ -18,13 +18,16 @@ export const AdminBookingsPage: React.FC = () => {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+
   const {
     data: bookingsData,
     isLoading: isLoadingBookings,
     isError: isBookingsError,
     refetch: refetchBookings,
     isFetching,
-  } = useGetAdminBookingsQuery({});
+  } = useGetAdminBookingsQuery({ page, pageSize });
 
   const handleExportCsv = async () => {
     try {
@@ -53,8 +56,8 @@ export const AdminBookingsPage: React.FC = () => {
     }
   };
 
-  const totalBookings = bookingsData?.length ?? 0;
-  const disputedCount = bookingsData?.filter((b) => (b.status || '').toLowerCase() === 'disputed').length ?? 0;
+  const totalBookings = bookingsData?.totalCount ?? 0;
+  const disputedCount = bookingsData?.items?.filter((b) => (b.status || '').toLowerCase() === 'disputed').length ?? 0;
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
@@ -144,9 +147,18 @@ export const AdminBookingsPage: React.FC = () => {
       {/* Full-Bleed Ledger View */}
       <main>
         <AdminBookingLedger
-          bookings={bookingsData ?? []}
+          bookings={bookingsData?.items ?? []}
           isLoading={isLoadingBookings}
           onRefresh={refetchBookings}
+          page={page}
+          pageSize={pageSize}
+          totalCount={bookingsData?.totalCount ?? 0}
+          totalPages={bookingsData?.totalPages ?? 1}
+          onPageChange={setPage}
+          onPageSizeChange={(sz) => {
+            setPageSize(sz);
+            setPage(1);
+          }}
         />
       </main>
     </div>

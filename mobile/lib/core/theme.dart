@@ -1,34 +1,48 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Brand colors
-  static const Color primary = Color(0xFFD86E51); // Warm Terracotta
-  static const Color primaryDark = Color(0xFFC0583D);
-  static const Color primaryLight = Color(0xFFF6DDD6);
+  // Brand colors (Codified in DESIGN.md & AGENTS.md)
+  static const Color background = Color(0xFFFAF7F2); // Warm Cashmere Ivory
+  static const Color surface = Color(0xFFFFFFFF); // Pure White
+  static const Color surfaceMuted = Color(0xFFF4EFEA); // Soft Linen Tint
 
-  static const Color sage = Color(0xFF587363); // Deep Sage
+  static const Color primary = Color(0xFF881337); // Rich Bordeaux Velvet
+  static const Color primaryHover = Color(0xFF9F1239); // Deep Wine Accent
+  static const Color primaryLight = Color(0xFFFCE7F3); // Rose Wash Tint
+  static const Color primaryDark = Color(0xFF4C0519); // Deep Velvet Dark
+
+  static const Color gold = Color(0xFFC5A059); // Burnished Champagne Gold
+  static const Color goldLight = Color(0xFFFBF4E6); // Champagne Glow Tint
+  static const Color goldDark = Color(0xFF997A3A); // Antique Bronze Gold
+
+  // Legacy alias for sage to prevent breaks while migrating
+  static const Color sage = Color(0xFF587363);
   static const Color sageDark = Color(0xFF3B5244);
   static const Color sageLight = Color(0xFFE4EDE7);
 
-  static const Color background = Color(0xFFFAF7F2); // Warm Linen
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceMuted = Color(0xFFF3EEE6);
+  // Text hierarchy
+  static const Color textPrimary = Color(0xFF1C1917); // Charcoal Espresso
+  static const Color textSecondary = Color(0xFF78716C); // Warm Stone
+  static const Color textMuted = Color(0xFFA8A29E); // Neutral Muted
 
-  static const Color textPrimary = Color(0xFF1C1917);
-  static const Color textSecondary = Color(0xFF78716C);
-  static const Color textMuted = Color(0xFFA8A29E);
+  static const Color border = Color(0xFFE7E2D9); // Warm Border
+  static const Color borderSubtle = Color(0xFFF0EBE1);
 
-  static const Color border = Color(0xFFE7E2D9);
+  // Outing status colors
+  static const Color statusPending = Color(0xFFD97706); // Amber
+  static const Color statusConfirmed = Color(0xFF881337); // Bordeaux Velvet
+  static const Color statusInProgress = Color(0xFFC5A059); // Champagne Gold
+  static const Color statusCompleted = Color(0xFF047857); // Forest Emerald
+  static const Color statusCancelled = Color(0xFFDC2626); // Crimson
+  static const Color statusDisputed = Color(0xFFB91C1C);
 
-  // Status colors
-  static const Color statusPending = Color(0xFFD97706);
-  static const Color statusConfirmed = Color(0xFF2563EB);
-  static const Color statusInProgress = Color(0xFF7C3AED);
-  static const Color statusCompleted = Color(0xFF059669);
-  static const Color statusCancelled = Color(0xFFDC2626);
+  // Safety & Emergency colors
+  static const Color emergencyRed = Color(0xFFDC2626);
+  static const Color emergencyRedHover = Color(0xFFB91C1C);
+  static const Color emergencyRedLight = Color(0xFFFEE2E2);
 
   // Trust score badge colors
-  static const Color trustHigh = Color(0xFF047857);
+  static const Color trustHigh = Color(0xFFC5A059); // Champagne Gold Tier
   static const Color trustMedium = Color(0xFFD97706);
   static const Color trustLow = Color(0xFFDC2626);
 }
@@ -37,10 +51,11 @@ class AppTheme {
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      fontFamily: 'Plus Jakarta Sans',
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.primary,
         primary: AppColors.primary,
-        secondary: AppColors.sage,
+        secondary: AppColors.gold,
         surface: AppColors.surface,
         brightness: Brightness.light,
       ),
@@ -70,6 +85,7 @@ class AppTheme {
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
           elevation: 0,
+          minimumSize: const Size(44, 48), // Strict 44x44px minimum touch target
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -77,6 +93,7 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
+            letterSpacing: 0.1,
           ),
         ),
       ),
@@ -84,6 +101,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           backgroundColor: AppColors.primary,
           foregroundColor: Colors.white,
+          minimumSize: const Size(44, 48),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
@@ -91,12 +109,14 @@ class AppTheme {
           textStyle: const TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
+            letterSpacing: 0.1,
           ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
+          minimumSize: const Size(44, 48),
           side: const BorderSide(color: AppColors.border),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(
@@ -112,7 +132,7 @@ class AppTheme {
         filled: true,
         fillColor: AppColors.surface,
         contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: AppColors.border),
@@ -140,7 +160,7 @@ class AppTheme {
             return const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: AppColors.primaryDark,
+              color: AppColors.primary,
             );
           }
           return const TextStyle(
@@ -153,4 +173,3 @@ class AppTheme {
     );
   }
 }
-

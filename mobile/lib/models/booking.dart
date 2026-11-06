@@ -45,6 +45,9 @@ enum BookingStatus {
   }
 }
 
+typedef Outing = Booking;
+typedef OutingStatus = BookingStatus;
+
 class Booking {
   const Booking({
     required this.orderId,
@@ -62,10 +65,12 @@ class Booking {
     required this.status,
     this.providerInitials = '',
     this.providerPhotoUrl,
-    this.meetingAddress = 'Central Park West, New York',
+    this.meetingAddress = 'Indiranagar 100ft Road, Bengaluru',
     this.specialRequests,
     this.hasReview = false,
     this.createdAt,
+    this.arrivalPin,
+    this.completionPin,
   });
 
   final String orderId;
@@ -87,8 +92,19 @@ class Booking {
   final String? specialRequests;
   final bool hasReview;
   final DateTime? createdAt;
+  final String? arrivalPin;
+  final String? completionPin;
 
-  /// Invariant check as defined in CONTEXT.md
+  // Canonical Host & Guest Aliases
+  String get hostId => providerId;
+  String get hostName => providerName;
+  String get hostInitials => providerInitials;
+  String? get hostPhotoUrl => providerPhotoUrl;
+  String get guestId => seekerId;
+  String get guestName => seekerName;
+  double get hostEarnings => providerEarnings;
+
+  /// Invariant check as defined in CONTEXT.md & specs
   static void validateInvariants({
     required String seekerId,
     required String providerId,
@@ -99,7 +115,7 @@ class Booking {
     required double totalAmount,
   }) {
     if (seekerId == providerId) {
-      throw ArgumentError('A service order must involve different seeker and provider users.');
+      throw ArgumentError('An outing must involve different guest and host users.');
     }
     if (!endTime.isAfter(startTime)) {
       throw ArgumentError('Booking end time must be strictly after start time.');
@@ -111,7 +127,7 @@ class Booking {
     final diff = ((providerEarnings + platformFee) - totalAmount).abs();
     if (diff > 0.05) {
       throw ArgumentError(
-        'Provider earnings ($providerEarnings) plus platform fee ($platformFee) must equal total amount ($totalAmount).',
+        'Host earnings ($providerEarnings) plus platform fee ($platformFee) must equal total amount ($totalAmount).',
       );
     }
   }
@@ -128,9 +144,11 @@ class Booking {
     required double durationHours,
     required double hourlyRate,
     String? providerPhotoUrl,
-    String meetingAddress = 'Central Park West, New York',
+    String meetingAddress = 'Indiranagar 100ft Road, Bengaluru',
     String? specialRequests,
     BookingStatus status = BookingStatus.pendingPayment,
+    String? arrivalPin,
+    String? completionPin,
   }) {
     final endTime = startTime.add(Duration(minutes: (durationHours * 60).round()));
     final baseEarnings = hourlyRate * durationHours;
@@ -166,6 +184,8 @@ class Booking {
       meetingAddress: meetingAddress,
       specialRequests: specialRequests,
       createdAt: DateTime.now(),
+      arrivalPin: arrivalPin,
+      completionPin: completionPin,
     );
   }
 
@@ -174,6 +194,8 @@ class Booking {
     bool? hasReview,
     String? specialRequests,
     String? meetingAddress,
+    String? arrivalPin,
+    String? completionPin,
   }) {
     return Booking(
       orderId: orderId,
@@ -195,6 +217,8 @@ class Booking {
       specialRequests: specialRequests ?? this.specialRequests,
       hasReview: hasReview ?? this.hasReview,
       createdAt: createdAt,
+      arrivalPin: arrivalPin ?? this.arrivalPin,
+      completionPin: completionPin ?? this.completionPin,
     );
   }
 
@@ -202,16 +226,21 @@ class Booking {
     return {
       'orderId': orderId,
       'providerId': providerId,
+      'hostId': providerId,
       'providerName': providerName,
+      'hostName': providerName,
       'providerInitials': providerInitials,
       'providerPhotoUrl': providerPhotoUrl,
       'seekerId': seekerId,
+      'guestId': seekerId,
       'seekerName': seekerName,
+      'guestName': seekerName,
       'startTime': startTime.toIso8601String(),
       'endTime': endTime.toIso8601String(),
       'hourlyRate': hourlyRate,
       'durationHours': durationHours,
       'providerEarnings': providerEarnings,
+      'hostEarnings': providerEarnings,
       'platformFee': platformFee,
       'totalAmount': totalAmount,
       'status': status.name,
@@ -219,6 +248,8 @@ class Booking {
       'specialRequests': specialRequests,
       'hasReview': hasReview,
       'createdAt': createdAt?.toIso8601String(),
+      'arrivalPin': arrivalPin,
+      'completionPin': completionPin,
     };
   }
 
@@ -227,31 +258,34 @@ class Booking {
     final end = DateTime.tryParse(json['endTime'] as String? ?? '') ?? start.add(const Duration(hours: 2));
     final durationHours = (json['durationHours'] as num?)?.toDouble() ??
         (end.difference(start).inMinutes / 60.0);
-    final total = (json['totalAmount'] as num?)?.toDouble() ?? 96.0;
+    final total = (json['totalAmount'] as num?)?.toDouble() ?? 1980.0;
     final fee = (json['platformFee'] as num?)?.toDouble() ?? (total * 0.10);
-    final earnings = (json['providerEarnings'] as num?)?.toDouble() ?? (total - fee);
+    final earnings = (json['providerEarnings'] as num?)?.toDouble() ??
+        (json['hostEarnings'] as num?)?.toDouble() ??
+        (total - fee);
 
     return Booking(
       orderId: json['orderId'] as String? ?? json['id'] as String? ?? '',
-      providerId: json['providerId'] as String? ?? '',
-      providerName: json['providerName'] as String? ?? 'Companion',
-      providerInitials: json['providerInitials'] as String? ?? 'CP',
-      providerPhotoUrl: json['providerPhotoUrl'] as String?,
-      seekerId: json['seekerId'] as String? ?? '',
-      seekerName: json['seekerName'] as String? ?? 'Seeker',
+      providerId: json['providerId'] as String? ?? json['hostId'] as String? ?? '',
+      providerName: json['providerName'] as String? ?? json['hostName'] as String? ?? 'Host',
+      providerInitials: json['providerInitials'] as String? ?? json['hostInitials'] as String? ?? 'HT',
+      providerPhotoUrl: json['providerPhotoUrl'] as String? ?? json['hostPhotoUrl'] as String?,
+      seekerId: json['seekerId'] as String? ?? json['guestId'] as String? ?? '',
+      seekerName: json['seekerName'] as String? ?? json['guestName'] as String? ?? 'Guest',
       startTime: start,
       endTime: end,
-      hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 45.0,
+      hourlyRate: (json['hourlyRate'] as num?)?.toDouble() ?? 900.0,
       durationHours: durationHours > 0 ? durationHours : 2.0,
       providerEarnings: earnings,
       platformFee: fee,
       totalAmount: total,
       status: BookingStatus.fromString(json['status'] as String? ?? 'pendingPayment'),
-      meetingAddress: json['meetingAddress'] as String? ?? 'New York, NY',
+      meetingAddress: json['meetingAddress'] as String? ?? 'Indiranagar 100ft Road, Bengaluru',
       specialRequests: json['specialRequests'] as String?,
       hasReview: json['hasReview'] as bool? ?? false,
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      arrivalPin: json['arrivalPin'] as String? ?? json['checkInPin'] as String?,
+      completionPin: json['completionPin'] as String?,
     );
   }
 }
-

@@ -39,7 +39,7 @@ export const ProfileDashboard: React.FC = () => {
     <div className="space-y-8">
       {/* Service Management Section */}
       <section className="rounded-2xl border border-border bg-card p-6 shadow-xs">
-        <h2 className="text-xl font-bold font-serif text-foreground mb-6">
+        <h2 className="text-xl font-bold font-sans text-foreground mb-6">
           Manage Your Services
         </h2>
         <ServiceManagement
@@ -55,13 +55,13 @@ export const ProfileDashboard: React.FC = () => {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Active Services
           </p>
-          <p className="text-2xl font-bold font-serif text-foreground">{specialties.length}</p>
+          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">{specialties.length}</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Upcoming This Week
           </p>
-          <p className="text-2xl font-bold font-serif text-foreground">
+          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">
             {bookings.filter((b: any) => new Date(b.startTime) > new Date()).length}
           </p>
         </div>
@@ -69,19 +69,19 @@ export const ProfileDashboard: React.FC = () => {
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Avg. Rating
           </p>
-          <p className="text-2xl font-bold font-serif text-foreground">4.95</p>
+          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">4.95</p>
         </div>
         <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
             Response Time
           </p>
-          <p className="text-2xl font-bold font-serif text-foreground">&lt; 15m</p>
+          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">&lt; 15m</p>
         </div>
       </section>
 
       {/* Bookings */}
       <section>
-        <h2 className="text-xl font-bold font-serif text-foreground mb-4">
+        <h2 className="text-xl font-bold font-sans text-foreground mb-4">
           Recent Orders
         </h2>
         {bookings.length === 0 ? (

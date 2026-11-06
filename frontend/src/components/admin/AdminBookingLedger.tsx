@@ -10,21 +10,57 @@ import {
 } from '@heroicons/react/24/outline';
 import type { AdminBookingLedgerItem } from '../../store/adminApi';
 import { formatINR } from '../../utils/currency';
+import { Pagination } from '../ui/Pagination';
 
 interface AdminBookingLedgerProps {
   bookings: AdminBookingLedgerItem[];
   isLoading: boolean;
   onRefresh: () => void;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
   bookings,
   isLoading,
   onRefresh,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }) => {
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(20);
+
+  const isServerPaged = Boolean(onPageChange);
+  const activePage = isServerPaged ? (page ?? 1) : localPage;
+  const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setLocalPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (ps: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(ps);
+    } else {
+      setLocalPageSize(ps);
+      setLocalPage(1);
+    }
+  };
 
   const isEscrowStatus = (status?: string) => {
     if (!status) return false;
@@ -56,6 +92,15 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
 
     return matchesFilter && matchesSearch;
   });
+
+  const displayedBookings = isServerPaged
+    ? filteredBookings
+    : filteredBookings.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+
+  const activeTotalCount = isServerPaged ? (totalCount ?? filteredBookings.length) : filteredBookings.length;
+  const activeTotalPages = isServerPaged
+    ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
+    : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const totalGmv = filteredBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
   const totalPlatformFee = filteredBookings.reduce((sum, b) => sum + (b.platformFee || 0), 0);
@@ -117,7 +162,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by ID, seeker, companion..."
+              placeholder="Search by ID, host, guest..."
               className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border/80 bg-background text-foreground text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
             />
             {search && (
@@ -166,7 +211,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
         </div>
         <div>
           <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
-            Companion Earnings (85%)
+            Guest Earnings (85%)
           </span>
           <p className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
             {formatINR(totalProviderNet)}
@@ -195,17 +240,17 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
               <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
                   <th className="px-5 py-3.5">Booking ID</th>
-                  <th className="px-4 py-3.5">Client</th>
-                  <th className="px-4 py-3.5">Companion</th>
+                  <th className="px-4 py-3.5">Host</th>
+                  <th className="px-4 py-3.5">Guest</th>
                   <th className="px-4 py-3.5 text-right">Total Amount</th>
                   <th className="px-4 py-3.5 text-right">Platform Fee (15%)</th>
-                  <th className="px-4 py-3.5 text-right">Companion Earnings (85%)</th>
+                  <th className="px-4 py-3.5 text-right">Guest Earnings (85%)</th>
                   <th className="px-4 py-3.5">Status</th>
                   <th className="px-5 py-3.5">Created At</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredBookings.map((b) => {
+                {displayedBookings.map((b) => {
                   const displayId = b.bookingId || b.id || 'N/A';
                   const isCompleted = b.status === 'Completed';
                   const isCancelled = b.status === 'Cancelled';
@@ -241,7 +286,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
                           <span className="text-foreground">{b.providerName}</span>
                           <Link
                             to={`/provider/${b.providerId}`}
-                            title="View Companion Discovery Profile"
+                            title="View Guest Profile"
                             className="p-1 rounded text-accent hover:bg-accent/10 transition-colors"
                           >
                             <EyeIcon className="w-3.5 h-3.5" />
@@ -306,6 +351,16 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={activePage}
+          totalPages={activeTotalPages}
+          totalCount={activeTotalCount}
+          pageSize={activePageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isLoading}
+        />
       </div>
     </section>
   );

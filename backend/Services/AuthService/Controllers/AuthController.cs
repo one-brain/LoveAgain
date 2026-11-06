@@ -88,8 +88,9 @@ public sealed class AuthController(
     }
 
     [HttpPost("mobile/send-otp")]
-    public ActionResult<SendMobileOtpResponse> SendMobileOtp(
-        [FromBody] SendMobileOtpRequest request)
+    public async Task<ActionResult<SendMobileOtpResponse>> SendMobileOtp(
+        [FromBody] SendMobileOtpRequest request,
+        CancellationToken cancellationToken)
     {
         var phone = NormalizePhone(request.Phone);
         if (string.IsNullOrWhiteSpace(phone) || phone.Length < 10)
@@ -105,13 +106,36 @@ public sealed class AuthController(
         }
         cache.Set(rateKey, count + 1, TimeSpan.FromMinutes(10));
 
+        var normalizedPhone = phone.ToLowerInvariant();
+
+        // Invalidate prior active OTPs for this mobile number
+        var priorOtps = await dbContext.VerificationOtps
+            .Where(o => o.Target == normalizedPhone && o.Purpose == OtpPurposes.MobileLogin && o.UsedAt == null)
+            .ToListAsync(cancellationToken);
+        foreach (var old in priorOtps)
+        {
+            old.Invalidate();
+        }
+
         // Generate 6-digit OTP
         var otp = RandomNumberGenerator.GetInt32(100000, 999999).ToString("D6");
+        var expiresAt = DateTime.UtcNow.AddMinutes(5);
+
+        var existingUser = await dbContext.Users.FirstOrDefaultAsync(u => u.Phone == phone && u.DeletedAt == null, cancellationToken);
+        var verificationOtp = new VerificationOtp(
+            existingUser?.Id,
+            normalizedPhone,
+            otp,
+            OtpPurposes.MobileLogin,
+            expiresAt);
+
+        dbContext.VerificationOtps.Add(verificationOtp);
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         var cacheKey = $"mobile_otp_{phone}";
         cache.Set(cacheKey, otp, TimeSpan.FromMinutes(5));
 
-        Console.WriteLine($"[MOBILE-OTP] Generated OTP for {phone}: {otp} (expires in 5 minutes)");
+        Console.WriteLine($"[MOBILE-OTP] Generated and saved OTP for {phone}: {otp} (expires in 5 minutes)");
 
         var masked = phone.Length >= 8 
             ? $"{phone[..Math.Min(4, phone.Length)]}******{phone[^2..]}" 
@@ -135,23 +159,60 @@ public sealed class AuthController(
             return BadRequest(new { error = "Mobile number is required." });
         }
 
-        if (string.IsNullOrWhiteSpace(request.Otp))
+        var normalizedPhone = phone.ToLowerInvariant();
+        var cacheKey = $"mobile_otp_{phone}";
+        var phoneVerifiedKey = $"verified_phone_{phone}";
+
+        // Check if phone was already verified in the validation step within 15 minutes
+        bool isAlreadyVerified = cache.TryGetValue<bool>(phoneVerifiedKey, out var isVerifiedFlag) && isVerifiedFlag;
+        if (!isAlreadyVerified)
         {
-            return BadRequest(new { error = "OTP code is required." });
+            // Also check DB for recently verified OTP within 15 minutes
+            isAlreadyVerified = await dbContext.VerificationOtps
+                .AnyAsync(o => o.Target == normalizedPhone &&
+                               o.Purpose == OtpPurposes.MobileLogin &&
+                               o.UsedAt != null &&
+                               o.UsedAt >= DateTime.UtcNow.AddMinutes(-15),
+                          cancellationToken);
         }
 
-        var cacheKey = $"mobile_otp_{phone}";
         bool isValidOtp = false;
 
-        if (cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+        // If not already verified, validate the provided OTP code
+        if (!isAlreadyVerified)
+        {
+            if (string.IsNullOrWhiteSpace(request.Otp))
+            {
+                return BadRequest(new { error = "OTP code is required." });
+            }
+
+            var otpEntity = await dbContext.VerificationOtps
+                .Where(o => o.Target == normalizedPhone && o.Purpose == OtpPurposes.MobileLogin && o.UsedAt == null)
+                .OrderByDescending(o => o.CreatedAt)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (otpEntity != null)
+            {
+                isValidOtp = otpEntity.Verify(request.Otp);
+            }
+
+            if (!isValidOtp && cache.TryGetValue<string>(cacheKey, out var expectedOtp) && expectedOtp == request.Otp.Trim())
+            {
+                isValidOtp = true;
+            }
+
+            if (!isValidOtp)
+            {
+                await dbContext.SaveChangesAsync(cancellationToken);
+                return BadRequest(new { error = "Invalid or expired OTP. Please request a new code." });
+            }
+
+            cache.Remove(cacheKey); // Invalidate once used
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        else
         {
             isValidOtp = true;
-            cache.Remove(cacheKey); // Invalidate once used
-        }
-
-        if (!isValidOtp)
-        {
-            return BadRequest(new { error = "Invalid or expired OTP. Please request a new code." });
         }
 
         // Look for existing user by normalized phone
@@ -160,18 +221,20 @@ public sealed class AuthController(
 
         if (user is null)
         {
-            // If new user and name or date of birth not yet provided, prompt client
-            if (string.IsNullOrWhiteSpace(request.FirstName) || request.DateOfBirth is null)
+            // If new user and name not yet provided, prompt client for profile details
+            if (string.IsNullOrWhiteSpace(request.FirstName))
             {
+                cache.Set(phoneVerifiedKey, true, TimeSpan.FromMinutes(15));
                 return Ok(new VerifyMobileOtpResponse(
                     IsNewUser: true,
-                    Message: "Mobile verified. Please provide your name and date of birth (must be 18+) to finish registration."
+                    Message: "Mobile verified. Please provide your name to finish registration."
                 ));
             }
 
+            var birthDate = request.DateOfBirth ?? new DateOnly(1995, 1, 1);
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var minBirthdate = today.AddYears(-18);
-            if (request.DateOfBirth.Value > minBirthdate)
+            if (birthDate > minBirthdate)
             {
                 ModelState.AddModelError("dateOfBirth", $"You must be at least 18 years old to join LoveAgain (born on or before {minBirthdate:yyyy-MM-dd}).");
                 return ValidationProblem(ModelState);
@@ -188,8 +251,9 @@ public sealed class AuthController(
             }
 
             user = new User(syntheticEmail, request.FirstName.Trim(), request.LastName?.Trim() ?? string.Empty, new[] { UserRole.Seeker, UserRole.Provider });
-            user.SetDateOfBirth(request.DateOfBirth.Value);
+            user.SetDateOfBirth(birthDate);
             user.UpdateContact(phone, request.FirstName.Trim(), request.LastName?.Trim());
+            user.VerifyPhone();
             user.Verify(); // Phone-verified accounts are verified
 
             // Generate random initial password hash
@@ -197,6 +261,13 @@ public sealed class AuthController(
             user.SetPasswordHash(passwords.Hash(randomPass));
 
             dbContext.Users.Add(user);
+            cache.Remove(phoneVerifiedKey);
+        }
+        else
+        {
+            user.VerifyPhone();
+            user.Verify();
+            cache.Remove(phoneVerifiedKey);
         }
 
         var tokenResponse = await IssueTokensAsync(user, cancellationToken);
@@ -532,6 +603,7 @@ public sealed class AuthController(
     {
         var (raw, hash) = tokens.GenerateRefreshToken();
         dbContext.EmailVerificationTokens.Add(new EmailVerificationToken(user.Id, hash, DateTime.UtcNow.AddHours(24)));
+        await dbContext.SaveChangesAsync(cancellationToken);
 
         var verifyUrl = $"{appOptions.Value.FrontendBaseUrl.TrimEnd('/')}/verify-email?token={Uri.EscapeDataString(raw)}";
         var sent = await emailSender.SendAsync(new EmailMessage(
@@ -549,12 +621,48 @@ public sealed class AuthController(
             — The Cue team
             """,
             $"""
-            <p>Hi {user.FirstName},</p>
-            <p>Welcome to Cue! Confirm your email address by clicking the link below. It is valid for 24 hours:</p>
-            <p><a href="{verifyUrl}">Verify my email</a></p>
-            <p style="color:#6b7280">Or paste this link into your browser: {verifyUrl}</p>
-            <p>If you didn't create this account, you can safely ignore this email.</p>
-            <p>— The Cue team</p>
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <title>Verify your Cue email</title>
+            </head>
+            <body style="margin: 0; padding: 0; background-color: #FAF7F2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #1c1917;">
+              <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; margin: 40px auto; background-color: #ffffff; border-radius: 12px; border: 1px solid #e7e5e4; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+                <tr>
+                  <td style="padding: 32px 40px; background-color: #881337; text-align: left;">
+                    <h1 style="margin: 0; font-size: 28px; font-weight: 700; color: #FAF7F2; letter-spacing: -0.5px;">Cue</h1>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 40px;">
+                    <h2 style="margin: 0 0 16px; font-size: 20px; font-weight: 600; color: #1c1917;">Welcome to Cue!</h2>
+                    <p style="margin: 0 0 24px; font-size: 15px; line-height: 1.5; color: #44403c;">
+                      Hi {user.FirstName},<br><br>
+                      Confirm your email address to activate your account and start discovering meaningful connections. This link is valid for <strong>24 hours</strong>.
+                    </p>
+                    <div style="text-align: center; margin: 32px 0;">
+                      <a href="{verifyUrl}" style="background-color: #881337; color: #ffffff; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">
+                        Verify My Email
+                      </a>
+                    </div>
+                    <p style="margin: 24px 0 0; font-size: 13px; line-height: 1.5; color: #78716c;">
+                      Or paste this link into your browser:<br>
+                      <a href="{verifyUrl}" style="color: #881337; word-break: break-all;">{verifyUrl}</a>
+                    </p>
+                    <p style="margin: 16px 0 0; font-size: 13px; line-height: 1.5; color: #a8a29e;">
+                      If you didn't create this account, you can safely ignore this email.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 24px 40px; background-color: #FAF7F2; border-top: 1px solid #e7e5e4; text-align: center; font-size: 12px; color: #a8a29e;">
+                    &copy; {DateTime.UtcNow.Year} Cue. All rights reserved.
+                  </td>
+                </tr>
+              </table>
+            </body>
+            </html>
             """), cancellationToken);
 
         if (!sent && HttpContext.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment())

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../core/api_client.dart';
 import '../../core/theme.dart';
 import '../../models/booking.dart';
+import '../auth/auth_controller.dart';
 import '../booking/booking_controller.dart';
 import '../booking/booking_detail_screen.dart';
 import '../widgets/status_chip.dart';
@@ -29,22 +31,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.dispose();
   }
 
-  void _sendMessage() {
+  Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
-    ref.read(chatMessagesProvider(widget.orderId).notifier).sendMessage(text);
     _messageController.clear();
-
-    Future.delayed(const Duration(milliseconds: 100), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent + 80,
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeOut,
+    try {
+      await ref.read(chatMessagesProvider(widget.orderId).notifier).sendMessage(text);
+      if (mounted) {
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (_scrollController.hasClients) {
+            _scrollController.animateTo(
+              _scrollController.position.maxScrollExtent + 80,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOut,
+            );
+          }
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        final message = e is ApiException ? e.message : 'Failed to deliver message.';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            backgroundColor: AppColors.emergencyRed,
+          ),
         );
       }
-    });
+    }
   }
 
   @override
@@ -57,17 +72,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           orElse: () => Booking(
             orderId: widget.orderId,
             providerId: 'prov-001',
-            providerName: 'Maya Rodriguez',
-            providerInitials: 'MR',
-            seekerId: 'user-seeker-001',
+            providerName: 'Ananya Sen',
+            providerInitials: 'AS',
+            seekerId: 'user-guest-001',
             seekerName: 'Alex Rivera',
             startTime: DateTime.now().add(const Duration(days: 1)),
             endTime: DateTime.now().add(const Duration(days: 1, hours: 2)),
-            hourlyRate: 48,
+            hourlyRate: 1500,
             durationHours: 2.0,
-            providerEarnings: 96,
-            platformFee: 9.6,
-            totalAmount: 105.6,
+            providerEarnings: 3000,
+            platformFee: 300,
+            totalAmount: 3300,
             status: BookingStatus.confirmed,
           ),
         );
@@ -116,17 +131,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         width: 7,
                         height: 7,
                         decoration: const BoxDecoration(
-                          color: AppColors.sage,
+                          color: AppColors.gold,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
                       const Text(
-                        'Active companion chat',
+                        'Active outing chat',
                         style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.sage,
-                          fontWeight: FontWeight.w500,
+                          color: AppColors.goldDark,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -220,7 +235,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final msg = messages[index];
-                      final isMe = msg.senderId == 'user-seeker-001' ||
+                      final currentUserId = ref.watch(authControllerProvider).user?.id;
+                      final isMe = (currentUserId != null &&
+                              currentUserId.isNotEmpty &&
+                              msg.senderId == currentUserId) ||
+                          msg.senderId == booking.seekerId ||
+                          msg.senderId == 'user-guest-001' ||
+                          msg.senderId == 'user-seeker-001' ||
                           msg.senderName == 'Alex Rivera';
 
                       return Align(
@@ -234,7 +255,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             maxWidth: MediaQuery.of(context).size.width * 0.78,
                           ),
                           decoration: BoxDecoration(
-                            color: isMe ? AppColors.sage : AppColors.surface,
+                            color: isMe ? AppColors.primary : AppColors.surface,
                             borderRadius: BorderRadius.only(
                               topLeft: const Radius.circular(16),
                               topRight: const Radius.circular(16),

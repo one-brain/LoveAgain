@@ -1,25 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {
   MagnifyingGlassIcon,
   EyeIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import type { AdminUserItem } from '../../store/adminApi';
+import { useGetAdminUserStatsQuery, type AdminUserItem, type AdminUserStats } from '../../store/adminApi';
+import { Pagination } from '../ui/Pagination';
 
 interface AdminUsersDirectoryProps {
   users: AdminUserItem[];
   isLoading: boolean;
   onToggleSuspend: (userId: string) => Promise<void>;
   isTogglingSuspend: boolean;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+  roleFilter?: 'All' | 'Guests' | 'Hosts' | 'Suspended' | 'Companions' | 'Clients';
+  onRoleFilterChange?: (role: 'All' | 'Guests' | 'Hosts' | 'Suspended') => void;
+  search?: string;
+  onSearchChange?: (search: string) => void;
+  stats?: AdminUserStats;
 }
 
-const isUserCompanion = (u: AdminUserItem) =>
-  Boolean(u.hasCompanionProfile || u.roles?.includes('Companion') || u.roles?.includes('Provider'));
+const isUserGuest = (u: AdminUserItem) =>
+  Boolean(u.hasCompanionProfile || u.roles?.includes('Companion') || u.roles?.includes('Provider') || u.roles?.includes('Guest'));
 const isUserAdmin = (u: AdminUserItem) =>
   Boolean(u.roles?.includes('Admin') || u.email?.toLowerCase() === 'admin@cue.local');
-const isUserClient = (u: AdminUserItem) =>
-  !isUserCompanion(u) && !isUserAdmin(u);
+const isUserHost = (u: AdminUserItem) =>
+  !isUserGuest(u) && !isUserAdmin(u);
 const isUserSuspended = (u: AdminUserItem) =>
   u.trustScore < 0;
 
@@ -28,28 +40,135 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   isLoading,
   onToggleSuspend,
   isTogglingSuspend,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
+  roleFilter,
+  onRoleFilterChange,
+  search,
+  onSearchChange,
+  stats,
 }) => {
-  const [roleFilter, setRoleFilter] = useState<'All' | 'Companions' | 'Clients' | 'Suspended'>('All');
-  const [search, setSearch] = useState('');
+  const [localRoleFilter, setLocalRoleFilter] = useState<'All' | 'Guests' | 'Hosts' | 'Suspended'>('All');
+  const [localSearch, setLocalSearch] = useState('');
   const [actionUserId, setActionUserId] = useState<string | null>(null);
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(20);
+
+  // Self-sufficient stats fetch if parent doesn't provide them
+  const { data: queryStats } = useGetAdminUserStatsQuery(undefined, {
+    skip: Boolean(stats),
+  });
+  const effectiveStats = stats || queryStats;
+
+  // Normalize role filter to canon Host/Guest values
+  const activeRoleFilter: 'All' | 'Guests' | 'Hosts' | 'Suspended' =
+    roleFilter === 'Companions'
+      ? 'Guests'
+      : roleFilter === 'Clients'
+      ? 'Hosts'
+      : roleFilter ?? localRoleFilter;
+
+  const activeSearch = search !== undefined ? search : localSearch;
+
+  const isServerPaged = Boolean(onPageChange);
+  const isServerFiltered = Boolean(onRoleFilterChange);
+  const activePage = isServerPaged ? (page ?? 1) : localPage;
+  const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  // Stable counts cache to prevent flickers during tab transitions
+  const [cachedCounts, setCachedCounts] = useState<{
+    All?: number;
+    Guests?: number;
+    Hosts?: number;
+    Suspended?: number;
+  }>({});
+
+  useEffect(() => {
+    if (effectiveStats) {
+      setCachedCounts({
+        All: effectiveStats.total,
+        Guests: effectiveStats.guests ?? effectiveStats.companions,
+        Hosts: effectiveStats.hosts ?? effectiveStats.clients,
+        Suspended: effectiveStats.suspended,
+      });
+    } else if (isServerFiltered && totalCount !== undefined) {
+      setCachedCounts((prev) => ({
+        ...prev,
+        [activeRoleFilter]: totalCount,
+      }));
+    }
+  }, [effectiveStats, isServerFiltered, activeRoleFilter, totalCount]);
+
+  const handleRoleSelect = (newRole: 'All' | 'Guests' | 'Hosts' | 'Suspended') => {
+    if (onRoleFilterChange) {
+      onRoleFilterChange(newRole);
+      onPageChange?.(1);
+    } else {
+      setLocalRoleFilter(newRole);
+      setLocalPage(1);
+    }
+  };
+
+  const handleSearchInput = (val: string) => {
+    if (onSearchChange) {
+      onSearchChange(val);
+      onPageChange?.(1);
+    } else {
+      setLocalSearch(val);
+      setLocalPage(1);
+    }
+  };
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setLocalPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (ps: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(ps);
+    } else {
+      setLocalPageSize(ps);
+      setLocalPage(1);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
+    if (isServerFiltered) {
+      if (!onSearchChange && activeSearch) {
+        const q = activeSearch.trim().toLowerCase();
+        return (
+          user.firstName?.toLowerCase().includes(q) ||
+          user.lastName?.toLowerCase().includes(q) ||
+          user.email?.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    }
+
     const suspended = isUserSuspended(user);
-    const companion = isUserCompanion(user);
-    const client = isUserClient(user);
+    const guest = isUserGuest(user);
+    const host = isUserHost(user);
 
     const matchesRole =
-      roleFilter === 'All'
+      activeRoleFilter === 'All'
         ? true
-        : roleFilter === 'Companions'
-        ? companion
-        : roleFilter === 'Clients'
-        ? client
-        : roleFilter === 'Suspended'
+        : activeRoleFilter === 'Guests'
+        ? guest
+        : activeRoleFilter === 'Hosts'
+        ? host
+        : activeRoleFilter === 'Suspended'
         ? suspended
         : true;
 
-    const q = search.trim().toLowerCase();
+    const q = activeSearch.trim().toLowerCase();
     const matchesSearch =
       !q ||
       user.firstName?.toLowerCase().includes(q) ||
@@ -58,6 +177,33 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
 
     return matchesRole && matchesSearch;
   });
+
+  const displayedUsers = isServerPaged
+    ? filteredUsers
+    : filteredUsers.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+
+  const activeTotalCount = isServerPaged ? (totalCount ?? filteredUsers.length) : filteredUsers.length;
+  const activeTotalPages = isServerPaged
+    ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
+    : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
+
+  const pillCounts: Record<'All' | 'Guests' | 'Hosts' | 'Suspended', number | undefined> = {
+    All: effectiveStats?.total ?? cachedCounts.All ?? (isServerPaged || isServerFiltered ? undefined : users.length),
+    Guests:
+      effectiveStats?.guests ??
+      effectiveStats?.companions ??
+      cachedCounts.Guests ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserGuest).length),
+    Hosts:
+      effectiveStats?.hosts ??
+      effectiveStats?.clients ??
+      cachedCounts.Hosts ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserHost).length),
+    Suspended:
+      effectiveStats?.suspended ??
+      cachedCounts.Suspended ??
+      (isServerPaged || isServerFiltered ? undefined : users.filter(isUserSuspended).length),
+  };
 
   const handleSuspendAction = async (userId: string) => {
     setActionUserId(userId);
@@ -74,29 +220,29 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/80 p-3 sm:p-4 rounded-2xl shadow-2xs">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           {[
-            { key: 'All', label: 'All Accounts', count: users.length },
+            { key: 'All', label: 'All Accounts', count: pillCounts.All },
             {
-              key: 'Companions',
-              label: 'Companions',
-              count: users.filter(isUserCompanion).length,
+              key: 'Guests',
+              label: 'Guests',
+              count: pillCounts.Guests,
             },
             {
-              key: 'Clients',
-              label: 'Clients',
-              count: users.filter(isUserClient).length,
+              key: 'Hosts',
+              label: 'Hosts',
+              count: pillCounts.Hosts,
             },
             {
               key: 'Suspended',
               label: 'Suspended',
-              count: users.filter(isUserSuspended).length,
+              count: pillCounts.Suspended,
             },
           ].map((pill) => {
-            const isActive = roleFilter === pill.key;
+            const isActive = activeRoleFilter === pill.key;
             return (
               <button
                 key={pill.key}
                 type="button"
-                onClick={() => setRoleFilter(pill.key as any)}
+                onClick={() => handleRoleSelect(pill.key as any)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
                   isActive
                     ? 'bg-accent text-accent-foreground border-accent shadow-xs'
@@ -104,18 +250,20 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                 }`}
               >
                 <span>{pill.label}</span>
-                {pill.count !== undefined && (
+                {pill.count !== undefined ? (
                   <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono tabular-nums leading-none ${
                       isActive
-                        ? 'bg-background/20 text-accent-foreground'
+                        ? 'bg-background/25 text-accent-foreground'
                         : pill.key === 'Suspended' && pill.count > 0
-                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400'
+                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold'
                         : 'bg-muted text-muted-foreground'
                     }`}
                   >
                     {pill.count}
                   </span>
+                ) : (
+                  <span className="w-3.5 h-3 bg-muted/60 rounded-full animate-pulse inline-block" />
                 )}
               </button>
             );
@@ -126,15 +274,15 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
           <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
           <input
             type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={activeSearch}
+            onChange={(e) => handleSearchInput(e.target.value)}
             placeholder="Search by name or email..."
             className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border/80 bg-background text-foreground text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
           />
-          {search && (
+          {activeSearch && (
             <button
               type="button"
-              onClick={() => setSearch('')}
+              onClick={() => handleSearchInput('')}
               className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
             >
               ×
@@ -165,14 +313,14 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                 <tr>
                   <th className="px-5 py-3.5">User Identity</th>
                   <th className="px-4 py-3.5">Assigned Roles</th>
-                  <th className="px-4 py-3.5">Companion Status</th>
+                  <th className="px-4 py-3.5">Guest Status</th>
                   <th className="px-4 py-3.5">Trust Score</th>
                   <th className="px-4 py-3.5">Registered</th>
                   <th className="px-5 py-3.5 text-right">Moderation Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredUsers.map((user) => {
+                {displayedUsers.map((user) => {
                   const isSuspended = user.trustScore < 0;
                   const isUserAnAdmin =
                     user.roles?.includes('Admin') || user.email?.toLowerCase() === 'admin@cue.local';
@@ -244,11 +392,19 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
                                   : 'bg-amber-500'
                               }`}
                             />
-                            <span>{user.companionStatus}</span>
+                            <span>
+                              {user.companionStatus === 'Approved'
+                                ? 'Verified Guest'
+                                : user.companionStatus === 'PendingReview'
+                                ? 'Review Pending'
+                                : user.companionStatus === 'Suspended'
+                                ? 'Guest Suspended'
+                                : user.companionStatus}
+                            </span>
                           </span>
                         ) : (
-                          <span className="text-muted-foreground text-[11px]">
-                            {isUserAnAdmin ? 'Superuser Admin' : 'Client Account'}
+                          <span className="text-muted-foreground text-[11px] font-medium">
+                            {isUserAnAdmin ? 'Administrator' : 'Host Account'}
                           </span>
                         )}
                       </td>
@@ -331,6 +487,16 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={activePage}
+          totalPages={activeTotalPages}
+          totalCount={activeTotalCount}
+          pageSize={activePageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isLoading}
+        />
       </div>
     </section>
   );

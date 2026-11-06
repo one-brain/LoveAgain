@@ -17,7 +17,7 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/react/24/outline';
 
-type TabMode = 'clients' | 'companions' | 'safety';
+type TabMode = 'hosts' | 'guests' | 'safety';
 
 interface FaqItem {
   question: string;
@@ -28,38 +28,38 @@ const FAQS: FaqItem[] = [
   {
     question: 'Is Cue a dating or matchmaking app?',
     answer:
-      'No. Cue is strictly a platonic experience companionship platform designed for shared activities, fitness partners, city guides, dining companions, and hobby enthusiasts. Physical intimacy, romance solicitations, or inappropriate conduct are strictly prohibited and result in permanent account bans.',
+      'No. Cue is strictly a platonic experience companionship platform designed for shared activities, cafe chats, dining, shopping, movies, and events. Physical intimacy, romance solicitations, or inappropriate conduct are strictly prohibited and result in permanent account bans.',
   },
   {
     question: 'How does the 100% Escrow Protection guarantee work?',
     answer:
-      'When a client books a session, the total amount is held safely in our protected escrow system. The companion is never paid upfront. The funds are held safely until the session finishes. Once both parties confirm completion, 85% of the fee is released to the companion wallet.',
+      'When a host books an outing, the total amount is held safely in our protected escrow system. The guest is never paid upfront. The funds are held safely until the outing finishes. Once both parties confirm completion via mutual PIN handshake, 85% of the fee is released to the guest wallet.',
   },
   {
-    question: 'What happens if a companion cancels or fails to show up?',
+    question: 'What happens if a guest cancels or fails to show up?',
     answer:
-      'If a companion cancels or does not arrive at the agreed public venue, the escrow hold is automatically voided and 100% of the funds are refunded immediately to the client wallet or original payment method without deduction.',
+      'If a guest cancels or does not arrive at the agreed public venue, the escrow hold is automatically voided and 100% of the funds are refunded immediately to the host wallet or original payment method without deduction.',
   },
   {
-    question: 'How do you verify companions before they appear in search?',
+    question: 'How do you verify guests before they appear in search?',
     answer:
-      'Every companion applicant must submit a valid Government ID proof (Aadhaar, Passport, or Driving License) alongside a live camera selfie verification. Our human administration team reviews every document to confirm identity authenticity before any profile goes live.',
+      'Every guest applicant must submit a valid Government ID proof (Aadhaar, Passport, or Driving License) alongside a live camera selfie verification. Our human administration team reviews every document to confirm identity authenticity before any profile goes live.',
   },
   {
     question: 'What are the platform fees and payment options?',
     answer:
-      'Companions set their own transparent hourly rates in Indian Rupees (₹). Cue takes a transparent 15% platform service fee that funds banking gateways, ID verification, customer support, and dispute mediation. Clients pay via UPI (GPay, PhonePe, Paytm), NetBanking, or Credit/Debit Cards.',
+      'Guests set their own transparent hourly rates in Indian Rupees (₹). Cue takes a transparent 15% platform service fee that funds banking gateways, ID verification, customer support, and dispute mediation. Hosts pay via UPI (GPay, PhonePe, Paytm), NetBanking, or Credit/Debit Cards.',
   },
   {
-    question: 'Can any registered user become a companion?',
+    question: 'Can any registered user become a guest?',
     answer:
-      'Yes! Cue uses a unified account model. Every registered user starts as a client. If you want to host experiences, you can apply by submitting your activities, hourly rates, and identity verification documents for review.',
+      'Yes! Cue uses a unified account model. Every registered user can host outings. If you want to accompany others as a guest and earn escrow payouts, you can apply by submitting your activities, hourly rates, and identity verification documents for review.',
   },
 ];
 
 const HowItWorks: React.FC = () => {
   const { isAuthenticated } = useSelector((state: RootState) => state.auth);
-  const [activeTab, setActiveTab] = useState<TabMode>('clients');
+  const [activeTab, setActiveTab] = useState<TabMode>('hosts');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   const toggleFaq = (idx: number) => {
@@ -82,31 +82,31 @@ const HowItWorks: React.FC = () => {
             How Cue Works
           </h1>
           <p className="mt-4 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Discover verified people for sports, culture, dining, and city adventures.
+            Discover verified people for coffee dates, dining, shopping, movies, and weekend outings.
             Protected by safe payments, identity verification, and community trust.
           </p>
 
           {/* Perspective Switcher */}
           <div className="mt-10 inline-flex p-1.5 rounded-2xl bg-card border border-border shadow-xs max-w-md w-full justify-center">
             <button
-              onClick={() => setActiveTab('clients')}
+              onClick={() => setActiveTab('hosts')}
               className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-                activeTab === 'clients'
+                activeTab === 'hosts'
                   ? 'bg-accent text-accent-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              For Clients
+              For Hosts
             </button>
             <button
-              onClick={() => setActiveTab('companions')}
+              onClick={() => setActiveTab('guests')}
               className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-                activeTab === 'companions'
+                activeTab === 'guests'
                   ? 'bg-accent text-accent-foreground shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              For Companions
+              For Guests
             </button>
             <button
               onClick={() => setActiveTab('safety')}
@@ -124,17 +124,17 @@ const HowItWorks: React.FC = () => {
 
       {/* Main Tab Content */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-16">
-        {activeTab === 'clients' && (
+        {activeTab === 'hosts' && (
           <div className="space-y-16 animate-in fade-in duration-200">
             <div className="text-center max-w-2xl mx-auto">
               <span className="text-xs font-bold uppercase tracking-wider text-accent mb-2 block">
-                The Client Experience
+                The Host Experience
               </span>
               <h2 className="text-2xl sm:text-4xl font-bold font-serif text-foreground">
-                Hire Companions in 4 Simple Steps
+                Host Outings in 4 Simple Steps
               </h2>
               <p className="text-muted-foreground text-sm sm:text-base mt-2">
-                Rent companionship for activities and hobbies without awkwardness or safety concerns.
+                Invite verified guests for social outings, dining, cafe catchups, shopping, and activities without awkwardness or safety concerns.
               </p>
             </div>
 
@@ -147,7 +147,7 @@ const HowItWorks: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">Explore & Match</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Filter verified companions by specialty (tennis, foodie dining, museum walk, running), city, and hourly rate.
+                    Filter verified guests by specialty (coffee dates, restaurant visits, shopping, movies, weekend activities, special events), city, and hourly rate.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-border/60 text-xs text-accent font-semibold flex items-center gap-1.5">
@@ -181,7 +181,7 @@ const HowItWorks: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">Chat & Coordinate</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Real-time encrypted chat unlocks once booked. Agree on an open public location like a café, stadium, or gallery.
+                    Real-time encrypted chat unlocks once booked. Agree on an open public location like a café, restaurant, or venue.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-border/60 text-xs text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1.5">
@@ -198,7 +198,7 @@ const HowItWorks: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-bold text-foreground mb-2">Release & Review</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Enjoy the experience. After the session wraps up, confirm completion to release payment and share an honest review.
+                    Enjoy the outing. After the session wraps up, confirm completion to release payment and share an honest review.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-border/60 text-xs text-amber-600 dark:text-amber-400 font-semibold flex items-center gap-1.5">
@@ -213,24 +213,24 @@ const HowItWorks: React.FC = () => {
                 to="/discovery"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold hover:bg-accent-hover transition-all shadow-xs"
               >
-                <span>Find a Companion Today</span>
+                <span>Find a Guest Today</span>
                 <ArrowRightIcon className="w-4 h-4" />
               </Link>
             </div>
           </div>
         )}
 
-        {activeTab === 'companions' && (
+        {activeTab === 'guests' && (
           <div className="space-y-16 animate-in fade-in duration-200">
             <div className="text-center max-w-2xl mx-auto">
               <span className="text-xs font-bold uppercase tracking-wider text-accent mb-2 block">
-                The Companion Journey
+                The Guest Journey
               </span>
               <h2 className="text-2xl sm:text-4xl font-bold font-serif text-foreground">
-                Earn by Sharing Experiences
+                Earn by Attending Curated Outings
               </h2>
               <p className="text-muted-foreground text-sm sm:text-base mt-2">
-                Monetize your time, fitness skills, and conversational energy safely on your own schedule.
+                Monetize your social time and conversational energy safely on your own schedule.
               </p>
             </div>
 
@@ -265,7 +265,7 @@ const HowItWorks: React.FC = () => {
                 </div>
                 <div className="mt-6 pt-4 border-t border-border/60 text-xs text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1.5">
                   <IdentificationIcon className="w-4 h-4" />
-                  <span>Verified Companion badge</span>
+                  <span>Verified Guest badge</span>
                 </div>
               </div>
 
@@ -275,9 +275,9 @@ const HowItWorks: React.FC = () => {
                   <div className="w-12 h-12 rounded-2xl bg-accent/15 text-accent flex items-center justify-center font-bold text-xl mb-5">
                     3
                   </div>
-                  <h3 className="text-lg font-bold text-foreground mb-2">Host Experiences</h3>
+                  <h3 className="text-lg font-bold text-foreground mb-2">Attend Outings</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Receive booking requests from verified clients. Confirm meeting dates and accompany them on great experiences.
+                    Receive booking requests from verified hosts. Confirm meeting dates and accompany them on great experiences.
                   </p>
                 </div>
                 <div className="mt-6 pt-4 border-t border-border/60 text-xs text-sky-600 dark:text-sky-400 font-semibold flex items-center gap-1.5">
@@ -309,7 +309,7 @@ const HowItWorks: React.FC = () => {
                 to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-accent text-accent-foreground font-semibold hover:bg-accent-hover transition-all shadow-xs"
               >
-                <span>Apply to Become a Companion</span>
+                <span>Apply to Become a Guest</span>
                 <ArrowRightIcon className="w-4 h-4" />
               </Link>
             </div>
@@ -326,7 +326,7 @@ const HowItWorks: React.FC = () => {
                 The 4 Pillars of Cue Safety
               </h2>
               <p className="text-muted-foreground text-sm sm:text-base mt-2">
-                We designed Cue from the ground up so that neither clients nor companions are ever exposed to financial or physical risk.
+                We designed Cue from the ground up so that neither hosts nor guests are ever exposed to financial or physical risk.
               </p>
             </div>
 
@@ -338,7 +338,7 @@ const HowItWorks: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-bold text-foreground mb-2">Protected Payment Guarantee</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    Funds are held securely by Cue until the experience concludes. Neither clients nor companions risk losing money to no-shows or cancellations.
+                    Funds are held securely by Cue until the experience concludes. Neither hosts nor guests risk losing money to no-shows or cancellations.
                   </p>
                 </div>
               </div>
@@ -350,7 +350,7 @@ const HowItWorks: React.FC = () => {
                 <div>
                   <h3 className="text-lg font-bold text-foreground mb-2">Government ID & Biometric Verification</h3>
                   <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                    No anonymous accounts. Companions undergo government identity verification and cross-referenced live camera selfie checks.
+                    No anonymous accounts. Guests undergo government identity verification and cross-referenced live camera selfie checks.
                   </p>
                 </div>
               </div>
@@ -487,20 +487,20 @@ const HowItWorks: React.FC = () => {
             Start Exploring Today
           </h2>
           <p className="text-sm sm:text-base text-muted-foreground max-w-xl mx-auto mb-8">
-            Experience genuine connection with verified companions for tennis, art, food, and life's shared moments.
+            Experience genuine connection with verified guests for coffee, dining, shopping, movies, and weekend outings.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link
               to="/discovery"
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-all"
             >
-              Discover Companions
+              Discover Guests
             </Link>
             <Link
               to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
               className="w-full sm:w-auto px-8 py-3.5 rounded-xl border border-border text-foreground hover:bg-muted font-semibold text-sm transition-all"
             >
-              Become a Companion
+              Become a Guest
             </Link>
           </div>
         </div>

@@ -36,7 +36,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     ],
     hourlyRate: 1500,
     bio: 'Semi-pro tennis coach, contemporary art curator, and bilingual city companion.',
-    specialties: ['Tennis', 'Yoga Partner', 'Museum Walk', 'Gym Spotter'],
+    specialties: ['Tennis', 'Weekend Activities & Getaways', 'Special Events & Plus-One', 'Coffee Dates & Cafe Chats', 'Museum Walk'],
     averageRating: 4.98,
     isVerified: true,
     trustScore: 99,
@@ -47,7 +47,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     city: 'Bengaluru',
     area: 'Indiranagar',
     lenses: ['wellness', 'companions'],
-    services: ['Tennis Coaching (1-on-1)', 'Art Gallery Curator Walk'],
+    services: ['Tennis Coaching (1-on-1)', 'Art Gallery Curator Walk', 'Coffee Date & Cafe Chats'],
     introVideoUrl: 'https://youtube.com',
   },
   {
@@ -61,8 +61,8 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
       'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=800&q=80',
     ],
     hourlyRate: 1800,
-    bio: 'Commercial photographer and street foodie guide. Available for photoshoots and culinary outings.',
-    specialties: ['Photography', 'Cooking & Baking', 'City Tour'],
+    bio: 'Commercial photographer and street foodie guide. Available for photoshoots, food tours, and restaurant visits.',
+    specialties: ['Photography', 'Restaurant Visits & Dining', 'Coffee Dates & Cafe Chats', 'City Tour'],
     averageRating: 4.95,
     isVerified: true,
     trustScore: 98,
@@ -73,7 +73,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     city: 'Mumbai',
     area: 'Bandra West',
     lenses: ['pro_work', 'companions'],
-    services: ['Portrait Photoshoot Package', 'Street Food Crawl Host'],
+    services: ['Portrait Photoshoot Package', 'Street Food Crawl Host', 'Fine Dining Companion'],
     introVideoUrl: null,
   },
   {
@@ -88,7 +88,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     ],
     hourlyRate: 1200,
     bio: 'Cardiologist & classical violinist. Let us explore mountain trails, scenic viewpoints, or catch a live symphony.',
-    specialties: ['Hiking', 'Yoga Partner', 'Violin', 'City Tour'],
+    specialties: ['Hiking', 'Weekend Activities & Getaways', 'Movies & Cinema Outings', 'Violin', 'City Tour'],
     averageRating: 4.92,
     isVerified: true,
     trustScore: 97,
@@ -99,7 +99,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     city: 'Delhi-NCR',
     area: 'South Delhi (Hauz Khas)',
     lenses: ['wellness', 'companions'],
-    services: ['Violin Performance / Lesson'],
+    services: ['Violin Performance / Lesson', 'Weekend Ridge Trail Walk', 'Symphony & Cinema Companion'],
     introVideoUrl: null,
   },
   {
@@ -113,8 +113,8 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
       'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?auto=format&fit=crop&w=800&q=80',
     ],
     hourlyRate: 1600,
-    bio: 'Certified salsa dance instructor & architectural history guide. Available for events & plus-one.',
-    specialties: ['Dance', 'Plus-One', 'Event Host', 'Architecture'],
+    bio: 'Certified salsa dance instructor & architectural history guide. Available for events, gala plus-one, and fine dining.',
+    specialties: ['Dance', 'Special Events & Plus-One', 'Restaurant Visits & Dining', 'Event Host'],
     averageRating: 4.88,
     isVerified: true,
     trustScore: 96,
@@ -125,7 +125,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     city: 'Hyderabad',
     area: 'Hitec City',
     lenses: ['pro_work', 'companions'],
-    services: ['Salsa Coaching', 'Wedding Plus-One'],
+    services: ['Salsa Coaching', 'Wedding Plus-One', 'Special Event Companion'],
     introVideoUrl: null,
   },
   {
@@ -139,8 +139,8 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
       'https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?auto=format&fit=crop&w=800&q=80',
     ],
     hourlyRate: 1500,
-    bio: 'Software Architect & avid book enthusiast. Available for coffee chats, tech career mentoring, and museum visits.',
-    specialties: ['Coding Mentorship', 'Language Practice', 'Museum Walk', 'Cafe & Chat'],
+    bio: 'Software Architect & avid book enthusiast. Available for coffee dates, weekend bookstore crawls, and indie movie screenings.',
+    specialties: ['Coffee Dates & Cafe Chats', 'Movies & Cinema Outings', 'Weekend Activities & Getaways', 'Coding Mentorship'],
     averageRating: 4.97,
     isVerified: true,
     trustScore: 99,
@@ -151,7 +151,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     city: 'Bengaluru',
     area: 'Koramangala',
     lenses: ['pro_work', 'companions'],
-    services: ['System Design Mentorship'],
+    services: ['System Design Mentorship', 'Artisanal Cafe Meet & Chat', 'Indie Cinema Discussion'],
     introVideoUrl: null,
   },
   {
@@ -165,8 +165,8 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
       'https://images.unsplash.com/photo-1513956589380-bad6acb9b9d4?auto=format&fit=crop&w=800&q=80',
     ],
     hourlyRate: 2000,
-    bio: 'Sommelier and fitness trainer. Host for dining excursions and high-intensity workout coaching.',
-    specialties: ['Fine Dining', 'Gym Spotter', 'Tennis'],
+    bio: 'Sommelier and fitness trainer. Host for restaurant visits, wine pairings, and weekend mountain hiking.',
+    specialties: ['Restaurant Visits & Dining', 'Weekend Activities & Getaways', 'Gym Spotter', 'Tennis'],
     averageRating: 4.94,
     isVerified: true,
     trustScore: 98,
@@ -177,7 +177,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     city: 'Pune',
     area: 'Koregaon Park',
     lenses: ['wellness', 'companions'],
-    services: ['Curated Wine Tasting Session', 'Strength Training (1-on-1)'],
+    services: ['Curated Wine Tasting Session', 'Strength Training (1-on-1)', 'Weekend Hill Trek Companion'],
     introVideoUrl: null,
   },
   {
@@ -192,7 +192,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     ],
     hourlyRate: 1200,
     bio: 'Passionate regional home chef and urban botanist. Specializing in healthy regional homestyle meal prep, festive flower rangolis, and lush balcony herb gardens.',
-    specialties: ['Regional Homestyle Cook', 'Festival & Pooja Decor', 'Balcony Tulsi & Gardening'],
+    specialties: ['Regional Homestyle Cook', 'Festival & Pooja Decor', 'Weekend Activities & Getaways'],
     averageRating: 4.96,
     isVerified: true,
     trustScore: 99,
@@ -218,7 +218,7 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     ],
     hourlyRate: 1000,
     bio: 'Retired defense officer & avid reader. Passionate about providing dignified, warm companionship to senior citizens for temple visits, evening walks, carrom, and engaging conversations.',
-    specialties: ['Senior Companion & Temple Escort', 'Carrom & Society Sports', 'Evening Chai & Gupshup'],
+    specialties: ['Senior Companion & Temple Escort', 'Coffee Dates & Cafe Chats', 'Weekend Activities & Getaways'],
     averageRating: 4.99,
     isVerified: true,
     trustScore: 100,
@@ -243,8 +243,8 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
       'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=800&q=80',
     ],
     hourlyRate: 1400,
-    bio: 'NIFT graduate & Mumbai heritage enthusiast. Available for traditional saree draping, wedding boutique shopping in Dadar/Linking Road, and desi pantry organizing.',
-    specialties: ['Ethnic Styling & Saree Draping', 'Sabzi Mandi & Bazaar Guide', 'Pantry & Dabba Organization'],
+    bio: 'NIFT graduate & Mumbai heritage enthusiast. Available for boutique shopping, wardrobe styling, festive saree draping, and cafe meets.',
+    specialties: ['Shopping & Styling Companion', 'Special Events & Plus-One', 'Coffee Dates & Cafe Chats'],
     averageRating: 4.93,
     isVerified: true,
     trustScore: 97,
@@ -255,7 +255,59 @@ export const SAMPLE_PROVIDERS_LIST: CuratedProvider[] = [
     city: 'Mumbai',
     area: 'Dadar West',
     lenses: ['lifestyle', 'pro_work'],
-    services: ['Saree Draping & Festive Styling', 'Dadar Flower & Spice Mandi Tour'],
+    services: ['Saree Draping & Festive Styling', 'Dadar Flower & Spice Mandi Tour', 'Boutique Styling Session'],
+    introVideoUrl: null,
+  },
+  {
+    providerId: 'sample-10',
+    displayName: 'Meera Sen',
+    gender: 'Female',
+    photoUrl: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80',
+    ],
+    hourlyRate: 1600,
+    bio: 'Film critic & personal shopper in Connaught Place. Available for cinema outings, multiplex screenings, vintage market shopping, and cozy cafe discussions.',
+    specialties: ['Movies & Cinema Outings', 'Shopping & Styling Companion', 'Coffee Dates & Cafe Chats'],
+    averageRating: 4.96,
+    isVerified: true,
+    trustScore: 99,
+    distanceKm: 2.2,
+    maxRadiusKm: 25,
+    latitude: 28.6315,
+    longitude: 77.2167,
+    city: 'Delhi-NCR',
+    area: 'Connaught Place',
+    lenses: ['companions', 'pro_work'],
+    services: ['IMAX Cinema Date Companion', 'Janpath & Khan Market Shopping Walk', 'Post-Screening Coffee Debrief'],
+    introVideoUrl: null,
+  },
+  {
+    providerId: 'sample-11',
+    displayName: 'Kabir Kapoor',
+    gender: 'Male',
+    photoUrl: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+    profileImages: [
+      'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80',
+    ],
+    hourlyRate: 1750,
+    bio: 'Culinary connoisseur & avid road tripper. Let us explore gourmet dining spots, attend weekend music festivals, or plan scenic day getaways.',
+    specialties: ['Restaurant Visits & Dining', 'Weekend Activities & Getaways', 'Special Events & Plus-One'],
+    averageRating: 4.95,
+    isVerified: true,
+    trustScore: 98,
+    distanceKm: 3.4,
+    maxRadiusKm: 30,
+    latitude: 12.9352,
+    longitude: 77.6245,
+    city: 'Bengaluru',
+    area: 'Koramangala',
+    lenses: ['companions', 'wellness'],
+    services: ['Chef Tasting Menu Companion', 'Weekend Nandi Hills Sunrise Drive', 'Concert & Gala Plus-One'],
     introVideoUrl: null,
   },
 ];
@@ -287,34 +339,38 @@ export const SAMPLE_PROVIDERS_MAP: Record<string, CuratedProvider> = SAMPLE_PROV
   {} as Record<string, CuratedProvider>
 );
 
-export function generateDemoSlots() {
+export function generateDemoSlots(providerId: string = '00000000-0000-0000-0000-000000000001') {
   const slots = [];
   const now = new Date();
-  for (let i = 1; i <= 4; i++) {
+  for (let i = 1; i <= 14; i++) {
     const d = new Date(now);
     d.setDate(d.getDate() + i);
 
-    // Morning slot
+    // Morning / Daytime slot (09:30 to 15:30 = 6 hours)
     const startM = new Date(d);
-    startM.setHours(10, 0, 0, 0);
+    startM.setHours(9, 30, 0, 0);
     const endM = new Date(d);
-    endM.setHours(12, 0, 0, 0);
+    endM.setHours(15, 30, 0, 0);
     slots.push({
       slotId: `slot-${i}-m`,
+      providerId,
       startTime: startM.toISOString(),
       endTime: endM.toISOString(),
+      durationHours: 6,
       isBooked: false,
     });
 
-    // Afternoon slot
+    // Afternoon / Evening slot (15:30 to 22:30 = 7 hours)
     const startA = new Date(d);
-    startA.setHours(14, 30, 0, 0);
+    startA.setHours(15, 30, 0, 0);
     const endA = new Date(d);
-    endA.setHours(16, 30, 0, 0);
+    endA.setHours(22, 30, 0, 0);
     slots.push({
       slotId: `slot-${i}-a`,
+      providerId,
       startTime: startA.toISOString(),
       endTime: endA.toISOString(),
+      durationHours: 7,
       isBooked: false,
     });
   }
@@ -392,7 +448,7 @@ export function resolveProviderInfo(
     if (found) {
       return {
         providerId: found.providerId || found.userId || found.id,
-        displayName: found.displayName || (found.firstName ? (found.firstName + ' ' + (found.lastName || '')).trim() : 'Verified Companion'),
+        displayName: found.displayName || (found.firstName ? (found.firstName + ' ' + (found.lastName || '')).trim() : 'Verified Guest'),
         photoUrl: found.photoUrl || (found.profileImages && found.profileImages[0]) || (found.photoUrls && found.photoUrls[0]),
         profileImages: found.profileImages || found.photoUrls || [],
         hourlyRate: found.hourlyRate,
@@ -414,7 +470,7 @@ export function resolveProviderInfo(
   // Fallback for unknown provider IDs
   return {
     providerId,
-    displayName: 'Verified Companion',
+    displayName: 'Verified Guest',
   };
 }
 

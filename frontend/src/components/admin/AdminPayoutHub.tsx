@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import type { AdminPayoutItem } from '../../store/adminApi';
 import { formatINR } from '../../utils/currency';
+import { Pagination } from '../ui/Pagination';
 
 interface AdminPayoutHubProps {
   payouts: AdminPayoutItem[];
@@ -15,6 +16,12 @@ interface AdminPayoutHubProps {
   onProcessPayout: (payoutId: string, utr: string) => Promise<void>;
   isProcessing: boolean;
   onRefresh: () => void;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
@@ -23,12 +30,41 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
   onProcessPayout,
   isProcessing,
   onRefresh,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }) => {
   const [filter, setFilter] = useState<'All' | 'Pending' | 'Completed'>('Pending');
   const [selectedPayout, setSelectedPayout] = useState<AdminPayoutItem | null>(null);
   const [payoutUtr, setPayoutUtr] = useState('');
   const [copiedVpa, setCopiedVpa] = useState<string | null>(null);
   const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(20);
+
+  const isServerPaged = Boolean(onPageChange);
+  const activePage = isServerPaged ? (page ?? 1) : localPage;
+  const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setLocalPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (ps: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(ps);
+    } else {
+      setLocalPageSize(ps);
+      setLocalPage(1);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -46,10 +82,25 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
     setTimeout(() => setCopiedUtr(null), 2000);
   };
 
+  const handleCopyVpa = (vpa: string) => {
+    navigator.clipboard.writeText(vpa);
+    setCopiedVpa(vpa);
+    setTimeout(() => setCopiedVpa(null), 2000);
+  };
+
   const filteredPayouts = payouts.filter((p) => {
     if (filter === 'All') return true;
     return p.status === filter;
   });
+
+  const displayedPayouts = isServerPaged
+    ? filteredPayouts
+    : filteredPayouts.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+
+  const activeTotalCount = isServerPaged ? (totalCount ?? filteredPayouts.length) : filteredPayouts.length;
+  const activeTotalPages = isServerPaged
+    ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
+    : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const pendingPayouts = payouts.filter((p) => p.status === 'Pending');
   const pendingAmount = pendingPayouts.reduce((sum, p) => sum + (p.amount || 0), 0);
@@ -67,12 +118,6 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
     await onProcessPayout(selectedPayout.id, payoutUtr.trim());
     setSelectedPayout(null);
     setPayoutUtr('');
-  };
-
-  const handleCopyVpa = (vpa: string) => {
-    navigator.clipboard.writeText(vpa);
-    setCopiedVpa(vpa);
-    setTimeout(() => setCopiedVpa(null), 2000);
   };
 
   return (
@@ -165,7 +210,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
             <h3 className="text-sm font-bold text-foreground">No payout records in this queue</h3>
             <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
               {filter === 'Pending'
-                ? 'All companion payout requests have been settled.'
+                ? 'All guest payout requests have been settled.'
                 : 'No payout records match this filter.'}
             </p>
           </div>
@@ -174,7 +219,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
             <table className="w-full text-left text-xs">
               <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
                 <tr>
-                  <th className="px-5 py-3.5">Companion</th>
+                  <th className="px-5 py-3.5">Guest</th>
                   <th className="px-4 py-3.5">Net Disbursal Amount</th>
                   <th className="px-4 py-3.5">UPI Destination VPA</th>
                   <th className="px-4 py-3.5">Settlement Status</th>
@@ -183,7 +228,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/60">
-                {filteredPayouts.map((payout) => {
+                {displayedPayouts.map((payout) => {
                   const isPending = payout.status === 'Pending';
 
                   return (
@@ -283,6 +328,16 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
             </table>
           </div>
         )}
+
+        <Pagination
+          currentPage={activePage}
+          totalPages={activeTotalPages}
+          totalCount={activeTotalCount}
+          pageSize={activePageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isLoading}
+        />
       </div>
 
       {/* UTR Settlement Modal */}
@@ -298,7 +353,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
               Confirm UPI Payout Settlement
             </h3>
             <p className="text-xs text-muted-foreground mb-4">
-              Disbursing <strong>{formatINR(selectedPayout.amount)}</strong> to companion{' '}
+              Disbursing <strong>{formatINR(selectedPayout.amount)}</strong> to guest{' '}
               <strong>{selectedPayout.userName}</strong> ({selectedPayout.destination}).
             </p>
 

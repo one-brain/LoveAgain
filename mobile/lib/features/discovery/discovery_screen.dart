@@ -20,11 +20,14 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
 
   final List<String> _categories = const [
     'All',
+    'Coffee Dates',
+    'Restaurant Visits',
+    'Shopping',
+    'Movies & Cinema',
+    'Weekend Activities',
+    'Special Events',
     'Art & Culture',
-    'Language Exchange',
-    'Event Plus-One',
     'Outdoor & Fitness',
-    'Dining & Coffee',
   ];
 
   @override
@@ -92,16 +95,16 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: AppColors.sage,
+                          color: AppColors.gold,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'FIND THOUGHTFUL COMPANIONSHIP',
+                        'CURATED COMPANIONSHIP',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               letterSpacing: 1.2,
-                              color: AppColors.sage,
+                              color: AppColors.goldDark,
                               fontWeight: FontWeight.w800,
                             ),
                       ),
@@ -347,10 +350,43 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               ),
             ),
             error: (err, _) => SliverToBoxAdapter(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text('Error loading providers: $err'),
+              child: Container(
+                margin: const EdgeInsets.all(24),
+                padding: const EdgeInsets.all(28),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.wifi_off_rounded,
+                        size: 48, color: AppColors.statusCancelled),
+                    const SizedBox(height: 12),
+                    const Text(
+                      'Connection to Cue Services Unavailable',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'Unable to retrieve live companion catalog. Check your network or gateway connection.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton.icon(
+                      onPressed: () => ref.refresh(discoveryProvidersProvider),
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Retry Connection'),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -437,7 +473,7 @@ class ProviderCard extends StatelessWidget {
                           provider.role,
                           style: const TextStyle(
                             fontSize: 13,
-                            color: AppColors.sage,
+                            color: AppColors.goldDark,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -473,11 +509,12 @@ class ProviderCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '\$${provider.rate}',
+                        '₹${provider.rate}',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 19,
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
+                          fontFamily: 'monospace',
                         ),
                       ),
                       const Text(

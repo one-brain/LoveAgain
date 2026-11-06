@@ -165,9 +165,9 @@ export const CancelBookingModal: React.FC<CancelBookingModalProps> = ({
           {/* Booking Summary Box */}
           <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-2.5">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Companion</span>
+              <span className="text-muted-foreground">Guest</span>
               <span className="font-semibold text-foreground">
-                {booking.providerName || 'Verified Companion'}
+                {booking.providerName || 'Verified Guest'}
               </span>
             </div>
 
@@ -256,7 +256,7 @@ export const CancelBookingModal: React.FC<CancelBookingModalProps> = ({
               rows={2}
               value={customNotes}
               onChange={(e) => setCustomNotes(e.target.value)}
-              placeholder="Let the companion know why plans changed..."
+              placeholder="Let the guest know why plans changed..."
               className="w-full px-3 py-2 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent placeholder:text-muted-foreground/60"
             />
           </div>

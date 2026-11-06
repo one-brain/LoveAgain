@@ -425,9 +425,9 @@ const Bookings: React.FC = () => {
           <div className="w-14 h-14 rounded-2xl bg-accent/15 text-accent flex items-center justify-center mx-auto">
             <ClockIcon className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold font-serif text-foreground">Sign In to View Bookings</h2>
+          <h2 className="text-2xl font-bold font-sans text-foreground">Sign In to View Bookings</h2>
           <p className="text-sm text-muted-foreground">
-            Please log in to your Cue account to view your scheduled companions and active chat orders.
+            Please log in to your Cue account to view your scheduled outings and active chat orders.
           </p>
           <Link
             to="/login"
@@ -442,7 +442,7 @@ const Bookings: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      {/* Unified View Switcher: All | My Outings | Incoming Requests */}
+      {/* Unified View Switcher: All | As Host | As Guest */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div
           role="tablist"
@@ -452,8 +452,8 @@ const Bookings: React.FC = () => {
           {(
             [
               { mode: 'all', label: 'All Bookings', count: totalAllCount },
-              { mode: 'client', label: 'My Outings', count: clientCount },
-              { mode: 'companion', label: 'Incoming Requests', count: companionCount },
+              { mode: 'client', label: 'As Host', count: clientCount },
+              { mode: 'companion', label: 'As Guest', count: companionCount },
             ] as { mode: ViewMode; label: string; count: number }[]
           ).map(({ mode, label, count }) => {
             const active = viewMode === mode;
@@ -491,7 +491,7 @@ const Bookings: React.FC = () => {
           className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-transform hover:scale-[1.02]"
         >
           <SparklesIcon className="w-4 h-4" />
-          <span>Find New Companion</span>
+          <span>Discover Guests</span>
         </Link>
       </div>
 
@@ -501,19 +501,19 @@ const Bookings: React.FC = () => {
           <div>
             <h3 className="font-bold text-sm text-foreground flex items-center gap-2">
               <ClockIcon className="w-4 h-4 text-amber-500" />
-              <span>{companionStatus === 'PendingReview' ? 'Companion Application In Review' : 'Start Earning as a Companion'}</span>
+              <span>{companionStatus === 'PendingReview' ? 'Guest Application In Review' : 'Start Earning as a Guest'}</span>
             </h3>
             <p className="text-xs text-muted-foreground mt-0.5">
               {companionStatus === 'PendingReview'
                 ? 'Your profile & ID verification are being reviewed by the Cue safety team. Turnaround is ~24 hours.'
-                : 'Complete your companion application with hourly rates, activities, and identity verification to receive incoming bookings.'}
+                : 'Complete your guest application with hourly rates, activities, and identity verification to receive incoming bookings.'}
             </p>
           </div>
           <Link
             to="/apply-companion"
             className="px-4 py-2 min-h-[44px] flex items-center justify-center rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-xs shrink-0"
           >
-            {companionStatus === 'PendingReview' ? 'View Review Status' : 'Apply to Become Companion'}
+            {companionStatus === 'PendingReview' ? 'View Review Status' : 'Apply to Become a Guest'}
           </Link>
         </div>
       )}
@@ -521,15 +521,15 @@ const Bookings: React.FC = () => {
       {/* Page Title & Context */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
+          <h1 className="text-3xl sm:text-4xl font-bold font-sans text-foreground">
             My Experience Bookings
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
             {viewMode === 'companion'
-              ? 'Requests clients have sent you. Accept sessions, verify Meeting PINs, and track pending earnings.'
+              ? 'Requests hosts have sent you. Accept sessions, verify Meeting PINs, and track pending earnings.'
               : viewMode === 'client'
-              ? 'Outings you booked with companions. Pay, check in, and coordinate in chat.'
-              : 'Every booking you are part of, whether you booked a companion or a client booked you.'}
+              ? 'Outings you are hosting with guests. Pay, check in, and coordinate in chat.'
+              : 'Every booking you are part of, whether you are hosting or attending as a guest.'}
           </p>
         </div>
       </div>
@@ -733,13 +733,13 @@ const Bookings: React.FC = () => {
                     <CalendarDaysIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground font-serif">
+                    <h3 className="text-lg font-bold text-foreground font-sans">
                       {statusFilter !== 'all' ? 'No Bookings Match Filter' : 'No Upcoming Bookings'}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {statusFilter !== 'all'
                         ? `There are no outings currently in "${statusFilter}" status.`
-                        : 'You do not have any pending or confirmed companion sessions right now. Browse our verified companions to schedule an outing.'}
+                        : 'You do not have any pending or confirmed outings right now. Discover verified guests to schedule an experience.'}
                     </p>
                   </div>
                   {statusFilter !== 'all' ? (
@@ -756,7 +756,7 @@ const Bookings: React.FC = () => {
                       className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
                     >
                       <SparklesIcon className="w-4 h-4" />
-                      <span>Explore Companions</span>
+                      <span>Discover Guests</span>
                     </Link>
                   )}
                 </div>
@@ -792,10 +792,10 @@ const Bookings: React.FC = () => {
                     <CheckCircleIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground font-serif">No Completed Outings Yet</h3>
+                    <h3 className="text-lg font-bold text-foreground font-sans">No Completed Outings Yet</h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
                       {roleMode === 'companion'
-                        ? 'Successfully fulfilled client outings, payment disbursements, and ratings will appear here.'
+                        ? 'Successfully fulfilled hosted outings, payment disbursements, and ratings will appear here.'
                         : 'Your safely concluded meetups, review ratings, and escrow release receipts will appear here once an outing finishes.'}
                     </p>
                   </div>
@@ -804,7 +804,7 @@ const Bookings: React.FC = () => {
                       to="/discovery"
                       className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-colors"
                     >
-                      <span>Explore Verified Companions</span>
+                      <span>Discover Verified Guests</span>
                       <ArrowUpRightIcon className="w-3.5 h-3.5" />
                     </Link>
                   )}
@@ -836,7 +836,7 @@ const Bookings: React.FC = () => {
                     <ShieldCheckIcon className="w-7 h-7" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-foreground font-serif">
+                    <h3 className="text-lg font-bold text-foreground font-sans">
                       {statusFilter !== 'all' ? 'No Bookings Match Filter' : 'No Cancelled or Disputed Outings'}
                     </h3>
                     <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
@@ -895,7 +895,7 @@ const Bookings: React.FC = () => {
                   >
                     <ChevronLeftIcon className="w-5 h-5" />
                   </button>
-                  <h2 className="text-xl sm:text-2xl font-bold font-serif text-foreground min-w-[200px]">
+                  <h2 className="text-xl sm:text-2xl font-bold font-sans text-foreground min-w-[200px]">
                     {calendarDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </h2>
                   <button
@@ -1019,7 +1019,7 @@ const Bookings: React.FC = () => {
               {/* Selected Day Schedule Inspector */}
               <div className="pt-6 border-t border-border space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h3 className="text-base sm:text-lg font-bold font-serif text-foreground">
+                  <h3 className="text-base sm:text-lg font-bold font-sans text-foreground">
                     Outings on {selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                   </h3>
                   <span className="text-xs font-mono text-muted-foreground tabular-nums">
@@ -1033,7 +1033,7 @@ const Bookings: React.FC = () => {
                       No sessions scheduled for this date.
                     </p>
                     <p className="text-xs text-muted-foreground/80 mt-1">
-                      Click any highlighted date above to view its scheduled companion meetups.
+                      Click any highlighted date above to view its scheduled outings.
                     </p>
                   </div>
                 ) : (
@@ -1062,7 +1062,7 @@ const Bookings: React.FC = () => {
         </>
       )}
 
-      {/* Pop-up Data View: Companion Profile Modal */}
+      {/* Pop-up Data View: Guest Profile Modal */}
       {previewProviderId && (
         <ProviderProfileModal
           isOpen={Boolean(previewProviderId)}
@@ -1077,7 +1077,8 @@ const Bookings: React.FC = () => {
           isOpen={true}
           onClose={() => setCheckInBooking(null)}
           orderId={checkInBooking.orderId}
-          clientName={checkInBooking.providerName || 'Client'}
+          clientName={checkInBooking.seekerName || 'Host'}
+          hostName={checkInBooking.seekerName || 'Host'}
           meetingAddress={checkInBooking.meetingAddress}
           onSuccess={() => {
             refetchProviderBookings();
@@ -1092,6 +1093,7 @@ const Bookings: React.FC = () => {
           onClose={() => setCompletingBooking(null)}
           orderId={completingBooking.orderId}
           companionName={completingBooking.providerName}
+          guestName={completingBooking.providerName}
           meetingAddress={completingBooking.meetingAddress}
           onSuccess={handleCompleteSuccess}
         />

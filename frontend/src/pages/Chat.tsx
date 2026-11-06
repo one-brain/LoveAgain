@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as signalR from '@microsoft/signalr';
-import { useGetOrderMessagesQuery, useMarkMessagesAsReadMutation, type ChatMessageDto } from '../store/chatApi';
+import {
+  useGetOrderMessagesQuery,
+  useSendMessageMutation,
+  useMarkMessagesAsReadMutation,
+  type ChatMessageDto,
+} from '../store/chatApi';
 import { useGetMyBookingsQuery } from '../store/bookingApi';
 import {
   ArrowLeftIcon,
@@ -34,11 +39,12 @@ const Chat: React.FC = () => {
 
   const canChat = !booking || (booking.status !== 'Cancelled' && booking.status !== 'Disputed' && booking.status !== 'PendingPayment');
 
-  const { data: historyMessages } = useGetOrderMessagesQuery(
+  const { data: historyMessages, refetch: refetchMessages } = useGetOrderMessagesQuery(
     { orderId: orderId || '' },
-    { skip: !orderId || !canChat }
+    { skip: !orderId || !canChat, pollingInterval: 2500 }
   );
 
+  const [sendMessageMutation] = useSendMessageMutation();
   const [markAsRead] = useMarkMessagesAsReadMutation();
 
   // Initialize SignalR
@@ -64,11 +70,17 @@ const Chat: React.FC = () => {
         hubConnection.invoke('JoinOrder', orderId).catch(() => {});
       })
       .catch((err) => {
-        console.warn('SignalR offline (running in local echo mode):', err.message);
+        console.warn('SignalR offline (running in real-time REST polling mode):', err.message);
       });
 
     hubConnection.on('ReceiveMessage', (message: ChatMessageDto) => {
-      setMessages((prev) => [...prev, message]);
+      setMessages((prev) => {
+        if (prev.some((m) => m.id === message.id)) return prev;
+        const filtered = prev.filter(
+          (m) => !(m.id.startsWith('local-') && m.content === message.content && m.senderId === message.senderId)
+        );
+        return [...filtered, message];
+      });
       const loggedInUserId = localStorage.getItem('userId');
       if (message.senderId !== loggedInUserId && orderId) {
         markAsRead(orderId);
@@ -82,30 +94,20 @@ const Chat: React.FC = () => {
     };
   }, [orderId, canChat, markAsRead]);
 
-  // Load history messages if available
+  // Load history messages when data changes
   useEffect(() => {
     if (historyMessages && historyMessages.length > 0) {
-      setMessages(historyMessages);
+      setMessages((prev) => {
+        const pendingLocals = prev.filter(
+          (p) => p.id.startsWith('local-') && !historyMessages.some((h) => h.content === p.content)
+        );
+        return [...historyMessages, ...pendingLocals];
+      });
       if (orderId) {
         markAsRead(orderId);
       }
-    } else {
-      setMessages((prev) => {
-        if (prev.length > 0) return prev;
-        return [
-          {
-            id: 'welcome-msg',
-            orderId: orderId || 'order-1',
-            senderId: 'companion-1',
-            content: 'Hello! Excited for our scheduled experience. Please let me know if you have any questions or preferred meeting spots beforehand.',
-            messageType: 'Text',
-            sentAt: new Date(Date.now() - 3600000).toISOString(),
-            isRead: true,
-          },
-        ];
-      });
     }
-  }, [historyMessages, orderId, markAsRead, currentUserId]);
+  }, [historyMessages, orderId, markAsRead]);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -118,8 +120,9 @@ const Chat: React.FC = () => {
 
     setIsSending(true);
 
+    const localId = `local-${Date.now()}`;
     const localMessage: ChatMessageDto = {
-      id: `local-${Date.now()}`,
+      id: localId,
       orderId,
       senderId: currentUserId,
       content: text,
@@ -132,15 +135,25 @@ const Chat: React.FC = () => {
     setMessages((prev) => [...prev, localMessage]);
     setNewMessage('');
 
-    if (connection && connection.state === signalR.HubConnectionState.Connected) {
-      try {
-        await connection.invoke('SendMessage', orderId, text, 0);
-      } catch (error) {
-        console.warn('Could not deliver via SignalR hub, message kept in local session:', error);
+    try {
+      // 1. Deliver via authoritative REST service (persists to PostgreSQL & broadcasts)
+      const res = await sendMessageMutation({ orderId, content: text, messageType: 'Text' }).unwrap();
+      setMessages((prev) =>
+        prev.map((m) => (m.id === localId ? res : m))
+      );
+      refetchMessages();
+    } catch (err) {
+      // 2. Fallback via SignalR hub invocation if REST network hiccup
+      if (connection && connection.state === signalR.HubConnectionState.Connected) {
+        try {
+          await connection.invoke('SendMessage', orderId, text, 0);
+        } catch (hubError) {
+          console.warn('Could not deliver via SignalR hub:', hubError);
+        }
       }
+    } finally {
+      setIsSending(false);
     }
-
-    setIsSending(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -173,7 +186,7 @@ const Chat: React.FC = () => {
 
             <div>
               <h2 className="text-sm font-bold text-foreground">
-                Companion Coordination
+                Outing Coordination
               </h2>
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span className="text-emerald-500 font-medium">Online</span>

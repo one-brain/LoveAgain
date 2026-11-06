@@ -24,7 +24,7 @@ const Footer: React.FC = () => {
               </span>
             </Link>
             <p className="text-sm text-foreground/80 leading-relaxed">
-              Meaningful companion experiences. Rent companionship for sports, arts, dining, skill-sharing, and new city explorations with verified community trust.
+              Meaningful shared experiences. Host verified guests for coffee, dining, shopping, arts, and city activities with mutual escrow trust.
             </p>
             <div className="flex items-center gap-2 text-xs text-muted-foreground pt-1">
               <ShieldCheckIcon className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -59,28 +59,43 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
+                <Link to="/discovery?q=Coffee" className="text-foreground/80 hover:text-accent transition-colors">
+                  Coffee Dates & Cafes
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Restaurant" className="text-foreground/80 hover:text-accent transition-colors">
+                  Restaurant Visits & Dining
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Shopping" className="text-foreground/80 hover:text-accent transition-colors">
+                  Shopping & Styling Companion
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Movies" className="text-foreground/80 hover:text-accent transition-colors">
+                  Movies & Cinema Outings
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Weekend" className="text-foreground/80 hover:text-accent transition-colors">
+                  Weekend Activities & Day Trips
+                </Link>
+              </li>
+              <li>
+                <Link to="/discovery?q=Special+Events" className="text-foreground/80 hover:text-accent transition-colors">
+                  Special Events & Plus-One
+                </Link>
+              </li>
+              <li>
                 <Link to="/discovery?specialty=Tennis" className="text-foreground/80 hover:text-accent transition-colors">
                   Sports & Fitness
                 </Link>
               </li>
               <li>
-                <Link to="/discovery?specialty=Art" className="text-foreground/80 hover:text-accent transition-colors">
-                  Museums & Culture
-                </Link>
-              </li>
-              <li>
                 <Link to="/discovery?specialty=Cooking" className="text-foreground/80 hover:text-accent transition-colors">
-                  Culinary & Dining
-                </Link>
-              </li>
-              <li>
-                <Link to="/discovery?specialty=Hiking" className="text-foreground/80 hover:text-accent transition-colors">
-                  Outdoors & Hiking
-                </Link>
-              </li>
-              <li>
-                <Link to="/discovery?specialty=Photography" className="text-foreground/80 hover:text-accent transition-colors">
-                  Skill Sharing & Photo
+                  Homestyle Cooking
                 </Link>
               </li>
             </ul>
@@ -178,7 +193,7 @@ const Footer: React.FC = () => {
                 <>
                   <li>
                     <Link to="/admin/verifications" className="text-foreground/80 hover:text-accent transition-colors font-medium">
-                      Companion Approvals
+                      Guest Approvals
                     </Link>
                   </li>
                   <li>
@@ -206,12 +221,12 @@ const Footer: React.FC = () => {
                 <>
                   <li>
                     <Link to="/discovery" className="text-foreground/80 hover:text-accent transition-colors font-medium">
-                      Discover Companions
+                      Discover Guests
                     </Link>
                   </li>
                   <li>
                     <Link to="/bookings" className="text-foreground/80 hover:text-accent transition-colors">
-                      My Bookings
+                      My Outings
                     </Link>
                   </li>
                   <li>
@@ -239,7 +254,7 @@ const Footer: React.FC = () => {
                 <>
                   <li>
                     <Link to="/discovery" className="text-foreground/80 hover:text-accent transition-colors font-medium">
-                      Discover Companions
+                      Discover Guests
                     </Link>
                   </li>
                   <li>
@@ -249,7 +264,7 @@ const Footer: React.FC = () => {
                   </li>
                   <li>
                     <Link to="/register?redirect=/apply-companion" className="text-foreground/80 hover:text-accent transition-colors">
-                      Become a Companion
+                      Become a Guest
                     </Link>
                   </li>
                   <li>

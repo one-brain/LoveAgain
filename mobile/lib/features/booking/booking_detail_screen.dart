@@ -4,9 +4,14 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
 import '../../models/booking.dart';
+import '../auth/auth_controller.dart';
 import '../widgets/status_chip.dart';
 import '../wallet/wallet_controller.dart';
 import 'booking_controller.dart';
+import 'widgets/arrival_pin_voucher_card.dart';
+import 'widgets/completion_pin_voucher_card.dart';
+import 'widgets/emergency_sos_bottom_sheet.dart';
+import 'widgets/pin_verification_modal.dart';
 
 class BookingDetailScreen extends ConsumerWidget {
   const BookingDetailScreen({required this.booking, super.key});
@@ -15,20 +20,29 @@ class BookingDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Watch current booking from controller state if available
     final bookingsState = ref.watch(bookingControllerProvider);
     final currentBooking = bookingsState.bookings.firstWhere(
       (b) => b.orderId == booking.orderId,
       orElse: () => booking,
     );
     final controller = ref.read(bookingControllerProvider.notifier);
+    final auth = ref.watch(authControllerProvider);
+
+    // Determine perspective: Host or Guest
+    final isHost = auth.isHostMode || (auth.user?.id == currentBooking.hostId);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Booking Details'),
+        title: const Text('Outing Details'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.shield_outlined, color: AppColors.emergencyRed),
+            tooltip: 'Safety SOS Hub',
+            onPressed: () => EmergencySosBottomSheet.show(context, currentBooking),
+          ),
+          IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
+            tooltip: 'Chat',
             onPressed: () {
               context.push('/chat/${currentBooking.orderId}',
                   extra: currentBooking);
@@ -37,8 +51,114 @@ class BookingDetailScreen extends ConsumerWidget {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
         children: [
+          // In-Person Safety Shield Banner (Active Outings)
+          if (currentBooking.status == BookingStatus.confirmed ||
+              currentBooking.status == BookingStatus.inProgress) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.emergencyRedLight.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.emergencyRed.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.shield_outlined,
+                    color: AppColors.emergencyRed,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'In-Person Safety Shield Active',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '24/7 National Emergency 112 & Trusted Contact Alert',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.emergencyRed,
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    onPressed: () =>
+                        EmergencySosBottomSheet.show(context, currentBooking),
+                    child: const Text(
+                      'SOS HUB',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Disputed Safety Review Notice
+          if (currentBooking.status == BookingStatus.disputed) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEDD5),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.statusDisputed),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: AppColors.statusDisputed, size: 22),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Outing Frozen under Safety Review',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.statusDisputed,
+                          ),
+                        ),
+                        Text(
+                          'Escrow payout is locked. A Cue Trust & Safety officer has been notified.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Order Header
           Container(
             padding: const EdgeInsets.all(16),
@@ -54,11 +174,12 @@ class BookingDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Order #${currentBooking.orderId}',
+                      'Outing #${currentBooking.orderId.substring(currentBooking.orderId.length > 8 ? currentBooking.orderId.length - 7 : 0)}',
                       style: const TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
                         color: AppColors.textSecondary,
+                        fontFamily: 'monospace',
                       ),
                     ),
                     BookingStatusChip(status: currentBooking.status),
@@ -71,13 +192,13 @@ class BookingDetailScreen extends ConsumerWidget {
                       radius: 26,
                       backgroundColor: AppColors.primaryLight,
                       child: Text(
-                        currentBooking.providerInitials.isNotEmpty
-                            ? currentBooking.providerInitials
-                            : 'CP',
+                        currentBooking.hostInitials.isNotEmpty
+                            ? currentBooking.hostInitials
+                            : 'HT',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: AppColors.primaryDark,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
@@ -87,7 +208,7 @@ class BookingDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            currentBooking.providerName,
+                            currentBooking.hostName,
                             style: const TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.w700,
@@ -95,40 +216,86 @@ class BookingDetailScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          const Text(
-                            'Companion',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppColors.sage,
-                              fontWeight: FontWeight.w600,
+                          Text(
+                            'Booked by ${currentBooking.guestName}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
-                    ),
-                    OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 14, vertical: 8),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: () {
-                        context.push('/chat/${currentBooking.orderId}',
-                            extra: currentBooking);
-                      },
-                      child: const Text('Message'),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
 
-          // Lifecycle Stepper Timeline
+          // In-Progress Live Outing Banner
+          if (currentBooking.status == BookingStatus.inProgress) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.goldLight,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.gold),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.radio_button_checked,
+                      size: 18, color: AppColors.goldDark),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Outing Session Active',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.goldDark,
+                          ),
+                        ),
+                        Text(
+                          'Arrival PIN verified in person. Escrow funds secured.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // VOUCHER 1: Arrival PIN Voucher (Shown to Guest on Confirmed)
+          if (currentBooking.status == BookingStatus.confirmed && !isHost) ...[
+            ArrivalPinVoucherCard(
+              pin: currentBooking.arrivalPin ?? '482910',
+              hostName: currentBooking.hostName,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // VOUCHER 2: Completion PIN Voucher (Shown to Host on InProgress)
+          if (currentBooking.status == BookingStatus.inProgress && isHost) ...[
+            CompletionPinVoucherCard(
+              pin: currentBooking.completionPin ?? '739184',
+              guestName: currentBooking.guestName,
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Outing Lifecycle Stepper
           const Text(
-            'Booking Lifecycle',
+            'Outing Lifecycle',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -136,12 +303,12 @@ class BookingDetailScreen extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 10),
-          _buildTimelineCard(currentBooking),
+          _buildLifecycleStepper(currentBooking),
           const SizedBox(height: 20),
 
-          // Meeting Details
+          // Outing Details (Date, Duration, Meeting Location)
           const Text(
-            'Meeting Details',
+            'Schedule & Location',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -190,9 +357,9 @@ class BookingDetailScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
-          // Payment Summary (Invariant In Action)
+          // Escrow Payment & Ledger (Invariant Enforced)
           const Text(
-            'Payment & Invariants',
+            'Escrow Payment & Ledger',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -213,14 +380,16 @@ class BookingDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Provider Rate (\$${currentBooking.hourlyRate.toStringAsFixed(0)} x ${currentBooking.durationHours.toStringAsFixed(1)} hrs)',
+                      'Host Rate (₹${currentBooking.hourlyRate.toStringAsFixed(0)} x ${currentBooking.durationHours.toStringAsFixed(1)} hrs)',
                       style: const TextStyle(
                           fontSize: 13, color: AppColors.textSecondary),
                     ),
                     Text(
-                      '\$${currentBooking.providerEarnings.toStringAsFixed(2)}',
+                      '₹${currentBooking.providerEarnings.toStringAsFixed(0)}',
                       style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -229,14 +398,16 @@ class BookingDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Platform Safety & Verification Fee (10%)',
+                      'Platform Safety & Escrow Fee (10%)',
                       style: TextStyle(
                           fontSize: 13, color: AppColors.textSecondary),
                     ),
                     Text(
-                      '\$${currentBooking.platformFee.toStringAsFixed(2)}',
+                      '₹${currentBooking.platformFee.toStringAsFixed(0)}',
                       style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -248,7 +419,7 @@ class BookingDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Total Bounded Amount',
+                      'Total Escrow Hold',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -256,11 +427,12 @@ class BookingDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '\$${currentBooking.totalAmount.toStringAsFixed(2)}',
+                      '₹${currentBooking.totalAmount.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: AppColors.primary,
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ],
@@ -287,22 +459,28 @@ class BookingDetailScreen extends ConsumerWidget {
           child: Row(
             children: [
               if (currentBooking.status != BookingStatus.completed &&
-                  currentBooking.status != BookingStatus.cancelled) ...[
+                  currentBooking.status != BookingStatus.cancelled &&
+                  currentBooking.status != BookingStatus.disputed) ...[
                 OutlinedButton(
                   onPressed: () {
                     controller.cancelBooking(
                         currentBooking.orderId, 'User requested cancellation');
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Booking has been cancelled')),
+                      const SnackBar(content: Text('Outing has been cancelled')),
                     );
                   },
-                  child: const Text('Cancel Booking'),
+                  child: const Text('Cancel Outing'),
                 ),
                 const SizedBox(width: 12),
               ],
               Expanded(
                 child: _buildBottomActionButton(
-                    context, ref, currentBooking, controller),
+                  context,
+                  ref,
+                  currentBooking,
+                  controller,
+                  isHost,
+                ),
               ),
             ],
           ),
@@ -311,20 +489,20 @@ class BookingDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildDetailRow(IconData icon, String title, String value) {
+  Widget _buildDetailRow(IconData icon, String label, String value) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: AppColors.primary),
-        const SizedBox(width: 12),
+        Icon(icon, size: 18, color: AppColors.textSecondary),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
+                label,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 12,
                   color: AppColors.textSecondary,
                   fontWeight: FontWeight.w500,
                 ),
@@ -345,7 +523,7 @@ class BookingDetailScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildTimelineCard(Booking b) {
+  Widget _buildLifecycleStepper(Booking b) {
     final steps = [
       {'title': 'Requested', 'done': true},
       {
@@ -384,7 +562,7 @@ class BookingDetailScreen extends ConsumerWidget {
                       ? (index == 0
                           ? AppColors.primaryLight
                           : AppColors.surfaceMuted)
-                      : (isDone ? AppColors.sage : AppColors.surfaceMuted),
+                      : (isDone ? const Color(0xFF047857) : AppColors.surfaceMuted),
                   child: Icon(
                     isDone ? Icons.check : Icons.circle,
                     size: 14,
@@ -410,7 +588,12 @@ class BookingDetailScreen extends ConsumerWidget {
   }
 
   Widget _buildBottomActionButton(
-      BuildContext context, WidgetRef ref, Booking b, BookingController controller) {
+    BuildContext context,
+    WidgetRef ref,
+    Booking b,
+    BookingController controller,
+    bool isHost,
+  ) {
     switch (b.status) {
       case BookingStatus.pendingPayment:
         return FilledButton.icon(
@@ -424,8 +607,8 @@ class BookingDetailScreen extends ConsumerWidget {
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    backgroundColor: AppColors.sage,
-                    content: Text('Payment secured in Escrow! Session confirmed.'),
+                    backgroundColor: Color(0xFF047857),
+                    content: Text('Payment secured in Escrow! Outing confirmed.'),
                   ),
                 );
               }
@@ -433,19 +616,99 @@ class BookingDetailScreen extends ConsumerWidget {
           },
           label: Text('Pay ₹${b.totalAmount.toStringAsFixed(0)} & Escrow'),
         );
+
       case BookingStatus.confirmed:
-        return FilledButton(
-          style: FilledButton.styleFrom(backgroundColor: AppColors.sage),
-          onPressed: () => controller.startBooking(b.orderId),
-          child: const Text('Start Live Session'),
-        );
+        if (isHost) {
+          // Host enters Guest's 6-digit Arrival PIN
+          return FilledButton.icon(
+            icon: const Icon(Icons.pin_rounded),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.primary),
+            onPressed: () {
+              PinVerificationModal.show(
+                context,
+                title: 'Verify Arrival PIN',
+                subtitle:
+                    'Ask ${b.guestName} for the 6-digit Arrival PIN shown on their screen to begin the session.',
+                primaryColor: AppColors.primary,
+                onVerify: (pin) async {
+                  return await controller.checkInWithPin(b.orderId, pin);
+                },
+              );
+            },
+            label: const Text('Verify Arrival PIN'),
+          );
+        } else {
+          // Guest shows PIN to Host
+          return OutlinedButton.icon(
+            icon: const Icon(Icons.shield_outlined, color: AppColors.gold),
+            onPressed: () {
+              // Open modal in demo perspective switch
+              PinVerificationModal.show(
+                context,
+                title: 'Verify Arrival PIN (Demo Host)',
+                subtitle:
+                    'Testing as Host: Enter the 6-digit code (${b.arrivalPin ?? "482910"}) displayed on this voucher.',
+                primaryColor: AppColors.primary,
+                onVerify: (pin) async {
+                  return await controller.checkInWithPin(b.orderId, pin);
+                },
+              );
+            },
+            label: const Text('Present Arrival PIN to Host'),
+          );
+        }
+
       case BookingStatus.inProgress:
-        return FilledButton(
-          style: FilledButton.styleFrom(
-              backgroundColor: AppColors.statusCompleted),
-          onPressed: () => controller.completeBooking(b.orderId),
-          child: const Text('Complete Session'),
-        );
+        if (!isHost) {
+          // Guest enters Host's 6-digit Completion PIN
+          return FilledButton.icon(
+            icon: const Icon(Icons.check_circle_outline),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF047857),
+            ),
+            onPressed: () {
+              PinVerificationModal.show(
+                context,
+                title: 'Release Escrow & Conclude',
+                subtitle:
+                    'Ask ${b.hostName} for the 6-digit Completion PIN displayed on their screen.',
+                primaryColor: const Color(0xFF047857),
+                onVerify: (pin) async {
+                  final ok = await controller.completeWithPin(b.orderId, pin);
+                  if (ok && context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: Color(0xFF047857),
+                        content: Text('Escrow released! Outing completed successfully.'),
+                      ),
+                    );
+                  }
+                  return ok;
+                },
+              );
+            },
+            label: const Text('Verify Completion PIN'),
+          );
+        } else {
+          // Host shows PIN to Guest
+          return OutlinedButton.icon(
+            icon: const Icon(Icons.verified_outlined, color: Color(0xFF047857)),
+            onPressed: () {
+              PinVerificationModal.show(
+                context,
+                title: 'Complete Outing (Demo Guest)',
+                subtitle:
+                    'Testing as Guest: Enter the 6-digit code (${b.completionPin ?? "739184"}) to release escrow.',
+                primaryColor: const Color(0xFF047857),
+                onVerify: (pin) async {
+                  return await controller.completeWithPin(b.orderId, pin);
+                },
+              );
+            },
+            label: const Text('Share Completion PIN with Guest'),
+          );
+        }
+
       case BookingStatus.completed:
         return FilledButton(
           onPressed: () {
@@ -453,21 +716,31 @@ class BookingDetailScreen extends ConsumerWidget {
           },
           child: const Text('Open Message History'),
         );
+
       case BookingStatus.cancelled:
         return FilledButton(
           onPressed: () => context.go('/'),
           child: const Text('Book Another Companion'),
         );
+
       case BookingStatus.disputed:
-        return FilledButton(
+        return FilledButton.icon(
+          icon: const Icon(Icons.support_agent_outlined),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.statusDisputed,
+          ),
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Support ticket created')),
+              SnackBar(
+                backgroundColor: AppColors.statusDisputed,
+                content: Text(
+                  'Priority Safety Desk is investigating Outing #${b.orderId}. Escrow locked.',
+                ),
+              ),
             );
           },
-          child: const Text('Contact Support'),
+          label: const Text('Priority Safety Desk Active'),
         );
     }
   }
 }
-

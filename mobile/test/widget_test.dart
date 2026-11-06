@@ -3,18 +3,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cue_mobile/app.dart';
+import 'package:cue_mobile/core/constants.dart';
+import 'package:cue_mobile/features/auth/auth_controller.dart';
+import 'fixtures/seed_data.dart';
 
 void main() {
   testWidgets('CueApp boots up with bottom navigation and discovery content',
       (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      AppConstants.tokenKey: 'fake-jwt-token',
+    });
     // Set a phone screen size
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const ProviderScope(child: CueApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          apiClientProvider.overrideWithValue(FakeSeedApiClient()),
+        ],
+        child: const CueApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // Verify Cue brand in top bar
@@ -30,15 +42,15 @@ void main() {
     expect(find.text('Messages'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
 
-    // Verify provider cards present
-    expect(find.text('Maya Rodriguez'), findsOneWidget);
-    expect(find.text('Jonah Kim'), findsOneWidget);
+    // Verify curated host cards present
+    expect(find.text('Ananya Sen'), findsOneWidget);
+    expect(find.text('Kabir Varma'), findsOneWidget);
 
     // Tap Bookings tab
     await tester.tap(find.text('Bookings'));
     await tester.pumpAndSettle();
 
-    expect(find.text('My Bookings'), findsOneWidget);
+    expect(find.text('My Outings'), findsOneWidget);
     expect(find.textContaining('Active'), findsOneWidget);
 
     // Tap Messages tab
@@ -60,6 +72,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sign In to Cue'), findsOneWidget);
-    expect(find.text('Instant Demo Sign In (Alex Rivera)'), findsOneWidget);
+    expect(find.text('Mobile & OTP'), findsOneWidget);
+    expect(find.text('Email & Password'), findsOneWidget);
   });
 }

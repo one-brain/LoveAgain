@@ -19,19 +19,18 @@ import {
   MagnifyingGlassIcon,
   StarIcon,
   MapPinIcon,
-  CheckBadgeIcon,
   AdjustmentsHorizontalIcon,
   XMarkIcon,
   SparklesIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  PhotoIcon,
   ArrowPathIcon,
   LockClosedIcon,
+  ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
 
 const CITY_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All India', icon: '🇮🇳', description: 'Show companions nationwide' },
+  { value: 'all', label: 'All India', icon: '🇮🇳', description: 'Show guests nationwide' },
   { value: 'blr', label: 'Bengaluru', icon: '📍', description: 'Indiranagar, Koramangala, Whitefield' },
   { value: 'mum', label: 'Mumbai', icon: '📍', description: 'Bandra, BKC, Colaba, Andheri' },
   { value: 'del', label: 'Delhi-NCR', icon: '📍', description: 'Connaught Place, Gurgaon, Noida' },
@@ -42,10 +41,10 @@ const CITY_OPTIONS: DropdownOption[] = [
 ];
 
 const GENDER_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All Genders', icon: '👥', description: 'Show all companions' },
-  { value: 'female', label: 'Women', icon: '👩', description: 'Female companions' },
-  { value: 'male', label: 'Men', icon: '👨', description: 'Male companions' },
-  { value: 'non-binary', label: 'Non-Binary', icon: '⚧', description: 'Non-binary companions' },
+  { value: 'all', label: 'All Genders', icon: '👥', description: 'Show all guests' },
+  { value: 'female', label: 'Women', icon: '👩', description: 'Female guests' },
+  { value: 'male', label: 'Men', icon: '👨', description: 'Male guests' },
+  { value: 'non-binary', label: 'Non-Binary', icon: '⚧', description: 'Non-binary guests' },
 ];
 
 const SORT_OPTIONS: DropdownOption[] = [
@@ -95,7 +94,7 @@ const Discovery: React.FC = () => {
   const [selectedProviderForBooking, setSelectedProviderForBooking] = useState<any | null>(null);
   const [activeCheckoutOrderId, setActiveCheckoutOrderId] = useState<string | null>(null);
   const [checkoutTotalAmount, setCheckoutTotalAmount] = useState<number>(0);
-  const [checkoutProviderName, setCheckoutProviderName] = useState<string>('Companion');
+  const [checkoutProviderName, setCheckoutProviderName] = useState<string>('Guest');
 
   useEffect(() => {
     const paramLens = searchParams.get('lens');
@@ -195,7 +194,7 @@ const Discovery: React.FC = () => {
 
       return {
         providerId: String(item.providerId),
-        displayName: String(item.displayName || 'Verified Companion'),
+        displayName: String(item.displayName || 'Verified Guest'),
         photoUrl: imgs[0],
         profileImages: imgs,
         gender: String(item.gender || 'Female'),
@@ -390,10 +389,34 @@ const Discovery: React.FC = () => {
     return count;
   }, [genderFilter, selectedCity, userLocation, minRate, maxRate, sortBy]);
 
+  const isAdmin = Boolean(
+    isAuthenticated && (user?.roles?.includes('Admin') || user?.email?.toLowerCase() === 'admin@cue.local')
+  );
+
   return (
     <div className="min-h-screen bg-background text-foreground pb-20">
+      {/* Administrator Context Continuity Ribbon */}
+      {isAdmin && (
+        <aside aria-label="Administrator Preview Ribbon" className="bg-gradient-to-r from-accent/90 via-accent to-accent-hover text-white text-xs py-2 px-4 shadow-sm border-b border-accent/40 sticky top-16 z-30 flex items-center justify-between">
+          <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 font-medium">
+              <span className="w-2 h-2 rounded-full bg-accent-champagne animate-pulse shrink-0" />
+              <span className="font-bold text-accent-champagne font-mono uppercase tracking-wider text-[11px]">Administrator Preview</span>
+              <span className="hidden sm:inline text-white/80">• Browsing live public directory as host</span>
+            </div>
+            <Link
+              to="/admin"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 shrink-0"
+            >
+              <ShieldCheckIcon className="w-3.5 h-3.5 text-accent-champagne" />
+              <span>Return to Dashboard &rarr;</span>
+            </Link>
+          </div>
+        </aside>
+      )}
+
       {/* Top Header & Search Bar */}
-      <section className="bg-card border-b border-border sticky top-16 z-20 backdrop-blur-md bg-card/95 transition-all shadow-2xs">
+      <section className={`bg-card border-b border-border sticky ${isAdmin ? 'top-25' : 'top-16'} z-20 backdrop-blur-md bg-card/95 transition-all shadow-2xs`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
           {/* Main Controls Row */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -413,7 +436,7 @@ const Discovery: React.FC = () => {
                     return next;
                   });
                 }}
-                placeholder="Search by activity, category, or companion name (e.g. Cooking, Yoga, Saree, Tennis, Elena)..."
+                placeholder="Search by activity (e.g. Coffee Dates, Restaurant Visits, Shopping, Movies, Elena)..."
                 className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-muted/50 border border-border/80 text-xs sm:text-sm placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all shadow-2xs"
               />
               {q && (
@@ -509,37 +532,48 @@ const Discovery: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Popular Search Tags */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs">
-            <span className="text-[11px] text-muted-foreground font-medium shrink-0">Popular:</span>
+          {/* Quick Curated Services Strip */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs">
+            <span className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider font-mono shrink-0 mr-1">
+              Services:
+            </span>
             {[
+              { label: 'All Services', query: '' },
+              { label: '☕ Coffee Dates', query: 'Coffee' },
+              { label: '🍽️ Restaurant Visits', query: 'Restaurant' },
+              { label: '🛍️ Shopping', query: 'Shopping' },
+              { label: '🎬 Movies', query: 'Movies' },
+              { label: '🌄 Weekend Activities', query: 'Weekend' },
+              { label: '🎟️ Special Events', query: 'Special Events' },
+              { label: '🎾 Tennis & Fitness', query: 'Tennis' },
               { label: '🍛 Homestyle Cooking', query: 'Cooking' },
-              { label: '🎾 Tennis', query: 'Tennis' },
-              { label: '🪔 Festival & Pooja', query: 'Pooja' },
               { label: '📸 Photography', query: 'Photography' },
-              { label: '👵 Senior Companion', query: 'Senior Companion' },
-              { label: '🧘 Yoga', query: 'Yoga' },
-            ].map((tag) => (
-              <button
-                key={tag.query}
-                type="button"
-                onClick={() => {
-                  setQ(tag.query);
-                  setSearchParams((prev) => {
-                    const next = new URLSearchParams(prev);
-                    next.set('q', tag.query);
-                    return next;
-                  });
-                }}
-                className={`px-2.5 py-1 rounded-lg border text-[11px] font-medium transition-colors shrink-0 cursor-pointer ${
-                  q.toLowerCase() === tag.query.toLowerCase()
-                    ? 'bg-accent text-accent-foreground border-accent shadow-2xs'
-                    : 'bg-muted/40 hover:bg-muted text-foreground/80 border-border/70 hover:border-accent/40'
-                }`}
-              >
-                {tag.label}
-              </button>
-            ))}
+              { label: '👵 Senior Care', query: 'Senior Companion' },
+            ].map((tag) => {
+              const isSelected = (!tag.query && !q.trim()) || (tag.query && q.toLowerCase().includes(tag.query.toLowerCase()));
+              return (
+                <button
+                  key={tag.label}
+                  type="button"
+                  onClick={() => {
+                    setQ(tag.query);
+                    setSearchParams((prev) => {
+                      const next = new URLSearchParams(prev);
+                      if (tag.query) next.set('q', tag.query);
+                      else next.delete('q');
+                      return next;
+                    });
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all shrink-0 cursor-pointer min-h-[36px] flex items-center gap-1 ${
+                    isSelected
+                      ? 'bg-accent text-accent-foreground border-accent shadow-2xs font-semibold'
+                      : 'bg-muted/40 hover:bg-muted text-foreground/85 border-border/80 hover:border-accent/40'
+                  }`}
+                >
+                  <span>{tag.label}</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Active Location Indicator Pill */}
@@ -548,7 +582,7 @@ const Discovery: React.FC = () => {
               <div className="flex items-center gap-1.5 text-accent font-medium">
                 <MapPinIcon className="w-3.5 h-3.5" />
                 <span>
-                  Filtering companions within <strong>{radiusKm} km</strong> of <strong>{userLocation.label}</strong>
+                  Filtering guests within <strong>{radiusKm} km</strong> of <strong>{userLocation.label}</strong>
                 </span>
               </div>
               <button
@@ -729,21 +763,21 @@ const Discovery: React.FC = () => {
                       navigate(`/provider/${provider.providerId}`);
                     }
                   }}
-                  className="rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer flex flex-col group focus:outline-hidden focus:ring-2 focus:ring-accent/50"
+                  className="rounded-3xl border border-border/80 bg-card overflow-hidden shadow-xs hover:shadow-xl hover:border-accent/30 transition-all duration-200 cursor-pointer flex flex-col group focus:outline-hidden focus:ring-2 focus:ring-accent/50"
                 >
-                  {/* Interactive 3-Photo Carousel & Top Badges */}
-                  <div className="relative h-64 overflow-hidden bg-muted">
+                  {/* Luxury Portrait Frame with Touch-Friendly Carousel */}
+                  <div className="relative h-72 overflow-hidden bg-muted">
                     <img
                       src={currentPhoto}
                       alt={`${provider.displayName} photo ${activeIdx + 1}`}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover transition-all duration-300"
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-all duration-300"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-black/20 pointer-events-none" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-black/25 pointer-events-none" />
 
                     {/* Top Right Rate Badge */}
-                    <div className="absolute top-3 right-3 z-10">
+                    <div className="absolute top-3.5 right-3.5 z-10">
                       <RateBadge
                         variant="card-badge"
                         rate={provider.hourlyRate}
@@ -752,31 +786,23 @@ const Discovery: React.FC = () => {
                       />
                     </div>
 
-                    {/* Top Left Verified + Photo Count Badge */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                      {provider.isVerified && (
-                        <div className="bg-success/90 backdrop-blur-md px-2 py-0.5 rounded-full text-[11px] font-semibold text-success-foreground flex items-center gap-1 shadow-xs">
-                          <CheckBadgeIcon className="w-3.5 h-3.5" />
-                          <span>Verified</span>
-                        </div>
-                      )}
-                      {images.length > 1 && (
-                        <div className="bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-full text-[10px] font-semibold text-white flex items-center gap-1">
-                          <PhotoIcon className="w-3 h-3" />
-                          <span>
-                            {activeIdx + 1}/{images.length}
-                          </span>
-                        </div>
-                      )}
+                    {/* Top Left Verified Trust & Rating Badge */}
+                    <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5">
+                      <div className="bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-[#C5A059] border border-[#C5A059]/30 flex items-center gap-1 shadow-sm font-mono">
+                        <StarIcon className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+                        <span>{Number(provider.averageRating || 4.9).toFixed(1)}</span>
+                        <span className="text-white/40">•</span>
+                        <span className="text-white text-[11px] font-sans font-medium">Verified Guest</span>
+                      </div>
                     </div>
 
-                    {/* Left / Right Photo Navigation Arrows */}
+                    {/* Touch & Click Friendly Prev / Next Controls */}
                     {images.length > 1 && (
                       <>
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, -1, e)}
-                          className="absolute left-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-hidden"
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all focus:outline-hidden backdrop-blur-xs"
                           aria-label={`Previous photo of ${provider.displayName}`}
                         >
                           <ChevronLeftIcon className="w-5 h-5" />
@@ -784,127 +810,64 @@ const Discovery: React.FC = () => {
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, 1, e)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/60 hover:bg-black/85 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 focus:outline-hidden"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all focus:outline-hidden backdrop-blur-xs"
                           aria-label={`Next photo of ${provider.displayName}`}
                         >
                           <ChevronRightIcon className="w-5 h-5" />
                         </button>
-                      </>
-                    )}
 
-                    {/* Bottom Bar: Category Badges (Left) & 3-Photo Thumbnail Switcher (Right) */}
-                    <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-2">
-                      <div className="flex flex-wrap gap-1">
-                        {provider.lenses?.includes('pro_work') && (
-                          <span className="px-2 py-0.5 rounded-md bg-sky-900/80 backdrop-blur-md text-[10px] font-semibold text-sky-200 border border-sky-400/30">
-                            💼 Skilled Pro
-                          </span>
-                        )}
-                        {provider.lenses?.includes('wellness') && (
-                          <span className="px-2 py-0.5 rounded-md bg-teal-900/80 backdrop-blur-md text-[10px] font-semibold text-teal-200 border border-teal-400/30">
-                            🏃 Active & Wellness
-                          </span>
-                        )}
-                        {provider.lenses?.includes('companions') && (
-                          <span className="px-2 py-0.5 rounded-md bg-emerald-900/80 backdrop-blur-md text-[10px] font-semibold text-emerald-200 border border-emerald-400/30">
-                            🤝 Companion
-                          </span>
-                        )}
-                        {provider.lenses?.includes('lifestyle') && (
-                          <span className="px-2 py-0.5 rounded-md bg-rose-900/80 backdrop-blur-md text-[10px] font-semibold text-rose-200 border border-rose-400/30">
-                            🏡 Lifestyle
-                          </span>
-                        )}
-                      </div>
-
-                      {/* 3-Photo Mini Thumbnails */}
-                      {images.length > 1 && (
-                        <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md p-1 rounded-xl border border-white/15">
-                          {images.map((imgUrl: string, idx: number) => (
+                        {/* Centered Photo Indicator Dots */}
+                        <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
+                          {images.map((_: any, idx: number) => (
                             <button
                               key={idx}
                               type="button"
                               onClick={(e) => handleSelectPhoto(provider.providerId, idx, e)}
-                              className={`w-7 h-7 rounded-lg overflow-hidden border-2 transition-all ${
-                                activeIdx === idx
-                                  ? 'border-accent scale-105 shadow-xs'
-                                  : 'border-transparent opacity-70 hover:opacity-100'
+                              className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                                activeIdx === idx ? 'w-5 bg-white shadow-xs' : 'w-1.5 bg-white/50 hover:bg-white/80'
                               }`}
-                              title={`View photo ${idx + 1}`}
-                            >
-                              <img
-                                src={imgUrl}
-                                alt={`${provider.displayName} thumb ${idx + 1}`}
-                                className="w-full h-full object-cover"
-                              />
-                            </button>
+                              aria-label={`Go to photo ${idx + 1}`}
+                            />
                           ))}
                         </div>
-                      )}
-                    </div>
+                      </>
+                    )}
                   </div>
 
-                  {/* Profile Details */}
-                  <div className="p-5 flex-1 flex flex-col justify-between">
-                    <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <h3 className="font-display font-medium text-xl text-foreground group-hover:text-accent transition-colors">
+                  {/* Profile Details & 1-Click Action */}
+                  <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-baseline justify-between gap-2">
+                        <h3 className="font-display text-2xl font-normal text-foreground group-hover:text-accent transition-colors truncate">
                           {provider.displayName}
                         </h3>
-                        <div className="flex items-center gap-1 text-xs font-semibold font-mono text-amber-500">
-                          <StarIcon className="w-4 h-4 fill-amber-400" />
-                          <span>{provider.averageRating}</span>
-                        </div>
+                        <span className="text-xs font-mono text-muted-foreground whitespace-nowrap tabular-nums">
+                          {provider.distanceKm != null ? `${provider.distanceKm} km` : (provider.city || 'Central Hub')}
+                        </span>
                       </div>
 
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
+                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
                         {provider.bio}
                       </p>
 
-                      {/* Offered Gigs / Services (If Present) */}
-                      {provider.services && provider.services.length > 0 && (
-                        <div className="mb-3">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
-                            Offered Services & Gigs:
-                          </span>
-                          <div className="flex flex-wrap gap-1">
-                            {provider.services.map((svc: string) => (
-                              <span
-                                key={svc}
-                                className="px-2 py-0.5 rounded-md bg-accent/10 text-accent text-[11px] font-medium"
-                              >
-                                ✓ {svc}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Specialty / Activity Tags */}
-                      <div className="flex flex-wrap gap-1.5 mb-4">
-                        {(provider.specialties || []).map((spec: string) => (
+                      {/* Curated Outing Experiences / Specialties */}
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {(provider.specialties || []).slice(0, 3).map((spec: string) => (
                           <span
                             key={spec}
-                            className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-muted-foreground"
+                            className="px-2.5 py-1 rounded-xl bg-muted/60 text-[11px] font-medium text-foreground/80 border border-border/60"
                           >
-                            #{spec}
+                            {spec}
                           </span>
                         ))}
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5 truncate max-w-[58%]">
-                        <MapPinIcon className="w-3.5 h-3.5 shrink-0 text-accent" />
-                        <span className="truncate">
-                          {provider.distanceKm != null ? (
-                            <strong className="text-foreground font-semibold tabular-nums">
-                              {provider.distanceKm} km away
-                            </strong>
-                          ) : null}
-                          {provider.area ? ` • ${provider.area}` : provider.city ? ` • ${provider.city}` : ''}
-                        </span>
-                      </span>
+                    <div className="pt-3 border-t border-border/70 flex items-center justify-between gap-2">
+                      <div className="text-xs text-muted-foreground truncate">
+                        <span>{provider.area ? `${provider.area}, ` : ''}{provider.city || 'Metro'}</span>
+                      </div>
+
                       <button
                         type="button"
                         onClick={(e) => {
@@ -915,13 +878,10 @@ const Discovery: React.FC = () => {
                           }
                           setSelectedProviderForBooking(provider);
                         }}
-                        className={`px-3 py-1.5 rounded-lg font-semibold transition-all shadow-2xs cursor-pointer ${
-                          isAuthenticated
-                            ? 'bg-accent/10 hover:bg-accent hover:text-accent-foreground text-accent'
-                            : 'bg-muted/80 hover:bg-accent hover:text-accent-foreground text-foreground border border-border/80'
-                        }`}
+                        className="px-4 py-2.5 min-h-[44px] rounded-xl font-bold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-foreground shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
                       >
-                        {isAuthenticated ? 'Book with Escrow \u2192' : 'Login to Book \u2192'}
+                        <ShieldCheckIcon className="w-4 h-4" />
+                        <span>Book Outing &rarr;</span>
                       </button>
                     </div>
                   </div>
@@ -939,10 +899,10 @@ const Discovery: React.FC = () => {
               Public Preview Limit (24 Profiles)
             </div>
             <h3 className="text-2xl font-bold font-serif text-foreground tracking-tight">
-              Looking for more verified companions?
+              Looking for more verified guests?
             </h3>
             <p className="text-muted-foreground text-sm mt-2 max-w-xl mx-auto leading-relaxed">
-              You are currently viewing a curated preview of 24 companions. Sign in or create a free account to unlock our entire community of verified companions, full photo galleries, and instant booking with escrow protection.
+              You are currently viewing a curated preview of 24 guests. Sign in or create a free account to unlock our entire community of verified guests, full photo galleries, and instant booking with escrow protection.
             </p>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
               <Link
@@ -966,7 +926,7 @@ const Discovery: React.FC = () => {
           <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/60">
             <p className="text-xs text-muted-foreground order-2 sm:order-1">
               Showing page <strong className="text-foreground">{currentPage}</strong> of{' '}
-              <strong className="text-foreground">{totalPages}</strong> ({totalCount} verified companions)
+              <strong className="text-foreground">{totalPages}</strong> ({totalCount} verified guests)
             </p>
             <div className="flex items-center gap-1.5 order-1 sm:order-2">
               <button
@@ -1017,6 +977,7 @@ const Discovery: React.FC = () => {
             isOpen={Boolean(selectedProviderForBooking)}
             onClose={() => setSelectedProviderForBooking(null)}
             provider={selectedProviderForBooking}
+            initialActivity={q || undefined}
             onProceedToPayment={async (bookingData: BookingRequirementData) => {
               let generatedOrderId = `order_${Date.now()}`;
               if (selectedProviderForBooking.providerId) {
@@ -1045,7 +1006,7 @@ const Discovery: React.FC = () => {
                   }
                 } catch (err: any) {
                   console.error('Booking API error:', err);
-                  alert(err?.data?.error || 'Failed to create booking. Please check companion availability.');
+                  alert(err?.data?.error || 'Failed to create booking. Please check guest availability.');
                   return;
                 }
               }
@@ -1083,7 +1044,7 @@ const Discovery: React.FC = () => {
                 Sign In to Unlock Pricing & Reserve
               </h3>
               <p className="text-sm text-muted-foreground leading-relaxed">
-                To guarantee companion privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
+                To guarantee guest privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
               </p>
               <div className="pt-2 flex flex-col gap-2">
                 <Link

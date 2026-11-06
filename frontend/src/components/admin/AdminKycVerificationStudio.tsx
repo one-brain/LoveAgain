@@ -10,6 +10,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline';
 import type { AdminKycVerificationItem } from '../../store/adminApi';
+import { Pagination } from '../ui/Pagination';
 
 interface AdminKycVerificationStudioProps {
   kycItems: AdminKycVerificationItem[];
@@ -18,6 +19,12 @@ interface AdminKycVerificationStudioProps {
   onReject: (id: string, reason: string) => Promise<void>;
   isApproving: boolean;
   isRejecting: boolean;
+  page?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  onPageChange?: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 const KYC_REJECTION_TEMPLATES = [
@@ -35,6 +42,12 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
   onReject,
   isApproving,
   isRejecting,
+  page,
+  pageSize,
+  totalCount,
+  totalPages,
+  onPageChange,
+  onPageSizeChange,
 }) => {
   const [filter, setFilter] = useState<'All' | 'PendingReview' | 'Approved' | 'Rejected'>('PendingReview');
   const [search, setSearch] = useState('');
@@ -42,6 +55,29 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
   const [rejectReason, setRejectReason] = useState('');
   const [comparisonModalItem, setComparisonModalItem] = useState<AdminKycVerificationItem | null>(null);
   const [activeImagePreview, setActiveImagePreview] = useState<{ url: string; label: string } | null>(null);
+  const [localPage, setLocalPage] = useState(1);
+  const [localPageSize, setLocalPageSize] = useState(20);
+
+  const isServerPaged = Boolean(onPageChange);
+  const activePage = isServerPaged ? (page ?? 1) : localPage;
+  const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
+
+  const handlePageChange = (p: number) => {
+    if (onPageChange) {
+      onPageChange(p);
+    } else {
+      setLocalPage(p);
+    }
+  };
+
+  const handlePageSizeChange = (ps: number) => {
+    if (onPageSizeChange) {
+      onPageSizeChange(ps);
+    } else {
+      setLocalPageSize(ps);
+      setLocalPage(1);
+    }
+  };
 
   const filteredItems = kycItems.filter((item) => {
     const matchesFilter = filter === 'All' ? true : item.status === filter;
@@ -54,6 +90,15 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
       item.documentType?.toLowerCase().includes(q);
     return matchesFilter && matchesSearch;
   });
+
+  const displayedItems = isServerPaged
+    ? filteredItems
+    : filteredItems.slice((activePage - 1) * activePageSize, activePage * activePageSize);
+
+  const activeTotalCount = isServerPaged ? (totalCount ?? filteredItems.length) : filteredItems.length;
+  const activeTotalPages = isServerPaged
+    ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
+    : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const pendingCount = kycItems.filter((v) => v.status === 'PendingReview').length;
   const approvedCount = kycItems.filter((v) => v.status === 'Approved').length;
@@ -167,7 +212,7 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
+          {displayedItems.map((item) => (
             <div
               key={item.id}
               className="bg-card rounded-2xl border border-border/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
@@ -301,6 +346,18 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
           ))}
         </div>
       )}
+
+      <div className="mt-4 rounded-2xl overflow-hidden border border-border/80 bg-card shadow-2xs">
+        <Pagination
+          currentPage={activePage}
+          totalPages={activeTotalPages}
+          totalCount={activeTotalCount}
+          pageSize={activePageSize}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
+          isLoading={isLoading}
+        />
+      </div>
 
       {/* Side-by-Side Full-Screen Comparison Modal */}
       {comparisonModalItem && (

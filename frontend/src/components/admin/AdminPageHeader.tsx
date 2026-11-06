@@ -31,7 +31,7 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
           {badge}
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground font-serif">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-sans">
           {title}
         </h1>
         <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed">

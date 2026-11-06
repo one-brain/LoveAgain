@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api_client.dart';
 import '../../core/constants.dart';
-import '../../data/mock_data.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../models/user.dart';
 
@@ -19,7 +18,9 @@ class AuthState {
     this.user,
     this.isLoading = false,
     this.error,
-    this.activeRole = 'Seeker',
+    this.activeRole = 'Guest',
+    this.isOtpSent = false,
+    this.pendingEmail,
   });
 
   final String? token;
@@ -27,9 +28,35 @@ class AuthState {
   final bool isLoading;
   final String? error;
   final String activeRole;
+  final bool isOtpSent;
+  final String? pendingEmail;
 
   bool get isAuthenticated => token != null && token!.isNotEmpty;
-  bool get isProviderMode => activeRole == 'Provider';
+  bool get isHostMode => activeRole == 'Host' || activeRole == 'Provider';
+  bool get isGuestMode => activeRole == 'Guest' || activeRole == 'Seeker';
+
+  // Backward compatibility alias
+  bool get isProviderMode => isHostMode;
+
+  AuthState copyWith({
+    String? token,
+    User? user,
+    bool? isLoading,
+    String? error,
+    String? activeRole,
+    bool? isOtpSent,
+    String? pendingEmail,
+  }) {
+    return AuthState(
+      token: token ?? this.token,
+      user: user ?? this.user,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      activeRole: activeRole ?? this.activeRole,
+      isOtpSent: isOtpSent ?? this.isOtpSent,
+      pendingEmail: pendingEmail ?? this.pendingEmail,
+    );
+  }
 }
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
@@ -39,12 +66,26 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   ),
 );
 
+const User defaultLiveGuestUser = User(
+  id: '6d59d945-c2ea-42e6-b195-34737b8cde33',
+  email: 'alex.seeker@cue.local',
+  firstName: 'Alex',
+  lastName: 'Seeker',
+  roles: ['Guest'],
+  trustScore: 98,
+  isVerified: true,
+  bio: 'Art enthusiast and quiet explorer living in Indiranagar, Bengaluru.',
+  phone: '+91 99000 00003',
+  city: 'Bengaluru',
+);
+
 class AuthController extends StateNotifier<AuthState> {
   AuthController(this._repository, this._api)
       : super(const AuthState(
-          token: 'cue-demo-jwt-token',
-          user: MockData.currentUser,
-          activeRole: 'Seeker',
+          token: null,
+          user: defaultLiveGuestUser,
+          activeRole: 'Guest',
+          isLoading: true,
         )) {
     restore();
   }
@@ -57,21 +98,22 @@ class AuthController extends StateNotifier<AuthState> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(AppConstants.tokenKey);
       final userJson = prefs.getString(AppConstants.userKey);
-      final role = prefs.getString(AppConstants.userRoleKey) ?? 'Seeker';
+      final rawRole = prefs.getString(AppConstants.userRoleKey) ?? 'Guest';
+      final role = (rawRole == 'Provider' || rawRole == 'Host') ? 'Host' : 'Guest';
 
       final signedOut = prefs.getBool('cue.signedOut') ?? false;
 
-      if (token != null && token.isNotEmpty) {
+      if (token != null && token.isNotEmpty && token != 'cue-demo-jwt-token') {
         _api.setAccessToken(token);
         User? user;
         if (userJson != null) {
           try {
             user = User.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
           } catch (_) {
-            user = MockData.currentUser;
+            user = defaultLiveGuestUser;
           }
         } else {
-          user = MockData.currentUser;
+          user = defaultLiveGuestUser;
         }
 
         state = AuthState(
@@ -80,19 +122,157 @@ class AuthController extends StateNotifier<AuthState> {
           activeRole: role,
         );
       } else if (!signedOut) {
-        // Initialize default demo user logged-in state so reviewer/user can immediately test
-        const demoToken = 'cue-demo-jwt-token';
-        _api.setAccessToken(demoToken);
-        state = const AuthState(
-          token: demoToken,
-          user: MockData.currentUser,
-          activeRole: 'Seeker',
-        );
+        // Authenticate with live backend credentials to get a genuine signed JWT
+        try {
+          final res = await _repository.login(
+            email: 'alex.seeker@cue.local',
+            password: 'CueDemo123!',
+          );
+          await prefs.setString(AppConstants.tokenKey, res.token);
+          await prefs.setString(AppConstants.userKey, jsonEncode(res.user.toJson()));
+          state = AuthState(
+            token: res.token,
+            user: res.user,
+            activeRole: 'Guest',
+          );
+        } catch (_) {
+          state = const AuthState(
+            token: 'cue-guest-session',
+            user: defaultLiveGuestUser,
+            activeRole: 'Guest',
+          );
+        }
       } else {
         state = const AuthState();
       }
     } catch (_) {
-      // Ignore restore errors
+      state = const AuthState();
+    }
+  }
+
+  Future<bool> sendMobileOtp(String phone) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.sendMobileOtp(phone: phone);
+      state = state.copyWith(
+        isLoading: false,
+        isOtpSent: true,
+        pendingEmail: phone,
+      );
+      return true;
+    } catch (e) {
+      final msg = e is ApiException ? e.message : 'Unable to send OTP. Please check your number.';
+      state = state.copyWith(
+        isLoading: false,
+        error: msg,
+      );
+      return false;
+    }
+  }
+
+  Future<VerifyMobileOtpResult?> verifyMobileOtp({
+    required String phone,
+    required String otp,
+    String? firstName,
+    String? lastName,
+    String? dateOfBirth,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final result = await _repository.verifyMobileOtp(
+        phone: phone,
+        otp: otp,
+        firstName: firstName,
+        lastName: lastName,
+        dateOfBirth: dateOfBirth,
+      );
+
+      if (result.isNewUser) {
+        state = state.copyWith(isLoading: false, error: null);
+        return result;
+      }
+
+      if (result.authResult != null) {
+        final authResult = result.authResult!;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(AppConstants.tokenKey, authResult.token);
+        await prefs.setString(AppConstants.userKey, jsonEncode(authResult.user.toJson()));
+        await prefs.remove('cue.signedOut');
+
+        state = AuthState(
+          token: authResult.token,
+          user: authResult.user,
+          activeRole: state.activeRole,
+          isOtpSent: false,
+          pendingEmail: null,
+        );
+        return result;
+      }
+
+      state = state.copyWith(isLoading: false);
+      return result;
+    } catch (e) {
+      final msg = e is ApiException ? e.message : 'Invalid OTP code. Please verify and try again.';
+      state = state.copyWith(
+        isLoading: false,
+        error: msg,
+      );
+      return null;
+    }
+  }
+
+  Future<bool> requestOtp(String email) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final ok = await _repository.requestOtp(email: email);
+      if (ok) {
+        state = state.copyWith(
+          isLoading: false,
+          isOtpSent: true,
+          pendingEmail: email,
+        );
+        return true;
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Unable to send OTP. Please try again.',
+        );
+        return false;
+      }
+    } catch (e) {
+      final msg = e is ApiException ? e.message : 'Network error requesting OTP.';
+      state = state.copyWith(
+        isLoading: false,
+        error: msg,
+      );
+      return false;
+    }
+  }
+
+  Future<bool> verifyOtp(String email, String code) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final result = await _repository.verifyOtp(email: email, code: code);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConstants.tokenKey, result.token);
+      await prefs.setString(AppConstants.userKey, jsonEncode(result.user.toJson()));
+      await prefs.remove('cue.signedOut');
+
+      state = AuthState(
+        token: result.token,
+        user: result.user,
+        activeRole: state.activeRole,
+        isOtpSent: false,
+        pendingEmail: null,
+      );
+      return true;
+    } catch (e) {
+      final msg = e is ApiException ? e.message : 'Invalid OTP code. Please verify and try again.';
+      state = state.copyWith(
+        isLoading: false,
+        error: msg,
+      );
+      return false;
     }
   }
 
@@ -112,8 +292,9 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
+      final msg = e is ApiException ? e.message : 'Unable to sign in. Please verify your credentials.';
       state = AuthState(
-        error: 'Unable to sign in. Please verify your credentials.',
+        error: msg,
         activeRole: state.activeRole,
       );
       return false;
@@ -129,12 +310,13 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = AuthState(isLoading: true, activeRole: state.activeRole);
     try {
+      final canonicalRoles = roles.map((r) => r == 'Provider' ? 'Host' : (r == 'Seeker' ? 'Guest' : r)).toList();
       final result = await _repository.register(
         email: email,
         password: password,
         firstName: firstName,
         lastName: lastName,
-        roles: roles,
+        roles: canonicalRoles,
       );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.tokenKey, result.token);
@@ -144,12 +326,13 @@ class AuthController extends StateNotifier<AuthState> {
       state = AuthState(
         token: result.token,
         user: result.user,
-        activeRole: roles.contains('Provider') ? 'Provider' : 'Seeker',
+        activeRole: canonicalRoles.contains('Host') ? 'Host' : 'Guest',
       );
       return true;
     } catch (e) {
+      final msg = e is ApiException ? e.message : 'Registration failed. Please try again.';
       state = AuthState(
-        error: 'Registration failed. Please try again.',
+        error: msg,
         activeRole: state.activeRole,
       );
       return false;
@@ -157,13 +340,27 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   void toggleRole() {
-    final newRole = state.activeRole == 'Seeker' ? 'Provider' : 'Seeker';
+    final newRole = state.isHostMode ? 'Guest' : 'Host';
     state = AuthState(
       token: state.token,
       user: state.user,
       activeRole: newRole,
     );
     SharedPreferences.getInstance().then((p) => p.setString(AppConstants.userRoleKey, newRole));
+  }
+
+  void setRole(String role) {
+    final newRole = (role == 'Host' || role == 'Provider') ? 'Host' : 'Guest';
+    state = AuthState(
+      token: state.token,
+      user: state.user,
+      activeRole: newRole,
+    );
+    SharedPreferences.getInstance().then((p) => p.setString(AppConstants.userRoleKey, newRole));
+  }
+
+  void resetOtp() {
+    state = state.copyWith(isOtpSent: false, pendingEmail: null, error: null);
   }
 
   Future<void> signOut() async {

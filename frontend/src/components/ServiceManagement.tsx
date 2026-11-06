@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { PlusIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { PlusIcon, XMarkIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/outline';
 
 interface ServiceManagementProps {
   specialties: string[];
@@ -8,6 +8,45 @@ interface ServiceManagementProps {
   serviceTags?: Record<string, string[]>;
   onServiceTagsChange?: (specialty: string, tags: string[]) => void;
 }
+
+export const RECOMMENDED_COMPANIONSHIP_SERVICES = [
+  {
+    name: 'Coffee Dates & Cafe Chats',
+    icon: '☕',
+    description: 'Artisanal cafes, pour-over tastings, relaxed conversations & quiet reading sessions',
+    defaultTags: ['Specialty Cafes', 'Engaging Conversationalist', 'Third Wave Coffee', 'Quiet Ambience'],
+  },
+  {
+    name: 'Restaurant Visits & Dining',
+    icon: '🍽️',
+    description: 'Fine dining dinners, casual lunch meetups, culinary food walks & chef tastings',
+    defaultTags: ['Fine Dining Etiquette', 'Foodie Explorer', 'Dinner Outings', 'Cuisine Pairings'],
+  },
+  {
+    name: 'Shopping & Styling Companion',
+    icon: '🛍️',
+    description: 'Personal shopping assistant, boutique explorations, wardrobe styling & mall visits',
+    defaultTags: ['Wardrobe Styling', 'Boutique Crawls', 'Patient Shopping Buddy', 'Mall Navigation'],
+  },
+  {
+    name: 'Movies & Cinema Outings',
+    icon: '🎬',
+    description: 'Multiplex new releases, film festival companion, IMAX screenings & post-show chats',
+    defaultTags: ['Cinema Buff', 'IMAX Screenings', 'Film Discussion', 'Popcorn & Movie Dates'],
+  },
+  {
+    name: 'Weekend Activities & Getaways',
+    icon: '🌄',
+    description: 'Sunday farmer markets, scenic outdoor spots, day trips, museum trails & picnic outings',
+    defaultTags: ['Weekend Day Trips', 'Sunday Markets', 'Scenic Drives', 'Park Walks & Picnics'],
+  },
+  {
+    name: 'Special Events & Plus-One',
+    icon: '🎟️',
+    description: 'Wedding plus-one, corporate galas, live concerts, black-tie dinners & art exhibitions',
+    defaultTags: ['Wedding Plus-One', 'Gala & Black-Tie', 'Concert Partner', 'Art Gallery Openings'],
+  },
+];
 
 export const ServiceManagement: React.FC<ServiceManagementProps> = ({
   specialties,
@@ -35,6 +74,19 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
       await onAddService?.(trimmed);
       setNewSpecialty('');
       setTagInputs((prev) => ({ ...prev, [trimmed]: '' }));
+    } catch {
+      setError('Failed to add service');
+    }
+  };
+
+  const handleQuickAddService = async (serviceName: string, defaultTags: string[]) => {
+    if (specialties.includes(serviceName)) return;
+    setError(null);
+    try {
+      await onAddService?.(serviceName);
+      if (onServiceTagsChange && defaultTags.length > 0) {
+        onServiceTagsChange(serviceName, defaultTags);
+      }
     } catch {
       setError('Failed to add service');
     }
@@ -173,22 +225,109 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
         </div>
       )}
 
-      {/* Add New Specialty Input Form */}
-      <form onSubmit={handleAdd} className="space-y-2">
+      {/* Recommended Companionship Services Showcase */}
+      <div className="space-y-3 pt-2 border-t border-border/70">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5">
+            <SparklesIcon className="w-4 h-4 text-accent" />
+            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
+              Curated Companionship Services
+            </h3>
+          </div>
+          <span className="text-[11px] text-muted-foreground">
+            Tap to offer or expand your profile
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {RECOMMENDED_COMPANIONSHIP_SERVICES.map((srv) => {
+            const isAdded = specialties.includes(srv.name);
+            return (
+              <div
+                key={srv.name}
+                className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-2.5 ${
+                  isAdded
+                    ? 'bg-accent/5 border-accent/30 shadow-2xs'
+                    : 'bg-card border-border hover:border-accent/40'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-base" role="img" aria-hidden="true">
+                      {srv.icon}
+                    </span>
+                    {isAdded ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25">
+                        <CheckIcon className="w-3 h-3" />
+                        <span>Active</span>
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        Recommended
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="text-xs font-bold text-foreground font-serif">
+                    {srv.name}
+                  </h4>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                    {srv.description}
+                  </p>
+                </div>
+
+                <div className="pt-1 flex items-center justify-between">
+                  <div className="flex flex-wrap gap-1">
+                    {srv.defaultTags.slice(0, 2).map((t) => (
+                      <span
+                        key={t}
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+
+                  {isAdded ? (
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(srv.name)}
+                      className="text-[11px] font-semibold text-muted-foreground hover:text-destructive px-2 py-1 rounded-lg transition-colors cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleQuickAddService(srv.name, srv.defaultTags)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors shadow-2xs cursor-pointer"
+                    >
+                      <PlusIcon className="w-3 h-3" />
+                      <span>Add</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Add New Custom Specialty Input Form */}
+      <form onSubmit={handleAdd} className="space-y-2 pt-2 border-t border-border/70">
         <label className="block text-xs font-semibold text-muted-foreground">
-          Add Another Specialty
+          Add Custom Specialty
         </label>
         <div className="flex gap-2">
           <input
             type="text"
             value={newSpecialty}
             onChange={(e) => setNewSpecialty(e.target.value)}
-            placeholder="e.g. Squash, Painting, Cycling..."
+            placeholder="e.g. Squash, Painting, Cycling, Chess..."
             className="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
           />
           <button
             type="submit"
-            className="px-5 py-2.5 text-xs sm:text-sm font-semibold bg-accent text-accent-foreground rounded-xl hover:bg-accent-hover transition-colors shadow-xs flex items-center gap-1.5"
+            className="px-5 py-2.5 text-xs sm:text-sm font-semibold bg-accent text-accent-foreground rounded-xl hover:bg-accent-hover transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
           >
             <PlusIcon className="w-4 h-4" />
             <span>Add Specialty</span>

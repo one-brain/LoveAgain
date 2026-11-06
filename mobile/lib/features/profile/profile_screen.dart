@@ -20,7 +20,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final user = auth.user;
-    final isProviderMode = auth.isProviderMode;
+    final isHost = user?.isHost == true || auth.isHostMode;
 
     return Scaffold(
       appBar: AppBar(
@@ -30,7 +30,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             icon: const Icon(Icons.settings_outlined),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Settings saved')),
+                const SnackBar(content: Text('Profile preferences updated')),
               );
             },
           ),
@@ -57,7 +57,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
-                      color: AppColors.primaryDark,
+                      color: AppColors.primary,
                     ),
                   ),
                 ),
@@ -87,6 +87,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     color: AppColors.textSecondary,
                   ),
                 ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textMuted),
+                    const SizedBox(width: 3),
+                    Text(
+                      user?.city ?? 'Bengaluru',
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    ),
+                  ],
+                ),
                 if (user?.bio != null) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -104,54 +116,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Role Switcher Card
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isProviderMode ? 'Provider Mode' : 'Seeker Mode',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isProviderMode
-                          ? 'Viewing incoming orders & companion dashboard'
-                          : 'Viewing companion discovery & outings',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-                Switch(
-                  value: isProviderMode,
-                  activeThumbColor: AppColors.primary,
-                  onChanged: (val) {
-                    ref.read(authControllerProvider.notifier).toggleRole();
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Provider Dashboard summary (Visible when Provider Mode is on)
-          if (isProviderMode) ...[
+          // Host Dashboard summary (Visible for registered companions / hosts)
+          if (isHost) ...[
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -165,14 +131,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Companion Dashboard',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                      const Expanded(
+                        child: Text(
+                          'Host Earnings & Ledger',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
@@ -200,19 +170,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       Expanded(
                         child: _buildMetricTile(
-                          'Total Earnings',
-                          '\$384.00',
-                          Icons.payments_outlined,
+                          'Released Escrow',
+                          '₹32,400',
+                          Icons.account_balance_wallet_outlined,
                           AppColors.primary,
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _buildMetricTile(
-                          'Rating',
+                          'Peer Rating',
                           '4.95 ★',
                           Icons.star_outline_rounded,
-                          const Color(0xFFF59E0B),
+                          AppColors.gold,
                         ),
                       ),
                     ],
@@ -221,14 +191,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Accept new booking requests',
-                        style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w500),
+                      const Expanded(
+                        child: Text(
+                          'Accept new outing requests',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Switch(
                         value: _isDiscoverable,
-                        activeThumbColor: AppColors.sage,
+                        activeThumbColor: AppColors.primary,
                         onChanged: (val) {
                           setState(() => _isDiscoverable = val);
                         },
@@ -255,27 +228,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.shield_rounded,
-                            size: 20, color: AppColors.sage),
-                        SizedBox(width: 8),
-                        Text(
-                          'Trust & Reputation',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                    const Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.shield_rounded,
+                              size: 20, color: AppColors.gold),
+                          SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'Trust & Reputation',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    TrustScoreBadge(score: user?.trustScore ?? 95),
+                    const SizedBox(width: 8),
+                    TrustScoreBadge(score: user?.trustScore ?? 96),
                   ],
                 ),
                 const SizedBox(height: 12),
                 const Text(
-                  'Your trust score reflects completed sessions, identity verification, positive peer reviews, and punctuality.',
+                  'Your trust score reflects verified identity, completed dual-PIN verified outings, positive peer reviews, and punctuality.',
                   style: TextStyle(
                     fontSize: 13,
                     color: AppColors.textSecondary,
@@ -297,14 +276,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: 8),
                 _buildTrustEventRow(
                   '+10 pts',
-                  'Identity and phone verification completed',
+                  'Aadhaar / Passport and phone verification completed',
                   'Oct 18, 2026',
                   true,
                 ),
                 const SizedBox(height: 6),
                 _buildTrustEventRow(
                   '+5 pts',
-                  '5-star completed museum companion order',
+                  '5-star completed NGMA museum companion outing',
                   'Oct 19, 2026',
                   true,
                 ),
@@ -323,7 +302,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.security, color: AppColors.sage),
+                  leading: const Icon(Icons.security, color: AppColors.gold),
                   title: const Text('Community Safety Guidelines'),
                   trailing: const Icon(Icons.arrow_forward_ios,
                       size: 14, color: AppColors.textMuted),
@@ -348,14 +327,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ListTile(
                   leading: const Icon(Icons.logout,
                       color: AppColors.statusCancelled),
-                  title: const Text(
-                    'Sign Out',
-                    style: TextStyle(color: AppColors.statusCancelled),
-                  ),
+                  title: const Text('Sign Out',
+                      style: TextStyle(color: AppColors.statusCancelled)),
                   onTap: () async {
-                    await ref
-                        .read(authControllerProvider.notifier)
-                        .signOut();
+                    await ref.read(authControllerProvider.notifier).signOut();
                     if (context.mounted) {
                       context.go('/login');
                     }
@@ -376,26 +351,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 18, color: color),
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 6),
           Text(
             value,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w800,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary,
+              color: AppColors.textPrimary,
+              fontFamily: 'monospace',
             ),
           ),
         ],
@@ -404,71 +390,136 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildTrustEventRow(
-      String delta, String description, String date, bool positive) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-          decoration: BoxDecoration(
-            color: positive
-                ? const Color(0xFFD1FAE5)
-                : const Color(0xFFFEE2E2),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Text(
-            delta,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: positive
-                  ? const Color(0xFF047857)
-                  : AppColors.statusCancelled,
+      String change, String description, String date, bool isPositive) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: isPositive
+                  ? const Color(0xFFD1FAE5)
+                  : const Color(0xFFFEE2E2),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              change,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: isPositive
+                    ? const Color(0xFF047857)
+                    : AppColors.statusCancelled,
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            description,
-            style: const TextStyle(fontSize: 12, color: AppColors.textPrimary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              description,
+              style: const TextStyle(
+                  fontSize: 12, color: AppColors.textPrimary),
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-        Text(
-          date,
-          style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
-        ),
-      ],
+          const SizedBox(width: 8),
+          Text(
+            date,
+            style: const TextStyle(
+                fontSize: 11, color: AppColors.textMuted),
+          ),
+        ],
+      ),
     );
   }
 
   void _showSafetyGuidelines(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => const Padding(
-        padding: EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Cue Safety Guidelines',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+      builder: (ctx) {
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Community Safety Principles',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _buildGuidelineItem(
+                Icons.public,
+                'Public Spaces First',
+                'All first and second outings must take place in public, well-lit spaces like galleries, cafes, museums, or events.',
+              ),
+              _buildGuidelineItem(
+                Icons.pin,
+                'Dual-PIN Mutual Verification',
+                'Verify arrival and completion PINs in person to safeguard escrow deposits.',
+              ),
+              _buildGuidelineItem(
+                Icons.health_and_safety_outlined,
+                'Strictly Platonic Companionship',
+                'Cue is dedicated to shared interests, conversation, and activities. Romantic solicitation or adult services are strictly prohibited.',
+              ),
+              const SizedBox(height: 16),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('I Understand & Agree'),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildGuidelineItem(IconData icon, String title, String body) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 20, color: AppColors.primary),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  body,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    height: 1.3,
+                  ),
+                ),
+              ],
             ),
-            SizedBox(height: 12),
-            Text(
-              '1. Always meet initially in well-lit public spaces (cafes, museums, parks).\n'
-              '2. Communicate exclusively through the in-app chat for auditability and safety tracking.\n'
-              '3. Payments are protected in escrow until session completion.\n'
-              '4. In case of discomfort, end the session and tap Contact Support immediately.',
-              style: TextStyle(fontSize: 13, height: 1.5),
-            ),
-            SizedBox(height: 20),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

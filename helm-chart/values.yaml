@@ -170,7 +170,13 @@ secret:
   # Connection string for AuthService (used by Entity Framework Core)
   ConnectionStrings__CueDatabase: Host=cue-cue-postgres-service;Port=5432;Database=cue_db;Username=admin;Password=localsecret
 
-  # Email service credentials (if using external email provider)
+  # Email service credentials (Mailjet Send API v3.1)
+  Mailjet__ApiKey: "" # Inject via helm --set-string secret.Mailjet__ApiKey=... or sealed secret
+  Mailjet__ApiSecret: "" # Inject via helm --set-string secret.Mailjet__ApiSecret=... or sealed secret
+  Mailjet__FromEmail: "naveen.bathina9@gmail.com"
+  Mailjet__FromName: "Cue"
+
+  # Legacy Email keys (deprecated)
   EMAIL_API_KEY: c2vjcmV0 # placeholder
   EMAIL_FROM_ADDRESS: cue@mailcompany.com
 

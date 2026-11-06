@@ -19,9 +19,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
   @override
   void dispose() {
-    _customAmountController.disposeDelayed();
-    _payoutAmountController.disposeDelayed();
-    _destinationController.disposeDelayed();
+    _customAmountController.dispose();
+    _payoutAmountController.dispose();
+    _destinationController.dispose();
     super.dispose();
   }
 
@@ -63,7 +63,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Add funds instantly using UPI (Google Pay, PhonePe, Paytm, QR) or Cards.',
+                'Add funds instantly using UPI (Google Pay, PhonePe, Paytm, BHIM) or Net Banking.',
                 style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
               ),
               const SizedBox(height: 20),
@@ -77,20 +77,24 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
+                    fontFamily: 'monospace',
                   ),
                   labelText: 'Amount (INR)',
-                  hintText: 'Enter amount (e.g. 1500)',
+                  hintText: 'Enter amount (e.g. 2000)',
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               Wrap(
                 spacing: 8,
                 children: [500, 1000, 2000, 5000].map((amt) {
                   return ActionChip(
-                    label: Text('₹$amt'),
+                    label: Text(
+                      '₹$amt',
+                      style: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
                     onPressed: () {
                       _customAmountController.text = amt.toString();
                     },
@@ -102,14 +106,14 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                 width: double.infinity,
                 height: 52,
                 child: FilledButton.icon(
-                  icon: const Icon(Icons.flash_on),
+                  icon: const Icon(Icons.flash_on, color: AppColors.gold),
                   label: const Text(
-                    'Pay with UPI / Razorpay',
+                    'Add Funds with UPI',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   onPressed: () async {
                     final amt = double.tryParse(_customAmountController.text);
-                    if (amt != null && amt >= 10) {
+                    if (amt != null && amt >= 100) {
                       Navigator.pop(ctx);
                       final success = await ref
                           .read(walletControllerProvider.notifier)
@@ -117,11 +121,16 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       if (context.mounted && success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            backgroundColor: AppColors.sage,
-                            content: Text('₹${amt.toStringAsFixed(0)} credited to Cue Wallet!'),
+                            backgroundColor: const Color(0xFF047857),
+                            content: Text(
+                                '₹${amt.toStringAsFixed(0)} credited to Cue Wallet!'),
                           ),
                         );
                       }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Minimum top-up is ₹100.')),
+                      );
                     }
                   },
                 ),
@@ -158,7 +167,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Withdraw Earnings',
+                        'Instant Host Withdrawal',
                         style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -171,27 +180,36 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 4),
                   Text(
-                    'Available to withdraw: ₹${clearedBalance.toStringAsFixed(0)}',
-                    style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                    'Available for instant payout: ₹${clearedBalance.toStringAsFixed(0)}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF047857),
+                    ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   Row(
                     children: [
-                      ChoiceChip(
-                        label: const Text('UPI ID (VPA)'),
-                        selected: _payoutType == 'Upi',
-                        onSelected: (val) {
-                          setModalState(() => _payoutType = 'Upi');
-                        },
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('UPI (Google Pay / PhonePe)'),
+                          selected: _payoutType == 'Upi',
+                          selectedColor: AppColors.primaryLight,
+                          onSelected: (val) =>
+                              setModalState(() => _payoutType = 'Upi'),
+                        ),
                       ),
                       const SizedBox(width: 8),
-                      ChoiceChip(
-                        label: const Text('Bank Transfer'),
-                        selected: _payoutType == 'BankTransfer',
-                        onSelected: (val) {
-                          setModalState(() => _payoutType = 'BankTransfer');
-                        },
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Bank Transfer (NEFT/IMPS)'),
+                          selected: _payoutType == 'Bank',
+                          selectedColor: AppColors.primaryLight,
+                          onSelected: (val) =>
+                              setModalState(() => _payoutType = 'Bank'),
+                        ),
                       ),
                     ],
                   ),
@@ -201,6 +219,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       prefixText: '₹ ',
+                      prefixStyle: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'monospace',
+                      ),
                       labelText: 'Withdrawal Amount',
                       hintText: 'Min ₹100',
                       border: OutlineInputBorder(
@@ -212,7 +235,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   TextField(
                     controller: _destinationController,
                     decoration: InputDecoration(
-                      labelText: _payoutType == 'Upi' ? 'UPI ID (e.g. name@upi)' : 'Account No + IFSC',
+                      labelText: _payoutType == 'Upi'
+                          ? 'UPI ID / VPA (e.g. name@okhdfcbank)'
+                          : 'Bank Account Number + IFSC',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
@@ -223,8 +248,12 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     width: double.infinity,
                     height: 52,
                     child: FilledButton(
+                      style: FilledButton.styleFrom(
+                        backgroundColor: const Color(0xFF047857),
+                      ),
                       onPressed: () async {
-                        final amt = double.tryParse(_payoutAmountController.text);
+                        final amt =
+                            double.tryParse(_payoutAmountController.text);
                         final dest = _destinationController.text.trim();
                         if (amt != null && amt >= 100 && dest.isNotEmpty) {
                           Navigator.pop(ctx);
@@ -238,16 +267,24 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           if (context.mounted && ok) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                backgroundColor: AppColors.sage,
-                                content: Text('Withdrawal of ₹${amt.toStringAsFixed(0)} initiated to $dest'),
+                                backgroundColor: const Color(0xFF047857),
+                                content: Text(
+                                    'Withdrawal of ₹${amt.toStringAsFixed(0)} initiated to $dest!'),
                               ),
                             );
                           }
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'Please enter a valid amount and payout destination.')),
+                          );
                         }
                       },
                       child: const Text(
-                        'Confirm Withdrawal',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        'Confirm Instant Withdrawal',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                     ),
                   ),
@@ -269,22 +306,26 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Cue Wallet',
+          'Cue Wallet & Escrow',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
-            onPressed: () => ref.read(walletControllerProvider.notifier).loadWalletData(),
+            tooltip: 'Refresh Ledger',
+            onPressed: () => ref
+                .read(walletControllerProvider.notifier)
+                .loadWalletData(),
           ),
         ],
       ),
       body: RefreshIndicator(
-        onRefresh: () => ref.read(walletControllerProvider.notifier).loadWalletData(),
+        onRefresh: () =>
+            ref.read(walletControllerProvider.notifier).loadWalletData(),
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            // Available Balance Card
+            // Available Balance Card (Bordeaux Gradient)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -318,18 +359,23 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Row(
                           children: [
-                            Icon(Icons.shield_outlined, size: 14, color: Colors.white),
+                            Icon(Icons.shield_outlined,
+                                size: 14, color: AppColors.gold),
                             SizedBox(width: 4),
                             Text(
-                              '100% Escrow',
-                              style: TextStyle(fontSize: 11, color: Colors.white, fontWeight: FontWeight.w600),
+                              '100% Escrow Secured',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600),
                             ),
                           ],
                         ),
@@ -340,10 +386,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   Text(
                     '₹${wallet.availableBalance.toStringAsFixed(0)}',
                     style: const TextStyle(
-                      fontSize: 40,
+                      fontSize: 38,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
                       letterSpacing: -1,
+                      fontFamily: 'monospace',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -354,8 +401,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
-                            'Held in Escrow',
-                            style: TextStyle(fontSize: 11, color: Colors.white70),
+                            'Locked in Active Escrow',
+                            style:
+                                TextStyle(fontSize: 11, color: Colors.white70),
                           ),
                           const SizedBox(height: 2),
                           Text(
@@ -363,7 +411,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                              color: AppColors.gold,
+                              fontFamily: 'monospace',
                             ),
                           ),
                         ],
@@ -381,7 +430,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           children: [
                             Icon(Icons.add, size: 18),
                             SizedBox(width: 4),
-                            Text('Add Money', style: TextStyle(fontWeight: FontWeight.bold)),
+                            Text('Add Money',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
                           ],
                         ),
                       ),
@@ -393,7 +443,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
             const SizedBox(height: 20),
 
-            // Provider Earnings & Withdrawal Banner
+            // Host Earnings & Withdrawal Banner
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -408,30 +458,40 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Companion Earnings',
+                        'Host Earnings & Payouts',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: AppColors.textPrimary,
                         ),
                       ),
-                      TextButton(
-                        onPressed: () => _showWithdrawDialog(context, earnings.clearedBalance),
-                        child: const Text('Withdraw to UPI'),
+                      TextButton.icon(
+                        icon: const Icon(Icons.arrow_outward, size: 16),
+                        onPressed: () => _showWithdrawDialog(
+                            context, earnings.clearedBalance),
+                        label: const Text('Withdraw UPI'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Cleared', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                            const Text('Cleared Balance',
+                                style: TextStyle(
+                                    fontSize: 11, color: AppColors.textMuted)),
+                            const SizedBox(height: 2),
                             Text(
                               '₹${earnings.clearedBalance.toStringAsFixed(0)}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.sage),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF047857),
+                                fontFamily: 'monospace',
+                              ),
                             ),
                           ],
                         ),
@@ -440,10 +500,38 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Take-Rate (15%)', style: TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                            const Text('Platform Fee (10%)',
+                                style: TextStyle(
+                                    fontSize: 11, color: AppColors.textMuted)),
+                            const SizedBox(height: 2),
                             Text(
                               '₹${earnings.platformCommission.toStringAsFixed(0)}',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppColors.textSecondary),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textSecondary,
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('In-Flight Escrow',
+                                style: TextStyle(
+                                    fontSize: 11, color: AppColors.textMuted)),
+                            const SizedBox(height: 2),
+                            Text(
+                              '₹${earnings.pendingBalance.toStringAsFixed(0)}',
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.goldDark,
+                                fontFamily: 'monospace',
+                              ),
                             ),
                           ],
                         ),
@@ -454,11 +542,11 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
               ),
             ),
 
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
 
             // Recent Transactions Title
             const Text(
-              'Recent Transactions',
+              'Ledger & Transactions',
               style: TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.bold,
@@ -497,12 +585,14 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: isCredit
-                            ? AppColors.sage.withValues(alpha: 0.15)
-                            : AppColors.primary.withValues(alpha: 0.15),
+                            ? const Color(0xFFD1FAE5)
+                            : AppColors.primaryLight,
                         child: Icon(
                           isCredit ? Icons.arrow_downward : Icons.arrow_upward,
                           size: 18,
-                          color: isCredit ? AppColors.sage : AppColors.primary,
+                          color: isCredit
+                              ? const Color(0xFF047857)
+                              : AppColors.primary,
                         ),
                       ),
                       const SizedBox(width: 14),
@@ -511,7 +601,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              txn.description.isNotEmpty ? txn.description : txn.type,
+                              txn.description.isNotEmpty
+                                  ? txn.description
+                                  : txn.type,
                               style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -520,7 +612,8 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              DateFormat('dd MMM yyyy, hh:mm a').format(txn.createdAt),
+                              DateFormat('dd MMM yyyy, hh:mm a')
+                                  .format(txn.createdAt),
                               style: const TextStyle(
                                 fontSize: 11,
                                 color: AppColors.textMuted,
@@ -537,7 +630,10 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                             style: TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
-                              color: isCredit ? AppColors.sage : AppColors.textPrimary,
+                              fontFamily: 'monospace',
+                              color: isCredit
+                                  ? const Color(0xFF047857)
+                                  : AppColors.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 2),
@@ -546,6 +642,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                             style: const TextStyle(
                               fontSize: 10,
                               color: AppColors.textMuted,
+                              fontFamily: 'monospace',
                             ),
                           ),
                         ],
@@ -560,10 +657,3 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
     );
   }
 }
-
-extension on TextEditingController {
-  void disposeDelayed() {
-    dispose();
-  }
-}
-

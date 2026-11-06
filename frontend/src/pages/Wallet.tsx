@@ -91,11 +91,11 @@ export const WalletPage: React.FC = () => {
             key: order.keyId,
             amount: order.amount * 100,
             currency: order.currency,
-            name: 'Cue Companion Platform',
+            name: 'Cue Escrow Platform',
             description: 'Wallet Balance Top-Up',
             order_id: order.orderId,
             prefill: {
-              name: 'Seeker',
+              name: 'Host',
             },
             theme: {
               color: '#E11D48',
@@ -136,7 +136,7 @@ export const WalletPage: React.FC = () => {
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold font-serif text-foreground">Cue Wallet</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold font-sans text-foreground tracking-tight">Cue Wallet</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Pre-funded instant checkout with complete 100% Escrow Protection
           </p>
@@ -200,12 +200,12 @@ export const WalletPage: React.FC = () => {
             <p className="text-xs text-muted-foreground mt-1">Transparent platform service fee</p>
           </div>
           <p className="text-[11px] text-muted-foreground">
-            85% goes directly to the companion upon meetup completion.
+            85% goes directly to the guest upon outing completion.
           </p>
         </div>
       </div>
 
-      {/* Companion Earnings & UPI Withdrawal Destination */}
+      {/* Guest Earnings & UPI Withdrawal Destination */}
       <ProviderEarningsCard />
 
       {/* Top-Up Section */}

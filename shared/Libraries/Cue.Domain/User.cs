@@ -110,6 +110,7 @@ public sealed class User
 
     public void VerifyEmail()
     {
+        IsVerified = true;
         if (!IsEmailVerified)
         {
             IsEmailVerified = true;

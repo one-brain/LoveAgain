@@ -22,11 +22,14 @@ interface EditBookingModalProps {
 }
 
 const VENUE_SUGGESTIONS = [
-  '☕ Local Cafe / Coffee Shop',
-  '🎾 Sports Club / Tennis Courts',
-  '🛍️ City Mall / Public Plaza',
-  '🍽️ Fine Dining Restaurant',
+  '☕ Specialty Cafe / Coffee Date',
+  '🍽️ Fine Dining / Restaurant Visit',
+  '🛍️ City Mall / Shopping District',
+  '🎬 Cinema / Multiplex Outing',
+  '🌄 Scenic Spot / Weekend Activity',
+  '🎟️ Concert / Special Event Gala',
   '🌳 Public Park / Garden',
+  '🎾 Sports Club / Tennis Courts',
 ];
 
 const DRESS_CODES = [
@@ -38,8 +41,8 @@ const DRESS_CODES = [
 
 const TRANSPORT_MODES = [
   'Meet independently at venue',
-  'Client books Uber for companion',
-  'Client will provide pickup',
+  'Host books Uber for Guest',
+  'Host will provide pickup',
 ];
 
 const DIET_PREFERENCES = [
@@ -58,11 +61,14 @@ const LANGUAGES = [
 ];
 
 const POPULAR_ACTIVITIES = [
-  '☕ Specialty Coffee & Conversation',
-  '🍽️ Casual Dining / Lunch',
+  '☕ Coffee Date & Cafe Chat',
+  '🍽️ Restaurant Visit & Dining',
+  '🛍️ Shopping & Styling Companion',
+  '🎬 Movies & Cinema Outing',
+  '🌄 Weekend Activity & Day Out',
+  '🎟️ Special Event & Plus-One',
   '🎾 Sports / Tennis Practice',
   '🖼️ Art Gallery / Museum Tour',
-  '🛍️ Personal Shopping Companion',
   '🌳 City Walk / Mindful Stroll',
 ];
 
@@ -205,7 +211,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
     }
   };
 
-  const companionName = booking.providerName || 'Verified Companion';
+  const guestName = booking.providerName || 'Verified Guest';
 
   return (
     <div
@@ -221,18 +227,18 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
             {booking.providerPhoto ? (
               <img
                 src={booking.providerPhoto}
-                alt={companionName}
+                alt={guestName}
                 className="w-12 h-12 rounded-2xl object-cover border border-border shadow-xs shrink-0"
               />
             ) : (
               <div className="w-12 h-12 rounded-2xl bg-accent/10 text-accent font-serif text-xl font-normal flex items-center justify-center border border-border shadow-xs shrink-0">
-                {companionName.charAt(0)}
+                {guestName.charAt(0)}
               </div>
             )}
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-2">
                 <h2 id="edit-booking-title" className="text-base sm:text-lg font-bold text-foreground font-serif truncate">
-                  Edit Booking: {companionName}
+                  Edit Booking: {guestName}
                 </h2>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
                   isPendingPayment
@@ -411,7 +417,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                     <span>Active Escrow Confirmed Schedule</span>
                   </div>
                   <p className="text-xs text-muted-foreground leading-relaxed">
-                    Outing timing is locked under confirmed escrow. You can modify your public venue, dress code, and preferences on Step 2. To reschedule timing, please coordinate with your companion in Chat.
+                    Outing timing is locked under confirmed escrow. You can modify your public venue, dress code, and preferences on Step 2. To reschedule timing, please coordinate with your guest in Chat.
                   </p>
                 </div>
               )}

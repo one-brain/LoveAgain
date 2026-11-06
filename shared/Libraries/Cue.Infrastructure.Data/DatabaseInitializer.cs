@@ -191,7 +191,22 @@ public static class DatabaseInitializer
             );
             """,
             "CREATE UNIQUE INDEX IF NOT EXISTS ix_user_kyc_documents_user_id ON profiles.user_kyc_documents (user_id);",
-            "CREATE INDEX IF NOT EXISTS ix_user_kyc_documents_status ON profiles.user_kyc_documents (status);"
+            "CREATE INDEX IF NOT EXISTS ix_user_kyc_documents_status ON profiles.user_kyc_documents (status);",
+            """
+            CREATE TABLE IF NOT EXISTS auth.verification_otps (
+                id uuid NOT NULL PRIMARY KEY,
+                user_id uuid NULL,
+                target character varying(255) NOT NULL,
+                otp_code character varying(20) NOT NULL,
+                purpose character varying(50) NOT NULL,
+                expires_at timestamp with time zone NOT NULL,
+                used_at timestamp with time zone NULL,
+                attempt_count integer NOT NULL DEFAULT 0,
+                created_at timestamp with time zone NOT NULL
+            );
+            """,
+            "CREATE INDEX IF NOT EXISTS ix_verification_otps_target_purpose ON auth.verification_otps (target, purpose, created_at DESC);",
+            "CREATE INDEX IF NOT EXISTS ix_verification_otps_user_id ON auth.verification_otps (user_id);"
         };
 
         foreach (var statement in statements)

@@ -1,15 +1,12 @@
+import 'package:dio/dio.dart';
 import '../../core/api_client.dart';
 import '../../models/chat_message.dart';
-import '../mock_data.dart';
 
 class ChatRepository {
   ChatRepository(this._api);
 
   final ApiClient _api;
-
-  final Map<String, List<ChatMessage>> _messages = Map<String, List<ChatMessage>>.from(
-    MockData.seedMessages.map((k, v) => MapEntry(k, List<ChatMessage>.from(v))),
-  );
+  final Map<String, List<ChatMessage>> _messages = {};
 
   Future<List<ChatMessage>> getMessages(String orderId) async {
     try {
@@ -18,10 +15,15 @@ class ChatRepository {
         final list = (response.data as List)
             .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
             .toList();
-        if (list.isNotEmpty) return list;
+        _messages[orderId] = list;
+        return list;
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        throw ApiException.fromDioException(e);
       }
     } catch (_) {
-      // Fallback
+      // Return cached messages if offline
     }
 
     return _messages[orderId] ?? [];
@@ -33,6 +35,26 @@ class ChatRepository {
     required String senderName,
     required String content,
   }) async {
+    try {
+      final response = await _api.post<Map<String, dynamic>>(
+        '/chat/orders/$orderId/messages',
+        data: {
+          'content': content,
+          'messageType': 'Text',
+        },
+      );
+
+      if (response.data != null) {
+        final created = ChatMessage.fromJson(response.data!);
+        _messages.putIfAbsent(orderId, () => []).add(created);
+        return created;
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    } catch (_) {
+      // In offline/test fallback
+    }
+
     final message = ChatMessage(
       id: 'msg-${DateTime.now().millisecondsSinceEpoch}',
       orderId: orderId,
@@ -42,15 +64,7 @@ class ChatRepository {
       sentAt: DateTime.now(),
       isRead: true,
     );
-
-    try {
-      await _api.post('/chat/orders/$orderId/messages', data: message.toJson());
-    } catch (_) {
-      // Fallback
-    }
-
     _messages.putIfAbsent(orderId, () => []).add(message);
     return message;
   }
 }
-

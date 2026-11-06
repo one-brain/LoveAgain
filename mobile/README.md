@@ -7,7 +7,7 @@ A cross-platform Flutter application for **Cue** (LoveAgain) — the Experience 
 1. **Discovery & Exploration** (`DiscoveryScreen`):
    - Browse vetted companions with photos/initials, roles, city, hourly rate, verified identity badges, and trust score metrics.
    - Real-time text search across companion names, bios, specialties, and cities.
-   - Category filtering chips (All, Art & Culture, Language Exchange, Event Plus-One, Outdoor & Fitness, Dining & Coffee).
+   - Category filtering chips (All, Coffee Dates, Restaurant Visits, Shopping, Movies & Cinema, Weekend Activities, Special Events, Art & Culture, Outdoor & Fitness).
    - Dynamic sorting (Recommended, Highest Rated, Highest Trust Score, Price Low-to-High, Price High-to-Low).
 
 2. **Companion Profile Detail** (`ProviderDetailScreen`):

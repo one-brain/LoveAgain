@@ -28,6 +28,14 @@ export const chatApi = createApi({
     getUnreadCount: builder.query<number, string>({
       query: (orderId) => `/orders/${orderId}/unread-count`,
     }),
+    sendMessage: builder.mutation<ChatMessageDto, { orderId: string; content: string; messageType?: string }>({
+      query: ({ orderId, content, messageType = 'Text' }) => ({
+        url: `/orders/${orderId}/messages`,
+        method: 'POST',
+        body: { content, messageType },
+      }),
+      invalidatesTags: (_result, _error, { orderId }) => [{ type: 'ChatMessages', id: orderId }],
+    }),
     markMessagesAsRead: builder.mutation<void, string>({
       query: (orderId) => ({
         url: `/orders/${orderId}/mark-read`,
@@ -41,5 +49,6 @@ export const chatApi = createApi({
 export const {
   useGetOrderMessagesQuery,
   useGetUnreadCountQuery,
+  useSendMessageMutation,
   useMarkMessagesAsReadMutation,
 } = chatApi;

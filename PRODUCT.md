@@ -8,13 +8,20 @@ web
 
 ## Users
 
-- **Seekers**: Individuals seeking safe, verified companionship for social outings, dining, fitness, cultural events, travel navigation, or mindful platonic conversation. Their primary job is finding someone reliable, pleasant, and verified to share an experience with without awkwardness or safety ambiguity.
-- **Companions (Providers)**: Verified local individuals sharing their time, skills, passions, and presence on an hourly basis. Their primary job is publishing authentic profiles, receiving pre-funded booking requests, setting custom rates and availability, and receiving direct bank/UPI payouts.
-- **Platform Administrators**: Back-office platform supervisors who monitor business health (GMV, 15% platform take, 85% companion payouts, escrow liquidity holds) and review verification applications (government ID proof, liveness selfie, and 3-photo public browse galleries).
+- **Hosts** *(formerly Seekers)*: Individuals planning and hosting safe, verified outings—such as coffee dates, dining, shopping, movies, weekend trips, and special events. Their primary role is inviting a verified guest, detailing outing logistics, and funding the reservation safely via 100% escrow protection.
+- **Guests** *(formerly Companions / Providers)*: Verified local individuals sharing their time, social presence, and conversational energy on an hourly basis. Their primary role is publishing authentic profiles, receiving hosted outing invitations, setting custom hourly rates and availability, and earning 85% payouts directly to bank/UPI.
+- **Platform Administrators**: Back-office platform supervisors who monitor marketplace health (GMV, 15% platform take, 85% guest payouts, escrow liquidity holds) and review verification applications (government ID proof, liveness selfie, and 3-photo public browse galleries).
+
+> [!NOTE]
+> **Terminology Experiment (`experiment/host-guest-terminology`)**:
+> On this branch, user-facing roles are evaluated under the **Host & Guest** mental model:
+> - **Host**: Organizes, invites, and funds the outing into escrow.
+> - **Guest**: Verified member who accepts the invitation, attends the experience, and receives honorarium earnings.
+> - Handshake verification: Host provides the **Session Arrival PIN**; Guest provides the **Outing Completion PIN** to trigger escrow release.
 
 ## Product Purpose
 
-Cue is an on-demand marketplace for curated, platonic companionship experiences. It removes loneliness, isolation, and social friction by making trusted human companionship accessible, structured, and safe. Success means seekers easily book fulfilling, dignified experiences while companions earn predictable, safe income with zero ambiguity regarding boundaries.
+Cue is an on-demand marketplace for curated, platonic companionship experiences. It removes loneliness, isolation, and social friction by making trusted human connection accessible, structured, and safe. Success means hosts easily book fulfilling, dignified outings while guests earn predictable, safe income with zero ambiguity regarding boundaries.
 
 ## Positioning
 
@@ -27,7 +34,14 @@ Unlike conventional dating apps or informal social forums, Cue is an **identity-
 - Pricing Dynamics: Standard companion hourly rates range from ₹800/hr to ₹2,500/hr (benchmark average ₹1,500/hr). Minimum recommended rate is ₹300/hr.
 - Settlement Rails: Razorpay UPI (Google Pay, PhonePe, Paytm, BHIM, CRED), NetBanking, and RuPay/Visa/Mastercard cards.
 - Web platform (responsive mobile-first layout accessible from phones, tablets, and desktops).
-- Real-time category and specialty filtering (dining, tennis/fitness, city walks, art galleries, event attendance).
+- Real-time category and specialty filtering:
+  - **Coffee Dates & Cafe Chats**: Artisanal cafes, pour-over tastings, mindful conversation, bookish chats.
+  - **Restaurant Visits & Dining**: Fine dining etiquette, lunch dates, dinner companion, food trail explorations.
+  - **Shopping & Styling Companion**: Wardrobe consultation, mall/market companion, boutique styling, gift shopping.
+  - **Movies & Cinema Outings**: Film screenings, IMAX releases, film festival companion, cinema & post-show discussion.
+  - **Weekend Activities & Day Trips**: City sightseeing, Sunday morning markets, scenic road trips, park walks & picnic days.
+  - **Special Events & Plus-One**: Weddings, gallery openings, business dinners, corporate galas, concert plus-one.
+  - Active wellness (tennis, gym, hiking) and lifestyle care (homestyle cooking, elder accompaniment).
 - Unified Canonical Booking Standard ("Book with Escrow"): All bookings across Discovery cards and Companion Detail pages follow a single, unified 2-step escrow reservation pattern (Step 1: Experience & venue specifications; Step 2: Escrow wallet/Razorpay deposit).
 - Escrow transaction lifecycle: Booking requested -> Companion confirms -> Wallet funds escrowed -> Session takes place -> Funds settled (85% to companion wallet, 15% platform commission).
 - Strict separation between administrative oversight and marketplace participation.
