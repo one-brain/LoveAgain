@@ -20,7 +20,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final auth = ref.watch(authControllerProvider);
     final user = auth.user;
-    final isHostMode = auth.isHostMode;
+    final isHost = user?.isHost == true || auth.isHostMode;
 
     return Scaffold(
       appBar: AppBar(
@@ -116,57 +116,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 20),
 
-          // Role Switcher Card (Host Mode vs Guest Mode)
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        isHostMode ? 'Host Mode' : 'Guest Mode',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        isHostMode
-                            ? 'Viewing incoming requests & companion dashboard'
-                            : 'Exploring curated companions & outings',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Switch(
-                  value: isHostMode,
-                  activeThumbColor: AppColors.primary,
-                  onChanged: (val) {
-                    ref.read(authControllerProvider.notifier).toggleRole();
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Host Dashboard summary (Visible when Host Mode is on)
-          if (isHostMode) ...[
+          // Host Dashboard summary (Visible for registered companions / hosts)
+          if (isHost) ...[
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(

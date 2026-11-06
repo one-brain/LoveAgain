@@ -51,7 +51,7 @@ void main() {
     });
 
     testWidgets(
-        'ProfileScreen Guest Mode switch renders without overflow in vertical narrow mode',
+        'ProfileScreen renders user profile and host dashboard cleanly without right overflow',
         (tester) async {
       // Set vertical narrow viewport (340 wide x 640 high)
       tester.view.physicalSize = const Size(340, 640);
@@ -72,11 +72,6 @@ void main() {
         isVerified: true,
       );
 
-      final errors = <FlutterErrorDetails>[];
-      final originalOnError = FlutterError.onError;
-      FlutterError.onError = (details) => errors.add(details);
-      addTearDown(() => FlutterError.onError = originalOnError);
-
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -95,17 +90,11 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // In Guest Mode, verify 'Guest Mode' and description render cleanly without right overflow
-      expect(find.text('Guest Mode'), findsOneWidget);
-      expect(find.text('Exploring curated companions & outings'), findsOneWidget);
-      expect(errors, isEmpty);
-      expect(tester.takeException(), isNull);
-
-      // Tap role switch to toggle to Host Mode
-      await tester.tap(find.byType(Switch).first);
-      await tester.pumpAndSettle();
-      expect(find.text('Host Mode'), findsOneWidget);
-      expect(errors, isEmpty);
+      // Verify persona toggle switch is completely removed
+      expect(find.text('Guest Mode'), findsNothing);
+      expect(find.text('Host Mode'), findsNothing);
+      expect(find.text('Exploring curated companions & outings'), findsNothing);
+      expect(find.text('Alex Rivera'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });
