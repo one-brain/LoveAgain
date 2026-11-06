@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'core/theme.dart';
-import 'data/mock_data.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/auth/login_screen.dart';
 import 'features/auth/otp_verification_screen.dart';
 import 'features/booking/booking_screen.dart';
 import 'features/chat/chat_screen.dart';
+import 'features/discovery/discovery_controller.dart';
 import 'features/discovery/provider_detail_screen.dart';
 import 'features/navigation/main_navigation_shell.dart';
 import 'models/booking.dart';
@@ -92,11 +92,7 @@ final routerProvider = Provider<GoRouter>((ref) {
             return ProviderDetailScreen(provider: extra);
           }
           final providerId = state.pathParameters['id'] ?? '';
-          final provider = MockData.seedProviders.firstWhere(
-            (p) => p.id == providerId,
-            orElse: () => MockData.seedProviders.first,
-          );
-          return ProviderDetailScreen(provider: provider);
+          return _ProviderRouteLoader(providerId: providerId, isBooking: false);
         },
       ),
       GoRoute(
@@ -106,7 +102,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (extra is ProviderProfile) {
             return BookingScreen(provider: extra);
           }
-          return BookingScreen(provider: MockData.seedProviders.first);
+          final providerId = state.uri.queryParameters['providerId'] ?? '';
+          return _ProviderRouteLoader(providerId: providerId, isBooking: true);
         },
       ),
       GoRoute(
@@ -124,6 +121,72 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
+class _ProviderRouteLoader extends ConsumerWidget {
+  const _ProviderRouteLoader({required this.providerId, required this.isBooking});
+  final String providerId;
+  final bool isBooking;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (providerId.isEmpty) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Companion Profile')),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.person_search_outlined, size: 56, color: AppColors.textMuted),
+              const SizedBox(height: 12),
+              const Text('Please select a companion first', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: () => context.go('/'),
+                child: const Text('Explore Companions'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final repo = ref.read(discoveryRepositoryProvider);
+    return FutureBuilder<ProviderProfile?>(
+      future: repo.getProviderById(providerId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          );
+        }
+        final provider = snapshot.data;
+        if (provider != null) {
+          return isBooking
+              ? BookingScreen(provider: provider)
+              : ProviderDetailScreen(provider: provider);
+        }
+        return Scaffold(
+          appBar: AppBar(title: const Text('Companion Profile')),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.person_off_outlined, size: 56, color: AppColors.textMuted),
+                const SizedBox(height: 12),
+                const Text('Companion profile not found', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => context.go('/'),
+                  child: const Text('Back to Discovery'),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class CueApp extends ConsumerWidget {
   const CueApp({super.key});
 
@@ -134,8 +197,8 @@ class CueApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Cue',
       theme: AppTheme.lightTheme,
-      debugShowCheckedModeBanner: false,
       routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }

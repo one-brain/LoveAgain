@@ -1,123 +1,122 @@
 import '../../core/api_client.dart';
 import '../../models/booking.dart';
-import '../mock_data.dart';
 
 class BookingRepository {
   BookingRepository(this._api);
 
   final ApiClient _api;
 
-  // Local state cache
-  final List<Booking> _cachedBookings = List<Booking>.from(MockData.seedBookings);
+  // In-memory cache for fast UI updates
+  final List<Booking> _cachedBookings = [];
 
   Future<List<Booking>> getMyBookings() async {
     try {
-      final response = await _api.get<dynamic>('/bookings/mine');
+      final response = await _api.get<dynamic>('/bookings');
       if (response.data is List) {
         final list = (response.data as List)
             .map((b) => Booking.fromJson(b as Map<String, dynamic>))
             .toList();
-        if (list.isNotEmpty) return list;
+        _cachedBookings.clear();
+        _cachedBookings.addAll(list);
+        return list;
       }
     } catch (_) {
-      // Use cached bookings
+      // Return cached bookings if offline
     }
     return List<Booking>.unmodifiable(_cachedBookings);
   }
 
   Future<Booking> createBooking(Booking booking) async {
-    try {
-      final response = await _api.post<Map<String, dynamic>>(
-        '/bookings',
-        data: {
-          'providerId': booking.providerId,
-          'startTime': booking.startTime.toIso8601String(),
-          'endTime': booking.endTime.toIso8601String(),
-          'hourlyRate': booking.hourlyRate,
-          'durationHours': booking.durationHours,
-          'meetingAddress': booking.meetingAddress,
-          'arrivalPin': booking.arrivalPin,
-          'completionPin': booking.completionPin,
-        },
+    final response = await _api.post<Map<String, dynamic>>(
+      '/bookings',
+      data: {
+        'providerId': booking.providerId,
+        'startTime': booking.startTime.toIso8601String(),
+        'endTime': booking.endTime.toIso8601String(),
+        'hourlyRate': booking.hourlyRate,
+        'durationHours': booking.durationHours,
+        'meetingAddress': booking.meetingAddress,
+        'requirements': booking.specialRequests != null
+            ? {'notes': booking.specialRequests}
+            : null,
+      },
+    );
+
+    if (response.data != null && response.data!['orderId'] != null) {
+      final createdOrderId = response.data!['orderId'].toString();
+      final arrivalPin = response.data!['arrivalPin']?.toString() ??
+          response.data!['checkInPin']?.toString() ??
+          booking.arrivalPin;
+      final completionPin = response.data!['completionPin']?.toString() ??
+          booking.completionPin;
+
+      final created = Booking(
+        orderId: createdOrderId,
+        providerId: booking.providerId,
+        providerName: booking.providerName,
+        providerInitials: booking.providerInitials,
+        providerPhotoUrl: booking.providerPhotoUrl,
+        seekerId: booking.seekerId,
+        seekerName: booking.seekerName,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        hourlyRate: booking.hourlyRate,
+        durationHours: booking.durationHours,
+        providerEarnings: booking.providerEarnings,
+        platformFee: booking.platformFee,
+        totalAmount: booking.totalAmount,
+        status: BookingStatus.confirmed,
+        meetingAddress: booking.meetingAddress,
+        specialRequests: booking.specialRequests,
+        arrivalPin: arrivalPin,
+        completionPin: completionPin,
       );
-      if (response.data != null && response.data!['orderId'] != null) {
-        final created = booking.copyWith();
-        _cachedBookings.insert(0, created);
-        return created;
-      }
-    } catch (_) {
-      // Fallback
+
+      _cachedBookings.removeWhere((b) => b.orderId == createdOrderId);
+      _cachedBookings.insert(0, created);
+      return created;
     }
+
     _cachedBookings.insert(0, booking);
     return booking;
   }
 
   Future<Booking> checkInWithPin(String orderId, String pin) async {
+    final response = await _api.patch<Map<String, dynamic>>(
+      '/bookings/$orderId/checkin',
+      data: {'pin': pin},
+    );
+
     final index = _cachedBookings.indexWhere((b) => b.orderId == orderId);
-    if (index == -1) {
-      throw StateError('Outing $orderId not found');
-    }
-    final current = _cachedBookings[index];
-    if (current.status != BookingStatus.confirmed) {
-      throw StateError('Outing must be in Confirmed status to check in.');
+    if (index != -1) {
+      final updated = _cachedBookings[index].copyWith(status: BookingStatus.inProgress);
+      _cachedBookings[index] = updated;
+      return updated;
     }
 
-    try {
-      final response = await _api.patch<Map<String, dynamic>>(
-        '/bookings/$orderId/checkin',
-        data: {'pin': pin},
-      );
-      if (response.statusCode == 200) {
-        final updated = current.copyWith(status: BookingStatus.inProgress);
-        _cachedBookings[index] = updated;
-        return updated;
-      }
-    } catch (_) {
-      // Offline fallback: check PIN against current.arrivalPin
-      if (current.arrivalPin != null && current.arrivalPin!.isNotEmpty) {
-        if (current.arrivalPin != pin) {
-          throw ArgumentError('Invalid arrival PIN. Please check the code with your Guest.');
-        }
-      }
+    if (response.data != null) {
+      return Booking.fromJson(response.data!);
     }
-
-    final updated = current.copyWith(status: BookingStatus.inProgress);
-    _cachedBookings[index] = updated;
-    return updated;
+    throw StateError('Outing $orderId not found');
   }
 
   Future<Booking> completeWithPin(String orderId, String completionPin) async {
+    final response = await _api.patch<Map<String, dynamic>>(
+      '/bookings/$orderId/complete',
+      data: {'completionPin': completionPin},
+    );
+
     final index = _cachedBookings.indexWhere((b) => b.orderId == orderId);
-    if (index == -1) {
-      throw StateError('Outing $orderId not found');
-    }
-    final current = _cachedBookings[index];
-    if (current.status != BookingStatus.inProgress) {
-      throw StateError('Outing cannot be completed before session is initiated with the arrival verification PIN.');
+    if (index != -1) {
+      final updated = _cachedBookings[index].copyWith(status: BookingStatus.completed);
+      _cachedBookings[index] = updated;
+      return updated;
     }
 
-    try {
-      final response = await _api.patch<Map<String, dynamic>>(
-        '/bookings/$orderId/complete',
-        data: {'completionPin': completionPin},
-      );
-      if (response.statusCode == 200) {
-        final updated = current.copyWith(status: BookingStatus.completed);
-        _cachedBookings[index] = updated;
-        return updated;
-      }
-    } catch (_) {
-      // Offline fallback: check PIN against current.completionPin
-      if (current.completionPin != null && current.completionPin!.isNotEmpty) {
-        if (current.completionPin != completionPin) {
-          throw ArgumentError('Invalid completion PIN. Please check the code with your Host.');
-        }
-      }
+    if (response.data != null) {
+      return Booking.fromJson(response.data!);
     }
-
-    final updated = current.copyWith(status: BookingStatus.completed);
-    _cachedBookings[index] = updated;
-    return updated;
+    throw StateError('Outing $orderId not found');
   }
 
   Future<bool> reportSafetyIncident(
@@ -127,16 +126,11 @@ class BookingRepository {
   }) async {
     try {
       await _api.post<Map<String, dynamic>>(
-        '/safety/sos',
-        data: {
-          'orderId': orderId,
-          'reason': reason,
-          'contactAlerted': contactAlerted,
-          'timestamp': DateTime.now().toIso8601String(),
-        },
+        '/bookings/$orderId/cancel',
+        data: {'reason': 'Safety Incident: $reason. Alerted: $contactAlerted'},
       );
     } catch (_) {
-      // Offline fallback: safety record logged locally
+      // Fallback
     }
 
     final index = _cachedBookings.indexWhere((b) => b.orderId == orderId);
@@ -159,13 +153,13 @@ class BookingRepository {
           await _api.post('/bookings/$orderId/cancel', data: {'reason': 'User requested cancellation'});
           break;
         case BookingStatus.disputed:
-          await _api.post('/bookings/$orderId/dispute', data: {'reason': 'Safety alert or dispute reported'});
+          await _api.post('/bookings/$orderId/cancel', data: {'reason': 'Safety alert or dispute reported'});
           break;
         default:
           break;
       }
     } catch (_) {
-      // Fallback local update
+      // Fallback
     }
 
     final index = _cachedBookings.indexWhere((b) => b.orderId == orderId);

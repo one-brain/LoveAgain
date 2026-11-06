@@ -213,3 +213,4 @@ flowchart TD
    - Wallet displays cleared INR balances from the PaymentService ledger.
    - Chat sends and receives live messages.
 4. **Codebase Cleanliness**: Zero occurrences of `mock_data.dart` or hardcoded fallback lists in `mobile/lib/`.
+

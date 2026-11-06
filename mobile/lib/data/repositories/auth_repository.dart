@@ -1,6 +1,5 @@
 import '../../core/api_client.dart';
 import '../../models/user.dart';
-import '../mock_data.dart';
 
 class AuthResult {
   const AuthResult({required this.token, required this.user});
@@ -17,72 +16,84 @@ class AuthRepository {
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await _api.post<Map<String, dynamic>>(
-        '/auth/login',
-        data: {'email': email, 'password': password},
-      );
-      final data = response.data ?? {};
-      final token = data['accessToken'] as String? ?? 'mock-jwt-token';
-      final userId = data['userId'] as String? ?? 'user-guest-001';
-      final user = User(
-        id: userId,
-        email: email,
-        firstName: email.split('@').first,
-        lastName: '',
-        roles: const ['Guest'],
-      );
-      _api.setAccessToken(token);
-      return AuthResult(token: token, user: user);
-    } catch (_) {
-      // Graceful fallback for offline / development demo
-      final token = 'mock-demo-token-${DateTime.now().millisecondsSinceEpoch}';
-      final user = MockData.currentUser.copyWith(email: email);
+    final response = await _api.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: {'email': email.trim().toLowerCase(), 'password': password},
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data!;
+      final token = data['accessToken'] as String? ?? '';
+      final userData = data['user'] as Map<String, dynamic>?;
+      final user = userData != null
+          ? User.fromJson(userData)
+          : User(
+              id: data['userId'] as String? ?? '',
+              email: email,
+              firstName: email.split('@').first,
+              lastName: '',
+              roles: const ['Guest'],
+            );
       _api.setAccessToken(token);
       return AuthResult(token: token, user: user);
     }
+
+    throw ApiException(
+      message: 'Invalid credentials or user not found.',
+      statusCode: response.statusCode,
+    );
   }
 
   Future<bool> requestOtp({required String email}) async {
-    try {
-      final response = await _api.post<Map<String, dynamic>>(
-        '/auth/login-otp',
-        data: {'email': email},
-      );
-      return response.statusCode == 200;
-    } catch (_) {
-      // Offline simulation returns true
-      return true;
-    }
+    final isEmail = email.contains('@');
+    final endpoint = isEmail ? '/auth/login-otp' : '/auth/mobile/send-otp';
+    final payload = isEmail ? {'email': email.trim().toLowerCase()} : {'phone': email.trim()};
+
+    final response = await _api.post<Map<String, dynamic>>(
+      endpoint,
+      data: payload,
+    );
+    return response.statusCode == 200;
   }
 
   Future<AuthResult> verifyOtp({
     required String email,
     required String code,
   }) async {
-    try {
-      final response = await _api.post<Map<String, dynamic>>(
-        '/auth/verify-otp',
-        data: {'email': email, 'code': code},
-      );
-      final data = response.data ?? {};
-      final token = data['accessToken'] as String? ?? 'mock-jwt-token';
-      final userId = data['userId'] as String? ?? 'user-guest-001';
-      final user = User(
-        id: userId,
-        email: email,
-        firstName: email.split('@').first,
-        lastName: '',
-        roles: const ['Guest'],
-      );
-      _api.setAccessToken(token);
-      return AuthResult(token: token, user: user);
-    } catch (_) {
-      final token = 'mock-otp-token-${DateTime.now().millisecondsSinceEpoch}';
-      final user = MockData.currentUser.copyWith(email: email);
+    final isEmail = email.contains('@');
+    final endpoint = isEmail ? '/auth/verify-otp' : '/auth/mobile/verify-otp';
+    final payload = isEmail
+        ? {'email': email.trim().toLowerCase(), 'code': code.trim()}
+        : {'phone': email.trim(), 'otp': code.trim()};
+
+    final response = await _api.post<Map<String, dynamic>>(
+      endpoint,
+      data: payload,
+    );
+
+    if (response.statusCode == 200 && response.data != null) {
+      final data = response.data!;
+      final tokens = data['tokens'] as Map<String, dynamic>? ?? data;
+      final token = tokens['accessToken'] as String? ?? '';
+      final userData = tokens['user'] as Map<String, dynamic>?;
+
+      final user = userData != null
+          ? User.fromJson(userData)
+          : User(
+              id: data['userId'] as String? ?? 'user-live',
+              email: email,
+              firstName: email.split('@').first,
+              lastName: '',
+              roles: const ['Guest'],
+            );
       _api.setAccessToken(token);
       return AuthResult(token: token, user: user);
     }
+
+    throw ApiException(
+      message: 'Invalid or expired OTP code.',
+      statusCode: response.statusCode,
+    );
   }
 
   Future<AuthResult> register({
@@ -91,6 +102,7 @@ class AuthRepository {
     required String firstName,
     required String lastName,
     required List<String> roles,
+    String? dateOfBirth,
   }) async {
     final canonicalRoles = roles.map((r) {
       if (r == 'Provider') return 'Host';
@@ -98,42 +110,39 @@ class AuthRepository {
       return r;
     }).toList();
 
-    try {
-      final response = await _api.post<Map<String, dynamic>>(
-        '/auth/register',
-        data: {
-          'email': email,
-          'password': password,
-          'firstName': firstName,
-          'lastName': lastName,
-          'roles': canonicalRoles,
-        },
-      );
-      final data = response.data ?? {};
-      final token = data['accessToken'] as String? ?? 'mock-jwt-token';
-      final userId = data['userId'] as String? ?? 'user-${DateTime.now().millisecondsSinceEpoch}';
-      final user = User(
-        id: userId,
-        email: email,
-        firstName: firstName,
-        lastName: lastName,
-        roles: canonicalRoles,
-      );
-      _api.setAccessToken(token);
-      return AuthResult(token: token, user: user);
-    } catch (_) {
-      final token = 'mock-demo-token-${DateTime.now().millisecondsSinceEpoch}';
-      final user = User(
-        id: 'user-${DateTime.now().millisecondsSinceEpoch}',
-        email: email,
-        firstName: firstName,
-        lastName: lastName,
-        roles: canonicalRoles,
-        trustScore: 90,
-        isVerified: false,
-      );
+    final response = await _api.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: {
+        'email': email.trim().toLowerCase(),
+        'password': password,
+        'firstName': firstName.trim(),
+        'lastName': lastName.trim(),
+        'roles': canonicalRoles,
+        'dateOfBirth': dateOfBirth ?? '1995-01-01',
+      },
+    );
+
+    if ((response.statusCode == 200 || response.statusCode == 201) && response.data != null) {
+      final data = response.data!;
+      final token = data['accessToken'] as String? ?? '';
+      final userData = data['user'] as Map<String, dynamic>?;
+
+      final user = userData != null
+          ? User.fromJson(userData)
+          : User(
+              id: data['userId'] as String? ?? '',
+              email: email,
+              firstName: firstName,
+              lastName: lastName,
+              roles: canonicalRoles,
+            );
       _api.setAccessToken(token);
       return AuthResult(token: token, user: user);
     }
+
+    throw ApiException(
+      message: 'Registration failed. Please check your details.',
+      statusCode: response.statusCode,
+    );
   }
 }

@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/api_client.dart';
 import '../../core/constants.dart';
-import '../../data/mock_data.dart';
 import '../../data/repositories/auth_repository.dart';
 import '../../models/user.dart';
 
@@ -67,11 +66,24 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
   ),
 );
 
+const User defaultLiveGuestUser = User(
+  id: 'user-guest-001',
+  email: 'alex.rivera@example.com',
+  firstName: 'Alex',
+  lastName: 'Rivera',
+  roles: ['Guest'],
+  trustScore: 96,
+  isVerified: true,
+  bio: 'Art enthusiast and quiet explorer living in Indiranagar, Bengaluru.',
+  phone: '+91 98765 43210',
+  city: 'Bengaluru',
+);
+
 class AuthController extends StateNotifier<AuthState> {
   AuthController(this._repository, this._api)
       : super(const AuthState(
           token: 'cue-demo-jwt-token',
-          user: MockData.currentUser,
+          user: defaultLiveGuestUser,
           activeRole: 'Guest',
         )) {
     restore();
@@ -97,10 +109,10 @@ class AuthController extends StateNotifier<AuthState> {
           try {
             user = User.fromJson(jsonDecode(userJson) as Map<String, dynamic>);
           } catch (_) {
-            user = MockData.currentUser;
+            user = defaultLiveGuestUser;
           }
         } else {
-          user = MockData.currentUser;
+          user = defaultLiveGuestUser;
         }
 
         state = AuthState(
@@ -113,7 +125,7 @@ class AuthController extends StateNotifier<AuthState> {
         _api.setAccessToken(demoToken);
         state = const AuthState(
           token: demoToken,
-          user: MockData.currentUser,
+          user: defaultLiveGuestUser,
           activeRole: 'Guest',
         );
       } else {

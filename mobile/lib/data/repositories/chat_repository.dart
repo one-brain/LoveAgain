@@ -1,15 +1,11 @@
 import '../../core/api_client.dart';
 import '../../models/chat_message.dart';
-import '../mock_data.dart';
 
 class ChatRepository {
   ChatRepository(this._api);
 
   final ApiClient _api;
-
-  final Map<String, List<ChatMessage>> _messages = Map<String, List<ChatMessage>>.from(
-    MockData.seedMessages.map((k, v) => MapEntry(k, List<ChatMessage>.from(v))),
-  );
+  final Map<String, List<ChatMessage>> _messages = {};
 
   Future<List<ChatMessage>> getMessages(String orderId) async {
     try {
@@ -18,10 +14,11 @@ class ChatRepository {
         final list = (response.data as List)
             .map((m) => ChatMessage.fromJson(m as Map<String, dynamic>))
             .toList();
-        if (list.isNotEmpty) return list;
+        _messages[orderId] = list;
+        return list;
       }
     } catch (_) {
-      // Fallback
+      // Return cached messages if offline
     }
 
     return _messages[orderId] ?? [];
@@ -44,13 +41,15 @@ class ChatRepository {
     );
 
     try {
-      await _api.post('/chat/orders/$orderId/messages', data: message.toJson());
+      await _api.post('/chat/orders/$orderId/messages', data: {
+        'content': content,
+        'messageType': 'Text',
+      });
     } catch (_) {
-      // Fallback
+      // In offline/preview, keep local message
     }
 
     _messages.putIfAbsent(orderId, () => []).add(message);
     return message;
   }
 }
-

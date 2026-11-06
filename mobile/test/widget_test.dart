@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cue_mobile/app.dart';
+import 'package:cue_mobile/features/auth/auth_controller.dart';
+import 'fixtures/seed_data.dart';
 
 void main() {
   testWidgets('CueApp boots up with bottom navigation and discovery content',
@@ -14,7 +16,14 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    await tester.pumpWidget(const ProviderScope(child: CueApp()));
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          apiClientProvider.overrideWithValue(FakeSeedApiClient()),
+        ],
+        child: const CueApp(),
+      ),
+    );
     await tester.pumpAndSettle();
 
     // Verify Cue brand in top bar

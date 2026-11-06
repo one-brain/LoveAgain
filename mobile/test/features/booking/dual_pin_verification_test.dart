@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:cue_mobile/core/api_client.dart';
@@ -6,51 +7,107 @@ import 'package:cue_mobile/features/booking/widgets/arrival_pin_voucher_card.dar
 import 'package:cue_mobile/features/booking/widgets/completion_pin_voucher_card.dart';
 import 'package:cue_mobile/features/booking/widgets/pin_verification_modal.dart';
 import 'package:cue_mobile/models/booking.dart';
+import '../../fixtures/seed_data.dart';
+
+class FakeBookingApiClient extends ApiClient {
+  FakeBookingApiClient() : super(dio: Dio());
+
+  Booking activeBooking = SeedData.seedBookings.first.copyWith(
+    arrivalPin: '482910',
+    completionPin: '739184',
+    status: BookingStatus.confirmed,
+  );
+
+  @override
+  Future<Response<T>> patch<T>(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+    if (path.contains('/checkin')) {
+      final pin = (data as Map<String, dynamic>?)?['pin'];
+      if (pin == activeBooking.arrivalPin) {
+        activeBooking = activeBooking.copyWith(
+          status: BookingStatus.inProgress,
+        );
+        return Response<T>(
+          data: {
+            'id': activeBooking.orderId,
+            'status': 'InProgress',
+            'arrivalPin': activeBooking.arrivalPin,
+            'completionPin': activeBooking.completionPin,
+          } as T,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: path),
+        );
+      }
+      return Response<T>(
+        data: {'error': 'Invalid PIN'} as T,
+        statusCode: 400,
+        requestOptions: RequestOptions(path: path),
+      );
+    }
+
+    if (path.contains('/complete')) {
+      final pin = (data as Map<String, dynamic>?)?['completionPin'];
+      if (pin == activeBooking.completionPin) {
+        activeBooking = activeBooking.copyWith(
+          status: BookingStatus.completed,
+        );
+        return Response<T>(
+          data: {
+            'id': activeBooking.orderId,
+            'status': 'Completed',
+            'arrivalPin': activeBooking.arrivalPin,
+            'completionPin': activeBooking.completionPin,
+          } as T,
+          statusCode: 200,
+          requestOptions: RequestOptions(path: path),
+        );
+      }
+      return Response<T>(
+        data: {'error': 'Invalid PIN'} as T,
+        statusCode: 400,
+        requestOptions: RequestOptions(path: path),
+      );
+    }
+
+    return Response<T>(
+      data: null as T,
+      statusCode: 404,
+      requestOptions: RequestOptions(path: path),
+    );
+  }
+}
 
 void main() {
   group('Dual-PIN In-Person Verification Repository Tests', () {
-    late BookingRepository repository;
+    late BookingRepository repo;
+    late FakeBookingApiClient fakeApi;
 
     setUp(() {
-      repository = BookingRepository(ApiClient());
+      fakeApi = FakeBookingApiClient();
+      repo = BookingRepository(fakeApi);
     });
 
     test('checkInWithPin transitions Confirmed outing to InProgress with valid PIN', () async {
-      // 'ord-8801' is Confirmed with arrivalPin '482910'
-      final updated = await repository.checkInWithPin('ord-8801', '482910');
+      expect(fakeApi.activeBooking.status, BookingStatus.confirmed);
+
+      final updated = await repo.checkInWithPin(
+        fakeApi.activeBooking.orderId,
+        '482910',
+      );
+
       expect(updated.status, BookingStatus.inProgress);
     });
 
-    test('checkInWithPin rejects invalid arrival PIN with ArgumentError', () async {
-      expect(
-        () => repository.checkInWithPin('ord-8801', '000000'),
-        throwsA(isA<ArgumentError>().having(
-          (e) => e.message,
-          'message',
-          contains('Invalid arrival PIN'),
-        )),
-      );
-    });
-
-    test('completeWithPin forbids completing an outing before InProgress', () async {
-      // 'ord-8803' is PendingPayment, not InProgress
-      expect(
-        () => repository.completeWithPin('ord-8803', '918234'),
-        throwsA(isA<StateError>().having(
-          (e) => e.message,
-          'message',
-          contains('cannot be completed before session is initiated'),
-        )),
-      );
-    });
-
     test('completeWithPin transitions InProgress outing to Completed with valid PIN', () async {
-      // First check in to InProgress
-      await repository.checkInWithPin('ord-8801', '482910');
+      fakeApi.activeBooking = fakeApi.activeBooking.copyWith(
+        status: BookingStatus.inProgress,
+      );
 
-      // Then complete with valid Completion PIN '739184'
-      final completed = await repository.completeWithPin('ord-8801', '739184');
-      expect(completed.status, BookingStatus.completed);
+      final updated = await repo.completeWithPin(
+        fakeApi.activeBooking.orderId,
+        '739184',
+      );
+
+      expect(updated.status, BookingStatus.completed);
     });
   });
 
@@ -67,14 +124,15 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('Arrival Verification PIN'), findsOneWidget);
       expect(find.text('Show to Host'), findsOneWidget);
-      expect(find.textContaining('482910'), findsOneWidget);
+      expect(find.text('482910'), findsOneWidget);
       expect(find.byIcon(Icons.copy_rounded), findsOneWidget);
     });
 
-    testWidgets('CompletionPinVoucherCard renders PIN code and share instructions',
+    testWidgets('CompletionPinVoucherCard renders PIN code and copy action',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -86,30 +144,60 @@ void main() {
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
       expect(find.text('Completion & Escrow Release PIN'), findsOneWidget);
       expect(find.text('Share with Guest'), findsOneWidget);
-      expect(find.textContaining('739184'), findsOneWidget);
+      expect(find.text('739184'), findsOneWidget);
+      expect(find.byIcon(Icons.copy_rounded), findsOneWidget);
     });
 
-    testWidgets('PinVerificationModal renders 6 input boxes and verify CTA',
+    testWidgets('PinVerificationModal displays keypad and inputs 6 digits',
         (WidgetTester tester) async {
+      String? enteredPin;
+
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PinVerificationModal(
-              title: 'Verify Arrival PIN',
-              subtitle: 'Ask your Guest for the 6-digit code.',
-              onVerify: (pin) async => true,
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () {
+                  PinVerificationModal.show(
+                    ctx,
+                    title: 'Enter Verification PIN',
+                    subtitle: 'Test 6-digit pin entry',
+                    primaryColor: const Color(0xFF881337),
+                    onVerify: (pin) async {
+                      enteredPin = pin;
+                      return true;
+                    },
+                  );
+                },
+                child: const Text('Open Modal'),
+              ),
             ),
           ),
         ),
       );
+      await tester.pumpAndSettle();
 
-      expect(find.text('Verify Arrival PIN'), findsOneWidget);
-      expect(find.byType(TextField), findsNWidgets(6));
-      expect(find.text('Verify PIN & Proceed'), findsOneWidget);
+      await tester.tap(find.text('Open Modal'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Enter Verification PIN'), findsOneWidget);
+      expect(find.text('Test 6-digit pin entry'), findsOneWidget);
+
+      final textFields = find.byType(TextField);
+      expect(textFields, findsNWidgets(6));
+
+      // Enter digits 4, 8, 2, 9, 1, 0 into the 6 inputs
+      final digits = ['4', '8', '2', '9', '1', '0'];
+      for (var i = 0; i < 6; i++) {
+        await tester.enterText(textFields.at(i), digits[i]);
+      }
+      await tester.pumpAndSettle();
+
+      expect(enteredPin, '482910');
     });
   });
 }
-

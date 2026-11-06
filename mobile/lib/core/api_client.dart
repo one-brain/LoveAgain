@@ -1,16 +1,29 @@
 import 'package:dio/dio.dart';
+import 'constants.dart';
+
+class ApiException implements Exception {
+  const ApiException({
+    required this.message,
+    this.statusCode,
+    this.data,
+  });
+
+  final String message;
+  final int? statusCode;
+  final dynamic data;
+
+  @override
+  String toString() => 'ApiException(statusCode: $statusCode, message: $message)';
+}
 
 class ApiClient {
   ApiClient({Dio? dio})
       : _dio = dio ??
             Dio(
               BaseOptions(
-                baseUrl: const String.fromEnvironment(
-                  'CUE_API_URL',
-                  defaultValue: 'http://localhost:5000/api/v1',
-                ),
-                connectTimeout: const Duration(seconds: 4),
-                receiveTimeout: const Duration(seconds: 4),
+                baseUrl: AppConstants.defaultApiUrl,
+                connectTimeout: const Duration(seconds: 8),
+                receiveTimeout: const Duration(seconds: 8),
                 headers: {
                   'Content-Type': 'application/json',
                   'Accept': 'application/json',
