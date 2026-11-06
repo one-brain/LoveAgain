@@ -107,40 +107,36 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   booking.providerInitials.isNotEmpty
                       ? booking.providerInitials
                       : 'CP',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryDark,
+                  style: FluentType.caption1Strong.copyWith(
+                    color: AppColors.brandForeground,
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: FluentSpacing.mNudge),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     booking.providerName,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
+                    style: FluentType.body2Strong.copyWith(
+                      color: AppColors.textPrimary,
                     ),
                   ),
                   Row(
                     children: [
                       Container(
-                        width: 7,
-                        height: 7,
+                        width: 6,
+                        height: 6,
                         decoration: const BoxDecoration(
                           color: AppColors.gold,
                           shape: BoxShape.circle,
                         ),
                       ),
-                      const SizedBox(width: 4),
-                      const Text(
+                      const SizedBox(width: FluentSpacing.xs),
+                      Text(
                         'Active outing chat',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.goldDark,
+                        style: FluentType.caption2.copyWith(
+                          color: AppColors.gold,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -169,23 +165,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           // Order summary banner
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: FluentSpacing.l,
+              vertical: FluentSpacing.s,
+            ),
             color: AppColors.surface,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.calendar_today,
-                        size: 13, color: AppColors.textSecondary),
-                    const SizedBox(width: 6),
+                    const Icon(
+                      Icons.calendar_today_outlined,
+                      size: 13,
+                      color: AppColors.textSecondary,
+                    ),
+                    const SizedBox(width: FluentSpacing.sNudge),
                     Text(
-                      DateFormat('EEE, MMM d • h:mm a').format(booking.startTime),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
-                      ),
+                      DateFormat('EEE, MMM d • h:mm a')
+                          .format(booking.startTime),
+                      style: FluentType.numeric(FluentType.caption1Strong)
+                          .copyWith(color: AppColors.textPrimary),
                     ),
                   ],
                 ),
@@ -200,27 +200,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: messages.isEmpty
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(24),
+                      padding: const EdgeInsets.all(FluentSpacing.xxl),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.chat_bubble_outline,
-                              size: 40, color: AppColors.textMuted),
-                          const SizedBox(height: 10),
+                          const Icon(
+                            Icons.chat_bubble_outline,
+                            size: 40,
+                            color: AppColors.textMuted,
+                          ),
+                          const SizedBox(height: FluentSpacing.mNudge),
                           Text(
-                            'Say hello to ${booking.providerName}!',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
+                            'Say hello to ${booking.providerName}',
+                            style: FluentType.body2Strong.copyWith(
                               color: AppColors.textSecondary,
                             ),
                           ),
-                          const SizedBox(height: 4),
-                          const Text(
+                          const SizedBox(height: FluentSpacing.xs),
+                          Text(
                             'Coordinate meeting spots, share expectations, or discuss details.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 12,
+                            style: FluentType.caption2.copyWith(
                               color: AppColors.textMuted,
                             ),
                           ),
@@ -231,11 +231,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 : ListView.builder(
                     controller: _scrollController,
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 16),
+                      horizontal: FluentSpacing.l,
+                      vertical: FluentSpacing.l,
+                    ),
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final msg = messages[index];
-                      final currentUserId = ref.watch(authControllerProvider).user?.id;
+                      final currentUserId =
+                          ref.watch(authControllerProvider).user?.id;
                       final isMe = (currentUserId != null &&
                               currentUserId.isNotEmpty &&
                               msg.senderId == currentUserId) ||
@@ -245,33 +248,39 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                           msg.senderName == 'Alex Rivera';
 
                       return Align(
-                        alignment:
-                            isMe ? Alignment.centerRight : Alignment.centerLeft,
+                        alignment: isMe
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
+                          margin: const EdgeInsets.only(
+                            bottom: FluentSpacing.m,
+                          ),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
+                            horizontal: FluentSpacing.m,
+                            vertical: FluentSpacing.mNudge,
+                          ),
                           constraints: BoxConstraints(
                             maxWidth: MediaQuery.of(context).size.width * 0.78,
                           ),
                           decoration: BoxDecoration(
                             color: isMe ? AppColors.primary : AppColors.surface,
                             borderRadius: BorderRadius.only(
-                              topLeft: const Radius.circular(16),
-                              topRight: const Radius.circular(16),
-                              bottomLeft: Radius.circular(isMe ? 16 : 4),
-                              bottomRight: Radius.circular(isMe ? 4 : 16),
+                              topLeft: const Radius.circular(
+                                FluentRadius.xLarge,
+                              ),
+                              topRight: const Radius.circular(
+                                FluentRadius.xLarge,
+                              ),
+                              bottomLeft: Radius.circular(
+                                isMe ? FluentRadius.xLarge : FluentRadius.medium,
+                              ),
+                              bottomRight: Radius.circular(
+                                isMe ? FluentRadius.medium : FluentRadius.xLarge,
+                              ),
                             ),
                             border: isMe
                                 ? null
                                 : Border.all(color: AppColors.border),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.03),
-                                blurRadius: 4,
-                                offset: const Offset(0, 1),
-                              ),
-                            ],
                           ),
                           child: Column(
                             crossAxisAlignment: isMe
@@ -280,34 +289,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             children: [
                               Text(
                                 msg.content,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  height: 1.4,
+                                style: FluentType.body2.copyWith(
                                   color: isMe
                                       ? Colors.white
                                       : AppColors.textPrimary,
                                 ),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: FluentSpacing.xs),
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Text(
                                     DateFormat('h:mm a').format(msg.sentAt),
-                                    style: TextStyle(
-                                      fontSize: 10,
+                                    style: FluentType.numeric(
+                                      FluentType.caption2,
+                                    ).copyWith(
                                       color: isMe
                                           ? Colors.white.withValues(alpha: 0.8)
                                           : AppColors.textMuted,
                                     ),
                                   ),
                                   if (isMe) ...[
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: FluentSpacing.xs),
                                     Icon(
                                       Icons.done_all,
                                       size: 13,
-                                      color:
-                                          Colors.white.withValues(alpha: 0.85),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.85,
+                                      ),
                                     ),
                                   ],
                                 ],
@@ -323,7 +332,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           // Message input bar
           SafeArea(
             child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              padding: const EdgeInsets.fromLTRB(
+                FluentSpacing.l,
+                FluentSpacing.s,
+                FluentSpacing.l,
+                FluentSpacing.m,
+              ),
               decoration: const BoxDecoration(
                 color: AppColors.surface,
                 border: Border(top: BorderSide(color: AppColors.border)),
@@ -336,13 +350,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       textCapitalization: TextCapitalization.sentences,
                       decoration: const InputDecoration(
                         hintText: 'Type your message...',
-                        contentPadding:
-                            EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        contentPadding: EdgeInsets.symmetric(
+                          horizontal: FluentSpacing.l,
+                          vertical: FluentSpacing.m,
+                        ),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: FluentSpacing.s),
                   IconButton.filled(
                     onPressed: _sendMessage,
                     icon: const Icon(Icons.send_rounded, size: 20),

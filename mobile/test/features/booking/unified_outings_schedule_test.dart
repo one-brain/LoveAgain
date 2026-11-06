@@ -51,8 +51,8 @@ void main() {
 
     testWidgets('Renders both Attending and Hosting cards together with distinct badges and details',
         (tester) async {
-      final authState = AuthState(
-        user: const User(
+      const authState = AuthState(
+        user: User(
           id: 'user-123',
           email: 'naveen@cue.local',
           firstName: 'Naveen',
@@ -117,8 +117,8 @@ void main() {
 
     testWidgets('Tapping role filter filters schedule between Attending and Hosting',
         (tester) async {
-      final authState = AuthState(
-        user: const User(
+      const authState = AuthState(
+        user: User(
           id: 'user-123',
           email: 'naveen@cue.local',
           firstName: 'Naveen',

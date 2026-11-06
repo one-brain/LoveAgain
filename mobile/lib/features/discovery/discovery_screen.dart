@@ -46,29 +46,23 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(
+                horizontal: FluentSpacing.s,
+                vertical: FluentSpacing.xs,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.primary,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(FluentRadius.medium),
               ),
-              child: const Text(
+              child: Text(
                 'Cue',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 16,
-                  letterSpacing: 0.5,
-                ),
+                style: FluentType.body2Strong.copyWith(color: Colors.white),
               ),
             ),
-            const SizedBox(width: 10),
-            const Text(
+            const SizedBox(width: FluentSpacing.mNudge),
+            Text(
               'Companion',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 18,
-                letterSpacing: -0.2,
-              ),
+              style: FluentType.title3.copyWith(color: AppColors.textPrimary),
             ),
           ],
         ),
@@ -85,52 +79,59 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
           // Hero & Tagline
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 12),
+              padding: const EdgeInsets.fromLTRB(
+                FluentSpacing.l,
+                FluentSpacing.l,
+                FluentSpacing.l,
+                FluentSpacing.m,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FluentSpacing.s,
+                      vertical: FluentSpacing.xxs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.goldLight,
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
+                      border: Border.all(color: AppColors.goldBorder),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.verified_user_rounded,
+                          size: 13,
                           color: AppColors.gold,
-                          shape: BoxShape.circle,
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'CURATED COMPANIONSHIP',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              letterSpacing: 1.2,
-                              color: AppColors.goldDark,
-                              fontWeight: FontWeight.w800,
-                            ),
-                      ),
-                    ],
+                        const SizedBox(width: FluentSpacing.xs),
+                        Text(
+                          'Curated companionship',
+                          style: FluentType.caption2.copyWith(
+                            color: AppColors.gold,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  const SizedBox(height: FluentSpacing.s),
+                  Text(
                     'A better hour\nstarts here.',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.w800,
-                      height: 1.05,
-                      letterSpacing: -0.5,
+                    style: FluentType.title1.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
+                  const SizedBox(height: FluentSpacing.s),
+                  Text(
                     'Vetted companions for exhibitions, dinners, language exchange, and everyday moments.',
-                    style: TextStyle(
-                      fontSize: 14,
+                    style: FluentType.body2.copyWith(
                       color: AppColors.textSecondary,
-                      height: 1.4,
                     ),
                   ),
-                  const SizedBox(height: 18),
+                  const SizedBox(height: FluentSpacing.l),
                   // Search Field
                   TextField(
                     controller: _searchController,
@@ -141,8 +142,10 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     },
                     decoration: InputDecoration(
                       hintText: 'Search by companion, activity, or city...',
-                      prefixIcon: const Icon(Icons.search,
-                          color: AppColors.textSecondary),
+                      prefixIcon: const Icon(
+                        Icons.search,
+                        color: AppColors.textSecondary,
+                      ),
                       suffixIcon: _searchController.text.isNotEmpty
                           ? IconButton(
                               icon: const Icon(Icons.clear, size: 18),
@@ -164,12 +167,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
           // Categories Horizontal Chips
           SliverToBoxAdapter(
             child: SizedBox(
-              height: 48,
+              height: 44,
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: const EdgeInsets.symmetric(horizontal: FluentSpacing.l),
                 scrollDirection: Axis.horizontal,
                 itemCount: _categories.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 8),
+                separatorBuilder: (context, index) =>
+                    const SizedBox(width: FluentSpacing.s),
                 itemBuilder: (context, index) {
                   final cat = _categories[index];
                   final isSelected = filter.specialty == cat;
@@ -178,16 +182,21 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     selected: isSelected,
                     selectedColor: AppColors.primaryLight,
                     backgroundColor: AppColors.surface,
-                    labelStyle: TextStyle(
-                      fontSize: 13,
-                      fontWeight:
-                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(FluentRadius.circular),
+                    ),
+                    labelStyle: (isSelected
+                            ? FluentType.caption1Strong
+                            : FluentType.caption1)
+                        .copyWith(
                       color: isSelected
-                          ? AppColors.primaryDark
+                          ? AppColors.brandForeground
                           : AppColors.textPrimary,
                     ),
                     side: BorderSide(
-                      color: isSelected ? AppColors.primary : AppColors.border,
+                      color: isSelected
+                          ? AppColors.brandStroke
+                          : AppColors.border,
                     ),
                     onSelected: (selected) {
                       ref.read(discoveryFilterProvider.notifier).update(
@@ -203,50 +212,63 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
           // Section Header (Results Count & Sort)
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+              padding: const EdgeInsets.fromLTRB(
+                FluentSpacing.l,
+                FluentSpacing.xl,
+                FluentSpacing.l,
+                FluentSpacing.mNudge,
+              ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   providersAsync.when(
                     data: (list) => Text(
-                      'Available Companions (${list.length})',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                      'Available companions (${list.length})',
+                      style: FluentType.numeric(FluentType.body1Strong).copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    loading: () => const Text(
+                    loading: () => Text(
                       'Finding companions...',
-                      style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textSecondary),
+                      style: FluentType.body1Strong.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                    error: (_, __) => const Text('Companions'),
+                    error: (_, __) => Text(
+                      'Companions',
+                      style: FluentType.body1Strong.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
+                    ),
                   ),
                   PopupMenuButton<String>(
                     initialValue: filter.sortBy,
                     tooltip: 'Sort by',
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
+                        horizontal: FluentSpacing.mNudge,
+                        vertical: FluentSpacing.sNudge,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
                         border: Border.all(color: AppColors.border),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.sort,
-                              size: 16, color: AppColors.textSecondary),
-                          SizedBox(width: 4),
-                          Text('Sort',
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppColors.textSecondary)),
+                          const Icon(
+                            Icons.sort,
+                            size: 16,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: FluentSpacing.xs),
+                          Text(
+                            'Sort',
+                            style: FluentType.caption1Strong.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -262,19 +284,19 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                       ),
                       PopupMenuItem(
                         value: 'rating',
-                        child: Text('Highest Rated'),
+                        child: Text('Highest rated'),
                       ),
                       PopupMenuItem(
                         value: 'trust',
-                        child: Text('Highest Trust Score'),
+                        child: Text('Highest trust score'),
                       ),
                       PopupMenuItem(
                         value: 'price_low',
-                        child: Text('Price: Low to High'),
+                        child: Text('Price: low to high'),
                       ),
                       PopupMenuItem(
                         value: 'price_high',
-                        child: Text('Price: High to Low'),
+                        child: Text('Price: high to low'),
                       ),
                     ],
                   ),
@@ -289,33 +311,36 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               if (list.isEmpty) {
                 return SliverToBoxAdapter(
                   child: Container(
-                    margin: const EdgeInsets.all(24),
-                    padding: const EdgeInsets.all(32),
+                    margin: const EdgeInsets.all(FluentSpacing.l),
+                    padding: const EdgeInsets.all(FluentSpacing.xxl),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.search_off_rounded,
-                            size: 48, color: AppColors.textMuted),
-                        const SizedBox(height: 12),
-                        const Text(
-                          'No companions found',
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary),
+                        const Icon(
+                          Icons.search_off_rounded,
+                          size: 44,
+                          color: AppColors.textMuted,
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
+                        const SizedBox(height: FluentSpacing.m),
+                        Text(
+                          'No companions found',
+                          style: FluentType.body1Strong.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: FluentSpacing.sNudge),
+                        Text(
                           'Try clearing search filters or selecting another category.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                              fontSize: 13, color: AppColors.textSecondary),
+                          style: FluentType.caption1.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: FluentSpacing.l),
                         OutlinedButton(
                           onPressed: () {
                             _searchController.clear();
@@ -323,7 +348,7 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                                 .read(discoveryFilterProvider.notifier)
                                 .update((_) => const DiscoveryFilter());
                           },
-                          child: const Text('Reset Filters'),
+                          child: const Text('Reset filters'),
                         ),
                       ],
                     ),
@@ -332,7 +357,12 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
               }
 
               return SliverPadding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+                padding: const EdgeInsets.fromLTRB(
+                  FluentSpacing.l,
+                  0,
+                  FluentSpacing.l,
+                  FluentSpacing.xxl,
+                ),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
@@ -351,40 +381,40 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             ),
             error: (err, _) => SliverToBoxAdapter(
               child: Container(
-                margin: const EdgeInsets.all(24),
-                padding: const EdgeInsets.all(28),
+                margin: const EdgeInsets.all(FluentSpacing.l),
+                padding: const EdgeInsets.all(FluentSpacing.xxl),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
                   children: [
-                    const Icon(Icons.wifi_off_rounded,
-                        size: 48, color: AppColors.statusCancelled),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Connection to Cue Services Unavailable',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                    const Icon(
+                      Icons.wifi_off_rounded,
+                      size: 44,
+                      color: AppColors.dangerForeground,
+                    ),
+                    const SizedBox(height: FluentSpacing.m),
+                    Text(
+                      'Connection to Cue services unavailable',
+                      style: FluentType.body1Strong.copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text(
+                    const SizedBox(height: FluentSpacing.sNudge),
+                    Text(
                       'Unable to retrieve live companion catalog. Check your network or gateway connection.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 13,
+                      style: FluentType.caption1.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: FluentSpacing.l),
                     FilledButton.icon(
                       onPressed: () => ref.refresh(discoveryProvidersProvider),
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('Retry Connection'),
+                      label: const Text('Retry connection'),
                     ),
                   ],
                 ),
@@ -405,26 +435,19 @@ class ProviderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: FluentSpacing.m),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
         border: Border.all(color: AppColors.border),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
         onTap: () {
           context.push('/provider/${provider.id}', extra: provider);
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(FluentSpacing.l),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -433,18 +456,16 @@ class ProviderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CircleAvatar(
-                    radius: 28,
+                    radius: 26,
                     backgroundColor: AppColors.primaryLight,
                     child: Text(
                       provider.initials,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
+                      style: FluentType.body1Strong.copyWith(
+                        color: AppColors.brandForeground,
                       ),
                     ),
                   ),
-                  const SizedBox(width: 14),
+                  const SizedBox(width: FluentSpacing.m),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,50 +475,46 @@ class ProviderCard extends StatelessWidget {
                             Flexible(
                               child: Text(
                                 provider.name,
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w700,
+                                style: FluentType.body1Strong.copyWith(
                                   color: AppColors.textPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             if (provider.isVerified) ...[
-                              const SizedBox(width: 5),
-                              const VerifiedBadge(size: 15),
+                              const SizedBox(width: FluentSpacing.sNudge),
+                              const VerifiedBadge(size: 14),
                             ],
                           ],
                         ),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: FluentSpacing.xxs),
                         Text(
                           provider.role,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppColors.goldDark,
-                            fontWeight: FontWeight.w600,
+                          style: FluentType.caption1Strong.copyWith(
+                            color: AppColors.textSecondary,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: FluentSpacing.xs),
                         Row(
                           children: [
-                            const Icon(Icons.location_on_outlined,
-                                size: 13, color: AppColors.textSecondary),
-                            const SizedBox(width: 2),
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 13,
+                              color: AppColors.textMuted,
+                            ),
+                            const SizedBox(width: FluentSpacing.xxs),
                             Text(
                               provider.city,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textSecondary,
+                              style: FluentType.caption2.copyWith(
+                                color: AppColors.textMuted,
                               ),
                             ),
                             if (provider.distanceKm != null) ...[
-                              const SizedBox(width: 6),
+                              const SizedBox(width: FluentSpacing.sNudge),
                               Text(
                                 '• ${provider.distanceKm!.toStringAsFixed(1)} km',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textMuted,
-                                ),
+                                style: FluentType.numeric(FluentType.caption2)
+                                    .copyWith(color: AppColors.textMuted),
                               ),
                             ],
                           ],
@@ -510,52 +527,50 @@ class ProviderCard extends StatelessWidget {
                     children: [
                       Text(
                         '₹${provider.rate}',
-                        style: const TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          fontFamily: 'monospace',
+                        style: FluentType.numeric(FluentType.title3).copyWith(
+                          color: AppColors.brandForeground,
                         ),
                       ),
-                      const Text(
+                      Text(
                         '/ hour',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: AppColors.textSecondary,
+                        style: FluentType.caption2.copyWith(
+                          color: AppColors.textMuted,
                         ),
                       ),
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: FluentSpacing.m),
 
               // Specialties Chips
               Wrap(
-                spacing: 6,
-                runSpacing: 6,
+                spacing: FluentSpacing.sNudge,
+                runSpacing: FluentSpacing.sNudge,
                 children: provider.specialties.take(3).map((spec) {
                   return Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FluentSpacing.s,
+                      vertical: FluentSpacing.xs,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceMuted,
-                      borderRadius: BorderRadius.circular(6),
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
+                      border: Border.all(color: AppColors.borderSubtle),
                     ),
                     child: Text(
                       spec,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textPrimary,
+                      style: FluentType.caption2.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textSecondary,
                       ),
                     ),
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: FluentSpacing.m),
               const Divider(height: 1, color: AppColors.border),
-              const SizedBox(height: 12),
+              const SizedBox(height: FluentSpacing.m),
 
               // Bottom Row: Rating, Trust score, and Book button
               Row(
@@ -568,7 +583,7 @@ class ProviderCard extends StatelessWidget {
                         reviewCount: provider.reviewCount,
                         size: 15,
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: FluentSpacing.mNudge),
                       TrustScoreBadge(score: provider.trustScore, compact: true),
                     ],
                   ),
@@ -577,30 +592,44 @@ class ProviderCard extends StatelessWidget {
                       OutlinedButton(
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 8),
-                          minimumSize: Size.zero,
+                            horizontal: FluentSpacing.m,
+                            vertical: FluentSpacing.s,
+                          ),
+                          minimumSize: const Size(44, 36),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         onPressed: () {
-                          context.push('/provider/${provider.id}',
-                              extra: provider);
+                          context.push(
+                            '/provider/${provider.id}',
+                            extra: provider,
+                          );
                         },
-                        child: const Text('View',
-                            style: TextStyle(fontSize: 13)),
+                        child: Text(
+                          'View',
+                          style: FluentType.caption1Strong.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: FluentSpacing.s),
                       FilledButton(
                         style: FilledButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 8),
-                          minimumSize: Size.zero,
+                            horizontal: FluentSpacing.l,
+                            vertical: FluentSpacing.s,
+                          ),
+                          minimumSize: const Size(44, 36),
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                         onPressed: () {
                           context.push('/book', extra: provider);
                         },
-                        child: const Text('Book',
-                            style: TextStyle(fontSize: 13)),
+                        child: Text(
+                          'Book',
+                          style: FluentType.caption1Strong.copyWith(
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ],
                   ),

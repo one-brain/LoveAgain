@@ -117,48 +117,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          padding: const EdgeInsets.symmetric(
+            horizontal: FluentSpacing.xl,
+            vertical: FluentSpacing.l,
+          ),
           children: [
-            // Luxury Brand Header
+            // Brand Header
             Center(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: FluentSpacing.l,
+                  vertical: FluentSpacing.s,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.25),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
                 ),
-                child: const Text(
+                child: Text(
                   'Cue',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 26,
-                    letterSpacing: 0.5,
-                  ),
+                  style: FluentType.title2.copyWith(color: Colors.white),
                 ),
               ),
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: FluentSpacing.l),
             Text(
               _authMethod == AuthMethod.email && _isEmailSignUp
                   ? 'Join as a Guest or Host'
                   : 'Welcome back to Cue',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
+              style: FluentType.title2.copyWith(color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: FluentSpacing.sNudge),
             Text(
               _authMethod == AuthMethod.mobile
                   ? 'Enter your 10-digit mobile number to receive a secure passcode.'
@@ -166,20 +155,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ? 'Curated companionship for gallery walks, dining, and cultural outings.'
                       : 'Sign in to coordinate bookings, escrow, and conversations.'),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
+              style: FluentType.body2.copyWith(color: AppColors.textSecondary),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
 
             // Segmented Auth Method Switcher
             Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(FluentSpacing.xs),
               decoration: BoxDecoration(
                 color: AppColors.surfaceMuted,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(FluentRadius.large),
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
@@ -187,24 +172,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Expanded(
                     child: InkWell(
                       onTap: () => setState(() => _authMethod = AuthMethod.mobile),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        duration: FluentMotion.normal,
+                        curve: FluentMotion.easyEase,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: FluentSpacing.mNudge,
+                        ),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: _authMethod == AuthMethod.mobile
                               ? AppColors.surface
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: _authMethod == AuthMethod.mobile
-                              ? [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.06),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ]
+                          borderRadius: BorderRadius.circular(FluentRadius.medium),
+                          border: _authMethod == AuthMethod.mobile
+                              ? Border.all(color: AppColors.border)
                               : null,
                         ),
                         child: Row(
@@ -214,19 +196,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Icons.phone_android_rounded,
                               size: 16,
                               color: _authMethod == AuthMethod.mobile
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.brandForeground
+                                  : AppColors.textMuted,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: FluentSpacing.sNudge),
                             Text(
                               'Mobile & OTP',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: _authMethod == AuthMethod.mobile
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                              style: (_authMethod == AuthMethod.mobile
+                                      ? FluentType.caption1Strong
+                                      : FluentType.caption1)
+                                  .copyWith(
                                 color: _authMethod == AuthMethod.mobile
-                                    ? AppColors.primary
+                                    ? AppColors.brandForeground
                                     : AppColors.textSecondary,
                               ),
                             ),
@@ -238,24 +219,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Expanded(
                     child: InkWell(
                       onTap: () => setState(() => _authMethod = AuthMethod.email),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
                       child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 200),
-                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        duration: FluentMotion.normal,
+                        curve: FluentMotion.easyEase,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: FluentSpacing.mNudge,
+                        ),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: _authMethod == AuthMethod.email
                               ? AppColors.surface
                               : Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: _authMethod == AuthMethod.email
-                              ? [
-                                  BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.06),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ]
+                          borderRadius: BorderRadius.circular(FluentRadius.medium),
+                          border: _authMethod == AuthMethod.email
+                              ? Border.all(color: AppColors.border)
                               : null,
                         ),
                         child: Row(
@@ -265,19 +243,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               Icons.mail_outline_rounded,
                               size: 16,
                               color: _authMethod == AuthMethod.email
-                                  ? AppColors.primary
-                                  : AppColors.textSecondary,
+                                  ? AppColors.brandForeground
+                                  : AppColors.textMuted,
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: FluentSpacing.sNudge),
                             Text(
                               'Email & Password',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: _authMethod == AuthMethod.email
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
+                              style: (_authMethod == AuthMethod.email
+                                      ? FluentType.caption1Strong
+                                      : FluentType.caption1)
+                                  .copyWith(
                                 color: _authMethod == AuthMethod.email
-                                    ? AppColors.primary
+                                    ? AppColors.brandForeground
                                     : AppColors.textSecondary,
                               ),
                             ),
@@ -289,39 +266,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
 
             // ERROR DISPLAY
             if (auth.error != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: FluentSpacing.m,
+                  vertical: FluentSpacing.mNudge,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFCA5A5)),
+                  color: AppColors.dangerBackground,
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
+                  border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.error_outline,
                       size: 18,
-                      color: AppColors.statusCancelled,
+                      color: AppColors.dangerForeground,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: FluentSpacing.s),
                     Expanded(
                       child: Text(
                         auth.error!,
-                        style: const TextStyle(
-                          color: AppColors.statusCancelled,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        style: FluentType.caption1Strong.copyWith(
+                          color: AppColors.dangerForeground,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: FluentSpacing.l),
             ],
 
             // 1. MOBILE PHONE OTP TAB
@@ -330,12 +308,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    height: 56,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FluentSpacing.mNudge,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
+                      borderRadius: BorderRadius.circular(FluentRadius.large),
+                      border: Border.all(color: AppColors.borderStrong),
                     ),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<String>(
@@ -345,9 +325,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.textSecondary,
                           size: 20,
                         ),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
+                        style: FluentType.numeric(FluentType.body2Strong).copyWith(
                           color: AppColors.textPrimary,
                         ),
                         items: const [
@@ -363,11 +341,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: FluentSpacing.mNudge),
                   Expanded(
                     child: TextField(
                       controller: _phoneController,
                       keyboardType: TextInputType.phone,
+                      style: FluentType.numeric(FluentType.body2).copyWith(
+                        color: AppColors.textPrimary,
+                      ),
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
                         LengthLimitingTextInputFormatter(10),
@@ -380,39 +361,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: AppColors.textSecondary,
                         ),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderRadius: BorderRadius.circular(FluentRadius.large),
+                          borderSide: const BorderSide(color: AppColors.borderStrong),
                         ),
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              const Row(
+              const SizedBox(height: FluentSpacing.m),
+              Row(
                 children: [
-                  Icon(Icons.shield_outlined, size: 14, color: AppColors.gold),
-                  SizedBox(width: 6),
+                  const Icon(Icons.verified_user_outlined, size: 14, color: AppColors.gold),
+                  const SizedBox(width: FluentSpacing.sNudge),
                   Expanded(
                     child: Text(
                       'We will send an OTP via SMS to verify your mobile number. New members are registered automatically.',
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: FluentType.caption2.copyWith(
                         color: AppColors.textSecondary,
-                        height: 1.3,
                       ),
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: FluentSpacing.xxl),
               FilledButton(
                 onPressed: auth.isLoading ? null : _submitMobileOtp,
                 style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
+                  minimumSize: const Size.fromHeight(48),
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(FluentRadius.large),
                   ),
                 ),
                 child: auth.isLoading
@@ -424,9 +403,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
+                    : Text(
                         'Get Verification Code',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                        style: FluentType.body2Strong.copyWith(color: Colors.white),
                       ),
               ),
             ],
@@ -442,35 +421,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         decoration: InputDecoration(
                           labelText: 'First Name',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(FluentRadius.large),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: FluentSpacing.m),
                     Expanded(
                       child: TextField(
                         controller: _lastNameController,
                         decoration: InputDecoration(
                           labelText: 'Last Name',
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(FluentRadius.large),
                           ),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
-                const Text(
-                  'Membership Type:',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
+                const SizedBox(height: FluentSpacing.m),
+                Text(
+                  'Membership type',
+                  style: FluentType.caption1Strong.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: FluentSpacing.sNudge),
                 Row(
                   children: [
                     Expanded(
@@ -482,7 +459,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             setState(() => _selectedRole = 'Guest'),
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: FluentSpacing.s),
                     Expanded(
                       child: ChoiceChip(
                         label: const Text('Host (Offer Companionship)'),
@@ -494,7 +471,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: FluentSpacing.m),
               ],
               TextField(
                 controller: _emailController,
@@ -507,12 +484,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     color: AppColors.textSecondary,
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(FluentRadius.large),
+                    borderSide: const BorderSide(color: AppColors.borderStrong),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
               TextField(
                 controller: _passwordController,
                 obscureText: _obscurePassword,
@@ -534,19 +511,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         setState(() => _obscurePassword = !_obscurePassword),
                   ),
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppColors.border),
+                    borderRadius: BorderRadius.circular(FluentRadius.large),
+                    borderSide: const BorderSide(color: AppColors.borderStrong),
                   ),
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: FluentSpacing.xxl),
               FilledButton(
                 onPressed: auth.isLoading ? null : _submitEmailAuth,
                 style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(50),
+                  minimumSize: const Size.fromHeight(48),
                   backgroundColor: AppColors.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(FluentRadius.large),
                   ),
                 ),
                 child: auth.isLoading
@@ -560,13 +537,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       )
                     : Text(
                         _isEmailSignUp ? 'Create Account' : 'Sign In',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: FluentType.body2Strong.copyWith(color: Colors.white),
                       ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
               Center(
                 child: TextButton(
                   onPressed: () =>
@@ -575,10 +549,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     _isEmailSignUp
                         ? 'Already have an account? Sign In'
                         : 'New to Cue? Create an account',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
+                    style: FluentType.caption1Strong.copyWith(
+                      color: AppColors.brandForeground,
                     ),
                   ),
                 ),

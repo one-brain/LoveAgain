@@ -10,17 +10,17 @@ class BookingStatusChip extends StatelessWidget {
   Color get _bg {
     switch (status) {
       case BookingStatus.pendingPayment:
-        return const Color(0xFFFEF3C7);
+        return AppColors.warningBackground;
       case BookingStatus.confirmed:
         return AppColors.primaryLight;
       case BookingStatus.inProgress:
         return AppColors.goldLight;
       case BookingStatus.completed:
-        return const Color(0xFFD1FAE5);
+        return AppColors.successBackground;
       case BookingStatus.cancelled:
-        return const Color(0xFFFEE2E2);
+        return AppColors.dangerBackground;
       case BookingStatus.disputed:
-        return const Color(0xFFFFEDD5);
+        return AppColors.dangerBackground;
     }
   }
 
@@ -29,9 +29,9 @@ class BookingStatusChip extends StatelessWidget {
       case BookingStatus.pendingPayment:
         return AppColors.statusPending;
       case BookingStatus.confirmed:
-        return AppColors.primary;
+        return AppColors.statusConfirmed;
       case BookingStatus.inProgress:
-        return AppColors.goldDark;
+        return AppColors.gold;
       case BookingStatus.completed:
         return AppColors.statusCompleted;
       case BookingStatus.cancelled:
@@ -41,22 +41,32 @@ class BookingStatusChip extends StatelessWidget {
     }
   }
 
+  Color get _border {
+    switch (status) {
+      case BookingStatus.inProgress:
+        return AppColors.goldBorder;
+      default:
+        return _fg.withValues(alpha: 0.25);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: FluentSpacing.s,
+        vertical: FluentSpacing.xxs,
+      ),
       decoration: BoxDecoration(
         color: _bg,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: _fg.withValues(alpha: 0.2)),
+        borderRadius: BorderRadius.circular(FluentRadius.medium),
+        border: Border.all(color: _border),
       ),
       child: Text(
         status.label,
-        style: TextStyle(
+        style: FluentType.caption2.copyWith(
           color: _fg,
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.1,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );

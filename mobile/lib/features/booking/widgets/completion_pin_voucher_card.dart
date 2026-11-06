@@ -15,19 +15,12 @@ class CompletionPinVoucherCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.symmetric(vertical: FluentSpacing.s),
+      padding: const EdgeInsets.all(FluentSpacing.l),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF047857), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF047857).withValues(alpha: 0.1),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+        border: Border.all(color: AppColors.success.withValues(alpha: 0.35)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,63 +31,69 @@ class CompletionPinVoucherCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(FluentSpacing.sNudge),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFD1FAE5),
-                      borderRadius: BorderRadius.circular(8),
+                      color: AppColors.successBackground,
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
+                      border: Border.all(
+                        color: AppColors.success.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: const Icon(
                       Icons.verified_outlined,
                       size: 18,
-                      color: Color(0xFF047857),
+                      color: AppColors.successForeground,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  const SizedBox(width: FluentSpacing.s),
+                  Text(
                     'Completion & Escrow Release PIN',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                    style: FluentType.body2Strong.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFD1FAE5),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFF047857).withValues(alpha: 0.3)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: FluentSpacing.s,
+                  vertical: FluentSpacing.xxs,
                 ),
-                child: const Text(
+                decoration: BoxDecoration(
+                  color: AppColors.successBackground,
+                  borderRadius: BorderRadius.circular(FluentRadius.medium),
+                  border: Border.all(
+                    color: AppColors.success.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: Text(
                   'Share with Guest',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF047857),
+                  style: FluentType.caption2.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.successForeground,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Text(
+          const SizedBox(height: FluentSpacing.m),
+          Text(
             'Share this 6-digit mutual code with your Guest at the conclusion of your outing to release escrow funds to your wallet.',
-            style: TextStyle(
-              fontSize: 13,
+            style: FluentType.caption1.copyWith(
               color: AppColors.textSecondary,
-              height: 1.35,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: FluentSpacing.m),
 
           // 6-Digit Display
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            padding: const EdgeInsets.symmetric(
+              vertical: FluentSpacing.m,
+              horizontal: FluentSpacing.l,
+            ),
             decoration: BoxDecoration(
               color: AppColors.surfaceMuted,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(FluentRadius.large),
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
@@ -102,17 +101,17 @@ class CompletionPinVoucherCard extends StatelessWidget {
               children: [
                 Text(
                   pin.isNotEmpty ? pin : '739 184',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 6,
-                    color: Color(0xFF047857),
-                    fontFamily: 'monospace',
+                  style: FluentType.numeric(FluentType.title1).copyWith(
+                    color: AppColors.successForeground,
                   ),
                 ),
                 IconButton(
                   tooltip: 'Copy PIN',
-                  icon: const Icon(Icons.copy_rounded, size: 20, color: Color(0xFF047857)),
+                  icon: const Icon(
+                    Icons.copy_rounded,
+                    size: 20,
+                    color: AppColors.successForeground,
+                  ),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: pin));
                     HapticFeedback.lightImpact();

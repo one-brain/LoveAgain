@@ -132,10 +132,17 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      padding: EdgeInsets.fromLTRB(24, 20, 24, bottomInset + 24),
+      padding: EdgeInsets.fromLTRB(
+        FluentSpacing.xl,
+        FluentSpacing.l,
+        FluentSpacing.xl,
+        bottomInset + FluentSpacing.xxl,
+      ),
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(FluentRadius.xLarge),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -144,26 +151,25 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
           // Drag handle
           Center(
             child: Container(
-              width: 40,
+              width: 36,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
+                color: AppColors.borderStrong,
+                borderRadius: BorderRadius.circular(FluentRadius.small),
               ),
             ),
           ),
-          const SizedBox(height: 18),
+          const SizedBox(height: FluentSpacing.l),
 
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                widget.title,
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                  letterSpacing: -0.3,
+              Expanded(
+                child: Text(
+                  widget.title,
+                  style: FluentType.title3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
                 ),
               ),
               IconButton(
@@ -172,16 +178,14 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: FluentSpacing.xs),
           Text(
             widget.subtitle,
-            style: const TextStyle(
-              fontSize: 13,
+            style: FluentType.caption1.copyWith(
               color: AppColors.textSecondary,
-              height: 1.4,
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: FluentSpacing.xxl),
 
           // 6 Segmented Boxes
           Row(
@@ -208,11 +212,8 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
                     textAlign: TextAlign.center,
                     autofocus: index == 0,
                     maxLength: 1,
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w800,
+                    style: FluentType.numeric(FluentType.title2).copyWith(
                       color: widget.primaryColor,
-                      fontFamily: 'monospace',
                     ),
                     inputFormatters: [
                       FilteringTextInputFormatter.digitsOnly,
@@ -223,11 +224,15 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
                       filled: true,
                       fillColor: AppColors.surfaceMuted,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: AppColors.border),
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                        borderSide: const BorderSide(color: AppColors.borderStrong),
+                      ),
+                      enabledBorder: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                        borderSide: const BorderSide(color: AppColors.borderStrong),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
                         borderSide: BorderSide(
                           color: widget.primaryColor,
                           width: 2,
@@ -240,42 +245,52 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
               );
             }),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: FluentSpacing.l),
 
           if (_errorMessage != null) ...[
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: FluentSpacing.m,
+                vertical: FluentSpacing.s,
+              ),
               decoration: BoxDecoration(
-                color: const Color(0xFFFEE2E2),
-                borderRadius: BorderRadius.circular(8),
+                color: AppColors.dangerBackground,
+                borderRadius: BorderRadius.circular(FluentRadius.large),
+                border: Border.all(
+                  color: AppColors.danger.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.error_outline,
-                      size: 16, color: AppColors.statusCancelled),
-                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.error_outline,
+                    size: 16,
+                    color: AppColors.dangerForeground,
+                  ),
+                  const SizedBox(width: FluentSpacing.s),
                   Expanded(
                     child: Text(
                       _errorMessage!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.statusCancelled,
+                      style: FluentType.caption1Strong.copyWith(
+                        color: AppColors.dangerForeground,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: FluentSpacing.l),
           ],
 
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 48,
             child: FilledButton(
               style: FilledButton.styleFrom(
                 backgroundColor: widget.primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
+                ),
               ),
               onPressed: _isLoading ? null : _submitPin,
               child: _isLoading
@@ -287,7 +302,10 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text('Verify PIN & Proceed'),
+                  : Text(
+                      'Verify PIN & Proceed',
+                      style: FluentType.body2Strong.copyWith(color: Colors.white),
+                    ),
             ),
           ),
         ],

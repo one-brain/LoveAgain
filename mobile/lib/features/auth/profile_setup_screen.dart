@@ -69,86 +69,82 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(
+            horizontal: FluentSpacing.xl,
+            vertical: FluentSpacing.xl,
+          ),
           children: [
             // Header Icon & Title
             Center(
               child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
+                padding: const EdgeInsets.all(FluentSpacing.l),
+                decoration: BoxDecoration(
                   color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: const Icon(
                   Icons.person_outline_rounded,
-                  size: 40,
-                  color: AppColors.primary,
+                  size: 36,
+                  color: AppColors.brandForeground,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            const SizedBox(height: FluentSpacing.xl),
+            Text(
               'Welcome to Cue',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
+              style: FluentType.title2.copyWith(color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            const SizedBox(height: FluentSpacing.s),
+            Text(
               'Please tell us your name to finish creating your account.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 14,
-                color: AppColors.textSecondary,
-                height: 1.4,
-              ),
+              style: FluentType.body2.copyWith(color: AppColors.textSecondary),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
 
             // Verified Mobile Card
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: FluentSpacing.l,
+                vertical: FluentSpacing.m,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: AppColors.gold.withValues(alpha: 0.5)),
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+                border: Border.all(color: AppColors.goldBorder),
               ),
               child: Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(FluentSpacing.sNudge),
                     decoration: BoxDecoration(
-                      color: AppColors.gold.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
+                      color: AppColors.goldLight,
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
+                      border: Border.all(color: AppColors.goldBorder),
                     ),
                     child: const Icon(
-                      Icons.check_circle_rounded,
+                      Icons.verified_user_rounded,
                       size: 18,
                       color: AppColors.gold,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: FluentSpacing.m),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Verified Mobile',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
+                        Text(
+                          'Verified mobile',
+                          style: FluentType.caption2.copyWith(
                             color: AppColors.textMuted,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
                           widget.phone,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
+                          style: FluentType.numeric(FluentType.body2Strong).copyWith(
                             color: AppColors.textPrimary,
                           ),
                         ),
@@ -156,25 +152,27 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFDCFCE7),
-                      borderRadius: BorderRadius.circular(6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FluentSpacing.s,
+                      vertical: FluentSpacing.xs,
                     ),
-                    child: const Text(
+                    decoration: BoxDecoration(
+                      color: AppColors.goldLight,
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
+                      border: Border.all(color: AppColors.goldBorder),
+                    ),
+                    child: Text(
                       'VERIFIED',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF166534),
-                        letterSpacing: 0.5,
+                      style: FluentType.caption2.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.gold,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
 
             // First Name Field
             TextField(
@@ -189,12 +187,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   color: AppColors.textSecondary,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
+                  borderSide: const BorderSide(color: AppColors.borderStrong),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: FluentSpacing.l),
 
             // Last Name Field
             TextField(
@@ -208,23 +206,21 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   color: AppColors.textSecondary,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppColors.border),
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
+                  borderSide: const BorderSide(color: AppColors.borderStrong),
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: FluentSpacing.xl),
 
             // Membership Type Selection
-            const Text(
-              'Membership Type:',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+            Text(
+              'Membership type',
+              style: FluentType.caption1Strong.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: FluentSpacing.s),
             Row(
               children: [
                 Expanded(
@@ -235,7 +231,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                     onSelected: (val) => setState(() => _selectedRole = 'Guest'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: FluentSpacing.s),
                 Expanded(
                   child: ChoiceChip(
                     label: const Text('Host (Offer Companionship)'),
@@ -246,49 +242,50 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
 
             // Error notice if any
             if (auth.error != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: FluentSpacing.m,
+                  vertical: FluentSpacing.mNudge,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFCA5A5)),
+                  color: AppColors.dangerBackground,
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
+                  border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.error_outline,
                       size: 18,
-                      color: AppColors.statusCancelled,
+                      color: AppColors.dangerForeground,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: FluentSpacing.s),
                     Expanded(
                       child: Text(
                         auth.error!,
-                        style: const TextStyle(
-                          color: AppColors.statusCancelled,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                        style: FluentType.caption1Strong.copyWith(
+                          color: AppColors.dangerForeground,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: FluentSpacing.l),
             ],
 
             // Submit Button
             FilledButton(
               onPressed: auth.isLoading ? null : _handleCompleteSetup,
               style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
+                minimumSize: const Size.fromHeight(48),
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
                 ),
               ),
               child: auth.isLoading
@@ -300,9 +297,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Complete Account Setup',
-                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      style: FluentType.body2Strong.copyWith(color: Colors.white),
                     ),
             ),
           ],

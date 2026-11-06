@@ -197,50 +197,44 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+          padding: const EdgeInsets.symmetric(
+            horizontal: FluentSpacing.xl,
+            vertical: FluentSpacing.xl,
+          ),
           children: [
             // Shield & Target Header
             Center(
               child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: const BoxDecoration(
+                padding: const EdgeInsets.all(FluentSpacing.l),
+                decoration: BoxDecoration(
                   color: AppColors.primaryLight,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+                  border: Border.all(color: AppColors.border),
                 ),
                 child: Icon(
                   _isPhone
                       ? Icons.phone_android_outlined
                       : Icons.mark_email_read_outlined,
-                  size: 38,
-                  color: AppColors.primary,
+                  size: 36,
+                  color: AppColors.brandForeground,
                 ),
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              'Enter 6-Digit Code',
+            const SizedBox(height: FluentSpacing.xl),
+            Text(
+              'Enter 6-digit code',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w800,
-                color: AppColors.textPrimary,
-                letterSpacing: -0.5,
-              ),
+              style: FluentType.title2.copyWith(color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: FluentSpacing.s),
             Text.rich(
               TextSpan(
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
+                style: FluentType.body2.copyWith(color: AppColors.textSecondary),
                 children: [
                   const TextSpan(text: 'We sent a verification passcode to\n'),
                   TextSpan(
                     text: widget.email,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
+                    style: FluentType.numeric(FluentType.body2Strong).copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -248,7 +242,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: FluentSpacing.xxxl),
 
             // 6 Segmented Digit Boxes
             Row(
@@ -256,7 +250,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
               children: List.generate(_otpLength, (index) {
                 return SizedBox(
                   width: 48,
-                  height: 58,
+                  height: 56,
                   child: KeyboardListener(
                     focusNode: FocusNode(),
                     onKeyEvent: (event) {
@@ -275,11 +269,8 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                       textAlign: TextAlign.center,
                       autofocus: index == 0,
                       maxLength: 1,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                        fontFamily: 'monospace',
+                      style: FluentType.numeric(FluentType.title2).copyWith(
+                        color: AppColors.brandForeground,
                       ),
                       inputFormatters: [
                         FilteringTextInputFormatter.digitsOnly,
@@ -290,13 +281,17 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         filled: true,
                         fillColor: AppColors.surface,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(color: AppColors.border),
+                          borderRadius: BorderRadius.circular(FluentRadius.large),
+                          borderSide: const BorderSide(color: AppColors.borderStrong),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(FluentRadius.large),
+                          borderSide: const BorderSide(color: AppColors.borderStrong),
                         ),
                         focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(FluentRadius.large),
                           borderSide: const BorderSide(
-                            color: AppColors.primary,
+                            color: AppColors.brandStroke,
                             width: 2,
                           ),
                         ),
@@ -307,48 +302,50 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                 );
               }),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: FluentSpacing.l),
 
             // Error notice
             if (auth.error != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: FluentSpacing.m,
+                  vertical: FluentSpacing.s,
+                ),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEE2E2),
-                  borderRadius: BorderRadius.circular(8),
+                  color: AppColors.dangerBackground,
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
+                  border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
                     const Icon(
                       Icons.error_outline,
                       size: 16,
-                      color: AppColors.statusCancelled,
+                      color: AppColors.dangerForeground,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: FluentSpacing.s),
                     Expanded(
                       child: Text(
                         auth.error!,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.statusCancelled,
+                        style: FluentType.caption1Strong.copyWith(
+                          color: AppColors.dangerForeground,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
             ],
 
             // Submit Button
             FilledButton(
               onPressed: auth.isLoading ? null : _handleVerify,
               style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(50),
+                minimumSize: const Size.fromHeight(48),
                 backgroundColor: AppColors.primary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(FluentRadius.large),
                 ),
               ),
               child: auth.isLoading
@@ -360,36 +357,31 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
                         color: Colors.white,
                       ),
                     )
-                  : const Text(
+                  : Text(
                       'Verify & Continue',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: FluentType.body2Strong.copyWith(color: Colors.white),
                     ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
 
             // Resend Countdown Row
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   "Didn't receive the code? ",
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  style: FluentType.caption1.copyWith(color: AppColors.textSecondary),
                 ),
                 TextButton(
                   onPressed: _resendCountdown == 0 ? _handleResend : null,
                   child: Text(
                     _resendCountdown > 0
                         ? 'Resend in ${_resendCountdown}s'
-                        : 'Resend Code',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
+                        : 'Resend code',
+                    style: FluentType.numeric(FluentType.caption1Strong).copyWith(
                       color: _resendCountdown > 0
                           ? AppColors.textMuted
-                          : AppColors.primary,
+                          : AppColors.brandForeground,
                     ),
                   ),
                 ),

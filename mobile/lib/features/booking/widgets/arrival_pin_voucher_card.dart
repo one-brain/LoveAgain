@@ -15,19 +15,12 @@ class ArrivalPinVoucherCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
-      padding: const EdgeInsets.all(18),
+      margin: const EdgeInsets.symmetric(vertical: FluentSpacing.s),
+      padding: const EdgeInsets.all(FluentSpacing.l),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.gold, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.gold.withValues(alpha: 0.12),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+        border: Border.all(color: AppColors.goldBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,63 +31,65 @@ class ArrivalPinVoucherCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(FluentSpacing.sNudge),
                     decoration: BoxDecoration(
                       color: AppColors.goldLight,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(FluentRadius.medium),
+                      border: Border.all(color: AppColors.goldBorder),
                     ),
                     child: const Icon(
                       Icons.pin_rounded,
                       size: 18,
-                      color: AppColors.goldDark,
+                      color: AppColors.gold,
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
+                  const SizedBox(width: FluentSpacing.s),
+                  Text(
                     'Arrival Verification PIN',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                    style: FluentType.body2Strong.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: FluentSpacing.s,
+                  vertical: FluentSpacing.xxs,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.goldLight,
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+                  borderRadius: BorderRadius.circular(FluentRadius.medium),
+                  border: Border.all(color: AppColors.goldBorder),
                 ),
-                child: const Text(
+                child: Text(
                   'Show to Host',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.goldDark,
+                  style: FluentType.caption2.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.gold,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          const Text(
+          const SizedBox(height: FluentSpacing.m),
+          Text(
             'Present this 6-digit mutual code to your Host when you physically meet to initiate the session.',
-            style: TextStyle(
-              fontSize: 13,
+            style: FluentType.caption1.copyWith(
               color: AppColors.textSecondary,
-              height: 1.35,
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: FluentSpacing.m),
 
           // 6-Digit Display
           Container(
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+            padding: const EdgeInsets.symmetric(
+              vertical: FluentSpacing.m,
+              horizontal: FluentSpacing.l,
+            ),
             decoration: BoxDecoration(
               color: AppColors.surfaceMuted,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(FluentRadius.large),
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
@@ -102,17 +97,17 @@ class ArrivalPinVoucherCard extends StatelessWidget {
               children: [
                 Text(
                   pin.isNotEmpty ? pin : '482 910',
-                  style: const TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 6,
-                    color: AppColors.primary,
-                    fontFamily: 'monospace',
+                  style: FluentType.numeric(FluentType.title1).copyWith(
+                    color: AppColors.brandForeground,
                   ),
                 ),
                 IconButton(
                   tooltip: 'Copy PIN',
-                  icon: const Icon(Icons.copy_rounded, size: 20, color: AppColors.primary),
+                  icon: const Icon(
+                    Icons.copy_rounded,
+                    size: 20,
+                    color: AppColors.brandForeground,
+                  ),
                   onPressed: () {
                     Clipboard.setData(ClipboardData(text: pin));
                     HapticFeedback.lightImpact();
