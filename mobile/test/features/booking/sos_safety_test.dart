@@ -64,7 +64,8 @@ void main() {
       expect(find.textContaining('Escrow Guarantee'), findsOneWidget);
     });
 
-    testWidgets('Call 112 button opens confirmation dialog with location details',
+    testWidgets(
+        'Call 112 button opens confirmation dialog with location details',
         (tester) async {
       final fakeApi = ApiClient(dio: Dio());
       final repo = BookingRepository(fakeApi);
@@ -99,7 +100,8 @@ void main() {
           findsOneWidget);
     });
 
-    testWidgets('Alert Emergency Contact dispatches SMS alert with meeting address',
+    testWidgets(
+        'Alert Emergency Contact dispatches SMS alert with meeting address',
         (tester) async {
       final fakeApi = ApiClient(dio: Dio());
       final repo = BookingRepository(fakeApi);
@@ -128,10 +130,11 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Alert Emergency Contact'));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.textContaining('Live outing alert dispatched'),
-          findsOneWidget);
+      expect(
+          find.textContaining('Live outing alert dispatched'), findsOneWidget);
     });
 
     testWidgets('End Outing & Freeze Escrow updates status to disputed',
@@ -169,12 +172,14 @@ void main() {
       expect(find.text('Felt uncomfortable or unsafe'), findsOneWidget);
 
       await tester.tap(find.text('Freeze & End Outing'));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.textContaining('ended under safety dispute'), findsOneWidget);
     });
 
-    testWidgets('BookingDetailScreen displays Safety Shield banner and SOS button',
+    testWidgets(
+        'BookingDetailScreen displays Safety Shield banner and SOS button',
         (tester) async {
       final fakeApi = ApiClient(dio: Dio());
       final repo = BookingRepository(fakeApi);

@@ -127,29 +127,32 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      isHostMode ? 'Host Mode' : 'Guest Mode',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        isHostMode ? 'Host Mode' : 'Guest Mode',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      isHostMode
-                          ? 'Viewing incoming requests & companion dashboard'
-                          : 'Exploring curated companions & outings',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppColors.textSecondary,
+                      const SizedBox(height: 2),
+                      Text(
+                        isHostMode
+                            ? 'Viewing incoming requests & companion dashboard'
+                            : 'Exploring curated companions & outings',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 12),
                 Switch(
                   value: isHostMode,
                   activeThumbColor: AppColors.primary,
@@ -177,14 +180,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Host Earnings & Ledger',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
+                      const Expanded(
+                        child: Text(
+                          'Host Earnings & Ledger',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
+                      const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 4),
@@ -233,11 +240,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Accept new outing requests',
-                        style: TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w500),
+                      const Expanded(
+                        child: Text(
+                          'Accept new outing requests',
+                          style: TextStyle(
+                              fontSize: 13, fontWeight: FontWeight.w500),
+                        ),
                       ),
+                      const SizedBox(width: 8),
                       Switch(
                         value: _isDiscoverable,
                         activeThumbColor: AppColors.primary,
@@ -267,21 +277,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
-                      children: [
-                        Icon(Icons.shield_rounded,
-                            size: 20, color: AppColors.gold),
-                        SizedBox(width: 8),
-                        Text(
-                          'Trust & Reputation',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.textPrimary,
+                    const Expanded(
+                      child: Row(
+                        children: [
+                          Icon(Icons.shield_rounded,
+                              size: 20, color: AppColors.gold),
+                          SizedBox(width: 8),
+                          Flexible(
+                            child: Text(
+                              'Trust & Reputation',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.textPrimary,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     TrustScoreBadge(score: user?.trustScore ?? 96),
                   ],
                 ),
@@ -393,12 +409,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             children: [
               Icon(icon, size: 16, color: color),
               const SizedBox(width: 6),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: AppColors.textSecondary,
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ),
             ],

@@ -108,32 +108,33 @@ class BookingsScreen extends ConsumerWidget {
 
   Widget _buildEmptyState(BuildContext context, String tab) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(Icons.event_note_outlined,
-                size: 56, color: AppColors.textMuted),
-            const SizedBox(height: 16),
+                size: 48, color: AppColors.textMuted),
+            const SizedBox(height: 12),
             Text(
-              'No $tab bookings',
+              'No $tab outings',
               style: const TextStyle(
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: FontWeight.w700,
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             const Text(
               'Looking to plan a new outing? Browse thoughtful companions now.',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: () => context.go('/'),
-              icon: const Icon(Icons.explore),
+              icon: const Icon(Icons.explore, size: 18),
               label: const Text('Explore Companions'),
             ),
           ],
