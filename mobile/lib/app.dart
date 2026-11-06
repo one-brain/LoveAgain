@@ -78,10 +78,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/otp-verify',
         builder: (context, state) {
-          final email = state.uri.queryParameters['email'] ??
+          final target = state.uri.queryParameters['phone'] ??
+              state.uri.queryParameters['email'] ??
               (state.extra as String?) ??
               'alex.rivera@example.com';
-          return OtpVerificationScreen(email: email);
+          return OtpVerificationScreen(email: target);
         },
       ),
       GoRoute(

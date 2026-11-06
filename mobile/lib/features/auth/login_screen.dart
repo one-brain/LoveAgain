@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme.dart';
 import 'auth_controller.dart';
+
+enum AuthMethod { mobile, email }
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -12,9 +15,12 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  bool _isSignUp = false;
-  bool _useOtp = true; // Mobile-first default
+  AuthMethod _authMethod = AuthMethod.mobile;
+  String _countryCode = '+91';
+  bool _obscurePassword = true;
+  bool _isEmailSignUp = false;
 
+  final _phoneController = TextEditingController();
   final _emailController = TextEditingController(text: 'alex.seeker@cue.local');
   final _passwordController = TextEditingController(text: 'CueDemo123!');
   final _firstNameController = TextEditingController(text: 'Alex');
@@ -23,6 +29,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   void dispose() {
+    _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _firstNameController.dispose();
@@ -30,8 +37,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _submitOtpRequest() async {
+  Future<void> _submitMobileOtp() async {
+    final rawPhone = _phoneController.text.trim();
+    final digits = rawPhone.replaceAll(RegExp(r'\D'), '');
+
+    if (digits.length < 10) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid 10-digit mobile number.')),
+      );
+      return;
+    }
+
+    final fullPhone = rawPhone.startsWith('+') ? rawPhone : '$_countryCode$digits';
+
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .sendMobileOtp(fullPhone);
+
+    if (success && mounted) {
+      context.push(
+        '/otp-verify?phone=${Uri.encodeComponent(fullPhone)}',
+        extra: fullPhone,
+      );
+    }
+  }
+
+  Future<void> _submitEmailAuth() async {
     final email = _emailController.text.trim();
+    final password = _passwordController.text;
+
     if (email.isEmpty || !email.contains('@')) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a valid email address.')),
@@ -39,28 +73,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
 
-    final success = await ref
-        .read(authControllerProvider.notifier)
-        .requestOtp(email);
-
-    if (success && mounted) {
-      context.push('/otp-verify?email=${Uri.encodeComponent(email)}', extra: email);
-    }
-  }
-
-  Future<void> _submitPasswordLogin() async {
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-
-    if (email.isEmpty || password.isEmpty) {
+    if (password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in email and password.')),
+        const SnackBar(content: Text('Please enter your password.')),
       );
       return;
     }
 
     bool success;
-    if (_isSignUp) {
+    if (_isEmailSignUp) {
       success = await ref.read(authControllerProvider.notifier).register(
             email: email,
             password: password,
@@ -75,7 +96,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
 
     if (success && mounted) {
-      context.go('/');
+      try {
+        context.go('/');
+      } catch (_) {}
     }
   }
 
@@ -86,312 +109,483 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: Text(_isSignUp ? 'Create Cue Account' : 'Sign In to Cue'),
+        title: Text(
+          _authMethod == AuthMethod.email && _isEmailSignUp
+              ? 'Create Cue Account'
+              : 'Sign In to Cue',
+        ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        children: [
-          // Luxury Brand Header
-          Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          children: [
+            // Luxury Brand Header
+            Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.25),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: const Text(
+                  'Cue',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 26,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              _authMethod == AuthMethod.email && _isEmailSignUp
+                  ? 'Join as a Guest or Host'
+                  : 'Welcome back to Cue',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                color: AppColors.textPrimary,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              _authMethod == AuthMethod.mobile
+                  ? 'Enter your 10-digit mobile number to receive a secure passcode.'
+                  : (_isEmailSignUp
+                      ? 'Curated companionship for gallery walks, dining, and cultural outings.'
+                      : 'Sign in to coordinate bookings, escrow, and conversations.'),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppColors.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Segmented Auth Method Switcher
+            Container(
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.25),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                color: AppColors.surfaceMuted,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _authMethod = AuthMethod.mobile),
+                      borderRadius: BorderRadius.circular(10),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _authMethod == AuthMethod.mobile
+                              ? AppColors.surface
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _authMethod == AuthMethod.mobile
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.phone_android_rounded,
+                              size: 16,
+                              color: _authMethod == AuthMethod.mobile
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Mobile & OTP',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: _authMethod == AuthMethod.mobile
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: _authMethod == AuthMethod.mobile
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: () => setState(() => _authMethod = AuthMethod.email),
+                      borderRadius: BorderRadius.circular(10),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _authMethod == AuthMethod.email
+                              ? AppColors.surface
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: _authMethod == AuthMethod.email
+                              ? [
+                                  BoxShadow(
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.mail_outline_rounded,
+                              size: 16,
+                              color: _authMethod == AuthMethod.email
+                                  ? AppColors.primary
+                                  : AppColors.textSecondary,
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Email & Password',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: _authMethod == AuthMethod.email
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: _authMethod == AuthMethod.email
+                                    ? AppColors.primary
+                                    : AppColors.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ],
               ),
-              child: const Text(
-                'Cue',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  fontSize: 26,
-                  letterSpacing: 0.5,
+            ),
+            const SizedBox(height: 24),
+
+            // ERROR DISPLAY
+            if (auth.error != null) ...[
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFEE2E2),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFFCA5A5)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.error_outline,
+                      size: 18,
+                      color: AppColors.statusCancelled,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        auth.error!,
+                        style: const TextStyle(
+                          color: AppColors.statusCancelled,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            _isSignUp ? 'Join as a Guest or Host' : 'Welcome back to Cue',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _isSignUp
-                ? 'Curated companionship for gallery walks, dining, and cultural outings.'
-                : (_useOtp
-                    ? 'Enter your email to receive a secure 6-digit passcode.'
-                    : 'Sign in to coordinate bookings, escrow, and conversations.'),
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: 24),
+              const SizedBox(height: 18),
+            ],
 
-          // Toggle Tab (Sign In vs Sign Up)
-          Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-              color: AppColors.surfaceMuted,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: InkWell(
-                    onTap: () => setState(() {
-                      _isSignUp = false;
-                    }),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: !_isSignUp ? AppColors.surface : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: !_isSignUp
-                            ? [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 4,
-                                )
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        'Sign In',
-                        style: TextStyle(
+            // 1. MOBILE PHONE OTP TAB
+            if (_authMethod == AuthMethod.mobile) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 56,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: AppColors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: _countryCode,
+                        icon: const Icon(
+                          Icons.arrow_drop_down,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                        style: const TextStyle(
                           fontSize: 14,
-                          fontWeight:
-                              !_isSignUp ? FontWeight.w700 : FontWeight.w500,
-                          color: !_isSignUp
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                        items: const [
+                          DropdownMenuItem(value: '+91', child: Text('🇮🇳 +91')),
+                          DropdownMenuItem(value: '+1', child: Text('🇺🇸 +1')),
+                          DropdownMenuItem(value: '+44', child: Text('🇬🇧 +44')),
+                          DropdownMenuItem(value: '+971', child: Text('🇦🇪 +971')),
+                          DropdownMenuItem(value: '+65', child: Text('🇸🇬 +65')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) setState(() => _countryCode = val);
+                        },
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.digitsOnly,
+                        LengthLimitingTextInputFormatter(10),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: 'Mobile Number',
+                        hintText: '99000 00003',
+                        prefixIcon: const Icon(
+                          Icons.phone_outlined,
+                          color: AppColors.textSecondary,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(color: AppColors.border),
                         ),
                       ),
                     ),
                   ),
-                ),
-                Expanded(
-                  child: InkWell(
-                    onTap: () => setState(() {
-                      _isSignUp = true;
-                      _useOtp = false; // Registration uses password
-                    }),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 10),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: _isSignUp ? AppColors.surface : Colors.transparent,
-                        borderRadius: BorderRadius.circular(8),
-                        boxShadow: _isSignUp
-                            ? [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 4,
-                                )
-                              ]
-                            : null,
-                      ),
-                      child: Text(
-                        'Create Account',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight:
-                              _isSignUp ? FontWeight.w700 : FontWeight.w500,
-                          color: _isSignUp
-                              ? AppColors.primary
-                              : AppColors.textSecondary,
-                        ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Row(
+                children: [
+                  Icon(Icons.shield_outlined, size: 14, color: AppColors.gold),
+                  SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'We will send an OTP via SMS to verify your mobile number. New members are registered automatically.',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textSecondary,
+                        height: 1.3,
                       ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: auth.isLoading ? null : _submitMobileOtp,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
+                child: auth.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Get Verification Code',
+                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                      ),
+              ),
+            ],
+
+            // 2. EMAIL & PASSWORD TAB
+            if (_authMethod == AuthMethod.email) ...[
+              if (_isEmailSignUp) ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _firstNameController,
+                        decoration: InputDecoration(
+                          labelText: 'First Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: TextField(
+                        controller: _lastNameController,
+                        decoration: InputDecoration(
+                          labelText: 'Last Name',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Text(
+                  'Membership Type:',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ChoiceChip(
+                        label: const Text('Guest (Book Outings)'),
+                        selected: _selectedRole == 'Guest',
+                        selectedColor: AppColors.primaryLight,
+                        onSelected: (val) =>
+                            setState(() => _selectedRole = 'Guest'),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ChoiceChip(
+                        label: const Text('Host (Offer Companionship)'),
+                        selected: _selectedRole == 'Host',
+                        selectedColor: AppColors.primaryLight,
+                        onSelected: (val) =>
+                            setState(() => _selectedRole = 'Host'),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
               ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Sign Up Extra Fields
-          if (_isSignUp) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _firstNameController,
-                    decoration: const InputDecoration(labelText: 'First Name'),
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: 'Email Address',
+                  hintText: 'name@example.com',
+                  prefixIcon: const Icon(
+                    Icons.email_outlined,
+                    color: AppColors.textSecondary,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _lastNameController,
-                    decoration: const InputDecoration(labelText: 'Last Name'),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
+                decoration: InputDecoration(
+                  labelText: 'Password',
+                  prefixIcon: const Icon(
+                    Icons.lock_outline,
+                    color: AppColors.textSecondary,
+                  ),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_outlined
+                          : Icons.visibility_off_outlined,
+                      color: AppColors.textSecondary,
+                      size: 20,
+                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: AppColors.border),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Select Membership Type:',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
               ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Guest (Book Outings)'),
-                    selected: _selectedRole == 'Guest',
-                    selectedColor: AppColors.primaryLight,
-                    onSelected: (val) =>
-                        setState(() => _selectedRole = 'Guest'),
+              const SizedBox(height: 24),
+              FilledButton(
+                onPressed: auth.isLoading ? null : _submitEmailAuth,
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(50),
+                  backgroundColor: AppColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Host (Offer Companionship)'),
-                    selected: _selectedRole == 'Host',
-                    selectedColor: AppColors.primaryLight,
-                    onSelected: (val) =>
-                        setState(() => _selectedRole = 'Host'),
+                child: auth.isLoading
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Text(
+                        _isEmailSignUp ? 'Create Account' : 'Sign In',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ),
+              const SizedBox(height: 16),
+              Center(
+                child: TextButton(
+                  onPressed: () =>
+                      setState(() => _isEmailSignUp = !_isEmailSignUp),
+                  child: Text(
+                    _isEmailSignUp
+                        ? 'Already have an account? Sign In'
+                        : 'New to Cue? Create an account',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.primary,
+                    ),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 16),
-          ],
-
-          // Email field
-          TextField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            decoration: const InputDecoration(
-              labelText: 'Email Address',
-              hintText: 'name@example.com',
-              prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Password field (only if not OTP mode or in signup)
-          if (!_useOtp || _isSignUp) ...[
-            TextField(
-              controller: _passwordController,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
               ),
-            ),
-            const SizedBox(height: 12),
+            ],
           ],
-
-          if (auth.error != null) ...[
-            Text(
-              auth.error!,
-              style: const TextStyle(
-                color: AppColors.statusCancelled,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-
-          // Primary Action Button
-          FilledButton(
-            onPressed: auth.isLoading
-                ? null
-                : (_useOtp && !_isSignUp ? _submitOtpRequest : _submitPasswordLogin),
-            child: auth.isLoading
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                  )
-                : Text(_isSignUp
-                    ? 'Create Account'
-                    : (_useOtp ? 'Send Verification Passcode' : 'Sign In with Password')),
-          ),
-          const SizedBox(height: 14),
-
-          // Toggle OTP vs Password login when in Sign In mode
-          if (!_isSignUp) ...[
-            Center(
-              child: TextButton.icon(
-                onPressed: () => setState(() => _useOtp = !_useOtp),
-                icon: Icon(_useOtp ? Icons.lock_outline : Icons.phonelink_ring_outlined, size: 16),
-                label: Text(
-                  _useOtp ? 'Sign in with Password instead' : 'Sign in with 6-Digit Passcode instead',
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
-
-          const Divider(height: 24, color: AppColors.border),
-
-          // Quick Demo Sign In Section
-          const Text(
-            'Instant Evaluation & Testing',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textMuted),
-          ),
-          const SizedBox(height: 10),
-          OutlinedButton.icon(
-            onPressed: () async {
-              _emailController.text = 'alex.seeker@cue.local';
-              _passwordController.text = 'CueDemo123!';
-              await ref
-                  .read(authControllerProvider.notifier)
-                  .login('alex.seeker@cue.local', 'CueDemo123!');
-              if (context.mounted) {
-                context.go('/');
-              }
-            },
-            icon: const Icon(Icons.person_outline, color: AppColors.gold),
-            label: const Text('Instant Demo Sign In (Alex Seeker - Guest)'),
-          ),
-          const SizedBox(height: 8),
-          OutlinedButton.icon(
-            onPressed: () async {
-              _emailController.text = 'aarohi.deshmukh.1@cue.in';
-              _passwordController.text = 'CueDemo123!';
-              await ref
-                  .read(authControllerProvider.notifier)
-                  .login('aarohi.deshmukh.1@cue.in', 'CueDemo123!');
-              if (context.mounted) {
-                context.go('/');
-              }
-            },
-            icon: const Icon(Icons.star_outline, color: AppColors.primary),
-            label: const Text('Instant Demo Sign In (Aarohi Deshmukh - Host)'),
-          ),
-        ],
+        ),
       ),
     );
   }

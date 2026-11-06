@@ -150,6 +150,77 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+  Future<bool> sendMobileOtp(String phone) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _repository.sendMobileOtp(phone: phone);
+      state = state.copyWith(
+        isLoading: false,
+        isOtpSent: true,
+        pendingEmail: phone,
+      );
+      return true;
+    } catch (e) {
+      final msg = e is ApiException ? e.message : 'Unable to send OTP. Please check your number.';
+      state = state.copyWith(
+        isLoading: false,
+        error: msg,
+      );
+      return false;
+    }
+  }
+
+  Future<VerifyMobileOtpResult?> verifyMobileOtp({
+    required String phone,
+    required String otp,
+    String? firstName,
+    String? lastName,
+    String? dateOfBirth,
+  }) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final result = await _repository.verifyMobileOtp(
+        phone: phone,
+        otp: otp,
+        firstName: firstName,
+        lastName: lastName,
+        dateOfBirth: dateOfBirth,
+      );
+
+      if (result.isNewUser) {
+        state = state.copyWith(isLoading: false, error: null);
+        return result;
+      }
+
+      if (result.authResult != null) {
+        final authResult = result.authResult!;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(AppConstants.tokenKey, authResult.token);
+        await prefs.setString(AppConstants.userKey, jsonEncode(authResult.user.toJson()));
+        await prefs.remove('cue.signedOut');
+
+        state = AuthState(
+          token: authResult.token,
+          user: authResult.user,
+          activeRole: state.activeRole,
+          isOtpSent: false,
+          pendingEmail: null,
+        );
+        return result;
+      }
+
+      state = state.copyWith(isLoading: false);
+      return result;
+    } catch (e) {
+      final msg = e is ApiException ? e.message : 'Invalid OTP code. Please verify and try again.';
+      state = state.copyWith(
+        isLoading: false,
+        error: msg,
+      );
+      return null;
+    }
+  }
+
   Future<bool> requestOtp(String email) async {
     state = state.copyWith(isLoading: true, error: null);
     try {

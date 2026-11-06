@@ -72,6 +72,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sign In to Cue'), findsOneWidget);
-    expect(find.textContaining('Instant Demo Sign In (Alex Seeker'), findsOneWidget);
+    expect(find.text('Mobile & OTP'), findsOneWidget);
+    expect(find.text('Email & Password'), findsOneWidget);
   });
 }
