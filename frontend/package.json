@@ -10,6 +10,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fluentui/react-components": "^9.75.1",
+    "@fluentui/react-icons": "^2.0.345",
     "@headlessui/react": "^2.2.10",
     "@heroicons/react": "^2.2.0",
     "@microsoft/signalr": "^10.0.11",
