@@ -3,13 +3,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cue_mobile/app.dart';
+import 'package:cue_mobile/core/constants.dart';
 import 'package:cue_mobile/features/auth/auth_controller.dart';
 import 'fixtures/seed_data.dart';
 
 void main() {
   testWidgets('CueApp boots up with bottom navigation and discovery content',
       (WidgetTester tester) async {
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({
+      AppConstants.tokenKey: 'fake-jwt-token',
+    });
     // Set a phone screen size
     tester.view.physicalSize = const Size(1080, 2400);
     tester.view.devicePixelRatio = 1.0;
@@ -69,6 +72,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sign In to Cue'), findsOneWidget);
-    expect(find.textContaining('Instant Demo Sign In (Alex Rivera'), findsOneWidget);
+    expect(find.textContaining('Instant Demo Sign In (Alex Seeker'), findsOneWidget);
   });
 }

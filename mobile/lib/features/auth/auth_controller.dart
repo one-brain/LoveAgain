@@ -67,24 +67,25 @@ final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
 );
 
 const User defaultLiveGuestUser = User(
-  id: 'user-guest-001',
-  email: 'alex.rivera@example.com',
+  id: '6d59d945-c2ea-42e6-b195-34737b8cde33',
+  email: 'alex.seeker@cue.local',
   firstName: 'Alex',
-  lastName: 'Rivera',
+  lastName: 'Seeker',
   roles: ['Guest'],
-  trustScore: 96,
+  trustScore: 98,
   isVerified: true,
   bio: 'Art enthusiast and quiet explorer living in Indiranagar, Bengaluru.',
-  phone: '+91 98765 43210',
+  phone: '+91 99000 00003',
   city: 'Bengaluru',
 );
 
 class AuthController extends StateNotifier<AuthState> {
   AuthController(this._repository, this._api)
       : super(const AuthState(
-          token: 'cue-demo-jwt-token',
+          token: null,
           user: defaultLiveGuestUser,
           activeRole: 'Guest',
+          isLoading: true,
         )) {
     restore();
   }
@@ -102,7 +103,7 @@ class AuthController extends StateNotifier<AuthState> {
 
       final signedOut = prefs.getBool('cue.signedOut') ?? false;
 
-      if (token != null && token.isNotEmpty) {
+      if (token != null && token.isNotEmpty && token != 'cue-demo-jwt-token') {
         _api.setAccessToken(token);
         User? user;
         if (userJson != null) {
@@ -121,18 +122,31 @@ class AuthController extends StateNotifier<AuthState> {
           activeRole: role,
         );
       } else if (!signedOut) {
-        const demoToken = 'cue-demo-jwt-token';
-        _api.setAccessToken(demoToken);
-        state = const AuthState(
-          token: demoToken,
-          user: defaultLiveGuestUser,
-          activeRole: 'Guest',
-        );
+        // Authenticate with live backend credentials to get a genuine signed JWT
+        try {
+          final res = await _repository.login(
+            email: 'alex.seeker@cue.local',
+            password: 'CueDemo123!',
+          );
+          await prefs.setString(AppConstants.tokenKey, res.token);
+          await prefs.setString(AppConstants.userKey, jsonEncode(res.user.toJson()));
+          state = AuthState(
+            token: res.token,
+            user: res.user,
+            activeRole: 'Guest',
+          );
+        } catch (_) {
+          state = const AuthState(
+            token: 'cue-guest-session',
+            user: defaultLiveGuestUser,
+            activeRole: 'Guest',
+          );
+        }
       } else {
         state = const AuthState();
       }
     } catch (_) {
-      // Ignore restore errors
+      state = const AuthState();
     }
   }
 
@@ -155,9 +169,10 @@ class AuthController extends StateNotifier<AuthState> {
         return false;
       }
     } catch (e) {
+      final msg = e is ApiException ? e.message : 'Network error requesting OTP.';
       state = state.copyWith(
         isLoading: false,
-        error: 'Network error requesting OTP.',
+        error: msg,
       );
       return false;
     }
@@ -181,9 +196,10 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
+      final msg = e is ApiException ? e.message : 'Invalid OTP code. Please verify and try again.';
       state = state.copyWith(
         isLoading: false,
-        error: 'Invalid OTP code. Please verify and try again.',
+        error: msg,
       );
       return false;
     }
@@ -205,8 +221,9 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
+      final msg = e is ApiException ? e.message : 'Unable to sign in. Please verify your credentials.';
       state = AuthState(
-        error: 'Unable to sign in. Please verify your credentials.',
+        error: msg,
         activeRole: state.activeRole,
       );
       return false;
@@ -242,8 +259,9 @@ class AuthController extends StateNotifier<AuthState> {
       );
       return true;
     } catch (e) {
+      final msg = e is ApiException ? e.message : 'Registration failed. Please try again.';
       state = AuthState(
-        error: 'Registration failed. Please try again.',
+        error: msg,
         activeRole: state.activeRole,
       );
       return false;

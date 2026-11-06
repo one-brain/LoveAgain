@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,9 +11,14 @@ import '../widgets/verified_badge.dart';
 import 'booking_controller.dart';
 
 class BookingScreen extends ConsumerStatefulWidget {
-  const BookingScreen({required this.provider, super.key});
+  const BookingScreen({
+    required this.provider,
+    this.initialSlot,
+    super.key,
+  });
 
   final ProviderProfile provider;
+  final AvailabilitySlot? initialSlot;
 
   @override
   ConsumerState<BookingScreen> createState() => _BookingScreenState();
@@ -22,6 +28,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   TimeOfDay _selectedTime = const TimeOfDay(hour: 14, minute: 0);
   double _duration = 2.0;
+  double _maxDuration = 6.0;
+  AvailabilitySlot? _selectedSlot;
+  List<AvailabilitySlot> _availableSlots = [];
+  bool _loadingSlots = false;
+  String? _submissionError;
   final _addressController =
       TextEditingController(text: 'Indiranagar 100ft Road, Bengaluru');
   final _requestController = TextEditingController();
@@ -34,6 +45,62 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     'NCPA Nariman Point, Mumbai',
     'Hauz Khas Village, Delhi',
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _availableSlots = List<AvailabilitySlot>.from(widget.provider.upcomingSlots);
+
+    if (widget.initialSlot != null) {
+      _applySlot(widget.initialSlot!);
+    } else if (_availableSlots.isNotEmpty) {
+      _applySlot(_availableSlots.first);
+    }
+
+    _fetchFreshSlots();
+  }
+
+  void _applySlot(AvailabilitySlot slot) {
+    _selectedSlot = slot;
+    final localStart = slot.startTime.toLocal();
+    _selectedDate = localStart;
+    _selectedTime = TimeOfDay.fromDateTime(localStart);
+    final slotDuration =
+        slot.endTime.difference(slot.startTime).inMinutes / 60.0;
+    _maxDuration = slotDuration > 0 ? slotDuration : 6.0;
+    _duration = min(2.0, _maxDuration);
+    if (_duration < 1.0 && _maxDuration >= 1.0) {
+      _duration = 1.0;
+    }
+  }
+
+  Future<void> _fetchFreshSlots() async {
+    setState(() => _loadingSlots = true);
+    try {
+      final fetched = await ref
+          .read(bookingRepositoryProvider)
+          .getCompanionAvailability(widget.provider.id);
+      if (mounted) {
+        setState(() {
+          _availableSlots = fetched;
+          _loadingSlots = false;
+          if (_selectedSlot == null && fetched.isNotEmpty) {
+            _applySlot(fetched.first);
+          } else if (_selectedSlot != null) {
+            // Keep matching slot if present in fetched
+            final match = fetched.where((s) => s.id == _selectedSlot!.id);
+            if (match.isNotEmpty) {
+              _applySlot(match.first);
+            }
+          }
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _loadingSlots = false);
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -49,6 +116,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       ((_providerEarnings + _platformFee) * 100).round() / 100;
 
   DateTime get _startDateTime {
+    if (_selectedSlot != null) {
+      return _selectedSlot!.startTime;
+    }
     return DateTime(
       _selectedDate.year,
       _selectedDate.month,
@@ -81,6 +151,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     if (picked != null) {
       setState(() {
         _selectedDate = picked;
+        _selectedSlot = null;
       });
     }
   }
@@ -93,6 +164,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
     if (picked != null) {
       setState(() {
         _selectedTime = picked;
+        _selectedSlot = null;
       });
     }
   }
@@ -105,7 +177,10 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
       return;
     }
 
-    setState(() => _submitting = true);
+    setState(() {
+      _submitting = true;
+      _submissionError = null;
+    });
 
     final booking =
         await ref.read(bookingControllerProvider.notifier).createBooking(
@@ -118,7 +193,14 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   : null,
             );
 
-    setState(() => _submitting = false);
+    final errorMsg = ref.read(bookingControllerProvider).error;
+
+    setState(() {
+      _submitting = false;
+      if (booking == null) {
+        _submissionError = errorMsg ?? 'Failed to create booking. Please try again.';
+      }
+    });
 
     if (mounted) {
       if (booking != null) {
@@ -176,7 +258,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                                   fontSize: 13,
                                   color: AppColors.textSecondary)),
                           Text(
-                            '\$${_totalAmount.toStringAsFixed(2)}',
+                            '₹${_totalAmount.toStringAsFixed(2)}',
                             style: const TextStyle(
                               fontSize: 15,
                               fontWeight: FontWeight.w800,
@@ -203,8 +285,22 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('Failed to create booking. Please try again.')),
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    _submissionError ?? 'Booking request failed.',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: AppColors.statusCancelled,
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     }
@@ -281,6 +377,88 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             ),
           ),
           const SizedBox(height: 24),
+
+          // Availability Slot Section
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Available Slots',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              if (_loadingSlots)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (_availableSlots.isNotEmpty) ...[
+            const Text(
+              'Select an open slot to schedule your outing:',
+              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _availableSlots.map((slot) {
+                final isSelected = _selectedSlot?.id == slot.id;
+                final localStart = slot.startTime.toLocal();
+                final localEnd = slot.endTime.toLocal();
+                final startStr =
+                    DateFormat('EEE, MMM d • h:mm a').format(localStart);
+                final endStr = DateFormat('h:mm a').format(localEnd);
+                return ChoiceChip(
+                  label: Text('$startStr - $endStr'),
+                  selected: isSelected,
+                  selectedColor: AppColors.primaryLight,
+                  labelStyle: TextStyle(
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: isSelected
+                        ? AppColors.primaryDark
+                        : AppColors.textPrimary,
+                  ),
+                  onSelected: (selected) {
+                    if (selected) {
+                      setState(() => _applySlot(slot));
+                    }
+                  },
+                );
+              }).toList(),
+            ),
+          ] else if (!_loadingSlots) ...[
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.goldLight,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                    color: AppColors.gold.withValues(alpha: 0.3)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.info_outline, color: AppColors.goldDark, size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'No pre-scheduled slots loaded. Selecting a custom slot will be subject to host availability.',
+                      style:
+                          TextStyle(fontSize: 12, color: AppColors.goldDark),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 20),
 
           // Date & Time Picker Card
           const Text(
@@ -411,24 +589,25 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   ],
                 ),
                 Slider(
-                  value: _duration,
+                  value: _duration.clamp(1.0, _maxDuration > 1.0 ? _maxDuration : 1.0),
                   min: 1.0,
-                  max: 6.0,
-                  divisions: 10,
+                  max: _maxDuration > 1.0 ? _maxDuration : 1.0,
+                  divisions: (_maxDuration > 1.0)
+                      ? ((_maxDuration - 1.0) * 2).round().clamp(1, 20)
+                      : null,
                   label: '${_duration.toStringAsFixed(1)} hrs',
-                  onChanged: (val) => setState(() => _duration = val),
+                  onChanged: _maxDuration > 1.0
+                      ? (val) => setState(() => _duration = val)
+                      : null,
                 ),
-                const Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('1 hr',
+                    const Text('1 hr',
                         style: TextStyle(
                             fontSize: 11, color: AppColors.textSecondary)),
-                    Text('3 hrs',
-                        style: TextStyle(
-                            fontSize: 11, color: AppColors.textSecondary)),
-                    Text('6 hrs',
-                        style: TextStyle(
+                    Text('Max ${_maxDuration.toStringAsFixed(1)} hrs',
+                        style: const TextStyle(
                             fontSize: 11, color: AppColors.textSecondary)),
                   ],
                 ),
@@ -581,6 +760,50 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               ],
             ),
           ),
+          if (_submissionError != null) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: AppColors.statusCancelled.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppColors.statusCancelled.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline,
+                      color: AppColors.statusCancelled, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Booking Request Failed',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.statusCancelled,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _submissionError!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textPrimary,
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
       bottomSheet: Container(

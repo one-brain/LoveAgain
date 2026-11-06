@@ -396,7 +396,13 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: () {
-                    context.push('/book', extra: p);
+                    context.push(
+                      '/book',
+                      extra: {
+                        'provider': p,
+                        'initialSlot': _selectedSlot,
+                      },
+                    );
                   },
                   icon: const Icon(Icons.calendar_month),
                   label: const Text('Book Outing'),

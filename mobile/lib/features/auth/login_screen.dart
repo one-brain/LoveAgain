@@ -15,10 +15,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isSignUp = false;
   bool _useOtp = true; // Mobile-first default
 
-  final _emailController = TextEditingController(text: 'alex.rivera@example.com');
-  final _passwordController = TextEditingController(text: 'SecretPass123!');
+  final _emailController = TextEditingController(text: 'alex.seeker@cue.local');
+  final _passwordController = TextEditingController(text: 'CueDemo123!');
   final _firstNameController = TextEditingController(text: 'Alex');
-  final _lastNameController = TextEditingController(text: 'Rivera');
+  final _lastNameController = TextEditingController(text: 'Seeker');
   String _selectedRole = 'Guest';
 
   @override
@@ -364,32 +364,32 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () async {
-              _emailController.text = 'alex.rivera@example.com';
-              _passwordController.text = 'SecretPass123!';
+              _emailController.text = 'alex.seeker@cue.local';
+              _passwordController.text = 'CueDemo123!';
               await ref
                   .read(authControllerProvider.notifier)
-                  .login('alex.rivera@example.com', 'SecretPass123!');
+                  .login('alex.seeker@cue.local', 'CueDemo123!');
               if (context.mounted) {
                 context.go('/');
               }
             },
             icon: const Icon(Icons.person_outline, color: AppColors.gold),
-            label: const Text('Instant Demo Sign In (Alex Rivera - Guest)'),
+            label: const Text('Instant Demo Sign In (Alex Seeker - Guest)'),
           ),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             onPressed: () async {
-              _emailController.text = 'ananya.sen@example.com';
-              _passwordController.text = 'SecretPass123!';
+              _emailController.text = 'aarohi.deshmukh.1@cue.in';
+              _passwordController.text = 'CueDemo123!';
               await ref
                   .read(authControllerProvider.notifier)
-                  .login('ananya.sen@example.com', 'SecretPass123!');
+                  .login('aarohi.deshmukh.1@cue.in', 'CueDemo123!');
               if (context.mounted) {
                 context.go('/');
               }
             },
             icon: const Icon(Icons.star_outline, color: AppColors.primary),
-            label: const Text('Instant Demo Sign In (Ananya Sen - Host)'),
+            label: const Text('Instant Demo Sign In (Aarohi Deshmukh - Host)'),
           ),
         ],
       ),

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/api_client.dart';
 import '../../data/repositories/booking_repository.dart';
 import '../../models/booking.dart';
 import '../../models/provider.dart';
@@ -84,9 +85,10 @@ class BookingController extends StateNotifier<BookingsState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final list = await _repository.getMyBookings();
-      state = state.copyWith(bookings: list, isLoading: false);
+      state = state.copyWith(bookings: list, isLoading: false, error: null);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Could not load outings');
+      final msg = e is ApiException ? e.message : 'Could not load outings';
+      state = state.copyWith(isLoading: false, error: msg);
     }
   }
 
@@ -104,8 +106,12 @@ class BookingController extends StateNotifier<BookingsState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final auth = _ref.read(authControllerProvider);
-      final currentUserId = auth.user?.id ?? 'user-guest-001';
-      final currentUserName = auth.user?.fullName ?? 'Alex Rivera';
+      final currentUserId = auth.user?.id.isNotEmpty == true
+          ? auth.user!.id
+          : '6d59d945-c2ea-42e6-b195-34737b8cde33';
+      final currentUserName = auth.user?.fullName.isNotEmpty == true
+          ? auth.user!.fullName
+          : 'Alex Seeker';
 
       final random = Random();
       final arrivalPin = (100000 + random.nextInt(900000)).toString();
@@ -113,7 +119,7 @@ class BookingController extends StateNotifier<BookingsState> {
 
       final newBooking = Booking.create(
         orderId: 'ord-${DateTime.now().millisecondsSinceEpoch}',
-        providerId: provider.id.isNotEmpty ? provider.id : 'prov-001',
+        providerId: provider.id.isNotEmpty ? provider.id : '00000000-0000-0000-0000-000000000042',
         providerName: provider.name,
         providerInitials: provider.initials,
         providerPhotoUrl: provider.photoUrl,
@@ -131,12 +137,15 @@ class BookingController extends StateNotifier<BookingsState> {
 
       final created = await _repository.createBooking(newBooking);
       final updatedList = [created, ...state.bookings];
-      state = state.copyWith(bookings: updatedList, isLoading: false);
+      state = state.copyWith(bookings: updatedList, isLoading: false, error: null);
       return created;
     } catch (e) {
+      final errorMessage = e is ApiException
+          ? e.message
+          : (e is ArgumentError ? e.message.toString() : 'Failed to request outing');
       state = state.copyWith(
         isLoading: false,
-        error: e is ArgumentError ? e.message.toString() : 'Failed to request outing',
+        error: errorMessage,
       );
       return null;
     }
@@ -149,9 +158,8 @@ class BookingController extends StateNotifier<BookingsState> {
       state = state.copyWith(bookings: list, error: null);
       return true;
     } catch (e) {
-      state = state.copyWith(
-        error: e is ArgumentError ? e.message.toString() : 'Check-in failed. Please verify the arrival PIN.',
-      );
+      final msg = e is ApiException ? e.message : 'Check-in failed. Please verify the arrival PIN.';
+      state = state.copyWith(error: msg);
       return false;
     }
   }
@@ -163,9 +171,8 @@ class BookingController extends StateNotifier<BookingsState> {
       state = state.copyWith(bookings: list, error: null);
       return true;
     } catch (e) {
-      state = state.copyWith(
-        error: e is ArgumentError ? e.message.toString() : 'Outing completion failed. Please verify the completion PIN.',
-      );
+      final msg = e is ApiException ? e.message : 'Outing completion failed. Please verify the completion PIN.';
+      state = state.copyWith(error: msg);
       return false;
     }
   }
@@ -187,8 +194,13 @@ class BookingController extends StateNotifier<BookingsState> {
     }
   }
 
-  Future<void> cancelBooking(String orderId, String reason) async {
-    await updateBookingStatus(orderId, BookingStatus.cancelled);
+  Future<bool> cancelBooking(String orderId, String reason) async {
+    try {
+      await _repository.updateStatus(orderId, BookingStatus.cancelled);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> reportSafetyIncident(
@@ -201,7 +213,6 @@ class BookingController extends StateNotifier<BookingsState> {
       reason: reason,
       contactAlerted: contactAlerted,
     );
-    // Reload bookings to reflect updated status
     await loadBookings();
     return success;
   }
@@ -222,16 +233,19 @@ class BookingController extends StateNotifier<BookingsState> {
   }
 
   Future<void> startBooking(String orderId) async {
-    final b = state.bookings.firstWhere((item) => item.orderId == orderId, orElse: () => state.bookings.first);
+    final b = state.bookings.firstWhere((item) => item.orderId == orderId,
+        orElse: () => state.bookings.first);
     await checkInWithPin(orderId, b.arrivalPin ?? '482910');
   }
 
   Future<void> completeBooking(String orderId) async {
-    final b = state.bookings.firstWhere((item) => item.orderId == orderId, orElse: () => state.bookings.first);
+    final b = state.bookings.firstWhere((item) => item.orderId == orderId,
+        orElse: () => state.bookings.first);
     await completeWithPin(orderId, b.completionPin ?? '739184');
   }
 
-  Future<void> submitReview(String orderId, double rating, String comment) async {
+  Future<void> submitReview(
+      String orderId, double rating, String comment) async {
     final list = state.bookings.map((b) {
       if (b.orderId == orderId) {
         return b.copyWith(hasReview: true);

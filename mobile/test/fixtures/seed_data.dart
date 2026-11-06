@@ -193,6 +193,26 @@ class FakeSeedApiClient extends ApiClient {
       );
     }
 
+    if (path.contains('/bookings/availability')) {
+      return Response<T>(
+        data: [
+          {
+            'id': 'slot-test-01',
+            'providerId': 'prov-001',
+            'startTime': DateTime.now()
+                .add(const Duration(days: 1, hours: 2))
+                .toIso8601String(),
+            'endTime': DateTime.now()
+                .add(const Duration(days: 1, hours: 4))
+                .toIso8601String(),
+            'isBooked': false,
+          }
+        ] as T,
+        statusCode: 200,
+        requestOptions: RequestOptions(path: path),
+      );
+    }
+
     if (path.contains('/bookings')) {
       final jsonBookings = SeedData.seedBookings.map((b) => {
         'id': b.orderId,
@@ -272,6 +292,28 @@ class FakeSeedApiClient extends ApiClient {
 
   @override
   Future<Response<T>> post<T>(String path, {dynamic data, Map<String, dynamic>? queryParameters}) async {
+    if (path.contains('/auth/login') || path.contains('/auth/verify-otp')) {
+      return Response<T>(
+        data: {
+          'token': 'fake-seed-jwt-token',
+          'user': {
+            'id': SeedData.currentUser.id,
+            'email': SeedData.currentUser.email,
+            'firstName': SeedData.currentUser.firstName,
+            'lastName': SeedData.currentUser.lastName,
+            'roles': SeedData.currentUser.roles,
+            'trustScore': SeedData.currentUser.trustScore,
+            'isVerified': SeedData.currentUser.isVerified,
+            'bio': SeedData.currentUser.bio,
+            'phone': SeedData.currentUser.phone,
+            'city': SeedData.currentUser.city,
+          },
+        } as T,
+        statusCode: 200,
+        requestOptions: RequestOptions(path: path),
+      );
+    }
+
     return Response<T>(
       data: {'status': 'ok'} as T,
       statusCode: 200,

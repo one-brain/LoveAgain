@@ -12,8 +12,45 @@ class ApiException implements Exception {
   final int? statusCode;
   final dynamic data;
 
+  factory ApiException.fromDioException(DioException e) {
+    String msg = 'An unexpected error occurred. Please try again.';
+    final res = e.response;
+
+    if (res?.data != null) {
+      final resData = res!.data;
+      if (resData is Map) {
+        if (resData['error'] != null) {
+          msg = resData['error'].toString();
+        } else if (resData['message'] != null) {
+          msg = resData['message'].toString();
+        } else if (resData['errors'] != null) {
+          final errs = resData['errors'];
+          if (errs is Map) {
+            msg = errs.values.map((v) => v is List ? v.join(', ') : v.toString()).join('\n');
+          } else {
+            msg = errs.toString();
+          }
+        }
+      } else if (resData is String && resData.isNotEmpty) {
+        msg = resData;
+      }
+    } else if (e.type == DioExceptionType.connectionTimeout ||
+        e.type == DioExceptionType.receiveTimeout ||
+        e.type == DioExceptionType.sendTimeout) {
+      msg = 'Connection timed out. Please check your network connection.';
+    } else if (e.type == DioExceptionType.connectionError) {
+      msg = 'Cannot connect to Cue service. Please check your network connection.';
+    }
+
+    return ApiException(
+      message: msg,
+      statusCode: res?.statusCode,
+      data: res?.data,
+    );
+  }
+
   @override
-  String toString() => 'ApiException(statusCode: $statusCode, message: $message)';
+  String toString() => message;
 }
 
 class ApiClient {

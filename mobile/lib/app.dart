@@ -102,6 +102,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           if (extra is ProviderProfile) {
             return BookingScreen(provider: extra);
           }
+          if (extra is Map<String, dynamic>) {
+            final provider = extra['provider'] as ProviderProfile;
+            final slot = extra['initialSlot'] as AvailabilitySlot?;
+            return BookingScreen(provider: provider, initialSlot: slot);
+          }
           final providerId = state.uri.queryParameters['providerId'] ?? '';
           return _ProviderRouteLoader(providerId: providerId, isBooking: true);
         },
