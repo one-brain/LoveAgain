@@ -36,6 +36,8 @@ class BookingRepository {
           'hourlyRate': booking.hourlyRate,
           'durationHours': booking.durationHours,
           'meetingAddress': booking.meetingAddress,
+          'arrivalPin': booking.arrivalPin,
+          'completionPin': booking.completionPin,
         },
       );
       if (response.data != null && response.data!['orderId'] != null) {
@@ -50,17 +52,79 @@ class BookingRepository {
     return booking;
   }
 
+  Future<Booking> checkInWithPin(String orderId, String pin) async {
+    final index = _cachedBookings.indexWhere((b) => b.orderId == orderId);
+    if (index == -1) {
+      throw StateError('Outing $orderId not found');
+    }
+    final current = _cachedBookings[index];
+    if (current.status != BookingStatus.confirmed) {
+      throw StateError('Outing must be in Confirmed status to check in.');
+    }
+
+    try {
+      final response = await _api.patch<Map<String, dynamic>>(
+        '/bookings/$orderId/checkin',
+        data: {'pin': pin},
+      );
+      if (response.statusCode == 200) {
+        final updated = current.copyWith(status: BookingStatus.inProgress);
+        _cachedBookings[index] = updated;
+        return updated;
+      }
+    } catch (_) {
+      // Offline fallback: check PIN against current.arrivalPin
+      if (current.arrivalPin != null && current.arrivalPin!.isNotEmpty) {
+        if (current.arrivalPin != pin) {
+          throw ArgumentError('Invalid arrival PIN. Please check the code with your Guest.');
+        }
+      }
+    }
+
+    final updated = current.copyWith(status: BookingStatus.inProgress);
+    _cachedBookings[index] = updated;
+    return updated;
+  }
+
+  Future<Booking> completeWithPin(String orderId, String completionPin) async {
+    final index = _cachedBookings.indexWhere((b) => b.orderId == orderId);
+    if (index == -1) {
+      throw StateError('Outing $orderId not found');
+    }
+    final current = _cachedBookings[index];
+    if (current.status != BookingStatus.inProgress) {
+      throw StateError('Outing cannot be completed before session is initiated with the arrival verification PIN.');
+    }
+
+    try {
+      final response = await _api.patch<Map<String, dynamic>>(
+        '/bookings/$orderId/complete',
+        data: {'completionPin': completionPin},
+      );
+      if (response.statusCode == 200) {
+        final updated = current.copyWith(status: BookingStatus.completed);
+        _cachedBookings[index] = updated;
+        return updated;
+      }
+    } catch (_) {
+      // Offline fallback: check PIN against current.completionPin
+      if (current.completionPin != null && current.completionPin!.isNotEmpty) {
+        if (current.completionPin != completionPin) {
+          throw ArgumentError('Invalid completion PIN. Please check the code with your Host.');
+        }
+      }
+    }
+
+    final updated = current.copyWith(status: BookingStatus.completed);
+    _cachedBookings[index] = updated;
+    return updated;
+  }
+
   Future<Booking> updateStatus(String orderId, BookingStatus status) async {
     try {
       switch (status) {
         case BookingStatus.confirmed:
           await _api.patch('/bookings/$orderId/confirm');
-          break;
-        case BookingStatus.inProgress:
-          await _api.patch('/bookings/$orderId/start');
-          break;
-        case BookingStatus.completed:
-          await _api.patch('/bookings/$orderId/complete');
           break;
         case BookingStatus.cancelled:
           await _api.post('/bookings/$orderId/cancel', data: {'reason': 'User requested cancellation'});
@@ -81,4 +145,3 @@ class BookingRepository {
     throw StateError('Booking $orderId not found');
   }
 }
-

@@ -327,24 +327,36 @@ class _BookingCard extends ConsumerWidget {
       case BookingStatus.confirmed:
         return FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.sage,
+            backgroundColor: AppColors.primary,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          onPressed: () => controller.startBooking(b.orderId),
-          child: const Text('Start', style: TextStyle(fontSize: 12)),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (ctx) => BookingDetailScreen(booking: b),
+              ),
+            );
+          },
+          child: const Text('View PIN', style: TextStyle(fontSize: 12)),
         );
       case BookingStatus.inProgress:
         return FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: AppColors.statusCompleted,
+            backgroundColor: const Color(0xFF047857),
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             minimumSize: Size.zero,
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
-          onPressed: () => controller.completeBooking(b.orderId),
-          child: const Text('Complete', style: TextStyle(fontSize: 12)),
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (ctx) => BookingDetailScreen(booking: b),
+              ),
+            );
+          },
+          child: const Text('Verify PIN', style: TextStyle(fontSize: 12)),
         );
       case BookingStatus.completed:
         if (!b.hasReview) {

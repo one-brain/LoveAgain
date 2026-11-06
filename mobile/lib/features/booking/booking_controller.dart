@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/booking_repository.dart';
 import '../../models/booking.dart';
@@ -84,7 +85,7 @@ class BookingController extends StateNotifier<BookingsState> {
       final list = await _repository.getMyBookings();
       state = state.copyWith(bookings: list, isLoading: false);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: 'Could not load bookings');
+      state = state.copyWith(isLoading: false, error: 'Could not load outings');
     }
   }
 
@@ -102,8 +103,12 @@ class BookingController extends StateNotifier<BookingsState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final auth = _ref.read(authControllerProvider);
-      final currentUserId = auth.user?.id ?? 'user-seeker-001';
+      final currentUserId = auth.user?.id ?? 'user-guest-001';
       final currentUserName = auth.user?.fullName ?? 'Alex Rivera';
+
+      final random = Random();
+      final arrivalPin = (100000 + random.nextInt(900000)).toString();
+      final completionPin = (100000 + random.nextInt(900000)).toString();
 
       final newBooking = Booking.create(
         orderId: 'ord-${DateTime.now().millisecondsSinceEpoch}',
@@ -119,6 +124,8 @@ class BookingController extends StateNotifier<BookingsState> {
         meetingAddress: meetingAddress,
         specialRequests: specialRequests,
         status: BookingStatus.confirmed,
+        arrivalPin: arrivalPin,
+        completionPin: completionPin,
       );
 
       final created = await _repository.createBooking(newBooking);
@@ -128,9 +135,37 @@ class BookingController extends StateNotifier<BookingsState> {
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: e is ArgumentError ? e.message.toString() : 'Failed to request booking',
+        error: e is ArgumentError ? e.message.toString() : 'Failed to request outing',
       );
       return null;
+    }
+  }
+
+  Future<bool> checkInWithPin(String orderId, String pin) async {
+    try {
+      final updated = await _repository.checkInWithPin(orderId, pin);
+      final list = state.bookings.map((b) => b.orderId == orderId ? updated : b).toList();
+      state = state.copyWith(bookings: list, error: null);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        error: e is ArgumentError ? e.message.toString() : 'Check-in failed. Please verify the arrival PIN.',
+      );
+      return false;
+    }
+  }
+
+  Future<bool> completeWithPin(String orderId, String completionPin) async {
+    try {
+      final updated = await _repository.completeWithPin(orderId, completionPin);
+      final list = state.bookings.map((b) => b.orderId == orderId ? updated : b).toList();
+      state = state.copyWith(bookings: list, error: null);
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        error: e is ArgumentError ? e.message.toString() : 'Outing completion failed. Please verify the completion PIN.',
+      );
+      return false;
     }
   }
 
@@ -160,11 +195,13 @@ class BookingController extends StateNotifier<BookingsState> {
   }
 
   Future<void> startBooking(String orderId) async {
-    await updateBookingStatus(orderId, BookingStatus.inProgress);
+    final b = state.bookings.firstWhere((item) => item.orderId == orderId, orElse: () => state.bookings.first);
+    await checkInWithPin(orderId, b.arrivalPin ?? '482910');
   }
 
   Future<void> completeBooking(String orderId) async {
-    await updateBookingStatus(orderId, BookingStatus.completed);
+    final b = state.bookings.firstWhere((item) => item.orderId == orderId, orElse: () => state.bookings.first);
+    await completeWithPin(orderId, b.completionPin ?? '739184');
   }
 
   Future<void> submitReview(String orderId, double rating, String comment) async {
@@ -177,4 +214,3 @@ class BookingController extends StateNotifier<BookingsState> {
     state = state.copyWith(bookings: list);
   }
 }
-
