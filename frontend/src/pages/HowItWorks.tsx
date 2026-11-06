@@ -194,7 +194,7 @@ const HowItWorks: React.FC = () => {
                 to="/discovery"
                 className="min-h-11 inline-flex items-center gap-2 px-6 py-2.5 rounded-md bg-accent text-accent-foreground font-semibold hover:bg-accent-hover transition-colors shadow-2xs"
               >
-                <span>Find a Guest Today</span>
+                <span>Explore companions</span>
                 <ArrowRight16Regular />
               </Link>
             </div>
@@ -290,7 +290,7 @@ const HowItWorks: React.FC = () => {
                 to={isAuthenticated ? '/apply-companion' : '/register?redirect=/apply-companion'}
                 className="min-h-11 inline-flex items-center gap-2 px-6 py-2.5 rounded-md bg-accent text-accent-foreground font-semibold hover:bg-accent-hover transition-colors shadow-2xs"
               >
-                <span>Apply to Become a Guest</span>
+                <span>Become a host</span>
                 <ArrowRight16Regular />
               </Link>
             </div>
@@ -475,13 +475,13 @@ const HowItWorks: React.FC = () => {
               to="/discovery"
               className="w-full sm:w-auto min-h-11 px-6 py-2.5 rounded-md bg-accent text-accent-foreground font-semibold text-body1 shadow-2xs hover:bg-accent-hover transition-colors flex items-center justify-center"
             >
-              Discover Guests
+              Explore
             </Link>
             <Link
               to={isAuthenticated ? '/apply-companion' : '/register?redirect=/apply-companion'}
               className="w-full sm:w-auto min-h-11 px-6 py-2.5 rounded-md border border-border-strong bg-card text-foreground hover:bg-muted font-semibold text-body1 transition-colors flex items-center justify-center"
             >
-              Become a Guest
+              Become a host
             </Link>
           </div>
         </div>

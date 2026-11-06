@@ -430,7 +430,7 @@ const Discovery: React.FC = () => {
               className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-card text-foreground font-semibold text-caption1 transition-colors border border-border shrink-0"
             >
               <ShieldCheckmark16Regular className="text-brand-fg" />
-              <span>Return to dashboard →</span>
+              <span>Admin</span>
             </Link>
           </div>
         </aside>
@@ -669,7 +669,7 @@ const Discovery: React.FC = () => {
                     onClick={() => setAuthPromptModal(true)}
                     className="w-full min-h-11 justify-between"
                   >
-                    <span>Sign in to filter by rate</span>
+                    <span>Unlock rates</span>
                   </Button>
                 )}
               </div>
@@ -681,7 +681,7 @@ const Discovery: React.FC = () => {
                   onClick={handleClearFilters}
                   className="min-h-11"
                 >
-                  Reset all filters
+                  Reset
                 </Button>
               </div>
             </div>
@@ -878,22 +878,33 @@ const Discovery: React.FC = () => {
                         onAuthPrompt={() => setAuthPromptModal(true)}
                       />
 
-                      <Button
-                        appearance="primary"
-                        size="medium"
-                        icon={<ShieldCheckmark16Regular />}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!isAuthenticated) {
-                            setAuthPromptModal(true);
-                            return;
-                          }
-                          setSelectedProviderForBooking(provider);
-                        }}
-                        className="shrink-0"
-                      >
-                        Book outing
-                      </Button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                          appearance="outline"
+                          size="medium"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/provider/${provider.providerId}`);
+                          }}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          appearance="primary"
+                          size="medium"
+                          icon={<ShieldCheckmark16Regular />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isAuthenticated) {
+                              setAuthPromptModal(true);
+                              return;
+                            }
+                            setSelectedProviderForBooking(provider);
+                          }}
+                        >
+                          Reserve
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </article>
@@ -921,7 +932,7 @@ const Discovery: React.FC = () => {
                 onClick={() => navigate('/register?redirect=/discovery')}
                 className="min-h-11"
               >
-                Create free account & explore all
+                Join Cue
               </Button>
               <Button
                 appearance="secondary"
@@ -1067,7 +1078,7 @@ const Discovery: React.FC = () => {
                   onClick={() => navigate('/register')}
                   className="w-full min-h-11"
                 >
-                  Create account (quick & free)
+                  Join Cue
                 </Button>
                 <Button
                   appearance="secondary"
@@ -1075,7 +1086,7 @@ const Discovery: React.FC = () => {
                   onClick={() => navigate('/login')}
                   className="w-full min-h-11"
                 >
-                  Existing user log in
+                  Sign in
                 </Button>
                 <Button
                   appearance="subtle"

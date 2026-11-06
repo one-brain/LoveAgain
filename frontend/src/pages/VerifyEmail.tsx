@@ -89,7 +89,7 @@ const VerifyEmail: React.FC = () => {
                 onClick={() => navigate('/discovery')}
                 className="w-full min-h-11"
               >
-                Find Companions & Outings &rarr;
+                Explore
               </Button>
               <Button
                 appearance="secondary"
@@ -97,7 +97,7 @@ const VerifyEmail: React.FC = () => {
                 onClick={() => navigate('/profile')}
                 className="w-full min-h-11"
               >
-                Go to Account Settings
+                Settings
               </Button>
             </div>
           </div>
@@ -123,13 +123,13 @@ const VerifyEmail: React.FC = () => {
                 onClick={() => navigate('/login')}
                 className="w-full min-h-11"
               >
-                Sign in to Request New Link
+                Sign in
               </Button>
               <Link
                 to="/"
                 className="text-caption1 text-muted-foreground hover:text-foreground underline pt-1"
               >
-                Return to Homepage
+                Home
               </Link>
             </div>
           </div>

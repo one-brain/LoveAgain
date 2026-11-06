@@ -228,7 +228,7 @@ export const CameraSelfieCapture: React.FC<CameraSelfieCaptureProps> = ({
                   onClick={captureSnapshot}
                   className="min-h-11"
                 >
-                  Take snapshot
+                  Capture
                 </Button>
                 <Button
                   appearance="secondary"
@@ -260,7 +260,7 @@ export const CameraSelfieCapture: React.FC<CameraSelfieCaptureProps> = ({
               onClick={handleRetake}
               className="flex-1 min-h-11"
             >
-              Retake via camera
+              Retake
             </Button>
             <Button
               appearance="subtle"
@@ -300,7 +300,7 @@ export const CameraSelfieCapture: React.FC<CameraSelfieCaptureProps> = ({
               onClick={() => fileInputRef.current?.click()}
               className="w-full sm:w-auto min-h-11"
             >
-              Upload photo file
+              Upload photo
             </Button>
           </div>
         </Card>

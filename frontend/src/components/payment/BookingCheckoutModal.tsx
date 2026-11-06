@@ -312,7 +312,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                     disabled={isPayingWallet}
                     icon={isPayingWallet ? <Spinner size="tiny" /> : <ShieldCheckmark20Regular />}
                   >
-                    {isPayingWallet ? 'Processing safe payment...' : `Pay ${formatINR(totalAmount)} with wallet`}
+                    {isPayingWallet ? 'Funding escrow...' : `Fund escrow • ${formatINR(totalAmount)}`}
                   </Button>
                 ) : (
                   <Button
@@ -324,8 +324,8 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
                     icon={isCreatingTopUp || isVerifyingTopUp || isPayingWallet ? <Spinner size="tiny" /> : <Payment20Regular />}
                   >
                     {isCreatingTopUp || isVerifyingTopUp || isPayingWallet
-                      ? 'Processing payment...'
-                      : `Add ${formatINR(shortage)} & pay securely`}
+                      ? 'Funding escrow...'
+                      : `Add ${formatINR(shortage)} & fund`}
                   </Button>
                 )}
               </DialogActions>

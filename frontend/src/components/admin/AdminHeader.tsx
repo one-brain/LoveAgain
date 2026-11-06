@@ -55,7 +55,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({
           icon={<ArrowDownload16Regular />}
           onClick={onExportCsv}
         >
-          Export ledger (CSV)
+          Export CSV
         </Button>
       </div>
     </header>

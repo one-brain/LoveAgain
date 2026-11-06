@@ -465,7 +465,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               }}
               className="flex-1 min-w-[130px] min-h-11"
             >
-              Deposit escrow
+              Fund escrow
             </Button>
           )}
 
@@ -495,7 +495,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
               }}
               className="flex-1 min-w-[150px] min-h-11"
             >
-              Complete outing
+              Release escrow
             </Button>
           )}
 
@@ -516,7 +516,7 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 }}
                 className="flex-1 min-w-[130px] min-h-11"
               >
-                Leave a review
+                Review
               </Button>
             )
           )}

@@ -323,7 +323,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
                                 size="small"
                                 onClick={() => handleOpenProcess(payout)}
                               >
-                                Transfer funds
+                                Settle UPI
                               </Button>
                             ) : (
                               <div className="inline-flex items-center gap-1.5">
@@ -370,7 +370,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
                                   )}
                                   {isPending && (
                                     <MenuItem onClick={() => handleOpenProcess(payout)}>
-                                      Transfer funds
+                                      Settle UPI
                                     </MenuItem>
                                   )}
                                 </MenuList>
@@ -448,7 +448,7 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
                   appearance="primary"
                   disabled={isProcessing || !payoutUtr.trim()}
                 >
-                  {isProcessing ? 'Settling...' : 'Confirm disbursal'}
+                  {isProcessing ? 'Settling...' : 'Settle UPI'}
                 </Button>
               </DialogActions>
             </DialogBody>

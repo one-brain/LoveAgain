@@ -300,7 +300,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
             icon={<ArrowLeft16Regular />}
             onClick={onBackToDashboard}
           >
-            Return to operations dashboard
+            Dashboard
           </Button>
         </div>
       )}
@@ -462,7 +462,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
                 icon={isUpdatingProfile ? <ArrowSync16Regular className="animate-spin" /> : undefined}
                 className="w-full min-h-11"
               >
-                {isUpdatingProfile ? 'Saving profile...' : 'Save administrative profile'}
+                {isUpdatingProfile ? 'Saving...' : 'Save profile'}
               </Button>
             </div>
           </form>
@@ -553,7 +553,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
                 icon={isChangingPassword ? <ArrowSync16Regular className="animate-spin" /> : undefined}
                 className="w-full min-h-11"
               >
-                {isChangingPassword ? 'Verifying credentials...' : 'Update master password'}
+                {isChangingPassword ? 'Updating...' : 'Update password'}
               </Button>
             </div>
           </form>

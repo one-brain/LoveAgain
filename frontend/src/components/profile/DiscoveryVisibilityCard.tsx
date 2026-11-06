@@ -145,10 +145,10 @@ export const DiscoveryVisibilityCard: React.FC<DiscoveryVisibilityCardProps> = (
             className="min-h-11"
           >
             {isUpdating
-              ? 'Updating visibility...'
+              ? 'Updating...'
               : isActive
-              ? 'Pause discovery visibility'
-              : 'Resume visibility'}
+              ? 'Pause profile'
+              : 'Go live'}
           </Button>
         </div>
       </div>

@@ -457,7 +457,7 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
                   onClick={() => handleOpenReject(activeDetail)}
                   className="text-destructive min-h-11"
                 >
-                  Reject submission
+                  Reject
                 </Button>
                 <Button
                   appearance="primary"
@@ -466,7 +466,7 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
                   onClick={() => handleApproveItem(activeDetail)}
                   className="min-h-11"
                 >
-                  Verify & approve user
+                  Approve ID
                 </Button>
               </div>
             </Card>
@@ -570,7 +570,7 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
                   onClick={() => handleOpenReject(comparisonModalItem)}
                   className="text-destructive"
                 >
-                  Reject submission
+                  Reject
                 </Button>
                 <Button
                   appearance="primary"
@@ -578,7 +578,7 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
                   disabled={isApproving || comparisonModalItem.status === 'Approved'}
                   onClick={() => handleApproveItem(comparisonModalItem)}
                 >
-                  Verify & approve user
+                  Approve ID
                 </Button>
               </DialogActions>
             </DialogBody>
@@ -642,7 +642,7 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
                 onClick={handleConfirmReject}
                 className="bg-destructive text-destructive-foreground"
               >
-                {isRejecting ? 'Rejecting...' : 'Confirm rejection'}
+                {isRejecting ? 'Rejecting...' : 'Reject'}
               </Button>
             </DialogActions>
           </DialogBody>

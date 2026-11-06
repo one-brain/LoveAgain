@@ -84,7 +84,7 @@ const ForgotPassword: React.FC = () => {
                 onClick={() => navigate('/login')}
                 className="w-full min-h-11"
               >
-                Return to Sign In
+                Sign in
               </Button>
               <Button
                 appearance="subtle"
@@ -94,7 +94,7 @@ const ForgotPassword: React.FC = () => {
                   setEmail('');
                 }}
               >
-                Didn't receive email? Try another address
+                Try another email
               </Button>
             </div>
           </div>
@@ -138,7 +138,7 @@ const ForgotPassword: React.FC = () => {
                 disabled={isLoading}
                 className="w-full min-h-11"
               >
-                {isLoading ? 'Sending reset link...' : 'Send Password Reset Link'}
+                {isLoading ? 'Sending...' : 'Send link'}
               </Button>
             </form>
 

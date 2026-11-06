@@ -435,7 +435,7 @@ export const ArchetypeQuizSection: React.FC = () => {
                   onClick={startQuiz}
                   className="min-h-11"
                 >
-                  Start 60s quiz
+                  Start quiz
                 </Button>
 
                 <div className="flex items-center gap-3 text-caption1 text-muted-foreground">
@@ -642,7 +642,7 @@ export const ArchetypeQuizSection: React.FC = () => {
                   onClick={() => navigate('/discovery')}
                   className="min-h-11 self-start sm:self-auto !text-brand-fg"
                 >
-                  View all companions
+                  View all
                 </Button>
               </div>
 

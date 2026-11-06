@@ -165,7 +165,7 @@ export const CompleteOutingModal: React.FC<CompleteOutingModalProps> = ({
                 disabled={isLoading || pin.trim().length !== 6}
                 icon={isLoading ? <Spinner size="tiny" /> : <CheckmarkCircle20Regular />}
               >
-                {isLoading ? 'Settling...' : 'Verify & release'}
+                {isLoading ? 'Settling...' : 'Release escrow'}
               </Button>
             </DialogActions>
           </DialogBody>

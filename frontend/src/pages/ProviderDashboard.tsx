@@ -157,7 +157,7 @@ const ProviderDashboard: React.FC = () => {
             to="/bookings?view=incoming"
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-body1 transition-colors self-start min-h-11"
           >
-            <span>Manage in My Experience Bookings</span>
+            <span>My outings</span>
             <ArrowRight16Regular />
           </Link>
         </Card>
@@ -202,7 +202,7 @@ const ProviderDashboard: React.FC = () => {
             className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-border bg-background hover:bg-muted font-semibold text-body1 text-foreground transition-colors self-start min-h-11"
           >
             <Briefcase20Regular className="text-brand-fg" />
-            <span>Edit in Profile & Settings</span>
+            <span>Host settings</span>
           </Link>
         </Card>
       </div>

@@ -254,7 +254,7 @@ export const LeaveReviewModal: React.FC<LeaveReviewModalProps> = ({
                 disabled={isLoading || comment.trim().length < 5}
                 icon={isLoading ? <Spinner size="tiny" /> : undefined}
               >
-                {isLoading ? 'Submitting...' : 'Submit verified review'}
+                {isLoading ? 'Posting...' : 'Post review'}
               </Button>
             </DialogActions>
           </DialogBody>

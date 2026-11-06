@@ -113,7 +113,7 @@ const ProviderDetail: React.FC = () => {
           onClick={() => navigate('/discovery')}
           className="min-h-11"
         >
-          Browse active guests
+          Explore
         </Button>
       </div>
     );
@@ -189,7 +189,7 @@ const ProviderDetail: React.FC = () => {
           onClick={() => navigate('/discovery')}
           className="min-h-11"
         >
-          Back to all guests
+          Back
         </Button>
       </div>
 
@@ -610,7 +610,7 @@ const ProviderDetail: React.FC = () => {
                 }}
                 className="w-full min-h-11"
               >
-                {isAuthenticated ? 'Book outing with escrow →' : 'Sign in to book outing →'}
+                {isAuthenticated ? 'Reserve outing' : 'Sign in to reserve'}
               </Button>
               <p className="text-caption1 text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
                 <ShieldCheckmark16Regular className="text-trust shrink-0" />
@@ -645,7 +645,7 @@ const ProviderDetail: React.FC = () => {
                 onClick={() => navigate('/bookings')}
                 className="w-full min-h-11"
               >
-                View my bookings
+                My outings
               </Button>
               <Button
                 appearance="secondary"
@@ -684,7 +684,7 @@ const ProviderDetail: React.FC = () => {
                 onClick={() => navigate('/register')}
                 className="w-full min-h-11"
               >
-                Create account (quick & free)
+                Join Cue
               </Button>
               <Button
                 appearance="secondary"
@@ -692,7 +692,7 @@ const ProviderDetail: React.FC = () => {
                 onClick={() => navigate('/login')}
                 className="w-full min-h-11"
               >
-                Existing user log in
+                Sign in
               </Button>
               <Button
                 appearance="subtle"

@@ -47,7 +47,7 @@ export const AdminMisAnalytics: React.FC<AdminMisAnalyticsProps> = ({
           icon={<ArrowDownload16Regular />}
           onClick={onExportCsv}
         >
-          Export platform report (CSV)
+          Export CSV
         </Button>
       </Card>
 

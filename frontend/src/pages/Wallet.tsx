@@ -286,8 +286,8 @@ export const WalletPage: React.FC = () => {
             className="min-h-11 tabular shrink-0"
           >
             {isCreatingOrder || isVerifying
-              ? 'Launching UPI gateway...'
-              : `Add ₹${currentAmount ? currentAmount.toLocaleString('en-IN') : '0'} via UPI`}
+              ? 'Opening UPI...'
+              : `Add ₹${currentAmount ? currentAmount.toLocaleString('en-IN') : '0'} UPI`}
           </Button>
         </div>
       </div>

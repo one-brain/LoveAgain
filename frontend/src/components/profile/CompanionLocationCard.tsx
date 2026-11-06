@@ -195,7 +195,7 @@ export const CompanionLocationCard: React.FC<CompanionLocationCardProps> = ({
           disabled={isDetectingGps || isUpdating}
           className="flex-1 min-h-11"
         >
-          {isDetectingGps ? 'Detecting GPS location...' : 'Use my device GPS'}
+          {isDetectingGps ? 'Locating...' : 'Locate me'}
         </Button>
 
         <div className="flex-1">

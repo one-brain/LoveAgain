@@ -253,7 +253,7 @@ export const CancelBookingModal: React.FC<CancelBookingModalProps> = ({
                 disabled={isCancelling}
                 icon={isCancelling ? <Spinner size="tiny" /> : undefined}
               >
-                {isCancelling ? 'Cancelling...' : 'Confirm cancellation'}
+                {isCancelling ? 'Cancelling...' : 'Cancel outing'}
               </Button>
             </DialogActions>
           </DialogBody>

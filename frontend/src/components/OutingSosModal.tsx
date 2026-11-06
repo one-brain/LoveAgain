@@ -127,7 +127,7 @@ export const OutingSosModal: React.FC<OutingSosModalProps> = ({
                   icon={<ShieldError20Regular />}
                   className="w-full min-h-11 border-destructive text-destructive"
                 >
-                  {isDispatching ? 'Alerting Trust & Safety desk...' : 'Alert Cue 24/7 Trust & Safety desk'}
+                  {isDispatching ? 'Dispatching SOS...' : 'Dispatch SOS'}
                 </Button>
               )}
 
@@ -137,7 +137,7 @@ export const OutingSosModal: React.FC<OutingSosModalProps> = ({
                 className="w-full min-h-11 py-2.5 px-4 rounded-md bg-destructive text-destructive-foreground font-semibold text-body1 shadow-sm flex items-center justify-center gap-2 transition-colors"
               >
                 <Call20Regular />
-                <span>Call 112 National Emergency</span>
+                <span>Call 112</span>
               </a>
 
               <Button
@@ -147,7 +147,7 @@ export const OutingSosModal: React.FC<OutingSosModalProps> = ({
                 icon={copied ? <Checkmark20Regular className="text-success" /> : <Share20Regular className="text-brand-fg" />}
                 className="w-full min-h-11"
               >
-                {copied ? 'Tracking link copied to clipboard!' : 'Share live tracking link with family'}
+                {copied ? 'Link copied!' : 'Share live location'}
               </Button>
             </div>
 

@@ -463,7 +463,7 @@ const Register: React.FC = () => {
                   disabled={isVerifyingOtp}
                   className="w-full min-h-11"
                 >
-                  {isVerifyingOtp ? 'Completing signup...' : 'Verify OTP & Create Account'}
+                  {isVerifyingOtp ? 'Joining...' : 'Verify & join'}
                 </Button>
               </div>
             )}
@@ -606,7 +606,7 @@ const Register: React.FC = () => {
               disabled={isEmailLoading}
               className="w-full min-h-11 mt-1"
             >
-              {isEmailLoading ? 'Creating account...' : 'Create Cue Account'}
+              {isEmailLoading ? 'Creating...' : 'Create account'}
             </Button>
           </form>
         )}

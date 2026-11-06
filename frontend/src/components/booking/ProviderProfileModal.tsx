@@ -291,7 +291,7 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
               className="min-h-11"
               onClick={onClose}
             >
-              Close preview
+              Close
             </Button>
             <Button
               appearance="primary"
@@ -301,7 +301,7 @@ export const ProviderProfileModal: React.FC<ProviderProfileModalProps> = ({
               iconPosition="after"
               onClick={handleNavigateToFullProfile}
             >
-              Open full profile page
+              Full profile
             </Button>
           </DialogActions>
         </DialogBody>

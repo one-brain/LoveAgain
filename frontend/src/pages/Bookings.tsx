@@ -425,7 +425,7 @@ const Bookings: React.FC = () => {
             onClick={() => navigate('/login')}
             className="w-full min-h-11"
           >
-            Go to login
+            Sign in
           </Button>
         </div>
       </div>
@@ -474,7 +474,7 @@ const Bookings: React.FC = () => {
           onClick={() => navigate('/discovery')}
           className="min-h-11 self-start sm:self-auto"
         >
-          Discover guests
+          Explore
         </Button>
       </div>
 
@@ -500,7 +500,7 @@ const Bookings: React.FC = () => {
             onClick={() => navigate('/apply-companion')}
             className="min-h-11 shrink-0"
           >
-            {companionStatus === 'PendingReview' ? 'View review status' : 'Apply to become a guest'}
+            {companionStatus === 'PendingReview' ? 'Application' : 'Become a host'}
           </Button>
         </div>
       )}
@@ -689,7 +689,7 @@ const Bookings: React.FC = () => {
                       onClick={() => setStatusFilter('all')}
                       className="min-h-11"
                     >
-                      Show all active statuses
+                      Show all
                     </Button>
                   ) : (
                     <Button
@@ -699,7 +699,7 @@ const Bookings: React.FC = () => {
                       onClick={() => navigate('/discovery')}
                       className="min-h-11"
                     >
-                      Discover guests
+                      Explore
                     </Button>
                   )}
                 </div>
@@ -751,7 +751,7 @@ const Bookings: React.FC = () => {
                       onClick={() => navigate('/discovery')}
                       className="min-h-11"
                     >
-                      Discover verified guests
+                      Explore
                     </Button>
                   )}
                 </div>
@@ -798,7 +798,7 @@ const Bookings: React.FC = () => {
                       onClick={() => setStatusFilter('all')}
                       className="min-h-11"
                     >
-                      Show all inactive statuses
+                      Show all
                     </Button>
                   ) : (
                     <Button
@@ -809,7 +809,7 @@ const Bookings: React.FC = () => {
                       onClick={() => navigate('/cancellation-policy')}
                       className="min-h-11"
                     >
-                      Read escrow & cancellation policy
+                      Escrow policy
                     </Button>
                   )}
                 </div>

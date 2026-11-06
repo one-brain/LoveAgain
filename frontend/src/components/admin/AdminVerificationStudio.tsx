@@ -612,8 +612,8 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                   className="text-destructive min-h-11"
                 >
                   {normalizeStatus(activeDetail.status) === 'Rejected'
-                    ? 'Update rejection reason'
-                    : 'Reject with feedback'}
+                    ? 'Update reason'
+                    : 'Reject'}
                 </Button>
 
                 <Button
@@ -624,8 +624,8 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                   className="min-h-11"
                 >
                   {normalizeStatus(activeDetail.status) === 'Rejected'
-                    ? 'Re-approve & publish to discovery'
-                    : 'Approve & publish to discovery'}
+                    ? 'Re-approve'
+                    : 'Approve & publish'}
                 </Button>
               </div>
             </Card>
@@ -703,7 +703,7 @@ export const AdminVerificationStudio: React.FC<AdminVerificationStudioProps> = (
                 onClick={handleConfirmReject}
                 className="bg-destructive text-destructive-foreground"
               >
-                {isRejecting ? 'Submitting...' : 'Confirm rejection'}
+                {isRejecting ? 'Rejecting...' : 'Reject'}
               </Button>
             </DialogActions>
           </DialogBody>

@@ -396,7 +396,7 @@ const Login: React.FC = () => {
                   disabled={isVerifyingOtp}
                   className="w-full min-h-11"
                 >
-                  {isVerifyingOtp ? 'Verifying OTP...' : 'Verify & Sign In'}
+                  {isVerifyingOtp ? 'Verifying...' : 'Verify'}
                 </Button>
               </div>
             )}
@@ -463,7 +463,7 @@ const Login: React.FC = () => {
               disabled={isEmailLoading}
               className="w-full min-h-11"
             >
-              {isEmailLoading ? 'Signing in...' : 'Sign in to Account'}
+              {isEmailLoading ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
         )}

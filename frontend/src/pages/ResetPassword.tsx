@@ -76,7 +76,7 @@ const ResetPassword: React.FC = () => {
               onClick={() => navigate('/forgot-password')}
               className="w-full min-h-11"
             >
-              Request Password Reset
+              Reset password
             </Button>
           </div>
         </Card>
@@ -118,7 +118,7 @@ const ResetPassword: React.FC = () => {
                 onClick={() => navigate('/login')}
                 className="w-full min-h-11"
               >
-                Sign In with New Password &rarr;
+                Sign in
               </Button>
             </div>
           </div>

@@ -323,7 +323,7 @@ export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
                 icon={<CheckmarkCircle20Regular />}
                 className="w-full min-h-11 tabular"
               >
-                Simulate successful payment ({formatINR(amount)})
+                Approve • {formatINR(amount)}
               </Button>
               <div className="grid grid-cols-2 gap-2 w-full">
                 <Button
@@ -332,7 +332,7 @@ export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
                   icon={<DismissCircle16Regular />}
                   className="min-h-11 text-destructive border-destructive"
                 >
-                  Simulate failure
+                  Decline
                 </Button>
                 <Button
                   appearance="secondary"

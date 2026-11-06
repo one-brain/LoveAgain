@@ -77,7 +77,7 @@ export const AdminMisPage: React.FC = () => {
               onClick={() => refetchMis()}
               disabled={isFetching}
             >
-              {isFetching ? 'Refreshing...' : 'Refresh metrics'}
+              {isFetching ? 'Syncing...' : 'Sync'}
             </Button>
             <Button
               appearance="primary"
@@ -85,7 +85,7 @@ export const AdminMisPage: React.FC = () => {
               icon={<ArrowDownload16Regular />}
               onClick={handleExportCsv}
             >
-              Export report (CSV)
+              Export CSV
             </Button>
           </>
         }

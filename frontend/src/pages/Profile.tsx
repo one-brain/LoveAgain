@@ -723,7 +723,7 @@ const Profile: React.FC = () => {
                     disabled={isUpdatingSeeker}
                     className="min-h-11"
                   >
-                    {isUpdatingSeeker ? 'Saving changes...' : 'Save personal details'}
+                    {isUpdatingSeeker ? 'Saving...' : 'Save profile'}
                   </Button>
                 </div>
               </form>
@@ -757,7 +757,7 @@ const Profile: React.FC = () => {
                       onClick={handleDeleteAccount}
                       className="bg-destructive text-destructive-foreground min-h-11"
                     >
-                      {isDeletingAccount ? 'Deactivating...' : 'Confirm deactivation'}
+                      {isDeletingAccount ? 'Deactivating...' : 'Deactivate'}
                     </Button>
                     <Button
                       type="button"
@@ -805,7 +805,7 @@ const Profile: React.FC = () => {
                     to="/apply-companion"
                     className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-accent text-accent-foreground text-body1 font-semibold hover:bg-accent-hover transition-colors whitespace-nowrap shrink-0 self-start sm:self-auto min-h-11"
                   >
-                    <span>Apply for guest verification</span>
+                    <span>Become a host</span>
                     <ArrowRight16Regular />
                   </Link>
                 )}
@@ -841,7 +841,7 @@ const Profile: React.FC = () => {
                   to="/wallet"
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-md border border-border bg-card hover:bg-muted text-foreground text-caption1 font-semibold whitespace-nowrap self-start sm:self-auto transition-colors"
                 >
-                  <span>Manage in wallet</span>
+                  <span>Open wallet</span>
                   <ArrowRight16Regular className="text-brand-fg" />
                 </Link>
               </div>
@@ -1018,7 +1018,7 @@ const Profile: React.FC = () => {
                     disabled={isUpdatingProvider}
                     className="min-h-11"
                   >
-                    {isUpdatingProvider ? 'Saving settings...' : 'Save guest settings'}
+                    {isUpdatingProvider ? 'Saving...' : 'Save rates'}
                   </Button>
                 </div>
               </form>
@@ -1374,8 +1374,8 @@ const Profile: React.FC = () => {
                           className="min-h-11"
                         >
                           {isSubmittingKyc
-                            ? 'Uploading & submitting...'
-                            : 'Submit documents for verification'}
+                            ? 'Submitting...'
+                            : 'Submit ID'}
                         </Button>
                       </div>
                     </form>

@@ -422,7 +422,7 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
                     icon={<ArrowRight16Regular />}
                     iconPosition="after"
                   >
-                    Continue to venue & preferences
+                    Next
                   </Button>
                 </DialogActions>
               </form>

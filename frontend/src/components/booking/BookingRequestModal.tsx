@@ -261,7 +261,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                   navigate('/profile?tab=kyc');
                 }}
               >
-                Complete KYC now
+                Verify ID
               </Button>
               <Button
                 appearance="secondary"
@@ -269,7 +269,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                 className="w-full min-h-11"
                 onClick={onClose}
               >
-                Back to guest profile
+                Back
               </Button>
             </DialogActions>
           </DialogBody>
@@ -646,7 +646,7 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
                 disabled={isSubmitting || slotsForSelectedDate.length === 0}
                 icon={isSubmitting ? <Spinner size="tiny" /> : <ShieldCheckmark20Regular />}
               >
-                {isSubmitting ? 'Initiating escrow hold...' : `Lock outing & deposit escrow (${formatINR(totalAmount)}) →`}
+                {isSubmitting ? 'Holding...' : `Hold in escrow • ${formatINR(totalAmount)}`}
               </Button>
             </DialogActions>
           </DialogBody>

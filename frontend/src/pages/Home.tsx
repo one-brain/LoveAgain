@@ -265,7 +265,7 @@ export const Home: React.FC = () => {
                 onClick={() => navigate('/discovery')}
                 className="min-h-11"
               >
-                Find Companions
+                Explore
               </Button>
             </div>
           </Card>
@@ -325,7 +325,7 @@ export const Home: React.FC = () => {
                   onClick={() => navigate('/discovery')}
                   className="min-h-11"
                 >
-                  Browse verified companions
+                  Explore companions
                 </Button>
                 <Button
                   appearance="secondary"
@@ -334,7 +334,7 @@ export const Home: React.FC = () => {
                   onClick={scrollToQuiz}
                   className="min-h-11"
                 >
-                  Take Archetype Quiz
+                  Match quiz
                 </Button>
               </div>
 
@@ -519,7 +519,7 @@ export const Home: React.FC = () => {
               onClick={() => navigate('/discovery')}
               className="min-h-11 self-start sm:self-auto"
             >
-              Browse all 100+ companions
+              View all
             </Button>
           </div>
 
@@ -582,7 +582,7 @@ export const Home: React.FC = () => {
                       {comp.distance}
                     </span>
                     <span className="font-semibold text-brand-fg">
-                      {isAuthenticated ? 'Book with Escrow \u2192' : 'View Profile \u2192'}
+                      {isAuthenticated ? 'Reserve \u2192' : 'View \u2192'}
                     </span>
                   </div>
                 </div>
@@ -686,13 +686,13 @@ export const Home: React.FC = () => {
                   to={isAuthenticated ? '/apply-companion' : '/register?redirect=/apply-companion'}
                   className="min-h-11 px-5 py-2.5 rounded-md bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-body1 shadow-2xs transition-colors flex items-center"
                 >
-                  Apply as a Verified Companion
+                  Become a host
                 </Link>
                 <Link
                   to="/how-it-works"
                   className="min-h-11 px-5 py-2.5 rounded-md bg-card hover:bg-muted text-foreground font-semibold text-body1 transition-colors border border-border-strong flex items-center"
                 >
-                  Learn About Payouts
+                  Payout guide
                 </Link>
               </div>
             </div>
@@ -790,7 +790,7 @@ export const Home: React.FC = () => {
               onClick={() => navigate('/discovery')}
               className="w-full sm:w-auto min-h-11"
             >
-              Explore Verified Companions
+              Explore companions
             </Button>
             <Button
               appearance="secondary"
@@ -799,7 +799,7 @@ export const Home: React.FC = () => {
               onClick={scrollToQuiz}
               className="w-full sm:w-auto min-h-11"
             >
-              Take Archetype Quiz
+              Match quiz
             </Button>
           </div>
         </div>

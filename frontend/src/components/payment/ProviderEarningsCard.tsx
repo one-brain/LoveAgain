@@ -109,7 +109,7 @@ export const ProviderEarningsCard: React.FC = () => {
           icon={<ArrowUpRight16Regular />}
           className="min-h-11 tabular self-start sm:self-auto"
         >
-          Withdraw earnings ({formatINR(clearedBalance)})
+          Withdraw • {formatINR(clearedBalance)}
         </Button>
       </div>
 
@@ -321,7 +321,7 @@ export const ProviderEarningsCard: React.FC = () => {
                   disabled={isRequestingPayout}
                   icon={isRequestingPayout ? <Spinner size="tiny" /> : undefined}
                 >
-                  {isRequestingPayout ? 'Processing UPI transfer...' : 'Confirm withdrawal'}
+                  {isRequestingPayout ? 'Transferring...' : 'Withdraw'}
                 </Button>
               </DialogActions>
             </DialogBody>

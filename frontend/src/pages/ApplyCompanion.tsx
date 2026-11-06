@@ -183,7 +183,7 @@ export const ApplyCompanion: React.FC = () => {
                 onClick={() => setIsEditingVerification(true)}
                 className="flex-1 min-h-11"
               >
-                Update verification docs
+                Update ID
               </Button>
               <Link
                 to="/profile?tab=provider"
@@ -196,7 +196,7 @@ export const ApplyCompanion: React.FC = () => {
                 onClick={() => navigate('/bookings')}
                 className="flex-1 min-h-11"
               >
-                Go to my bookings
+                My outings
               </Button>
             </div>
           </div>
@@ -229,14 +229,14 @@ export const ApplyCompanion: React.FC = () => {
               onClick={() => navigate('/profile?tab=provider')}
               className="min-h-11"
             >
-              Manage guest settings
+              Host settings
             </Button>
             <Button
               appearance="outline"
               onClick={() => navigate('/discovery')}
               className="min-h-11"
             >
-              View discovery feed
+              Explore
             </Button>
           </div>
         </Card>
@@ -479,7 +479,7 @@ export const ApplyCompanion: React.FC = () => {
               icon={<ShieldCheckmark20Regular />}
               className="w-full sm:w-auto min-h-11 shrink-0"
             >
-              {isSubmitting ? 'Submitting verification...' : 'Submit for verification'}
+              {isSubmitting ? 'Submitting...' : 'Submit ID'}
             </Button>
           </div>
         </Card>

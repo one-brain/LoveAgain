@@ -206,7 +206,7 @@ const Header: React.FC = () => {
                   onClick={handleResendVerification}
                   disabled={isResendingVerification}
                 >
-                  {isResendingVerification ? 'Sending...' : 'Resend verification email'}
+                  {isResendingVerification ? 'Sending...' : 'Resend link'}
                 </Button>
               )}
             </div>
@@ -273,7 +273,7 @@ const Header: React.FC = () => {
             ) : isAuthenticated && !isAdmin ? (
               <nav className="hidden md:flex items-center gap-1">
                 <Link to="/discovery" className={navLinkClass(isActive('/discovery'))}>
-                  Discover Guests
+                  Explore
                 </Link>
                 <Link to="/bookings" className={navLinkClass(isActive('/bookings'))}>
                   My Outings
@@ -285,7 +285,7 @@ const Header: React.FC = () => {
             ) : (
               <nav className="hidden md:flex items-center gap-1">
                 <Link to="/discovery" className={navLinkClass(isActive('/discovery'))}>
-                  Discover Guests
+                  Explore
                 </Link>
                 <Link to="/how-it-works" className={navLinkClass(isActive('/how-it-works'))}>
                   How It Works
@@ -298,7 +298,7 @@ const Header: React.FC = () => {
                         (location.pathname === '/register' && location.search.includes('apply-companion'))
                     )}
                   >
-                    Become a Guest
+                    Become a Host
                   </Link>
                 )}
               </nav>
@@ -313,7 +313,7 @@ const Header: React.FC = () => {
                   title="Return to Back-Office Operations Portal"
                 >
                   <ShieldCheckmark20Regular className="text-trust shrink-0" />
-                  <span>Back-Office Portal &rarr;</span>
+                  <span>Admin &rarr;</span>
                 </Link>
               )}
 
@@ -516,14 +516,14 @@ const Header: React.FC = () => {
                     size="medium"
                     onClick={() => navigate('/login')}
                   >
-                    Log In
+                    Sign in
                   </Button>
                   <Button
                     appearance="primary"
                     size="medium"
                     onClick={() => navigate('/register')}
                   >
-                    Get Started
+                    Join Cue
                   </Button>
                 </div>
               )}
@@ -666,7 +666,7 @@ const Header: React.FC = () => {
                     >
                       <div className="flex items-center gap-2">
                         <ShieldCheckmark20Regular className="text-trust shrink-0" />
-                        <span>Back-Office Portal</span>
+                        <span>Admin</span>
                       </div>
                       <span className="font-mono">&rarr;</span>
                     </Link>
@@ -678,7 +678,7 @@ const Header: React.FC = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   className="min-h-11 flex items-center px-3 py-2.5 rounded-md text-body1 font-semibold text-foreground hover:bg-muted"
                 >
-                  Discover Guests
+                  Explore
                 </Link>
                 <Link
                   to="/how-it-works"
@@ -757,7 +757,7 @@ const Header: React.FC = () => {
                       onClick={() => setMobileMenuOpen(false)}
                       className="min-h-11 flex items-center px-3 py-2.5 rounded-md text-body1 font-semibold text-foreground hover:bg-muted"
                     >
-                      Become a Guest
+                      Become a Host
                     </Link>
                     <div className="pt-3 flex flex-col gap-2 border-t border-border">
                       <Button
@@ -769,7 +769,7 @@ const Header: React.FC = () => {
                         }}
                         className="w-full min-h-11"
                       >
-                        Log In
+                        Sign in
                       </Button>
                       <Button
                         appearance="primary"
@@ -780,7 +780,7 @@ const Header: React.FC = () => {
                         }}
                         className="w-full min-h-11"
                       >
-                        Get Started
+                        Join Cue
                       </Button>
                     </div>
                   </div>
