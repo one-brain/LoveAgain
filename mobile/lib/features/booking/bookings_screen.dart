@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../core/theme.dart';
 import '../../models/booking.dart';
+import '../auth/auth_controller.dart';
 import '../widgets/status_chip.dart';
 import 'booking_controller.dart';
 import 'booking_detail_screen.dart';
@@ -28,26 +29,45 @@ class BookingsScreen extends ConsumerWidget {
       ),
       body: Column(
         children: [
-          // Filter Tabs
+          // Filter Section: Status Pills and Role Scope
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
             color: AppColors.background,
-            child: Row(
+            child: Column(
               children: [
-                _buildTabChip('active', 'Active (${state.activeBookings.length})',
-                    state.selectedTab, controller),
-                const SizedBox(width: 8),
-                _buildTabChip(
-                    'completed',
-                    'Completed (${state.completedBookings.length})',
-                    state.selectedTab,
-                    controller),
-                const SizedBox(width: 8),
-                _buildTabChip(
-                    'cancelled',
-                    'Cancelled (${state.cancelledBookings.length})',
-                    state.selectedTab,
-                    controller),
+                // Status Filter Pills (Active, Completed, Cancelled)
+                Row(
+                  children: [
+                    _buildTabChip('active', 'Active (${state.activeBookings.length})',
+                        state.selectedTab, controller),
+                    const SizedBox(width: 8),
+                    _buildTabChip(
+                        'completed',
+                        'Completed (${state.completedBookings.length})',
+                        state.selectedTab,
+                        controller),
+                    const SizedBox(width: 8),
+                    _buildTabChip(
+                        'cancelled',
+                        'Cancelled (${state.cancelledBookings.length})',
+                        state.selectedTab,
+                        controller),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                // Role Scope Filter (All, Attending, Hosting)
+                Row(
+                  children: [
+                    _buildRoleChip(
+                        'all', 'All Outings', state.selectedRoleFilter, controller),
+                    const SizedBox(width: 6),
+                    _buildRoleChip(
+                        'guest', 'Attending', state.selectedRoleFilter, controller),
+                    const SizedBox(width: 6),
+                    _buildRoleChip(
+                        'host', 'Hosting', state.selectedRoleFilter, controller),
+                  ],
+                ),
               ],
             ),
           ),
@@ -72,6 +92,45 @@ class BookingsScreen extends ConsumerWidget {
                       ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildRoleChip(
+      String role, String label, String currentRole, BookingController controller) {
+    final isSelected = role == currentRole;
+    return InkWell(
+      onTap: () => controller.setRoleFilter(role),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        decoration: BoxDecoration(
+          color: isSelected
+              ? (role == 'host'
+                  ? const Color(0xFFFEF3C7)
+                  : (role == 'guest' ? const Color(0xFFFCE7F3) : AppColors.surface))
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected
+                ? (role == 'host'
+                    ? const Color(0xFFC5A059)
+                    : (role == 'guest' ? AppColors.primary : AppColors.textPrimary))
+                : AppColors.border,
+          ),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            color: isSelected
+                ? (role == 'host'
+                    ? const Color(0xFF92400E)
+                    : (role == 'guest' ? AppColors.primary : AppColors.textPrimary))
+                : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }
@@ -152,6 +211,63 @@ class _BookingCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final controller = ref.read(bookingControllerProvider.notifier);
+    final auth = ref.watch(authControllerProvider);
+    final currentUserId = auth.user?.id;
+    final isHost = (currentUserId != null &&
+            currentUserId.isNotEmpty &&
+            booking.providerId == currentUserId) ||
+        (auth.isHostMode && booking.seekerId != currentUserId);
+
+    // Counterpart details (who the user is meeting with)
+    final counterpartName = isHost
+        ? (booking.seekerName.isNotEmpty ? booking.seekerName : 'Guest')
+        : (booking.providerName.isNotEmpty ? booking.providerName : 'Companion');
+
+    final counterpartInitials = isHost
+        ? (booking.seekerName.isNotEmpty
+            ? booking.seekerName
+                .trim()
+                .split(RegExp(r'\s+'))
+                .map((n) => n.isNotEmpty ? n[0] : '')
+                .take(2)
+                .join('')
+                .toUpperCase()
+            : 'GT')
+        : (booking.providerInitials.isNotEmpty ? booking.providerInitials : 'CP');
+
+    final counterpartRole = isHost ? 'Guest' : 'Companion Host';
+
+    final roleBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: isHost ? const Color(0xFFFEF3C7) : const Color(0xFFFCE7F3),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isHost ? const Color(0xFFC5A059) : AppColors.primary,
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isHost ? Icons.shield_outlined : Icons.event_seat_outlined,
+            size: 10,
+            color: isHost ? const Color(0xFF92400E) : AppColors.primary,
+          ),
+          const SizedBox(width: 3),
+          Text(
+            isHost ? 'HOSTING' : 'ATTENDING',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+              color: isHost ? const Color(0xFF92400E) : AppColors.primary,
+            ),
+          ),
+        ],
+      ),
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
@@ -174,50 +290,67 @@ class _BookingCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header: Companion & Status
+              // Header: Counterpart & Status + Role Badge
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppColors.primaryLight,
-                        child: Text(
-                          booking.providerInitials.isNotEmpty
-                              ? booking.providerInitials
-                              : 'CP',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primaryDark,
+                  Expanded(
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: isHost
+                              ? const Color(0xFFFEF3C7)
+                              : AppColors.primaryLight,
+                          child: Text(
+                            counterpartInitials,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: isHost
+                                  ? const Color(0xFF92400E)
+                                  : AppColors.primaryDark,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 10),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            booking.providerName,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.textPrimary,
-                            ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                counterpartName,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.textPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                '$counterpartRole • #${booking.orderId.substring(booking.orderId.length > 7 ? booking.orderId.length - 6 : 0)}',
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  color: AppColors.textMuted,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
                           ),
-                          Text(
-                            'Order #${booking.orderId.substring(booking.orderId.length > 7 ? booking.orderId.length - 6 : 0)}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppColors.textMuted,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      BookingStatusChip(status: booking.status),
+                      const SizedBox(height: 4),
+                      roleBadge,
                     ],
                   ),
-                  BookingStatusChip(status: booking.status),
                 ],
               ),
               const SizedBox(height: 14),
@@ -269,7 +402,7 @@ class _BookingCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '₹${booking.totalAmount.toStringAsFixed(0)}',
+                        '₹${(isHost ? booking.providerEarnings : booking.totalAmount).toStringAsFixed(0)}',
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
@@ -278,7 +411,9 @@ class _BookingCard extends ConsumerWidget {
                         ),
                       ),
                       Text(
-                        '${booking.durationHours.toStringAsFixed(1)} hrs total',
+                        isHost
+                            ? 'Your payout • ${booking.durationHours.toStringAsFixed(1)} hrs'
+                            : 'Total paid • ${booking.durationHours.toStringAsFixed(1)} hrs',
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.textSecondary,
@@ -290,7 +425,7 @@ class _BookingCard extends ConsumerWidget {
                     children: [
                       IconButton.outlined(
                         icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                        tooltip: 'Message Host',
+                        tooltip: isHost ? 'Message Guest' : 'Message Host',
                         style: IconButton.styleFrom(
                           side: const BorderSide(color: AppColors.border),
                         ),
@@ -300,7 +435,7 @@ class _BookingCard extends ConsumerWidget {
                         },
                       ),
                       const SizedBox(width: 8),
-                      _buildQuickActionButton(context, booking, controller),
+                      _buildQuickActionButton(context, booking, controller, isHost),
                     ],
                   ),
                 ],
@@ -313,7 +448,63 @@ class _BookingCard extends ConsumerWidget {
   }
 
   Widget _buildQuickActionButton(
-      BuildContext context, Booking b, BookingController controller) {
+      BuildContext context, Booking b, BookingController controller, bool isHost) {
+    if (isHost) {
+      switch (b.status) {
+        case BookingStatus.confirmed:
+          return FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) => BookingDetailScreen(booking: b),
+                ),
+              );
+            },
+            child: const Text('Verify PIN', style: TextStyle(fontSize: 12)),
+          );
+        case BookingStatus.inProgress:
+          return FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF047857),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) => BookingDetailScreen(booking: b),
+                ),
+              );
+            },
+            child: const Text('In Outing', style: TextStyle(fontSize: 12)),
+          );
+        default:
+          return OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (ctx) => BookingDetailScreen(booking: b),
+                ),
+              );
+            },
+            child: const Text('Details', style: TextStyle(fontSize: 12)),
+          );
+      }
+    }
+
+    // Guest actions
     switch (b.status) {
       case BookingStatus.pendingPayment:
         return FilledButton(

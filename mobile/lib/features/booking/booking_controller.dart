@@ -17,26 +17,55 @@ class BookingsState {
     this.isLoading = false,
     this.error,
     this.selectedTab = 'active',
+    this.selectedRoleFilter = 'all',
+    this.currentUserId,
   });
 
   final List<Booking> bookings;
   final bool isLoading;
   final String? error;
   final String selectedTab;
+  final String selectedRoleFilter;
+  final String? currentUserId;
 
-  List<Booking> get activeBookings => bookings
-      .where((b) =>
-          b.status == BookingStatus.confirmed ||
-          b.status == BookingStatus.pendingPayment ||
-          b.status == BookingStatus.inProgress ||
-          b.status == BookingStatus.disputed)
-      .toList();
+  bool _matchesRole(Booking b) {
+    if (selectedRoleFilter == 'all') return true;
+    final isHost = (currentUserId != null &&
+        currentUserId!.isNotEmpty &&
+        b.providerId == currentUserId);
+    if (selectedRoleFilter == 'host') return isHost;
+    if (selectedRoleFilter == 'guest') return !isHost;
+    return true;
+  }
 
-  List<Booking> get completedBookings =>
-      bookings.where((b) => b.status == BookingStatus.completed).toList();
+  List<Booking> get activeBookings {
+    final list = bookings
+        .where((b) =>
+            _matchesRole(b) &&
+            (b.status == BookingStatus.confirmed ||
+                b.status == BookingStatus.pendingPayment ||
+                b.status == BookingStatus.inProgress ||
+                b.status == BookingStatus.disputed))
+        .toList();
+    list.sort((a, b) => a.startTime.compareTo(b.startTime));
+    return list;
+  }
 
-  List<Booking> get cancelledBookings =>
-      bookings.where((b) => b.status == BookingStatus.cancelled).toList();
+  List<Booking> get completedBookings {
+    final list = bookings
+        .where((b) => _matchesRole(b) && b.status == BookingStatus.completed)
+        .toList();
+    list.sort((a, b) => b.startTime.compareTo(a.startTime));
+    return list;
+  }
+
+  List<Booking> get cancelledBookings {
+    final list = bookings
+        .where((b) => _matchesRole(b) && b.status == BookingStatus.cancelled)
+        .toList();
+    list.sort((a, b) => b.startTime.compareTo(a.startTime));
+    return list;
+  }
 
   List<Booking> get filteredBookings {
     switch (selectedTab) {
@@ -47,7 +76,9 @@ class BookingsState {
       case 'cancelled':
         return cancelledBookings;
       default:
-        return bookings;
+        final list = List<Booking>.from(bookings);
+        list.sort((a, b) => a.startTime.compareTo(b.startTime));
+        return list;
     }
   }
 
@@ -56,12 +87,16 @@ class BookingsState {
     bool? isLoading,
     String? error,
     String? selectedTab,
+    String? selectedRoleFilter,
+    String? currentUserId,
   }) {
     return BookingsState(
       bookings: bookings ?? this.bookings,
       isLoading: isLoading ?? this.isLoading,
       error: error,
       selectedTab: selectedTab ?? this.selectedTab,
+      selectedRoleFilter: selectedRoleFilter ?? this.selectedRoleFilter,
+      currentUserId: currentUserId ?? this.currentUserId,
     );
   }
 }
@@ -86,7 +121,13 @@ class BookingController extends StateNotifier<BookingsState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final list = await _repository.getMyBookings();
-      state = state.copyWith(bookings: list, isLoading: false, error: null);
+      final currentUserId = _ref.read(authControllerProvider).user?.id;
+      state = state.copyWith(
+        bookings: list,
+        currentUserId: currentUserId,
+        isLoading: false,
+        error: null,
+      );
     } catch (e) {
       final msg = e is ApiException ? e.message : 'Could not load outings';
       state = state.copyWith(isLoading: false, error: msg);
@@ -95,6 +136,10 @@ class BookingController extends StateNotifier<BookingsState> {
 
   void setTab(String tab) {
     state = state.copyWith(selectedTab: tab);
+  }
+
+  void setRoleFilter(String role) {
+    state = state.copyWith(selectedRoleFilter: role);
   }
 
   Future<Booking?> createBooking({
