@@ -5,6 +5,7 @@ import 'core/theme.dart';
 import 'data/mock_data.dart';
 import 'features/auth/auth_controller.dart';
 import 'features/auth/login_screen.dart';
+import 'features/auth/otp_verification_screen.dart';
 import 'features/booking/booking_screen.dart';
 import 'features/chat/chat_screen.dart';
 import 'features/discovery/provider_detail_screen.dart';
@@ -25,12 +26,13 @@ class RouterNotifier extends ChangeNotifier {
 
   String? redirect(BuildContext context, GoRouterState state) {
     final auth = _ref.read(authControllerProvider);
-    final isLoggingIn = state.matchedLocation == '/login';
+    final isAuthRoute = state.matchedLocation == '/login' ||
+        state.matchedLocation == '/otp-verify';
 
     if (!auth.isAuthenticated) {
-      return isLoggingIn ? null : '/login';
+      return isAuthRoute ? null : '/login';
     }
-    if (isLoggingIn) {
+    if (isAuthRoute) {
       return '/';
     }
     return null;
@@ -58,16 +60,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const MainNavigationShell(initialIndex: 1),
       ),
       GoRoute(
-        path: '/messages',
+        path: '/wallet',
         builder: (context, state) => const MainNavigationShell(initialIndex: 2),
       ),
       GoRoute(
-        path: '/profile',
+        path: '/messages',
         builder: (context, state) => const MainNavigationShell(initialIndex: 3),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const MainNavigationShell(initialIndex: 4),
       ),
       GoRoute(
         path: '/login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/otp-verify',
+        builder: (context, state) {
+          final email = state.uri.queryParameters['email'] ??
+              (state.extra as String?) ??
+              'alex.rivera@example.com';
+          return OtpVerificationScreen(email: email);
+        },
       ),
       GoRoute(
         path: '/provider/:id',
@@ -88,10 +103,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/book',
         builder: (context, state) {
           final extra = state.extra;
-          final provider = extra is ProviderProfile
-              ? extra
-              : MockData.seedProviders.first;
-          return BookingScreen(provider: provider);
+          if (extra is ProviderProfile) {
+            return BookingScreen(provider: extra);
+          }
+          return BookingScreen(provider: MockData.seedProviders.first);
         },
       ),
       GoRoute(

@@ -1,8 +1,7 @@
 # Feature & Architecture Spec: Cue Mobile Client (Flutter)
 
-**Document Status**: Approved / Ready for Execution  
-**Target Milestone**: Cue Mobile v1.0.0 (iOS & Android)  
-**Related Specs**: 
+**Document Status**: Approved / Ready for Execution**Target Milestone**: Cue Mobile v1.0.0 (iOS & Android)**Related Specs**:
+
 - [`docs/specs/dual-pin-session-verification.md`](./dual-pin-session-verification.md)
 - [`docs/specs/bookings-workflow-and-calendar.md`](./bookings-workflow-and-calendar.md)
 - [`docs/specs/user-identity-verification-kyc.md`](./user-identity-verification-kyc.md)
@@ -14,15 +13,19 @@
 ## 1. Executive Summary & Problem Statement
 
 ### 1.1 The "Why"
+
 Cue is an experience companion marketplace connecting verified **Guests** (Seekers) with vetted **Hosts** (Companions) for platonic, curated social activities (museum tours, gallery walks, cafe conversations, dining, events).
 
 While Cue's web platform operates in production on Kubernetes, experience companionship is inherently mobile, location-aware, and in-person. The mobile client is the primary runtime for:
+
 1. **Real-time In-Person Safety & Verification**: Physical check-ins requiring instant cryptographic Mutual PIN exchange (Arrival PIN & Completion PIN) between Guest and Host phones.
 2. **Instant Escrow & UPI Operations**: Push notifications on booking requests, fast UPI top-ups, and immediate companion earnings withdrawal.
 3. **Location-Aware Discovery & Emergency Protocols**: Discreet safety SOS triggers during active outings, live geolocated companion discovery, and instant chat.
 
 ### 1.2 Status Quo & Deficiencies in Current Mobile Baseline
+
 The mobile client located in `mobile/` was bootstrapped with Flutter/Riverpod/GoRouter and currently passes 13 core tests, but suffers from significant architectural drift:
+
 1. **Design System Divergence**: Mobile still uses the deprecated terracotta (`#D86E51`) / sage (`#587363`) palette rather than the luxury brand standard codified in [`DESIGN.md`](../../DESIGN.md) (Warm Cashmere Ivory `#FAF7F2`, Rich Bordeaux Velvet `#881337`, Burnished Champagne Gold `#C5A059`, JetBrains Mono numerals).
 2. **Terminology Fragmentation**: Mobile models and UI still utilize legacy `Seeker` and `Provider` terminology instead of the platform-standard **`Guest`** and **`Host`**.
 3. **Missing Dual-PIN Safety Enforcement**: The mobile booking screen currently contains bypass buttons (`"Start Live Session"`, `"Complete Session"`) without enforcing the mandatory 6-digit mutual Arrival PIN and Completion PIN verification required by the domain and backend API.
@@ -34,6 +37,7 @@ The mobile client located in `mobile/` was bootstrapped with Flutter/Riverpod/Go
 ## 2. Scope & Boundaries
 
 ### 2.1 In Scope (Phase 1 Execution)
+
 - **Design System Alignment**: Complete theme overhaul to Cashmere Ivory, Bordeaux Velvet (`#881337`), Champagne Gold (`#C5A059`), with 44x44px minimum touch targets and tabular INR formatting.
 - **Domain & Terminology Refactoring**: Refactor all models (`User`, `ProviderProfile` -> `HostProfile`, `Booking` -> `Outing`), state controllers, and UI copy to `Host` and `Guest`.
 - **Dual-PIN Mutual Verification**: Full implementation of the Arrival PIN voucher/entry modal and Completion PIN voucher/entry modal with backend API synchronization.
@@ -42,11 +46,13 @@ The mobile client located in `mobile/` was bootstrapped with Flutter/Riverpod/Go
 - **Discreet Emergency SOS Trigger**: Emergency action sheet during active outings with simulated/actual local emergency dispatch coordinates.
 
 ### 2.2 Out of Scope (Deferred to v1.1+)
+
 - Background continuous GPS breadcrumb tracking (Phase 1 uses point-in-time check-in geocoding).
 - In-app WebRTC video calling (communications remain platonic text chat and in-person meetings).
 - Biometric biometric hardware passkeys (Phase 1 uses secure storage JWT + PIN).
 
 ### 2.3 Strict Constraints & Invariants
+
 - **Platonic Only**: Strictly platonic companionship framing. All adult or escort-adjacent terminology is strictly prohibited.
 - **Escrow Invariant**: Funds are held in escrow on booking confirmation. Escrow release to Host wallet is strictly locked behind successful Seeker verification of the Host's 6-digit Completion PIN. Direct transition from Confirmed to Completed is forbidden.
 - **Touch Target Accessibility**: Minimum 44x44px touch targets on all interactive buttons, chips, and controls across both iOS and Android.
@@ -56,6 +62,7 @@ The mobile client located in `mobile/` was bootstrapped with Flutter/Riverpod/Go
 ## 3. Architecture & System Design
 
 ### 3.1 Technology Stack
+
 - **Framework**: Flutter 3.35.6 (Dart 3.9.2)
 - **State Management**: `flutter_riverpod: ^2.6.1` (NotifierProvider pattern)
 - **Navigation & Deep Linking**: `go_router: ^14.6.2` (Declarative, auth-guarded routing)
@@ -64,6 +71,7 @@ The mobile client located in `mobile/` was bootstrapped with Flutter/Riverpod/Go
 - **Formatting**: `intl: ^0.20.3` (Indian Rupee `₹` currency formats, localized dates)
 
 ### 3.2 Directory Structure
+
 ```
 mobile/lib/
 ├── app.dart                                # GoRouter routes & MaterialApp configuration
@@ -161,6 +169,7 @@ class AppColors {
 ### 4.2 Dual-PIN Mutual Verification Protocol
 
 #### State Machine Flow
+
 ```
 [Requested / Pending Payment]
           │ (Guest Pays Escrow via UPI / Wallet)
@@ -218,6 +227,7 @@ Scenario: Guest verifies Host Completion PIN to conclude outing & release escrow
 ### 4.4 In-Person Safety & Emergency SOS Feature
 
 During `In Progress` outings:
+
 - A persistent, high-visibility amber/gold safety shield banner is pinned to the top of the app.
 - Tapping **SOS Safety Beacon** displays an emergency modal with 3 instant options:
   1. **Discreet Check-In**: Sends SMS alert with live GPS coordinates to pre-configured trusted contact.
@@ -237,20 +247,19 @@ flowchart TD
 ```
 
 | Sprint | Objective | Deliverables | Verification Test |
-|---|---|---|---|
-| **Sprint 1** | Brand & Terminology Overhaul | - Update `AppColors` to Bordeaux (`#881337`), Ivory (`#FAF7F2`), Gold (`#C5A059`).<br>- Refactor models & controllers to `Host` and `Guest`.<br>- Update mock dataset to Indian cities (Bengaluru, Mumbai, Delhi). | `flutter test` passes with updated models and color checks. |
-| **Sprint 2** | Mobile OTP & Auth Gateway | - Build `OtpVerificationScreen` with 6-box input.<br>- Integrate `AuthRepository` with backend OTP endpoints.<br>- Support one-click demo sign-in for Host and Guest. | Widget test verifies OTP entry, countdown timer, and token storage. |
-| **Sprint 3** | Dual-PIN Mutual Verification Flow | - Implement `ArrivalPinVoucherCard` and `CompletionPinVoucherCard`.<br>- Build `PinInputModal` with vibration feedback.<br>- Wire `OutingRepository.checkIn()` & `complete()`. | Unit and UI tests enforce strict sequencing and PIN matching. |
-| **Sprint 4** | UPI Escrow & Host Wallet Integration | - Connect `WalletScreen` with live `/payments/wallet` endpoints.<br>- Implement INR escrow holds and instant payout requests.<br>- Add Razorpay/UPI intent launcher stub. | Test verifies escrow balance debit and credit on completion. |
-| **Sprint 5** | In-Person Safety SOS & Live Polish | - Add SOS action sheet to active outing screen.<br>- Ensure 44x44px minimum touch targets throughout.<br>- Validate seamless offline fallback mode. | Full end-to-end simulation passes without errors. |
+| ------------------ | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Sprint 1** | Brand & Terminology Overhaul | - Update `AppColors` to Bordeaux (`#881337`), Ivory (`#FAF7F2`), Gold (`#C5A059`).- Refactor models & controllers to `Host` and `Guest`.- Update mock dataset to Indian cities (Bengaluru, Mumbai, Delhi). | `flutter test` passes with updated models and color checks. |
+| **Sprint 2** | Mobile OTP & Auth Gateway | - Build `OtpVerificationScreen` with 6-box input.- Integrate `AuthRepository` with backend OTP endpoints.- Support one-click demo sign-in for Host and Guest. | Widget test verifies OTP entry, countdown timer, and token storage. |
+| **Sprint 3** | Dual-PIN Mutual Verification Flow | - Implement `ArrivalPinVoucherCard` and `CompletionPinVoucherCard`.- Build `PinInputModal` with vibration feedback.- Wire `OutingRepository.checkIn()` & `complete()`. | Unit and UI tests enforce strict sequencing and PIN matching. |
+| **Sprint 4** | UPI Escrow & Host Wallet Integration | - Connect `WalletScreen` with live `/payments/wallet` endpoints.- Implement INR escrow holds and instant payout requests.- Add Razorpay/UPI intent launcher stub. | Test verifies escrow balance debit and credit on completion. |
+| **Sprint 5** | In-Person Safety SOS & Live Polish | - Add SOS action sheet to active outing screen.- Ensure 44x44px minimum touch targets throughout.- Validate seamless offline fallback mode. | Full end-to-end simulation passes without errors. |
 
 ---
 
 ## 6. Risk Analysis & Mitigations
 
-| Risk | Likelihood | Impact | Mitigation Strategy |
-|---|---|---|---|
-| **Offline Connectivity during Meetup** | Medium | High | Cache PINs locally on client once outing enters `Confirmed`. If network drops at cafe/venue, companion app displays offline verification QR code or records timestamped signature for sync upon reconnection. |
-| **Accidental PIN Leakage** | Low | Critical | Ensure API contract never returns `ArrivalPin` to Host or `CompletionPin` to Guest before the respective stage. Vouchers have blur privacy overlays. |
-| **Sub-44px Touch Targets on Small Screens** | Medium | Medium | Wrap all touchable icons and buttons in `ConstrainedBox(constraints: BoxConstraints(minWidth: 44, minHeight: 44))`. |
-
+| Risk                                              | Likelihood | Impact   | Mitigation Strategy                                                                                                                                                                                             |
+| ------------------------------------------------- | ---------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Offline Connectivity during Meetup**      | Medium     | High     | Cache PINs locally on client once outing enters `Confirmed`. If network drops at cafe/venue, companion app displays offline verification QR code or records timestamped signature for sync upon reconnection. |
+| **Accidental PIN Leakage**                  | Low        | Critical | Ensure API contract never returns `ArrivalPin` to Host or `CompletionPin` to Guest before the respective stage. Vouchers have blur privacy overlays.                                                        |
+| **Sub-44px Touch Targets on Small Screens** | Medium     | Medium   | Wrap all touchable icons and buttons in `ConstrainedBox(constraints: BoxConstraints(minWidth: 44, minHeight: 44))`.                                                                                           |

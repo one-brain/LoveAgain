@@ -13,6 +13,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isSignUp = false;
+  bool _useOtp = true; // Mobile-first default
 
   final _emailController = TextEditingController(text: 'alex.rivera@example.com');
   final _passwordController = TextEditingController(text: 'SecretPass123!');
@@ -29,13 +30,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     super.dispose();
   }
 
-  Future<void> _submit() async {
+  Future<void> _submitOtpRequest() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty || !email.contains('@')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a valid email address.')),
+      );
+      return;
+    }
+
+    final success = await ref
+        .read(authControllerProvider.notifier)
+        .requestOtp(email);
+
+    if (success && mounted) {
+      context.push('/otp-verify?email=${Uri.encodeComponent(email)}', extra: email);
+    }
+  }
+
+  Future<void> _submitPasswordLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in email and password')),
+        const SnackBar(content: Text('Please fill in email and password.')),
       );
       return;
     }
@@ -113,7 +132,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Text(
             _isSignUp
                 ? 'Curated companionship for gallery walks, dining, and cultural outings.'
-                : 'Sign in to coordinate bookings, escrow, and conversations.',
+                : (_useOtp
+                    ? 'Enter your email to receive a secure 6-digit passcode.'
+                    : 'Sign in to coordinate bookings, escrow, and conversations.'),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 14,
@@ -135,7 +156,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 Expanded(
                   child: InkWell(
-                    onTap: () => setState(() => _isSignUp = false),
+                    onTap: () => setState(() {
+                      _isSignUp = false;
+                    }),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -168,7 +191,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 Expanded(
                   child: InkWell(
-                    onTap: () => setState(() => _isSignUp = true),
+                    onTap: () => setState(() {
+                      _isSignUp = true;
+                      _useOtp = false; // Registration uses password
+                    }),
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -265,22 +291,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             keyboardType: TextInputType.emailAddress,
             decoration: const InputDecoration(
               labelText: 'Email Address',
+              hintText: 'name@example.com',
               prefixIcon: Icon(Icons.email_outlined, color: AppColors.textSecondary),
             ),
           ),
           const SizedBox(height: 16),
 
-          // Password field
-          TextField(
-            controller: _passwordController,
-            obscureText: true,
-            decoration: const InputDecoration(
-              labelText: 'Password',
-              prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
+          // Password field (only if not OTP mode or in signup)
+          if (!_useOtp || _isSignUp) ...[
+            TextField(
+              controller: _passwordController,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                prefixIcon: Icon(Icons.lock_outline, color: AppColors.textSecondary),
+              ),
             ),
-          ),
-          if (auth.error != null) ...[
             const SizedBox(height: 12),
+          ],
+
+          if (auth.error != null) ...[
             Text(
               auth.error!,
               style: const TextStyle(
@@ -288,19 +318,50 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 fontSize: 13,
               ),
             ),
+            const SizedBox(height: 12),
           ],
-          const SizedBox(height: 24),
 
-          // Submit Button
+          // Primary Action Button
           FilledButton(
-            onPressed: auth.isLoading ? null : _submit,
-            child: Text(auth.isLoading
-                ? 'Processing...'
-                : (_isSignUp ? 'Create Account' : 'Sign In')),
+            onPressed: auth.isLoading
+                ? null
+                : (_useOtp && !_isSignUp ? _submitOtpRequest : _submitPasswordLogin),
+            child: auth.isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  )
+                : Text(_isSignUp
+                    ? 'Create Account'
+                    : (_useOtp ? 'Send Verification Passcode' : 'Sign In with Password')),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
-          // Quick Demo Sign In
+          // Toggle OTP vs Password login when in Sign In mode
+          if (!_isSignUp) ...[
+            Center(
+              child: TextButton.icon(
+                onPressed: () => setState(() => _useOtp = !_useOtp),
+                icon: Icon(_useOtp ? Icons.lock_outline : Icons.phonelink_ring_outlined, size: 16),
+                label: Text(
+                  _useOtp ? 'Sign in with Password instead' : 'Sign in with 6-Digit Passcode instead',
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          const Divider(height: 24, color: AppColors.border),
+
+          // Quick Demo Sign In Section
+          const Text(
+            'Instant Evaluation & Testing',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.textMuted),
+          ),
+          const SizedBox(height: 10),
           OutlinedButton.icon(
             onPressed: () async {
               _emailController.text = 'alex.rivera@example.com';
@@ -312,8 +373,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 context.go('/');
               }
             },
-            icon: const Icon(Icons.flash_on, color: AppColors.gold),
+            icon: const Icon(Icons.person_outline, color: AppColors.gold),
             label: const Text('Instant Demo Sign In (Alex Rivera - Guest)'),
+          ),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            onPressed: () async {
+              _emailController.text = 'ananya.sen@example.com';
+              _passwordController.text = 'SecretPass123!';
+              await ref
+                  .read(authControllerProvider.notifier)
+                  .login('ananya.sen@example.com', 'SecretPass123!');
+              if (context.mounted) {
+                context.go('/');
+              }
+            },
+            icon: const Icon(Icons.star_outline, color: AppColors.primary),
+            label: const Text('Instant Demo Sign In (Ananya Sen - Host)'),
           ),
         ],
       ),

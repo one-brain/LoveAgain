@@ -20,6 +20,8 @@ class AuthState {
     this.isLoading = false,
     this.error,
     this.activeRole = 'Guest',
+    this.isOtpSent = false,
+    this.pendingEmail,
   });
 
   final String? token;
@@ -27,6 +29,8 @@ class AuthState {
   final bool isLoading;
   final String? error;
   final String activeRole;
+  final bool isOtpSent;
+  final String? pendingEmail;
 
   bool get isAuthenticated => token != null && token!.isNotEmpty;
   bool get isHostMode => activeRole == 'Host' || activeRole == 'Provider';
@@ -34,6 +38,26 @@ class AuthState {
 
   // Backward compatibility alias
   bool get isProviderMode => isHostMode;
+
+  AuthState copyWith({
+    String? token,
+    User? user,
+    bool? isLoading,
+    String? error,
+    String? activeRole,
+    bool? isOtpSent,
+    String? pendingEmail,
+  }) {
+    return AuthState(
+      token: token ?? this.token,
+      user: user ?? this.user,
+      isLoading: isLoading ?? this.isLoading,
+      error: error,
+      activeRole: activeRole ?? this.activeRole,
+      isOtpSent: isOtpSent ?? this.isOtpSent,
+      pendingEmail: pendingEmail ?? this.pendingEmail,
+    );
+  }
 }
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
@@ -97,6 +121,59 @@ class AuthController extends StateNotifier<AuthState> {
       }
     } catch (_) {
       // Ignore restore errors
+    }
+  }
+
+  Future<bool> requestOtp(String email) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final ok = await _repository.requestOtp(email: email);
+      if (ok) {
+        state = state.copyWith(
+          isLoading: false,
+          isOtpSent: true,
+          pendingEmail: email,
+        );
+        return true;
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Unable to send OTP. Please try again.',
+        );
+        return false;
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Network error requesting OTP.',
+      );
+      return false;
+    }
+  }
+
+  Future<bool> verifyOtp(String email, String code) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      final result = await _repository.verifyOtp(email: email, code: code);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(AppConstants.tokenKey, result.token);
+      await prefs.setString(AppConstants.userKey, jsonEncode(result.user.toJson()));
+      await prefs.remove('cue.signedOut');
+
+      state = AuthState(
+        token: result.token,
+        user: result.user,
+        activeRole: state.activeRole,
+        isOtpSent: false,
+        pendingEmail: null,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Invalid OTP code. Please verify and try again.',
+      );
+      return false;
     }
   }
 
@@ -169,6 +246,10 @@ class AuthController extends StateNotifier<AuthState> {
       activeRole: newRole,
     );
     SharedPreferences.getInstance().then((p) => p.setString(AppConstants.userRoleKey, newRole));
+  }
+
+  void resetOtp() {
+    state = state.copyWith(isOtpSent: false, pendingEmail: null, error: null);
   }
 
   Future<void> signOut() async {
