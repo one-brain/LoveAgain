@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../core/api_client.dart';
 import '../../models/chat_message.dart';
 
@@ -17,6 +18,10 @@ class ChatRepository {
         _messages[orderId] = list;
         return list;
       }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 403) {
+        throw ApiException.fromDioException(e);
+      }
     } catch (_) {
       // Return cached messages if offline
     }
@@ -30,6 +35,26 @@ class ChatRepository {
     required String senderName,
     required String content,
   }) async {
+    try {
+      final response = await _api.post<Map<String, dynamic>>(
+        '/chat/orders/$orderId/messages',
+        data: {
+          'content': content,
+          'messageType': 'Text',
+        },
+      );
+
+      if (response.data != null) {
+        final created = ChatMessage.fromJson(response.data!);
+        _messages.putIfAbsent(orderId, () => []).add(created);
+        return created;
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDioException(e);
+    } catch (_) {
+      // In offline/test fallback
+    }
+
     final message = ChatMessage(
       id: 'msg-${DateTime.now().millisecondsSinceEpoch}',
       orderId: orderId,
@@ -39,16 +64,6 @@ class ChatRepository {
       sentAt: DateTime.now(),
       isRead: true,
     );
-
-    try {
-      await _api.post('/chat/orders/$orderId/messages', data: {
-        'content': content,
-        'messageType': 'Text',
-      });
-    } catch (_) {
-      // In offline/preview, keep local message
-    }
-
     _messages.putIfAbsent(orderId, () => []).add(message);
     return message;
   }

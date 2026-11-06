@@ -5,6 +5,7 @@ import '../../data/repositories/booking_repository.dart';
 import '../../models/booking.dart';
 import '../../models/provider.dart';
 import '../auth/auth_controller.dart';
+import '../wallet/wallet_controller.dart';
 
 final bookingRepositoryProvider = Provider<BookingRepository>(
   (ref) => BookingRepository(ref.read(apiClientProvider)),
@@ -136,6 +137,12 @@ class BookingController extends StateNotifier<BookingsState> {
       );
 
       final created = await _repository.createBooking(newBooking);
+      try {
+        final paymentRepo = _ref.read(paymentRepositoryProvider);
+        await paymentRepo.checkoutWithWallet(created.orderId);
+      } catch (_) {
+        // If wallet has insufficient funds, booking stays pendingPayment
+      }
       final updatedList = [created, ...state.bookings];
       state = state.copyWith(bookings: updatedList, isLoading: false, error: null);
       return created;
@@ -229,7 +236,12 @@ class BookingController extends StateNotifier<BookingsState> {
   }
 
   Future<void> payBooking(String orderId) async {
+    try {
+      final paymentRepo = _ref.read(paymentRepositoryProvider);
+      await paymentRepo.checkoutWithWallet(orderId);
+    } catch (_) {}
     await updateBookingStatus(orderId, BookingStatus.confirmed);
+    await loadBookings();
   }
 
   Future<void> startBooking(String orderId) async {

@@ -4,14 +4,69 @@ using Cue.Infrastructure.Data;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 namespace ChatService.Controllers;
 
 [ApiController]
 [Route("api/v1/chat")]
 [Authorize]
-public sealed class ChatController(ISender sender, ChatRepository chatRepository) : ControllerBase
+public sealed class ChatController(
+    ISender sender,
+    ChatRepository chatRepository,
+    IHubContext<ChatHub> hubContext) : ControllerBase
 {
+    [HttpPost("orders/{orderId:guid}/messages")]
+    [ProducesResponseType(typeof(ChatMessageDto), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ChatMessageDto>> SendMessage(
+        Guid orderId,
+        [FromBody] SendChatMessageRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        if (!TryGetUserId(out var userId))
+        {
+            return Unauthorized();
+        }
+
+        if (!await chatRepository.HasPaidAsync(orderId, cancellationToken))
+        {
+            return StatusCode(StatusCodes.Status403Forbidden, new { error = "Chat is only available for paid bookings." });
+        }
+
+        try
+        {
+            var message = await sender.Send(new SendMessageCommand(orderId, userId, request.Content, request.MessageType), cancellationToken);
+
+            await hubContext.Clients.Group($"order:{orderId}").SendAsync("ReceiveMessage", new
+            {
+                message.Id,
+                message.OrderId,
+                message.SenderId,
+                message.Content,
+                message.SentAt,
+                message.MessageType
+            }, cancellationToken);
+
+            return CreatedAtAction(nameof(GetMessages), new { orderId }, message);
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
     [HttpGet("orders/{orderId:guid}/messages")]
     [ProducesResponseType(typeof(IReadOnlyList<ChatMessageDto>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyList<ChatMessageDto>>> GetMessages(

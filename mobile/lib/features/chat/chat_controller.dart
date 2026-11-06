@@ -20,24 +20,43 @@ final chatMessagesProvider =
 class ChatNotifier extends StateNotifier<List<ChatMessage>> {
   ChatNotifier(this.orderId, this._repository, this._ref) : super(const []) {
     loadMessages();
+    _startPolling();
   }
 
   final String orderId;
   final ChatRepository _repository;
   final Ref _ref;
+  Timer? _pollTimer;
 
-  Future<void> loadMessages() async {
-    final msgs = await _repository.getMessages(orderId);
-    state = msgs;
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      loadMessages();
+    });
   }
 
-  Future<void> sendMessage(String text) async {
-    if (text.trim().isEmpty) return;
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> loadMessages() async {
+    try {
+      final msgs = await _repository.getMessages(orderId);
+      if (mounted) {
+        state = msgs;
+      }
+    } catch (_) {}
+  }
+
+  Future<ChatMessage?> sendMessage(String text) async {
+    if (text.trim().isEmpty) return null;
 
     final auth = _ref.read(authControllerProvider);
     final user = auth.user;
-    final senderId = user?.id ?? 'user-seeker-001';
-    final senderName = user?.fullName ?? 'Alex Rivera';
+    final senderId = user?.id.isNotEmpty == true ? user!.id : 'user-seeker-001';
+    final senderName = user?.fullName.isNotEmpty == true ? user!.fullName : 'Alex Rivera';
 
     final sent = await _repository.sendMessage(
       orderId: orderId,
@@ -46,29 +65,12 @@ class ChatNotifier extends StateNotifier<List<ChatMessage>> {
       content: text.trim(),
     );
 
-    state = [...state, sent];
-
-    // Simulate companion response after 1.5s for lively interactive mobile UX
-    Timer(const Duration(milliseconds: 1400), () {
-      final companionReplies = [
-        'That sounds like a wonderful plan! Looking forward to it.',
-        'Got it! See you there on time.',
-        'Perfect, let me know if there are any specific spots you would like to visit.',
-        'Sounds great to me!',
-      ];
-      final replyText = companionReplies[state.length % companionReplies.length];
-
-      final reply = ChatMessage(
-        id: 'reply-${DateTime.now().millisecondsSinceEpoch}',
-        orderId: orderId,
-        senderId: 'provider-user',
-        senderName: 'Companion',
-        content: replyText,
-        sentAt: DateTime.now(),
-        isRead: true,
-      );
-      state = [...state, reply];
-    });
+    if (mounted) {
+      if (!state.any((m) => m.id == sent.id)) {
+        state = [...state, sent];
+      }
+    }
+    return sent;
   }
 }
 
