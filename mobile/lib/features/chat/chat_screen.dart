@@ -57,17 +57,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           orElse: () => Booking(
             orderId: widget.orderId,
             providerId: 'prov-001',
-            providerName: 'Maya Rodriguez',
-            providerInitials: 'MR',
-            seekerId: 'user-seeker-001',
+            providerName: 'Ananya Sen',
+            providerInitials: 'AS',
+            seekerId: 'user-guest-001',
             seekerName: 'Alex Rivera',
             startTime: DateTime.now().add(const Duration(days: 1)),
             endTime: DateTime.now().add(const Duration(days: 1, hours: 2)),
-            hourlyRate: 48,
+            hourlyRate: 1500,
             durationHours: 2.0,
-            providerEarnings: 96,
-            platformFee: 9.6,
-            totalAmount: 105.6,
+            providerEarnings: 3000,
+            platformFee: 300,
+            totalAmount: 3300,
             status: BookingStatus.confirmed,
           ),
         );
@@ -116,17 +116,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         width: 7,
                         height: 7,
                         decoration: const BoxDecoration(
-                          color: AppColors.sage,
+                          color: AppColors.gold,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 4),
                       const Text(
-                        'Active companion chat',
+                        'Active outing chat',
                         style: TextStyle(
                           fontSize: 11,
-                          color: AppColors.sage,
-                          fontWeight: FontWeight.w500,
+                          color: AppColors.goldDark,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
@@ -220,7 +220,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     itemCount: messages.length,
                     itemBuilder: (context, index) {
                       final msg = messages[index];
-                      final isMe = msg.senderId == 'user-seeker-001' ||
+                      final isMe = msg.senderId == 'user-guest-001' ||
+                          msg.senderId == 'user-seeker-001' ||
                           msg.senderName == 'Alex Rivera';
 
                       return Align(
@@ -234,7 +235,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             maxWidth: MediaQuery.of(context).size.width * 0.78,
                           ),
                           decoration: BoxDecoration(
-                            color: isMe ? AppColors.sage : AppColors.surface,
+                            color: isMe ? AppColors.primary : AppColors.surface,
                             borderRadius: BorderRadius.only(
                               topLeft: const Radius.circular(16),
                               topRight: const Radius.circular(16),

@@ -85,7 +85,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                   p.role,
                   style: const TextStyle(
                     fontSize: 15,
-                    color: AppColors.sage,
+                    color: AppColors.goldDark,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -382,11 +382,12 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                         TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
                   Text(
-                    '\$${p.rate} / hr',
+                    '₹${p.rate} / hr',
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: AppColors.primary,
+                      fontFamily: 'monospace',
                     ),
                   ),
                 ],
@@ -398,7 +399,7 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                     context.push('/book', extra: p);
                   },
                   icon: const Icon(Icons.calendar_month),
-                  label: const Text('Book Moment'),
+                  label: const Text('Book Outing'),
                 ),
               ),
             ],

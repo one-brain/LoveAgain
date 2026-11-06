@@ -18,7 +18,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController(text: 'SecretPass123!');
   final _firstNameController = TextEditingController(text: 'Alex');
   final _lastNameController = TextEditingController(text: 'Rivera');
-  String _selectedRole = 'Seeker';
+  String _selectedRole = 'Guest';
 
   @override
   void dispose() {
@@ -70,46 +70,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         title: Text(_isSignUp ? 'Create Cue Account' : 'Sign In to Cue'),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
         children: [
-          // Logo & Title
+          // Luxury Brand Header
           Center(
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
               decoration: BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withValues(alpha: 0.25),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: const Text(
                 'Cue',
                 style: TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
-                  fontSize: 24,
+                  fontSize: 26,
                   letterSpacing: 0.5,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
           Text(
-            _isSignUp ? 'Join the companion community.' : 'Keep the good hours going.',
+            _isSignUp ? 'Join as a Guest or Host' : 'Welcome back to Cue',
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontSize: 22,
+              fontSize: 24,
               fontWeight: FontWeight.w800,
               color: AppColors.textPrimary,
+              letterSpacing: -0.5,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             _isSignUp
-                ? 'Sign up to discover companionship or offer your time.'
-                : 'Sign in to coordinate bookings and conversations.',
+                ? 'Curated companionship for gallery walks, dining, and cultural outings.'
+                : 'Sign in to coordinate bookings, escrow, and conversations.',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 14,
               color: AppColors.textSecondary,
+              height: 1.4,
             ),
           ),
           const SizedBox(height: 24),
@@ -120,6 +129,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             decoration: BoxDecoration(
               color: AppColors.surfaceMuted,
               borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
@@ -149,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           fontWeight:
                               !_isSignUp ? FontWeight.w700 : FontWeight.w500,
                           color: !_isSignUp
-                              ? AppColors.textPrimary
+                              ? AppColors.primary
                               : AppColors.textSecondary,
                         ),
                       ),
@@ -182,7 +192,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           fontWeight:
                               _isSignUp ? FontWeight.w700 : FontWeight.w500,
                           color: _isSignUp
-                              ? AppColors.textPrimary
+                              ? AppColors.primary
                               : AppColors.textSecondary,
                         ),
                       ),
@@ -215,29 +225,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'I want to join as:',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              'Select Membership Type:',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textPrimary,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Seeker (Book Companions)'),
-                    selected: _selectedRole == 'Seeker',
+                    label: const Text('Guest (Book Outings)'),
+                    selected: _selectedRole == 'Guest',
                     selectedColor: AppColors.primaryLight,
                     onSelected: (val) =>
-                        setState(() => _selectedRole = 'Seeker'),
+                        setState(() => _selectedRole = 'Guest'),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: ChoiceChip(
-                    label: const Text('Companion (Offer Time)'),
-                    selected: _selectedRole == 'Provider',
+                    label: const Text('Host (Offer Companionship)'),
+                    selected: _selectedRole == 'Host',
                     selectedColor: AppColors.primaryLight,
                     onSelected: (val) =>
-                        setState(() => _selectedRole = 'Provider'),
+                        setState(() => _selectedRole = 'Host'),
                   ),
                 ),
               ],
@@ -298,8 +312,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 context.go('/');
               }
             },
-            icon: const Icon(Icons.flash_on, color: AppColors.primary),
-            label: const Text('Instant Demo Sign In (Alex Rivera)'),
+            icon: const Icon(Icons.flash_on, color: AppColors.gold),
+            label: const Text('Instant Demo Sign In (Alex Rivera - Guest)'),
           ),
         ],
       ),

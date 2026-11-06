@@ -23,15 +23,16 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
   TimeOfDay _selectedTime = const TimeOfDay(hour: 14, minute: 0);
   double _duration = 2.0;
   final _addressController =
-      TextEditingController(text: 'Central Park West, New York');
+      TextEditingController(text: 'Indiranagar 100ft Road, Bengaluru');
   final _requestController = TextEditingController();
   bool _submitting = false;
 
   final List<String> _suggestedLocations = const [
-    'Central Park West',
-    'Whitney Museum Lobby',
-    'SoHo Cafe & Roastery',
-    'Lincoln Center Plaza',
+    'Indiranagar 100ft Rd, Bengaluru',
+    'NGMA Gallery, Bengaluru',
+    'Kala Ghoda Cafe, Mumbai',
+    'NCPA Nariman Point, Mumbai',
+    'Hauz Khas Village, Delhi',
   ];
 
   @override
@@ -517,14 +518,14 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '\$${p.rate} x ${_duration.toStringAsFixed(1)} hours',
+                      '₹${p.rate} x ${_duration.toStringAsFixed(1)} hours',
                       style: const TextStyle(
                           fontSize: 14, color: AppColors.textSecondary),
                     ),
                     Text(
-                      '\$${_providerEarnings.toStringAsFixed(2)}',
+                      '₹${_providerEarnings.toStringAsFixed(0)}',
                       style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
+                          fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -535,7 +536,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                     const Row(
                       children: [
                         Text(
-                          'Cue Platform & Safety Fee (10%)',
+                          'Cue Platform & Escrow Fee (10%)',
                           style: TextStyle(
                               fontSize: 13, color: AppColors.textSecondary),
                         ),
@@ -545,9 +546,9 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       ],
                     ),
                     Text(
-                      '\$${_platformFee.toStringAsFixed(2)}',
+                      '₹${_platformFee.toStringAsFixed(0)}',
                       style: const TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary),
+                          fontSize: 13, color: AppColors.textSecondary, fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -559,7 +560,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Total Amount',
+                      'Total Escrow Hold',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -567,11 +568,12 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       ),
                     ),
                     Text(
-                      '\$${_totalAmount.toStringAsFixed(2)}',
+                      '₹${_totalAmount.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w800,
                         color: AppColors.primary,
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ],
@@ -609,7 +611,7 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   : const Icon(Icons.check_circle_outline),
               label: Text(_submitting
                   ? 'Requesting...'
-                  : 'Confirm & Request Moment (\$${_totalAmount.toStringAsFixed(2)})'),
+                  : 'Confirm & Request Outing (₹${_totalAmount.toStringAsFixed(0)})'),
             ),
           ),
         ),

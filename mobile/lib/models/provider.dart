@@ -15,9 +15,12 @@ class AvailabilitySlot {
   final bool isBooked;
   final String? bookingId;
 
+  String get hostId => providerId;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'providerId': providerId,
+        'hostId': providerId,
         'startTime': startTime.toIso8601String(),
         'endTime': endTime.toIso8601String(),
         'isBooked': isBooked,
@@ -27,7 +30,7 @@ class AvailabilitySlot {
   factory AvailabilitySlot.fromJson(Map<String, dynamic> json) {
     return AvailabilitySlot(
       id: json['id'] as String? ?? json['slotId'] as String? ?? '',
-      providerId: json['providerId'] as String? ?? '',
+      providerId: json['providerId'] as String? ?? json['hostId'] as String? ?? '',
       startTime: DateTime.tryParse(json['startTime'] as String? ?? '') ??
           DateTime.now(),
       endTime: DateTime.tryParse(json['endTime'] as String? ?? '') ??
@@ -67,7 +70,7 @@ class ProviderReview {
   factory ProviderReview.fromJson(Map<String, dynamic> json) {
     return ProviderReview(
       id: json['id'] as String? ?? '',
-      reviewerName: json['reviewerName'] as String? ?? 'Seeker',
+      reviewerName: json['reviewerName'] as String? ?? 'Guest',
       rating: (json['rating'] as num?)?.toDouble() ?? 5.0,
       comment: json['comment'] as String? ?? '',
       createdAt: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
@@ -76,6 +79,9 @@ class ProviderReview {
     );
   }
 }
+
+typedef HostReview = ProviderReview;
+typedef HostProfile = ProviderProfile;
 
 class ProviderProfile {
   const ProviderProfile({
@@ -88,7 +94,7 @@ class ProviderProfile {
     required this.specialties,
     this.id = '',
     this.bio = '',
-    this.trustScore = 92,
+    this.trustScore = 95,
     this.isVerified = true,
     this.photoUrl,
     this.maxRadiusKm = 25,
@@ -116,18 +122,25 @@ class ProviderProfile {
   final List<AvailabilitySlot> upcomingSlots;
   final List<ProviderReview> reviews;
 
-  // Aliases for compatibility
+  // Canonical Host aliases
+  String get hostId => id;
+  String get hostName => name;
+  String get hostInitials => initials;
   int get hourlyRate => rate;
   String get displayName => name;
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'hostId': id,
         'name': name,
+        'hostName': name,
         'role': role,
         'city': city,
         'rate': rate,
+        'hourlyRate': rate,
         'rating': rating,
         'initials': initials,
+        'hostInitials': initials,
         'specialties': specialties,
         'bio': bio,
         'trustScore': trustScore,
@@ -140,6 +153,7 @@ class ProviderProfile {
 
   factory ProviderProfile.fromJson(Map<String, dynamic> json) {
     final rawName = json['displayName'] as String? ??
+        json['hostName'] as String? ??
         json['name'] as String? ??
         'Companion';
     final nameParts = rawName.trim().split(' ');
@@ -150,15 +164,18 @@ class ProviderProfile {
             : 'C';
 
     return ProviderProfile(
-      id: json['providerId'] as String? ?? json['id'] as String? ?? '',
+      id: json['hostId'] as String? ??
+          json['providerId'] as String? ??
+          json['id'] as String? ??
+          '',
       name: rawName,
       role: json['role'] as String? ??
           (json['specialties'] as List<dynamic>?)?.firstOrNull?.toString() ??
-          'Companion',
-      city: json['city'] as String? ?? 'New York, NY',
+          'Curated Companion',
+      city: json['city'] as String? ?? 'Bengaluru',
       rate: (json['hourlyRate'] as num?)?.toInt() ??
           (json['rate'] as num?)?.toInt() ??
-          45,
+          1200,
       rating: (json['averageRating'] as num?)?.toDouble() ??
           (json['rating'] as num?)?.toDouble() ??
           4.9,
@@ -168,7 +185,7 @@ class ProviderProfile {
               .toList() ??
           const ['Conversation', 'Art walks'],
       bio: json['bio'] as String? ?? '',
-      trustScore: json['trustScore'] as int? ?? 90,
+      trustScore: json['trustScore'] as int? ?? 95,
       isVerified: json['isVerified'] as bool? ?? true,
       photoUrl: json['photoUrl'] as String?,
       maxRadiusKm: json['maxRadiusKm'] as int? ?? 25,
@@ -186,95 +203,95 @@ class ProviderProfile {
   }
 }
 
-// Initial static seed providers
+// Curated Indian metropolitan hosts
 const providers = [
   ProviderProfile(
     id: 'prov-001',
-    name: 'Maya Rodriguez',
-    role: 'Museum & Art Companion',
-    city: 'Brooklyn, NY',
-    rate: 48,
-    rating: 4.9,
-    initials: 'MR',
-    specialties: ['Art & Culture', 'Museum walks', 'Exhibitions', 'Quiet cafes'],
+    name: 'Ananya Sen',
+    role: 'Art & Gallery Companion',
+    city: 'Bengaluru (Indiranagar)',
+    rate: 1500,
+    rating: 4.95,
+    initials: 'AS',
+    specialties: ['Art & Culture', 'Gallery walks', 'Independent coffee', 'Architecture'],
     bio:
-        'Art history graduate passionate about contemporary galleries, quiet corners in museums, and thoughtful conversations about life and aesthetics.',
+        'Curator and visual arts graduate. Passionate about local indie galleries, heritage architectural walks in Bangalore, and reflective conversations.',
     trustScore: 98,
     isVerified: true,
-    distanceKm: 2.4,
-    reviewCount: 34,
+    distanceKm: 2.1,
+    reviewCount: 38,
     reviews: [
       ProviderReview(
         id: 'rev-01',
-        reviewerName: 'Lucas M.',
+        reviewerName: 'Rohan K.',
         rating: 5.0,
         comment:
-            'Maya made our visit to the Whitney museum unforgettable. Incredibly knowledgeable and relaxing presence.',
+            'Ananya was an absolute delight. Made our visit to the NGMA museum and gallery quiet, enriching, and very relaxing.',
       ),
     ],
   ),
   ProviderProfile(
     id: 'prov-002',
-    name: 'Jonah Kim',
-    role: 'Language Exchange & Coffee',
-    city: 'Manhattan, NY',
-    rate: 36,
-    rating: 4.8,
-    initials: 'JK',
-    specialties: ['Language Exchange', 'Korean', 'Coffee walks', 'Writing'],
+    name: 'Kabir Varma',
+    role: 'Literature & Coffee Walks',
+    city: 'Bengaluru (Koramangala)',
+    rate: 1200,
+    rating: 4.88,
+    initials: 'KV',
+    specialties: ['Coffee walks', 'Literature', 'Film discussion', 'Creative writing'],
     bio:
-        'Bilingual writer and coffee aficionado. Patient language buddy for Korean and English practice over casual neighborhood strolls.',
+        'Bilingual writer and specialty pour-over enthusiast. Patient conversationalist for thoughtful dialogue over quiet evening cafes.',
     trustScore: 94,
     isVerified: true,
-    distanceKm: 4.1,
-    reviewCount: 22,
+    distanceKm: 3.5,
+    reviewCount: 26,
   ),
   ProviderProfile(
     id: 'prov-003',
-    name: 'Celine Brooks',
-    role: 'Event Plus-One & Networking',
-    city: 'Queens, NY',
-    rate: 62,
+    name: 'Tara Mehra',
+    role: 'Symphony & Event Plus-One',
+    city: 'Mumbai (Bandra West)',
+    rate: 2200,
     rating: 5.0,
-    initials: 'CB',
-    specialties: ['Event Plus-One', 'Networking', 'Concerts', 'Dinner dates'],
+    initials: 'TM',
+    specialties: ['Event Plus-One', 'Classical Music', 'Charity Galas', 'Fine Dining'],
     bio:
-        'Polished, charismatic companion for corporate galas, gallery openings, friend gatherings, or live music where having good company elevates the night.',
+        'Polished and charismatic companion for classical concerts, corporate dinners, or cultural summits where gracious companionship elevates the evening.',
     trustScore: 99,
     isVerified: true,
-    distanceKm: 6.8,
-    reviewCount: 47,
+    distanceKm: 5.4,
+    reviewCount: 52,
   ),
   ProviderProfile(
     id: 'prov-004',
-    name: 'David Vance',
-    role: 'Outdoor & Fitness Partner',
-    city: 'Hoboken, NJ',
-    rate: 40,
+    name: 'Devansh Roy',
+    role: 'Heritage Trail & Fitness Partner',
+    city: 'Delhi (Hauz Khas)',
+    rate: 1400,
     rating: 4.9,
-    initials: 'DV',
-    specialties: ['Outdoor & Fitness', 'Running', 'Hiking', 'Central Park walks'],
+    initials: 'DR',
+    specialties: ['Heritage Trails', 'Morning walks', 'Photography', 'Outdoor & Fitness'],
     bio:
-        'Amateur marathon runner and outdoor enthusiast. Great pacer, upbeat conversationalist, and reliable partner for morning trails.',
-    trustScore: 91,
+        'Architectural photographer and weekend runner. Knowledgeable companion for Lodhi Art District explorations and park trails.',
+    trustScore: 92,
     isVerified: true,
-    distanceKm: 5.3,
-    reviewCount: 19,
+    distanceKm: 4.2,
+    reviewCount: 21,
   ),
   ProviderProfile(
     id: 'prov-005',
-    name: 'Elena Rostova',
-    role: 'Culinary & Dining Guide',
-    city: 'SoHo, NY',
-    rate: 55,
-    rating: 4.95,
-    initials: 'ER',
-    specialties: ['Dining & Coffee', 'Food tours', 'Wine tasting', 'Culinary arts'],
+    name: 'Rhea Deshmukh',
+    role: 'Culinary & Tea Tastings',
+    city: 'Mumbai (Kala Ghoda)',
+    rate: 1800,
+    rating: 4.96,
+    initials: 'RD',
+    specialties: ['Culinary tours', 'Artisanal Tea', 'Historic cafes', 'Conversations'],
     bio:
-        'Culinary writer who loves finding hidden gem eateries, trying new cuisines, and sharing comfortable mealtime conversations.',
-    trustScore: 96,
+        'Food anthropologist with an eye for South Mumbai heritage eateries, artisanal tea tastings, and relaxed, engaging discussions.',
+    trustScore: 97,
     isVerified: true,
     distanceKm: 1.8,
-    reviewCount: 29,
+    reviewCount: 31,
   ),
 ];

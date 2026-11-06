@@ -18,7 +18,7 @@ class BookingsScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Bookings'),
+        title: const Text('My Outings'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -268,11 +268,12 @@ class _BookingCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        '\$${booking.totalAmount.toStringAsFixed(2)}',
+                        '₹${booking.totalAmount.toStringAsFixed(0)}',
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
+                          fontFamily: 'monospace',
                         ),
                       ),
                       Text(
@@ -288,7 +289,7 @@ class _BookingCard extends ConsumerWidget {
                     children: [
                       IconButton.outlined(
                         icon: const Icon(Icons.chat_bubble_outline, size: 18),
-                        tooltip: 'Message Companion',
+                        tooltip: 'Message Host',
                         style: IconButton.styleFrom(
                           side: const BorderSide(color: AppColors.border),
                         ),

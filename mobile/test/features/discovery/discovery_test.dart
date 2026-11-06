@@ -17,15 +17,15 @@ void main() {
     });
 
     test('filters providers by query text', () async {
-      final providers = await repo.getProviders(query: 'Museum');
+      final providers = await repo.getProviders(query: 'Gallery');
       expect(providers.length, greaterThanOrEqualTo(1));
-      expect(providers.first.name, 'Maya Rodriguez');
+      expect(providers.first.name, 'Ananya Sen');
     });
 
     test('filters providers by specialty', () async {
-      final providers = await repo.getProviders(specialty: 'Language Exchange');
+      final providers = await repo.getProviders(specialty: 'Literature');
       expect(providers.length, greaterThanOrEqualTo(1));
-      expect(providers.first.name, 'Jonah Kim');
+      expect(providers.first.name, 'Kabir Varma');
     });
 
     test('sorts providers by price ascending', () async {
@@ -45,4 +45,3 @@ void main() {
     });
   });
 }
-

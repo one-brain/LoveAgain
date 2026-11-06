@@ -19,7 +19,7 @@ class AuthState {
     this.user,
     this.isLoading = false,
     this.error,
-    this.activeRole = 'Seeker',
+    this.activeRole = 'Guest',
   });
 
   final String? token;
@@ -29,7 +29,11 @@ class AuthState {
   final String activeRole;
 
   bool get isAuthenticated => token != null && token!.isNotEmpty;
-  bool get isProviderMode => activeRole == 'Provider';
+  bool get isHostMode => activeRole == 'Host' || activeRole == 'Provider';
+  bool get isGuestMode => activeRole == 'Guest' || activeRole == 'Seeker';
+
+  // Backward compatibility alias
+  bool get isProviderMode => isHostMode;
 }
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
@@ -44,7 +48,7 @@ class AuthController extends StateNotifier<AuthState> {
       : super(const AuthState(
           token: 'cue-demo-jwt-token',
           user: MockData.currentUser,
-          activeRole: 'Seeker',
+          activeRole: 'Guest',
         )) {
     restore();
   }
@@ -57,7 +61,8 @@ class AuthController extends StateNotifier<AuthState> {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString(AppConstants.tokenKey);
       final userJson = prefs.getString(AppConstants.userKey);
-      final role = prefs.getString(AppConstants.userRoleKey) ?? 'Seeker';
+      final rawRole = prefs.getString(AppConstants.userRoleKey) ?? 'Guest';
+      final role = (rawRole == 'Provider' || rawRole == 'Host') ? 'Host' : 'Guest';
 
       final signedOut = prefs.getBool('cue.signedOut') ?? false;
 
@@ -80,13 +85,12 @@ class AuthController extends StateNotifier<AuthState> {
           activeRole: role,
         );
       } else if (!signedOut) {
-        // Initialize default demo user logged-in state so reviewer/user can immediately test
         const demoToken = 'cue-demo-jwt-token';
         _api.setAccessToken(demoToken);
         state = const AuthState(
           token: demoToken,
           user: MockData.currentUser,
-          activeRole: 'Seeker',
+          activeRole: 'Guest',
         );
       } else {
         state = const AuthState();
@@ -129,12 +133,13 @@ class AuthController extends StateNotifier<AuthState> {
   }) async {
     state = AuthState(isLoading: true, activeRole: state.activeRole);
     try {
+      final canonicalRoles = roles.map((r) => r == 'Provider' ? 'Host' : (r == 'Seeker' ? 'Guest' : r)).toList();
       final result = await _repository.register(
         email: email,
         password: password,
         firstName: firstName,
         lastName: lastName,
-        roles: roles,
+        roles: canonicalRoles,
       );
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(AppConstants.tokenKey, result.token);
@@ -144,7 +149,7 @@ class AuthController extends StateNotifier<AuthState> {
       state = AuthState(
         token: result.token,
         user: result.user,
-        activeRole: roles.contains('Provider') ? 'Provider' : 'Seeker',
+        activeRole: canonicalRoles.contains('Host') ? 'Host' : 'Guest',
       );
       return true;
     } catch (e) {
@@ -157,7 +162,7 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   void toggleRole() {
-    final newRole = state.activeRole == 'Seeker' ? 'Provider' : 'Seeker';
+    final newRole = state.isHostMode ? 'Guest' : 'Host';
     state = AuthState(
       token: state.token,
       user: state.user,

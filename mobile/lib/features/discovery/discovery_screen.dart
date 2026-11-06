@@ -95,16 +95,16 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: AppColors.sage,
+                          color: AppColors.gold,
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'FIND THOUGHTFUL COMPANIONSHIP',
+                        'CURATED COMPANIONSHIP',
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
                               letterSpacing: 1.2,
-                              color: AppColors.sage,
+                              color: AppColors.goldDark,
                               fontWeight: FontWeight.w800,
                             ),
                       ),
@@ -440,7 +440,7 @@ class ProviderCard extends StatelessWidget {
                           provider.role,
                           style: const TextStyle(
                             fontSize: 13,
-                            color: AppColors.sage,
+                            color: AppColors.goldDark,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -476,11 +476,12 @@ class ProviderCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        '\$${provider.rate}',
+                        '₹${provider.rate}',
                         style: const TextStyle(
-                          fontSize: 20,
+                          fontSize: 19,
                           fontWeight: FontWeight.w800,
                           color: AppColors.primary,
+                          fontFamily: 'monospace',
                         ),
                       ),
                       const Text(

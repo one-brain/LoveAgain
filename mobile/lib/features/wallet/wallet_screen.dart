@@ -117,7 +117,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       if (context.mounted && success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            backgroundColor: AppColors.sage,
+                            backgroundColor: const Color(0xFF047857),
                             content: Text('₹${amt.toStringAsFixed(0)} credited to Cue Wallet!'),
                           ),
                         );
@@ -238,7 +238,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           if (context.mounted && ok) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                backgroundColor: AppColors.sage,
+                                backgroundColor: const Color(0xFF047857),
                                 content: Text('Withdrawal of ₹${amt.toStringAsFixed(0)} initiated to $dest'),
                               ),
                             );

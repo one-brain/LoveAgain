@@ -25,7 +25,7 @@ class BookingDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Booking Details'),
+        title: const Text('Outing Details'),
         actions: [
           IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
@@ -190,9 +190,9 @@ class BookingDetailScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 20),
 
-          // Payment Summary (Invariant In Action)
+          // Payment Summary (Escrow Invariant)
           const Text(
-            'Payment & Invariants',
+            'Escrow Payment & Ledger',
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -213,14 +213,14 @@ class BookingDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Provider Rate (\$${currentBooking.hourlyRate.toStringAsFixed(0)} x ${currentBooking.durationHours.toStringAsFixed(1)} hrs)',
+                      'Host Rate (₹${currentBooking.hourlyRate.toStringAsFixed(0)} x ${currentBooking.durationHours.toStringAsFixed(1)} hrs)',
                       style: const TextStyle(
                           fontSize: 13, color: AppColors.textSecondary),
                     ),
                     Text(
-                      '\$${currentBooking.providerEarnings.toStringAsFixed(2)}',
+                      '₹${currentBooking.providerEarnings.toStringAsFixed(0)}',
                       style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
+                          fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -229,14 +229,14 @@ class BookingDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Platform Safety & Verification Fee (10%)',
+                      'Platform Safety & Escrow Fee (10%)',
                       style: TextStyle(
                           fontSize: 13, color: AppColors.textSecondary),
                     ),
                     Text(
-                      '\$${currentBooking.platformFee.toStringAsFixed(2)}',
+                      '₹${currentBooking.platformFee.toStringAsFixed(0)}',
                       style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600),
+                          fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'monospace'),
                     ),
                   ],
                 ),
@@ -248,7 +248,7 @@ class BookingDetailScreen extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Total Bounded Amount',
+                      'Total Escrow Hold',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -256,11 +256,12 @@ class BookingDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     Text(
-                      '\$${currentBooking.totalAmount.toStringAsFixed(2)}',
+                      '₹${currentBooking.totalAmount.toStringAsFixed(0)}',
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: AppColors.primary,
+                        fontFamily: 'monospace',
                       ),
                     ),
                   ],

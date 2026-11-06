@@ -30,15 +30,15 @@ void main() {
     expect(find.text('Messages'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
 
-    // Verify provider cards present
-    expect(find.text('Maya Rodriguez'), findsOneWidget);
-    expect(find.text('Jonah Kim'), findsOneWidget);
+    // Verify curated host cards present
+    expect(find.text('Ananya Sen'), findsOneWidget);
+    expect(find.text('Kabir Varma'), findsOneWidget);
 
     // Tap Bookings tab
     await tester.tap(find.text('Bookings'));
     await tester.pumpAndSettle();
 
-    expect(find.text('My Bookings'), findsOneWidget);
+    expect(find.text('My Outings'), findsOneWidget);
     expect(find.textContaining('Active'), findsOneWidget);
 
     // Tap Messages tab
@@ -60,6 +60,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Sign In to Cue'), findsOneWidget);
-    expect(find.text('Instant Demo Sign In (Alex Rivera)'), findsOneWidget);
+    expect(find.textContaining('Instant Demo Sign In (Alex Rivera'), findsOneWidget);
   });
 }

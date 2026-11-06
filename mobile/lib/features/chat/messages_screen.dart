@@ -94,7 +94,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                           const SizedBox(height: 20),
                           FilledButton(
                             onPressed: () => context.go('/'),
-                            child: const Text('Find Companions'),
+                            child: const Text('Find Curated Hosts'),
                           ),
                         ],
                       ),

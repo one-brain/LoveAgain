@@ -15,22 +15,24 @@ class VerifiedBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (showLabel) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          color: AppColors.sageLight,
+          color: AppColors.goldLight,
           borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.check_circle_rounded, size: size, color: AppColors.sageDark),
+            Icon(Icons.verified_rounded, size: size, color: AppColors.goldDark),
             const SizedBox(width: 4),
             const Text(
-              'Verified Identity',
+              'Verified Host',
               style: TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: AppColors.sageDark,
+                fontWeight: FontWeight.w700,
+                color: AppColors.goldDark,
+                letterSpacing: 0.1,
               ),
             ),
           ],
@@ -40,7 +42,7 @@ class VerifiedBadge extends StatelessWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.sage,
+        color: AppColors.gold,
         shape: BoxShape.circle,
       ),
       padding: const EdgeInsets.all(2),
@@ -52,4 +54,3 @@ class VerifiedBadge extends StatelessWidget {
     );
   }
 }
-

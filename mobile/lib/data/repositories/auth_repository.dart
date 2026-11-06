@@ -24,19 +24,61 @@ class AuthRepository {
       );
       final data = response.data ?? {};
       final token = data['accessToken'] as String? ?? 'mock-jwt-token';
-      final userId = data['userId'] as String? ?? 'user-seeker-001';
+      final userId = data['userId'] as String? ?? 'user-guest-001';
       final user = User(
         id: userId,
         email: email,
         firstName: email.split('@').first,
         lastName: '',
-        roles: const ['Seeker'],
+        roles: const ['Guest'],
       );
       _api.setAccessToken(token);
       return AuthResult(token: token, user: user);
     } catch (_) {
       // Graceful fallback for offline / development demo
       final token = 'mock-demo-token-${DateTime.now().millisecondsSinceEpoch}';
+      final user = MockData.currentUser.copyWith(email: email);
+      _api.setAccessToken(token);
+      return AuthResult(token: token, user: user);
+    }
+  }
+
+  Future<bool> requestOtp({required String email}) async {
+    try {
+      final response = await _api.post<Map<String, dynamic>>(
+        '/auth/login-otp',
+        data: {'email': email},
+      );
+      return response.statusCode == 200;
+    } catch (_) {
+      // Offline simulation returns true
+      return true;
+    }
+  }
+
+  Future<AuthResult> verifyOtp({
+    required String email,
+    required String code,
+  }) async {
+    try {
+      final response = await _api.post<Map<String, dynamic>>(
+        '/auth/verify-otp',
+        data: {'email': email, 'code': code},
+      );
+      final data = response.data ?? {};
+      final token = data['accessToken'] as String? ?? 'mock-jwt-token';
+      final userId = data['userId'] as String? ?? 'user-guest-001';
+      final user = User(
+        id: userId,
+        email: email,
+        firstName: email.split('@').first,
+        lastName: '',
+        roles: const ['Guest'],
+      );
+      _api.setAccessToken(token);
+      return AuthResult(token: token, user: user);
+    } catch (_) {
+      final token = 'mock-otp-token-${DateTime.now().millisecondsSinceEpoch}';
       final user = MockData.currentUser.copyWith(email: email);
       _api.setAccessToken(token);
       return AuthResult(token: token, user: user);
@@ -50,6 +92,12 @@ class AuthRepository {
     required String lastName,
     required List<String> roles,
   }) async {
+    final canonicalRoles = roles.map((r) {
+      if (r == 'Provider') return 'Host';
+      if (r == 'Seeker') return 'Guest';
+      return r;
+    }).toList();
+
     try {
       final response = await _api.post<Map<String, dynamic>>(
         '/auth/register',
@@ -58,7 +106,7 @@ class AuthRepository {
           'password': password,
           'firstName': firstName,
           'lastName': lastName,
-          'roles': roles,
+          'roles': canonicalRoles,
         },
       );
       final data = response.data ?? {};
@@ -69,7 +117,7 @@ class AuthRepository {
         email: email,
         firstName: firstName,
         lastName: lastName,
-        roles: roles,
+        roles: canonicalRoles,
       );
       _api.setAccessToken(token);
       return AuthResult(token: token, user: user);
@@ -80,8 +128,8 @@ class AuthRepository {
         email: email,
         firstName: firstName,
         lastName: lastName,
-        roles: roles,
-        trustScore: 85,
+        roles: canonicalRoles,
+        trustScore: 90,
         isVerified: false,
       );
       _api.setAccessToken(token);
@@ -89,4 +137,3 @@ class AuthRepository {
     }
   }
 }
-

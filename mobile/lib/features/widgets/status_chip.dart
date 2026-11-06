@@ -12,9 +12,9 @@ class BookingStatusChip extends StatelessWidget {
       case BookingStatus.pendingPayment:
         return const Color(0xFFFEF3C7);
       case BookingStatus.confirmed:
-        return const Color(0xFFDBEAFE);
+        return AppColors.primaryLight;
       case BookingStatus.inProgress:
-        return const Color(0xFFEDE9FE);
+        return AppColors.goldLight;
       case BookingStatus.completed:
         return const Color(0xFFD1FAE5);
       case BookingStatus.cancelled:
@@ -29,15 +29,15 @@ class BookingStatusChip extends StatelessWidget {
       case BookingStatus.pendingPayment:
         return AppColors.statusPending;
       case BookingStatus.confirmed:
-        return AppColors.statusConfirmed;
+        return AppColors.primary;
       case BookingStatus.inProgress:
-        return AppColors.statusInProgress;
+        return AppColors.goldDark;
       case BookingStatus.completed:
         return AppColors.statusCompleted;
       case BookingStatus.cancelled:
         return AppColors.statusCancelled;
       case BookingStatus.disputed:
-        return const Color(0xFFC2410C);
+        return AppColors.statusDisputed;
     }
   }
 
@@ -48,6 +48,7 @@ class BookingStatusChip extends StatelessWidget {
       decoration: BoxDecoration(
         color: _bg,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: _fg.withValues(alpha: 0.2)),
       ),
       child: Text(
         status.label,
@@ -55,9 +56,9 @@ class BookingStatusChip extends StatelessWidget {
           color: _fg,
           fontSize: 12,
           fontWeight: FontWeight.w700,
+          letterSpacing: 0.1,
         ),
       ),
     );
   }
 }
-

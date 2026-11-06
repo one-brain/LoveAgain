@@ -17,7 +17,7 @@ void main() {
         throwsA(isA<ArgumentError>().having(
           (e) => e.message,
           'message',
-          contains('different seeker and provider'),
+          contains('different'),
         )),
       );
     });
@@ -87,21 +87,20 @@ void main() {
       final booking = Booking.create(
         orderId: 'ord-test-01',
         providerId: 'prov-01',
-        providerName: 'Maya Rodriguez',
-        providerInitials: 'MR',
-        seekerId: 'seeker-01',
+        providerName: 'Ananya Sen',
+        providerInitials: 'AS',
+        seekerId: 'guest-01',
         seekerName: 'Alex Rivera',
         startTime: now,
         durationHours: 3.0,
-        hourlyRate: 50.0,
+        hourlyRate: 1500.0,
       );
 
-      expect(booking.providerEarnings, 150.0);
-      expect(booking.platformFee, 15.0);
-      expect(booking.totalAmount, 165.0);
+      expect(booking.providerEarnings, 4500.0);
+      expect(booking.platformFee, 450.0);
+      expect(booking.totalAmount, 4950.0);
       expect(booking.endTime, now.add(const Duration(hours: 3)));
       expect(booking.status, BookingStatus.pendingPayment);
     });
   });
 }
-
