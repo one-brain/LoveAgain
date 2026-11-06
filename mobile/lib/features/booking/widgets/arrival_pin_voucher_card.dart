@@ -132,3 +132,4 @@ class ArrivalPinVoucherCard extends StatelessWidget {
     );
   }
 }
+

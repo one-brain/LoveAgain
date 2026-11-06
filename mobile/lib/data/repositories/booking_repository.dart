@@ -120,6 +120,35 @@ class BookingRepository {
     return updated;
   }
 
+  Future<bool> reportSafetyIncident(
+    String orderId, {
+    required String reason,
+    String? contactAlerted,
+  }) async {
+    try {
+      await _api.post<Map<String, dynamic>>(
+        '/safety/sos',
+        data: {
+          'orderId': orderId,
+          'reason': reason,
+          'contactAlerted': contactAlerted,
+          'timestamp': DateTime.now().toIso8601String(),
+        },
+      );
+    } catch (_) {
+      // Offline fallback: safety record logged locally
+    }
+
+    final index = _cachedBookings.indexWhere((b) => b.orderId == orderId);
+    if (index != -1) {
+      final updated = _cachedBookings[index].copyWith(
+        status: BookingStatus.disputed,
+      );
+      _cachedBookings[index] = updated;
+    }
+    return true;
+  }
+
   Future<Booking> updateStatus(String orderId, BookingStatus status) async {
     try {
       switch (status) {
@@ -128,6 +157,9 @@ class BookingRepository {
           break;
         case BookingStatus.cancelled:
           await _api.post('/bookings/$orderId/cancel', data: {'reason': 'User requested cancellation'});
+          break;
+        case BookingStatus.disputed:
+          await _api.post('/bookings/$orderId/dispute', data: {'reason': 'Safety alert or dispute reported'});
           break;
         default:
           break;

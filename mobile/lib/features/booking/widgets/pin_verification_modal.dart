@@ -295,3 +295,4 @@ class _PinVerificationModalState extends State<PinVerificationModal> {
     );
   }
 }
+

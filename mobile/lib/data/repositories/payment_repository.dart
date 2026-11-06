@@ -16,9 +16,9 @@ class PaymentRepository {
       // Graceful local fallback for preview mode
     }
     return const WalletModel(
-      userId: 'user-self',
-      availableBalance: 2500.0,
-      pendingBalance: 1200.0,
+      userId: 'user-guest-001',
+      availableBalance: 25000.0,
+      pendingBalance: 3300.0,
       currency: 'INR',
     );
   }
@@ -41,30 +41,39 @@ class PaymentRepository {
     return [
       WalletTransactionModel(
         id: 'tx_1',
-        amount: 2000.0,
+        amount: 5000.0,
         direction: 'Credit',
         type: 'TopUp',
-        balanceAfter: 2500.0,
-        description: 'UPI Wallet Top-Up (GPay)',
+        balanceAfter: 25000.0,
+        description: 'UPI Wallet Top-Up (Google Pay)',
         createdAt: DateTime.now().subtract(const Duration(hours: 2)),
       ),
       WalletTransactionModel(
         id: 'tx_2',
-        amount: 800.0,
+        amount: 3300.0,
         direction: 'Debit',
-        type: 'BookingPayment',
-        balanceAfter: 500.0,
-        description: 'Escrow hold for Companion Session',
+        type: 'EscrowHold',
+        balanceAfter: 20000.0,
+        description: 'Escrow Hold for Outing with Ananya Sen',
         createdAt: DateTime.now().subtract(const Duration(days: 1)),
       ),
       WalletTransactionModel(
         id: 'tx_3',
-        amount: 1300.0,
+        amount: 2640.0,
         direction: 'Credit',
-        type: 'TopUp',
-        balanceAfter: 1300.0,
-        description: 'UPI Wallet Top-Up (PhonePe)',
-        createdAt: DateTime.now().subtract(const Duration(days: 3)),
+        type: 'EscrowRelease',
+        balanceAfter: 23300.0,
+        description: 'Escrow Release from Outing with Kabir Varma',
+        createdAt: DateTime.now().subtract(const Duration(days: 4)),
+      ),
+      WalletTransactionModel(
+        id: 'tx_4',
+        amount: 10000.0,
+        direction: 'Debit',
+        type: 'Payout',
+        balanceAfter: 20660.0,
+        description: 'Instant UPI Withdrawal to alex@okhdfcbank',
+        createdAt: DateTime.now().subtract(const Duration(days: 6)),
       ),
     ];
   }
@@ -97,9 +106,9 @@ class PaymentRepository {
     }
 
     return WalletModel(
-      userId: 'user-self',
-      availableBalance: 2500.0 + amount,
-      pendingBalance: 1200.0,
+      userId: 'user-guest-001',
+      availableBalance: 25000.0 + amount,
+      pendingBalance: 3300.0,
       currency: 'INR',
     );
   }
@@ -127,10 +136,10 @@ class PaymentRepository {
     }
 
     return const ProviderEarningsModel(
-      grossRevenue: 14000.0,
-      platformCommission: 2100.0,
-      clearedBalance: 11900.0,
-      pendingBalance: 1800.0,
+      grossRevenue: 36000.0,
+      platformCommission: 3600.0,
+      clearedBalance: 32400.0,
+      pendingBalance: 3000.0,
       currency: 'INR',
     );
   }
@@ -155,4 +164,3 @@ class PaymentRepository {
     }
   }
 }
-

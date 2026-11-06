@@ -36,6 +36,11 @@ class AppColors {
   static const Color statusCancelled = Color(0xFFDC2626); // Crimson
   static const Color statusDisputed = Color(0xFFB91C1C);
 
+  // Safety & Emergency colors
+  static const Color emergencyRed = Color(0xFFDC2626);
+  static const Color emergencyRedHover = Color(0xFFB91C1C);
+  static const Color emergencyRedLight = Color(0xFFFEE2E2);
+
   // Trust score badge colors
   static const Color trustHigh = Color(0xFFC5A059); // Champagne Gold Tier
   static const Color trustMedium = Color(0xFFD97706);

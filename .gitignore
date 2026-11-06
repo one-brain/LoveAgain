@@ -131,3 +131,5 @@ backups/
 # Local tooling caches
 .archify/
 .gstack/tmp/
+__pycache__/
+*.py[cod]

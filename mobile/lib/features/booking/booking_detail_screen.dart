@@ -10,6 +10,7 @@ import '../wallet/wallet_controller.dart';
 import 'booking_controller.dart';
 import 'widgets/arrival_pin_voucher_card.dart';
 import 'widgets/completion_pin_voucher_card.dart';
+import 'widgets/emergency_sos_bottom_sheet.dart';
 import 'widgets/pin_verification_modal.dart';
 
 class BookingDetailScreen extends ConsumerWidget {
@@ -35,6 +36,11 @@ class BookingDetailScreen extends ConsumerWidget {
         title: const Text('Outing Details'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.shield_outlined, color: AppColors.emergencyRed),
+            tooltip: 'Safety SOS Hub',
+            onPressed: () => EmergencySosBottomSheet.show(context, currentBooking),
+          ),
+          IconButton(
             icon: const Icon(Icons.chat_bubble_outline),
             tooltip: 'Chat',
             onPressed: () {
@@ -47,6 +53,112 @@ class BookingDetailScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
         children: [
+          // In-Person Safety Shield Banner (Active Outings)
+          if (currentBooking.status == BookingStatus.confirmed ||
+              currentBooking.status == BookingStatus.inProgress) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: AppColors.emergencyRedLight.withValues(alpha: 0.35),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(
+                  color: AppColors.emergencyRed.withValues(alpha: 0.25),
+                ),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.shield_outlined,
+                    color: AppColors.emergencyRed,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'In-Person Safety Shield Active',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '24/7 National Emergency 112 & Trusted Contact Alert',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  TextButton(
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.emergencyRed,
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                    ),
+                    onPressed: () =>
+                        EmergencySosBottomSheet.show(context, currentBooking),
+                    child: const Text(
+                      'SOS HUB',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
+          // Disputed Safety Review Notice
+          if (currentBooking.status == BookingStatus.disputed) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFEDD5),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppColors.statusDisputed),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded,
+                      color: AppColors.statusDisputed, size: 22),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Outing Frozen under Safety Review',
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.statusDisputed,
+                          ),
+                        ),
+                        Text(
+                          'Escrow payout is locked. A Cue Trust & Safety officer has been notified.',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+
           // Order Header
           Container(
             padding: const EdgeInsets.all(16),
@@ -347,7 +459,8 @@ class BookingDetailScreen extends ConsumerWidget {
           child: Row(
             children: [
               if (currentBooking.status != BookingStatus.completed &&
-                  currentBooking.status != BookingStatus.cancelled) ...[
+                  currentBooking.status != BookingStatus.cancelled &&
+                  currentBooking.status != BookingStatus.disputed) ...[
                 OutlinedButton(
                   onPressed: () {
                     controller.cancelBooking(
@@ -611,13 +724,22 @@ class BookingDetailScreen extends ConsumerWidget {
         );
 
       case BookingStatus.disputed:
-        return FilledButton(
+        return FilledButton.icon(
+          icon: const Icon(Icons.support_agent_outlined),
+          style: FilledButton.styleFrom(
+            backgroundColor: AppColors.statusDisputed,
+          ),
           onPressed: () {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Support ticket created')),
+              SnackBar(
+                backgroundColor: AppColors.statusDisputed,
+                content: Text(
+                  'Priority Safety Desk is investigating Outing #${b.orderId}. Escrow locked.',
+                ),
+              ),
             );
           },
-          child: const Text('Contact Support'),
+          label: const Text('Priority Safety Desk Active'),
         );
     }
   }

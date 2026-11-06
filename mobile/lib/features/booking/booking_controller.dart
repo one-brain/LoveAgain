@@ -26,7 +26,8 @@ class BookingsState {
       .where((b) =>
           b.status == BookingStatus.confirmed ||
           b.status == BookingStatus.pendingPayment ||
-          b.status == BookingStatus.inProgress)
+          b.status == BookingStatus.inProgress ||
+          b.status == BookingStatus.disputed)
       .toList();
 
   List<Booking> get completedBookings =>
@@ -188,6 +189,32 @@ class BookingController extends StateNotifier<BookingsState> {
 
   Future<void> cancelBooking(String orderId, String reason) async {
     await updateBookingStatus(orderId, BookingStatus.cancelled);
+  }
+
+  Future<bool> reportSafetyIncident(
+    String orderId, {
+    required String reason,
+    String? contactAlerted,
+  }) async {
+    final success = await _repository.reportSafetyIncident(
+      orderId,
+      reason: reason,
+      contactAlerted: contactAlerted,
+    );
+    // Reload bookings to reflect updated status
+    await loadBookings();
+    return success;
+  }
+
+  Future<void> endOutingWithSafetyDispute(
+    String orderId,
+    String reason,
+  ) async {
+    await _repository.reportSafetyIncident(
+      orderId,
+      reason: 'Safety Incident Dispatched: $reason',
+    );
+    await updateBookingStatus(orderId, BookingStatus.disputed);
   }
 
   Future<void> payBooking(String orderId) async {
