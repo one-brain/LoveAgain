@@ -10,29 +10,38 @@ import {
 } from '../../store/api';
 import { useChangeAdminPasswordMutation } from '../../store/adminApi';
 import {
-  ShieldCheckIcon,
-  KeyIcon,
-  UserCircleIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  PhotoIcon,
-  TrashIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  ArrowPathIcon,
-  LockClosedIcon,
-  DocumentDuplicateIcon,
-  ClipboardDocumentCheckIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  BuildingLibraryIcon,
-  ArrowLeftIcon,
-} from '@heroicons/react/24/outline';
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  MessageBar,
+  MessageBarBody,
+} from '@fluentui/react-components';
+import {
+  ShieldCheckmark20Regular,
+  Key20Regular,
+  PersonCircle20Regular,
+  Image16Regular,
+  Delete16Regular,
+  Eye16Regular,
+  EyeOff16Regular,
+  ArrowSync16Regular,
+  LockClosed16Regular,
+  Copy16Regular,
+  Checkmark16Regular,
+  Mail16Regular,
+  Call16Regular,
+  Building20Regular,
+  ArrowLeft16Regular,
+} from '@fluentui/react-icons';
 
-/**
- * Compresses uploaded admin avatar so network payload is minimal (<120KB)
- */
-async function compressImageFile(file: File, maxDim = 600, quality = 0.85): Promise<{ file: File; dataUrl: string }> {
+async function compressImageFile(
+  file: File,
+  maxDim = 600,
+  quality = 0.85
+): Promise<{ file: File; dataUrl: string }> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (ev) => {
@@ -89,27 +98,23 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
 
-  // Queries & Mutations
   const { data: profileData, isLoading: isLoadingProfile, refetch } = useGetSeekerProfileQuery();
   const [updateProfile, { isLoading: isUpdatingProfile }] = useUpdateSeekerProfileMutation();
   const [uploadPhoto, { isLoading: isUploadingPhoto }] = useUploadSeekerPhotoMutation();
   const [deletePhoto, { isLoading: isDeletingPhoto }] = useDeleteSeekerPhotoMutation();
   const [changePassword, { isLoading: isChangingPassword }] = useChangeAdminPasswordMutation();
 
-  // Personal Information State
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [copiedId, setCopiedId] = useState(false);
 
-  // Password State
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  // Notifications State
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
@@ -233,7 +238,7 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
       );
 
       refetch();
-      showToast('Avatar photo removed. Reverted to executive initials.');
+      showToast('Avatar photo removed. Reverted to administrator initials.');
     } catch {
       showToast('Failed to remove photo.', 'error');
     }
@@ -269,7 +274,8 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
       setConfirmPassword('');
       showToast('Administrator password updated successfully.');
     } catch (err: any) {
-      const msg = err?.data?.error || 'Failed to update password. Please check your current password.';
+      const msg =
+        err?.data?.error || 'Failed to update password. Please check your current password.';
       setPasswordError(msg);
     }
   };
@@ -277,67 +283,40 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
   const photoUrl = profileData?.profile?.photoUrl || user?.photoUrl;
   const adminEmail = profileData?.profile?.email || user?.email || 'admin@cue.local';
   const adminId = profileData?.profile?.userId || user?.id || '—';
-  const userInitials = `${firstName.trim().charAt(0) || 'C'}${lastName.trim().charAt(0) || 'A'}`.toUpperCase();
 
   return (
-    <div className="space-y-8 animate-in fade-in-0 duration-200">
-      {/* Toast Alert */}
+    <div className="space-y-6">
       {toast && (
-        <div
-          className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-sm font-semibold transition-all ${
-            toast.type === 'success'
-              ? 'bg-card border-emerald-500/30 text-emerald-600 dark:text-emerald-400'
-              : 'bg-card border-rose-500/30 text-rose-600 dark:text-rose-400'
-          }`}
-        >
-          {toast.type === 'success' ? (
-            <CheckCircleIcon className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-          ) : (
-            <ExclamationTriangleIcon className="w-5 h-5 text-rose-500 flex-shrink-0" />
-          )}
-          <span>{toast.message}</span>
-        </div>
+        <MessageBar intent={toast.type === 'success' ? 'success' : 'error'}>
+          <MessageBarBody>{toast.message}</MessageBarBody>
+        </MessageBar>
       )}
 
-      {/* Navigation Return Shortcut */}
       {onBackToDashboard && (
         <div className="flex items-center justify-between">
-          <button
-            type="button"
+          <Button
+            appearance="outline"
+            size="small"
+            icon={<ArrowLeft16Regular />}
             onClick={onBackToDashboard}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-border/80 bg-card hover:bg-muted text-xs font-semibold text-foreground transition-all shadow-2xs hover:shadow-xs active:scale-95 focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent"
           >
-            <ArrowLeftIcon className="w-3.5 h-3.5 text-accent" />
-            <span>Return to Operations Dashboard</span>
-          </button>
+            Return to operations dashboard
+          </Button>
         </div>
       )}
 
       {/* Administrative Profile Header Card */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-card via-card to-amber-500/5 border border-border/80 shadow-xs relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/5 rounded-full blur-3xl -z-10 pointer-events-none" />
-
+      <Card className="p-6 rounded-2xl bg-card border border-border shadow-sm">
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-          {/* Avatar with Upload/Delete Controls */}
-          <div className="relative group flex-shrink-0">
-            <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border-2 border-amber-500/40 bg-card shadow-md flex items-center justify-center relative">
-              {photoUrl ? (
-                <img src={photoUrl} alt="Admin Avatar" className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full bg-gradient-to-br from-amber-500/20 via-amber-600/20 to-amber-700/20 text-amber-500 font-extrabold text-3xl font-sans flex items-center justify-center">
-                  {userInitials}
-                </div>
-              )}
-
-              {/* Uploading Overlay */}
-              {(isUploadingPhoto || isDeletingPhoto) && (
-                <div className="absolute inset-0 bg-background/80 backdrop-blur-xs flex items-center justify-center">
-                  <ArrowPathIcon className="w-6 h-6 text-amber-500 animate-spin" />
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center justify-center gap-1.5 mt-2.5">
+          <div className="flex flex-col items-center gap-2 shrink-0">
+            <Avatar
+              size={72}
+              shape="square"
+              name={`${firstName || 'Admin'} ${lastName}`.trim()}
+              image={photoUrl ? { src: photoUrl } : undefined}
+              color="gold"
+            />
+            <div className="flex items-center gap-1.5">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -346,345 +325,295 @@ export const AdminProfileView: React.FC<AdminProfileViewProps> = ({ onBackToDash
                 className="hidden"
                 id="admin-photo-upload"
               />
-              <label
-                htmlFor="admin-photo-upload"
-                className="px-2.5 py-1 rounded-lg bg-card border border-border hover:bg-muted text-[11px] font-semibold text-foreground cursor-pointer transition-all flex items-center gap-1 shadow-xs"
-                title="Upload Photo"
+              <Button
+                appearance="outline"
+                size="small"
+                icon={<Image16Regular />}
+                disabled={isUploadingPhoto || isDeletingPhoto}
+                onClick={() => fileInputRef.current?.click()}
               >
-                <PhotoIcon className="w-3.5 h-3.5 text-accent" />
-                <span>Upload</span>
-              </label>
-
+                {isUploadingPhoto ? 'Uploading...' : 'Upload'}
+              </Button>
               {photoUrl && (
-                <button
-                  type="button"
-                  onClick={handleDeletePhoto}
+                <Button
+                  appearance="subtle"
+                  size="small"
+                  icon={<Delete16Regular />}
                   disabled={isDeletingPhoto}
-                  className="p-1 rounded-lg bg-card border border-rose-500/20 hover:bg-rose-500/10 text-rose-500 text-[11px] transition-all"
-                  title="Remove Photo"
-                >
-                  <TrashIcon className="w-3.5 h-3.5" />
-                </button>
+                  onClick={handleDeletePhoto}
+                  title="Remove photo"
+                  aria-label="Remove photo"
+                />
               )}
             </div>
           </div>
 
-          {/* Profile Identity Details */}
           <div className="flex-1 text-center sm:text-left space-y-2">
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-              <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-bold uppercase tracking-wider">
-                <ShieldCheckIcon className="w-4 h-4 text-amber-500" />
-                <span>Platform Administrator • Tier 1 Clearance</span>
-              </span>
-              <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
-                100% Trust Score
-              </span>
+              <Badge appearance="tint" color="warning" icon={<ShieldCheckmark20Regular />}>
+                Platform administrator · Tier 1 clearance
+              </Badge>
+              <Badge appearance="tint" color="success" className="tabular">
+                100% trust score
+              </Badge>
             </div>
 
-            <h2 className="text-2xl sm:text-3xl font-extrabold text-foreground font-sans">
+            <h2 className="text-title2 font-semibold text-foreground">
               {firstName || 'Administrator'} {lastName}
             </h2>
-            <p className="text-xs text-muted-foreground font-mono flex items-center justify-center sm:justify-start gap-2">
-              <EnvelopeIcon className="w-3.5 h-3.5 text-muted-foreground" />
+            <p className="text-caption1 text-muted-foreground font-mono flex items-center justify-center sm:justify-start gap-1.5">
+              <Mail16Regular />
               <span>{adminEmail}</span>
             </p>
 
-            <div className="pt-2 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1.5 bg-muted/60 px-3 py-1.5 rounded-xl border border-border/60 font-mono">
+            <div className="pt-1 flex flex-wrap items-center justify-center sm:justify-start gap-3 text-caption1 text-muted-foreground">
+              <div className="flex items-center gap-1.5 bg-muted px-2.5 py-1 rounded-md border border-border font-mono tabular">
                 <span>UUID:</span>
-                <span className="font-semibold text-foreground truncate max-w-[150px] sm:max-w-none">{adminId}</span>
-                <button
-                  type="button"
+                <span className="font-semibold text-foreground truncate max-w-[160px] sm:max-w-none">
+                  {adminId}
+                </span>
+                <Button
+                  appearance="transparent"
+                  size="small"
+                  icon={
+                    copiedId ? (
+                      <Checkmark16Regular className="text-success" />
+                    ) : (
+                      <Copy16Regular />
+                    )
+                  }
                   onClick={handleCopyId}
-                  className="hover:text-accent ml-1 transition-colors"
-                  title="Copy User ID"
-                >
-                  {copiedId ? (
-                    <ClipboardDocumentCheckIcon className="w-4 h-4 text-emerald-500" />
-                  ) : (
-                    <DocumentDuplicateIcon className="w-4 h-4" />
-                  )}
-                </button>
+                  title="Copy user ID"
+                  aria-label="Copy user ID"
+                />
               </div>
-
-              <div className="text-[11px] text-muted-foreground">
-                Administrative security log: Active session authenticated
-              </div>
+              <span>Administrative security log: Active session authenticated</span>
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Card 1: Administrator Personal Information */}
-        <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border/80 shadow-xs space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-border/60">
-            <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
-              <UserCircleIcon className="w-5 h-5" />
-            </div>
+        <Card className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-border">
+            <PersonCircle20Regular className="text-brand-fg" />
             <div>
-              <h3 className="font-bold text-base text-foreground font-sans">Administrative Identity</h3>
-              <p className="text-xs text-muted-foreground">Update your official administrator contact coordinates.</p>
+              <h3 className="font-semibold text-subtitle1 text-foreground">
+                Administrative identity
+              </h3>
+              <p className="text-caption1 text-muted-foreground">
+                Update your official administrator contact coordinates.
+              </p>
             </div>
           </div>
 
           <form onSubmit={handleSaveProfile} className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">First Name</label>
-                <input
-                  type="text"
+              <Field label="First name" required>
+                <Input
                   required
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(_e, data) => setFirstName(data.value)}
                   placeholder="e.g. Alex"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                 />
-              </div>
+              </Field>
 
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Last Name</label>
-                <input
-                  type="text"
+              <Field label="Last name">
+                <Input
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(_e, data) => setLastName(data.value)}
                   placeholder="e.g. Vance"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                 />
-              </div>
+              </Field>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
-                <span>Primary Administrator Email</span>
-                <span className="text-[10px] text-amber-500 font-bold uppercase tracking-wider flex items-center gap-1">
-                  <LockClosedIcon className="w-3 h-3" />
-                  System Managed
-                </span>
-              </label>
-              <div className="relative">
-                <EnvelopeIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="email"
-                  disabled
-                  value={adminEmail}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border/60 bg-muted/40 text-muted-foreground text-sm font-mono cursor-not-allowed select-none"
-                />
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Root administrator email bound to platform infrastructure credentials.
-              </p>
-            </div>
+            <Field
+              label="Primary administrator email"
+              hint="Root administrator email bound to platform infrastructure credentials."
+            >
+              <Input
+                type="email"
+                disabled
+                contentBefore={<Mail16Regular />}
+                contentAfter={<LockClosed16Regular />}
+                value={adminEmail}
+              />
+            </Field>
 
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                Emergency & Operations Alert Phone
-              </label>
-              <div className="relative">
-                <PhoneIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="tel"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+91 98765 43210"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-1">
-                Used for critical platform uptime and high-priority escrow alerts.
-              </p>
-            </div>
+            <Field
+              label="Emergency & operations alert phone"
+              hint="Used for critical platform uptime and high-priority escrow alerts."
+            >
+              <Input
+                type="tel"
+                contentBefore={<Call16Regular />}
+                value={phone}
+                onChange={(_e, data) => setPhone(data.value)}
+                placeholder="+91 98765 43210"
+              />
+            </Field>
 
             <div className="pt-2">
-              <button
+              <Button
                 type="submit"
+                appearance="primary"
                 disabled={isUpdatingProfile || isLoadingProfile}
-                className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                icon={isUpdatingProfile ? <ArrowSync16Regular className="animate-spin" /> : undefined}
+                className="w-full min-h-11"
               >
-                {isUpdatingProfile ? (
-                  <>
-                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                    <span>Saving Profile...</span>
-                  </>
-                ) : (
-                  <span>Save Administrative Profile</span>
-                )}
-              </button>
+                {isUpdatingProfile ? 'Saving profile...' : 'Save administrative profile'}
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
 
         {/* Card 2: Security & Password Management */}
-        <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border/80 shadow-xs space-y-6">
-          <div className="flex items-center gap-3 pb-4 border-b border-border/60">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-500">
-              <KeyIcon className="w-5 h-5" />
-            </div>
+        <Card className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-5">
+          <div className="flex items-center gap-3 pb-3 border-b border-border">
+            <Key20Regular className="text-warning" />
             <div>
-              <h3 className="font-bold text-base text-foreground font-sans">Security & Credentials</h3>
-              <p className="text-xs text-muted-foreground">Rotate your back-office master console password.</p>
+              <h3 className="font-semibold text-subtitle1 text-foreground">
+                Security & credentials
+              </h3>
+              <p className="text-caption1 text-muted-foreground">
+                Rotate your back-office master console password.
+              </p>
             </div>
           </div>
 
           {passwordError && (
-            <div className="p-3.5 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
-              <ExclamationTriangleIcon className="w-4 h-4 flex-shrink-0" />
-              <span>{passwordError}</span>
-            </div>
+            <MessageBar intent="error">
+              <MessageBarBody>{passwordError}</MessageBarBody>
+            </MessageBar>
           )}
 
           <form onSubmit={handlePasswordChange} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Current Password</label>
-              <div className="relative">
-                <input
-                  type={showCurrentPassword ? 'text' : 'password'}
-                  required
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showCurrentPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
+            <Field label="Current password" required>
+              <Input
+                type={showCurrentPassword ? 'text' : 'password'}
+                required
+                value={currentPassword}
+                onChange={(_e, data) => setCurrentPassword(data.value)}
+                placeholder="••••••••••••"
+                contentAfter={
+                  <Button
+                    type="button"
+                    appearance="transparent"
+                    size="small"
+                    icon={showCurrentPassword ? <EyeOff16Regular /> : <Eye16Regular />}
+                    onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                    aria-label="Toggle current password visibility"
+                  />
+                }
+              />
+            </Field>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">New Password</label>
-                <div className="relative">
-                  <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    required
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 8 characters"
-                    className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  >
-                    {showNewPassword ? <EyeSlashIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
-                  </button>
-                </div>
-              </div>
+              <Field label="New password" required>
+                <Input
+                  type={showNewPassword ? 'text' : 'password'}
+                  required
+                  value={newPassword}
+                  onChange={(_e, data) => setNewPassword(data.value)}
+                  placeholder="Min 8 characters"
+                  contentAfter={
+                    <Button
+                      type="button"
+                      appearance="transparent"
+                      size="small"
+                      icon={showNewPassword ? <EyeOff16Regular /> : <Eye16Regular />}
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      aria-label="Toggle new password visibility"
+                    />
+                  }
+                />
+              </Field>
 
-              <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Confirm New Password</label>
-                <input
+              <Field label="Confirm new password" required>
+                <Input
                   type={showNewPassword ? 'text' : 'password'}
                   required
                   value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  onChange={(_e, data) => setConfirmPassword(data.value)}
                   placeholder="Repeat new password"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-accent"
                 />
-              </div>
+              </Field>
             </div>
 
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-caption1 text-muted-foreground">
               Password requirements: Minimum 8 characters with alphanumeric combination.
             </p>
 
             <div className="pt-2">
-              <button
+              <Button
                 type="submit"
+                appearance="primary"
                 disabled={isChangingPassword}
-                className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-sm shadow-xs transition-all disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
+                icon={isChangingPassword ? <ArrowSync16Regular className="animate-spin" /> : undefined}
+                className="w-full min-h-11"
               >
-                {isChangingPassword ? (
-                  <>
-                    <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                    <span>Verifying Credentials...</span>
-                  </>
-                ) : (
-                  <span>Update Master Password</span>
-                )}
-              </button>
+                {isChangingPassword ? 'Verifying credentials...' : 'Update master password'}
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
       </div>
 
       {/* Card 3: Platform Governance & Clearance Audit Matrix */}
-      <div className="p-6 sm:p-7 rounded-3xl bg-card border border-border/80 shadow-xs space-y-5">
-        <div className="flex items-center gap-3 pb-4 border-b border-border/60">
-          <div className="w-10 h-10 rounded-xl bg-amber-500/15 flex items-center justify-center text-amber-500">
-            <BuildingLibraryIcon className="w-5 h-5" />
-          </div>
+      <Card className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-5">
+        <div className="flex items-center gap-3 pb-3 border-b border-border">
+          <Building20Regular className="text-brand-fg" />
           <div>
-            <h3 className="font-bold text-base text-foreground font-sans">Administrative Clearance & Access Matrix</h3>
-            <p className="text-xs text-muted-foreground">Active security policies and role grants bound to this account.</p>
+            <h3 className="font-semibold text-subtitle1 text-foreground">
+              Administrative clearance & access matrix
+            </h3>
+            <p className="text-caption1 text-muted-foreground">
+              Active security policies and role grants bound to this account.
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-foreground">KYC Verification</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase">
-                Active
-              </span>
+          {[
+            {
+              title: 'KYC verification',
+              desc: 'Approve, reject, or request changes on guest ID and selfie verifications.',
+            },
+            {
+              title: 'Escrow & settlements',
+              desc: 'Settle UPI payouts, inspect booking transactions, and arbitrate escrow releases.',
+            },
+            {
+              title: 'User moderation',
+              desc: 'Audit registered accounts, inspect guest profiles, and toggle account suspensions.',
+            },
+            {
+              title: 'Financial ledger MIS',
+              desc: 'Export GMV reports, audit revenue trajectories, and analyze platform take-rates.',
+            },
+          ].map((item) => (
+            <div
+              key={item.title}
+              className="p-4 rounded-lg bg-muted border border-border space-y-1.5"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-body1 text-foreground">{item.title}</span>
+                <Badge appearance="tint" color="success" size="small">
+                  Active
+                </Badge>
+              </div>
+              <p className="text-caption1 text-muted-foreground">{item.desc}</p>
             </div>
-            <p className="text-[11px] text-muted-foreground">
-              Approve, reject, or request changes on guest ID and selfie verifications.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-foreground">Escrow & Settlements</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase">
-                Active
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Settle UPI payouts, inspect booking transactions, and arbitrate escrow releases.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-foreground">User Moderation</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase">
-                Active
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Audit registered accounts, inspect guest profiles, and toggle account suspensions.
-            </p>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-muted/40 border border-border/60 space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-xs text-foreground">Financial Ledger MIS</span>
-              <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-extrabold uppercase">
-                Active
-              </span>
-            </div>
-            <p className="text-[11px] text-muted-foreground">
-              Export GMV reports, audit revenue trajectories, and analyze platform take-rates.
-            </p>
-          </div>
+          ))}
         </div>
 
-        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-700 dark:text-amber-400 text-xs flex items-center gap-2.5">
-          <ShieldCheckIcon className="w-5 h-5 flex-shrink-0 text-amber-500" />
-          <span>
-            <strong>Audit & Security Notice:</strong> All administrative modifications and clearance actions are
-            cryptographically logged with timestamps and administrator UUID for audit compliance.
-          </span>
-        </div>
-      </div>
+        <MessageBar intent="warning">
+          <MessageBarBody>
+            <strong>Audit & security notice:</strong> All administrative modifications and clearance actions are cryptographically logged with timestamps and administrator UUID for audit compliance.
+          </MessageBarBody>
+        </MessageBar>
+      </Card>
     </div>
   );
 };
-

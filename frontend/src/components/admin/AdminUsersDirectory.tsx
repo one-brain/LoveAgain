@@ -1,11 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
-  MagnifyingGlassIcon,
-  EyeIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/outline';
-import { useGetAdminUserStatsQuery, type AdminUserItem, type AdminUserStats } from '../../store/adminApi';
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Input,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
+  ProgressBar,
+  Spinner,
+  Tab,
+  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableCellLayout,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from '@fluentui/react-components';
+import {
+  Search16Regular,
+  Eye16Regular,
+  ShieldCheckmark20Regular,
+  MoreHorizontal16Regular,
+  Dismiss16Regular,
+} from '@fluentui/react-icons';
+import {
+  useGetAdminUserStatsQuery,
+  type AdminUserItem,
+  type AdminUserStats,
+} from '../../store/adminApi';
 import { Pagination } from '../ui/Pagination';
 
 interface AdminUsersDirectoryProps {
@@ -27,13 +56,16 @@ interface AdminUsersDirectoryProps {
 }
 
 const isUserGuest = (u: AdminUserItem) =>
-  Boolean(u.hasCompanionProfile || u.roles?.includes('Companion') || u.roles?.includes('Provider') || u.roles?.includes('Guest'));
+  Boolean(
+    u.hasCompanionProfile ||
+      u.roles?.includes('Companion') ||
+      u.roles?.includes('Provider') ||
+      u.roles?.includes('Guest')
+  );
 const isUserAdmin = (u: AdminUserItem) =>
   Boolean(u.roles?.includes('Admin') || u.email?.toLowerCase() === 'admin@cue.local');
-const isUserHost = (u: AdminUserItem) =>
-  !isUserGuest(u) && !isUserAdmin(u);
-const isUserSuspended = (u: AdminUserItem) =>
-  u.trustScore < 0;
+const isUserHost = (u: AdminUserItem) => !isUserGuest(u) && !isUserAdmin(u);
+const isUserSuspended = (u: AdminUserItem) => u.trustScore < 0;
 
 export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   users,
@@ -52,19 +84,20 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   onSearchChange,
   stats,
 }) => {
-  const [localRoleFilter, setLocalRoleFilter] = useState<'All' | 'Guests' | 'Hosts' | 'Suspended'>('All');
+  const navigate = useNavigate();
+  const [localRoleFilter, setLocalRoleFilter] = useState<
+    'All' | 'Guests' | 'Hosts' | 'Suspended'
+  >('All');
   const [localSearch, setLocalSearch] = useState('');
   const [actionUserId, setActionUserId] = useState<string | null>(null);
   const [localPage, setLocalPage] = useState(1);
   const [localPageSize, setLocalPageSize] = useState(20);
 
-  // Self-sufficient stats fetch if parent doesn't provide them
   const { data: queryStats } = useGetAdminUserStatsQuery(undefined, {
     skip: Boolean(stats),
   });
   const effectiveStats = stats || queryStats;
 
-  // Normalize role filter to canon Host/Guest values
   const activeRoleFilter: 'All' | 'Guests' | 'Hosts' | 'Suspended' =
     roleFilter === 'Companions'
       ? 'Guests'
@@ -79,7 +112,6 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
   const activePage = isServerPaged ? (page ?? 1) : localPage;
   const activePageSize = isServerPaged ? (pageSize ?? 20) : localPageSize;
 
-  // Stable counts cache to prevent flickers during tab transitions
   const [cachedCounts, setCachedCounts] = useState<{
     All?: number;
     Guests?: number;
@@ -182,13 +214,18 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     ? filteredUsers
     : filteredUsers.slice((activePage - 1) * activePageSize, activePage * activePageSize);
 
-  const activeTotalCount = isServerPaged ? (totalCount ?? filteredUsers.length) : filteredUsers.length;
+  const activeTotalCount = isServerPaged
+    ? (totalCount ?? filteredUsers.length)
+    : filteredUsers.length;
   const activeTotalPages = isServerPaged
     ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
     : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const pillCounts: Record<'All' | 'Guests' | 'Hosts' | 'Suspended', number | undefined> = {
-    All: effectiveStats?.total ?? cachedCounts.All ?? (isServerPaged || isServerFiltered ? undefined : users.length),
+    All:
+      effectiveStats?.total ??
+      cachedCounts.All ??
+      (isServerPaged || isServerFiltered ? undefined : users.length),
     Guests:
       effectiveStats?.guests ??
       effectiveStats?.companions ??
@@ -214,277 +251,291 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
     }
   };
 
+  const rolePills: { key: 'All' | 'Guests' | 'Hosts' | 'Suspended'; label: string; count?: number }[] = [
+    { key: 'All', label: 'All accounts', count: pillCounts.All },
+    { key: 'Guests', label: 'Guests', count: pillCounts.Guests },
+    { key: 'Hosts', label: 'Hosts', count: pillCounts.Hosts },
+    { key: 'Suspended', label: 'Suspended', count: pillCounts.Suspended },
+  ];
+
   return (
     <section aria-label="Users and Moderation Directory" className="space-y-4">
       {/* Controls & Search Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/80 p-3 sm:p-4 rounded-2xl shadow-2xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { key: 'All', label: 'All Accounts', count: pillCounts.All },
-            {
-              key: 'Guests',
-              label: 'Guests',
-              count: pillCounts.Guests,
-            },
-            {
-              key: 'Hosts',
-              label: 'Hosts',
-              count: pillCounts.Hosts,
-            },
-            {
-              key: 'Suspended',
-              label: 'Suspended',
-              count: pillCounts.Suspended,
-            },
-          ].map((pill) => {
-            const isActive = activeRoleFilter === pill.key;
-            return (
-              <button
-                key={pill.key}
-                type="button"
-                onClick={() => handleRoleSelect(pill.key as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
-                  isActive
-                    ? 'bg-accent text-accent-foreground border-accent shadow-xs'
-                    : 'bg-card text-muted-foreground border-border/80 hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <span>{pill.label}</span>
-                {pill.count !== undefined ? (
-                  <span
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] font-bold font-mono tabular-nums leading-none ${
-                      isActive
-                        ? 'bg-background/25 text-accent-foreground'
-                        : pill.key === 'Suspended' && pill.count > 0
-                        ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400 font-extrabold'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
-                    {pill.count}
-                  </span>
-                ) : (
-                  <span className="w-3.5 h-3 bg-muted/60 rounded-full animate-pulse inline-block" />
-                )}
-              </button>
-            );
-          })}
+      <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border p-3 rounded-2xl shadow-sm">
+        <div className="overflow-x-auto">
+          <TabList
+            size="small"
+            selectedValue={activeRoleFilter}
+            onTabSelect={(_e, data) =>
+              handleRoleSelect(data.value as 'All' | 'Guests' | 'Hosts' | 'Suspended')
+            }
+          >
+            {rolePills.map((pill) => (
+              <Tab key={pill.key} value={pill.key}>
+                <span className="flex items-center gap-1.5">
+                  <span>{pill.label}</span>
+                  {pill.count !== undefined && (
+                    <Badge
+                      appearance="tint"
+                      color={pill.key === 'Suspended' && pill.count > 0 ? 'danger' : 'informative'}
+                      size="small"
+                      className="tabular"
+                    >
+                      {pill.count}
+                    </Badge>
+                  )}
+                </span>
+              </Tab>
+            ))}
+          </TabList>
         </div>
 
-        <div className="relative w-full sm:w-64">
-          <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-          <input
-            type="text"
-            value={activeSearch}
-            onChange={(e) => handleSearchInput(e.target.value)}
-            placeholder="Search by name or email..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border/80 bg-background text-foreground text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
-          />
-          {activeSearch && (
-            <button
-              type="button"
-              onClick={() => handleSearchInput('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
+        <Input
+          size="small"
+          contentBefore={<Search16Regular />}
+          contentAfter={
+            activeSearch ? (
+              <Button
+                appearance="transparent"
+                size="small"
+                icon={<Dismiss16Regular />}
+                onClick={() => handleSearchInput('')}
+                aria-label="Clear search"
+              />
+            ) : undefined
+          }
+          value={activeSearch}
+          onChange={(_e, data) => handleSearchInput(data.value)}
+          placeholder="Search by name or email..."
+          className="w-full sm:w-64"
+        />
+      </Card>
 
       {/* Directory Table */}
-      <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-2xs">
+      <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-0">
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs text-muted-foreground font-medium">Loading user accounts directory...</p>
+          <div className="py-20 flex flex-col items-center justify-center">
+            <Spinner label="Loading user accounts directory..." />
           </div>
         ) : filteredUsers.length === 0 ? (
           <div className="text-center py-16 p-8">
-            <ShieldCheckIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-foreground">No accounts match this query</h3>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+            <ShieldCheckmark20Regular className="text-muted-foreground mx-auto mb-3" />
+            <h3 className="text-body1 font-semibold text-foreground">
+              No accounts match this query
+            </h3>
+            <p className="text-caption1 text-muted-foreground mt-1 max-w-sm mx-auto">
               Try adjusting your filter or search keywords.
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="px-5 py-3.5">User Identity</th>
-                  <th className="px-4 py-3.5">Assigned Roles</th>
-                  <th className="px-4 py-3.5">Guest Status</th>
-                  <th className="px-4 py-3.5">Trust Score</th>
-                  <th className="px-4 py-3.5">Registered</th>
-                  <th className="px-5 py-3.5 text-right">Moderation Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+            <Table size="small" aria-label="User directory table">
+              <TableHeader>
+                <TableRow>
+                  <TableHeaderCell>User identity</TableHeaderCell>
+                  <TableHeaderCell>Assigned roles</TableHeaderCell>
+                  <TableHeaderCell>Guest status</TableHeaderCell>
+                  <TableHeaderCell>Trust score</TableHeaderCell>
+                  <TableHeaderCell>Registered</TableHeaderCell>
+                  <TableHeaderCell>Moderation action</TableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {displayedUsers.map((user) => {
                   const isSuspended = user.trustScore < 0;
                   const isUserAnAdmin =
-                    user.roles?.includes('Admin') || user.email?.toLowerCase() === 'admin@cue.local';
+                    user.roles?.includes('Admin') ||
+                    user.email?.toLowerCase() === 'admin@cue.local';
                   const isActing = actionUserId === user.id && isTogglingSuspend;
 
                   return (
-                    <tr key={user.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={`w-8 h-8 rounded-full font-bold flex items-center justify-center text-xs shrink-0 ${
-                              isUserAnAdmin
-                                ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
-                                : 'bg-accent/15 text-accent'
-                            }`}
-                          >
-                            {user.firstName?.[0] || 'U'}
-                          </div>
+                    <TableRow key={user.id}>
+                      <TableCell>
+                        <TableCellLayout
+                          media={
+                            <Avatar
+                              size={28}
+                              name={`${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'}
+                              color={isUserAnAdmin ? 'gold' : 'brand'}
+                            />
+                          }
+                        >
                           <div className="min-w-0">
-                            <p className="font-bold text-foreground flex items-center gap-1.5 truncate">
+                            <p className="font-semibold text-foreground flex items-center gap-1.5 truncate">
                               <span>
                                 {user.firstName} {user.lastName}
                               </span>
                               {isSuspended && (
-                                <span className="px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-600 dark:text-rose-400 text-[9px] font-extrabold uppercase shrink-0">
+                                <Badge appearance="filled" color="danger" size="small">
                                   Suspended
-                                </span>
+                                </Badge>
                               )}
                             </p>
-                            <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                            <p className="text-caption1 text-muted-foreground truncate">
+                              {user.email}
+                            </p>
                           </div>
-                        </div>
-                      </td>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5">
-                        <div className="flex flex-wrap gap-1">
-                          {user.roles.map((r) => (
-                            <span
-                              key={r}
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${
-                                r === 'Admin'
-                                  ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30 font-bold'
-                                  : 'bg-muted text-foreground/80 border-border/60'
-                              }`}
-                            >
-                              {r}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <div className="flex flex-wrap gap-1">
+                            {user.roles.map((r) => (
+                              <Badge
+                                key={r}
+                                appearance={r === 'Admin' ? 'tint' : 'outline'}
+                                color={r === 'Admin' ? 'warning' : 'informative'}
+                                size="small"
+                              >
+                                {r}
+                              </Badge>
+                            ))}
+                          </div>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5">
-                        {user.hasCompanionProfile ? (
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
-                              user.companionStatus === 'Approved'
-                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                                : user.companionStatus === 'Rejected' || user.companionStatus === 'Suspended'
-                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20'
-                                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                            }`}
-                          >
-                            <span
-                              className={`w-1 h-1 rounded-full ${
+                      <TableCell>
+                        <TableCellLayout>
+                          {user.hasCompanionProfile ? (
+                            <Badge
+                              appearance="tint"
+                              color={
                                 user.companionStatus === 'Approved'
-                                  ? 'bg-emerald-500'
-                                  : user.companionStatus === 'Rejected' || user.companionStatus === 'Suspended'
-                                  ? 'bg-rose-500'
-                                  : 'bg-amber-500'
-                              }`}
-                            />
-                            <span>
+                                  ? 'success'
+                                  : user.companionStatus === 'Rejected' ||
+                                    user.companionStatus === 'Suspended'
+                                  ? 'danger'
+                                  : 'warning'
+                              }
+                              size="small"
+                            >
                               {user.companionStatus === 'Approved'
-                                ? 'Verified Guest'
+                                ? 'Verified guest'
                                 : user.companionStatus === 'PendingReview'
-                                ? 'Review Pending'
+                                ? 'Review pending'
                                 : user.companionStatus === 'Suspended'
-                                ? 'Guest Suspended'
+                                ? 'Guest suspended'
                                 : user.companionStatus}
-                            </span>
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground text-[11px] font-medium">
-                            {isUserAnAdmin ? 'Administrator' : 'Host Account'}
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <span
-                            className={`px-2 py-0.5 rounded-md text-xs font-mono font-bold tabular-nums ${
-                              isSuspended
-                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-                                : user.trustScore >= 80
-                                ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400'
-                                : 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                            }`}
-                          >
-                            {isSuspended ? 'Suspended' : `${user.trustScore}/100`}
-                          </span>
-                          {!isSuspended && (
-                            <div className="w-12 bg-muted rounded-full h-1.5 overflow-hidden hidden sm:block">
-                              <div
-                                className={`h-full rounded-full ${
-                                  user.trustScore >= 80 ? 'bg-emerald-500' : 'bg-amber-500'
-                                }`}
-                                style={{ width: `${Math.max(10, Math.min(100, user.trustScore))}%` }}
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-3.5 text-muted-foreground text-[11px] whitespace-nowrap">
-                        {new Date(user.createdAt).toLocaleDateString('en-IN', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </td>
-
-                      <td className="px-5 py-3.5 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {user.hasCompanionProfile && (
-                            <Link
-                              to={`/provider/${user.id}`}
-                              className="px-2.5 py-1 rounded-xl text-xs font-semibold bg-muted hover:bg-muted/80 text-foreground transition-all border border-border/80 inline-flex items-center gap-1 shadow-2xs"
-                              title="Inspect Companion Public Profile"
-                            >
-                              <EyeIcon className="w-3.5 h-3.5 text-accent" />
-                              <span>Inspect</span>
-                            </Link>
-                          )}
-
-                          {isUserAnAdmin ? (
-                            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-bold px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20">
-                              Protected Admin
-                            </span>
+                            </Badge>
                           ) : (
-                            <button
-                              type="button"
-                              onClick={() => handleSuspendAction(user.id)}
-                              disabled={isActing}
-                              className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all border ${
-                                isSuspended
-                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/20'
-                                  : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/20'
-                              } disabled:opacity-50`}
-                            >
-                              {isActing
-                                ? 'Updating...'
-                                : isSuspended
-                                ? 'Reinstate'
-                                : 'Suspend'}
-                            </button>
+                            <span className="text-muted-foreground text-caption1">
+                              {isUserAnAdmin ? 'Administrator' : 'Host account'}
+                            </span>
                           )}
-                        </div>
-                      </td>
-                    </tr>
+                        </TableCellLayout>
+                      </TableCell>
+
+                      <TableCell>
+                        <TableCellLayout>
+                          <div className="flex items-center gap-2">
+                            <Badge
+                              appearance="tint"
+                              color={
+                                isSuspended
+                                  ? 'danger'
+                                  : user.trustScore >= 80
+                                  ? 'success'
+                                  : 'warning'
+                              }
+                              size="small"
+                              className="tabular"
+                            >
+                              {isSuspended ? 'Suspended' : `${user.trustScore}/100`}
+                            </Badge>
+                            {!isSuspended && (
+                              <div className="w-12 hidden sm:block">
+                                <ProgressBar
+                                  value={Math.max(0.1, Math.min(1, user.trustScore / 100))}
+                                  color={user.trustScore >= 80 ? 'success' : 'warning'}
+                                />
+                              </div>
+                            )}
+                          </div>
+                        </TableCellLayout>
+                      </TableCell>
+
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="text-caption1 text-muted-foreground tabular">
+                            {new Date(user.createdAt).toLocaleDateString('en-IN', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </TableCellLayout>
+                      </TableCell>
+
+                      <TableCell>
+                        <TableCellLayout>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {user.hasCompanionProfile && (
+                              <Link
+                                to={`/provider/${user.id}`}
+                                className="px-2.5 py-1 rounded-md text-caption1 font-semibold bg-muted hover:bg-subtle text-foreground border border-border inline-flex items-center gap-1"
+                                title="Inspect companion public profile"
+                              >
+                                <Eye16Regular className="text-brand-fg" />
+                                <span>Inspect</span>
+                              </Link>
+                            )}
+
+                            {isUserAnAdmin ? (
+                              <Badge appearance="tint" color="warning" size="small">
+                                Protected admin
+                              </Badge>
+                            ) : (
+                              <>
+                                <Button
+                                  appearance="outline"
+                                  size="small"
+                                  disabled={isActing}
+                                  onClick={() => handleSuspendAction(user.id)}
+                                  className={isSuspended ? 'text-success' : 'text-destructive'}
+                                >
+                                  {isActing
+                                    ? 'Updating...'
+                                    : isSuspended
+                                    ? 'Reinstate'
+                                    : 'Suspend'}
+                                </Button>
+
+                                <Menu>
+                                  <MenuTrigger disableButtonEnhancement>
+                                    <Button
+                                      appearance="subtle"
+                                      size="small"
+                                      icon={<MoreHorizontal16Regular />}
+                                      aria-label="More account actions"
+                                    />
+                                  </MenuTrigger>
+                                  <MenuPopover>
+                                    <MenuList>
+                                      {user.hasCompanionProfile && (
+                                        <MenuItem
+                                          icon={<Eye16Regular />}
+                                          onClick={() => navigate(`/provider/${user.id}`)}
+                                        >
+                                          Inspect public profile
+                                        </MenuItem>
+                                      )}
+                                      <MenuItem onClick={() => handleSuspendAction(user.id)}>
+                                        {isSuspended ? 'Reinstate account' : 'Suspend account'}
+                                      </MenuItem>
+                                    </MenuList>
+                                  </MenuPopover>
+                                </Menu>
+                              </>
+                            )}
+                          </div>
+                        </TableCellLayout>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
 
@@ -497,7 +548,7 @@ export const AdminUsersDirectory: React.FC<AdminUsersDirectoryProps> = ({
           onPageSizeChange={handlePageSizeChange}
           isLoading={isLoading}
         />
-      </div>
+      </Card>
     </section>
   );
 };

@@ -1,12 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  CheckBadgeIcon,
-  ShieldCheckIcon,
-  ArrowPathIcon,
-  ExclamationCircleIcon,
-  XMarkIcon,
-  PaperAirplaneIcon,
-} from '@heroicons/react/24/outline';
+  Button,
+  Badge,
+  OverlayDrawer,
+  DrawerHeader,
+  DrawerHeaderTitle,
+  DrawerBody,
+  MessageBar,
+  MessageBarBody,
+} from '@fluentui/react-components';
+import {
+  CheckmarkCircle16Regular,
+  ShieldCheckmark16Regular,
+  ArrowSync16Regular,
+  Dismiss20Regular,
+  Send16Regular,
+} from '@fluentui/react-icons';
 
 interface OtpVerificationDrawerProps {
   type: 'email' | 'phone';
@@ -36,7 +45,6 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
 
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  // Cooldown countdown timer
   useEffect(() => {
     if (cooldown <= 0) return;
     const timer = setInterval(() => {
@@ -61,7 +69,7 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
       setCooldown(60);
       setTimeout(() => {
         inputRefs.current[0]?.focus();
-      }, 100);
+      }, 150);
     } catch (err: any) {
       setErrorMessage(err?.data?.error || err?.message || `Failed to send ${type} verification code.`);
     } finally {
@@ -76,12 +84,10 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
     setDigits(newDigits);
     setErrorMessage(null);
 
-    // Auto-advance to next box
     if (cleanVal && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
 
-    // Auto-submit if all 6 digits entered
     if (cleanVal && index === 5 && newDigits.every((d) => d.length === 1)) {
       submitCode(newDigits.join(''));
     }
@@ -129,58 +135,71 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
 
   return (
     <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <label className="block text-xs font-semibold text-muted-foreground">{label}</label>
-        {isVerified ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
-            <CheckBadgeIcon className="w-3.5 h-3.5" />
-            <span>Verified</span>
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <span className="block text-body1 font-semibold text-foreground">{label}</span>
+          <span className="block text-caption1 text-muted-foreground tabular">
+            {targetValue || 'Not configured'}
           </span>
+        </div>
+        {isVerified ? (
+          <Badge appearance="tint" color="success" icon={<CheckmarkCircle16Regular />}>
+            Verified
+          </Badge>
         ) : targetValue ? (
-          <button
-            type="button"
+          <Button
+            appearance="outline"
+            size="small"
+            icon={<ShieldCheckmark16Regular />}
             onClick={handleOpenDrawer}
             disabled={disabled || isOpen}
-            className="text-xs font-bold text-accent hover:underline flex items-center gap-1 cursor-pointer disabled:opacity-40"
           >
-            <ShieldCheckIcon className="w-3.5 h-3.5" />
-            <span>Verify {type === 'email' ? 'Email' : 'Phone'}</span>
-          </button>
+            Verify {type === 'email' ? 'email' : 'phone'}
+          </Button>
         ) : (
-          <span className="text-[11px] text-muted-foreground italic">Required</span>
+          <Badge appearance="outline" color="informative">
+            Required
+          </Badge>
         )}
       </div>
 
-      {/* Inline OTP Verification Drawer */}
-      {isOpen && !isVerified && (
-        <div className="p-4 rounded-2xl border border-accent/30 bg-accent/5 space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="text-xs font-bold text-foreground">
-                Enter 6-Digit Code Sent to {targetValue}
-              </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                We sent a security verification code to your {type === 'email' ? 'inbox' : 'mobile via SMS'}.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              className="text-muted-foreground hover:text-foreground p-1"
-            >
-              <XMarkIcon className="w-4 h-4" />
-            </button>
+      <OverlayDrawer
+        position="end"
+        open={isOpen && !isVerified}
+        onOpenChange={(_e, { open }) => setIsOpen(open)}
+      >
+        <DrawerHeader>
+          <DrawerHeaderTitle
+            action={
+              <Button
+                appearance="subtle"
+                aria-label="Close verification drawer"
+                icon={<Dismiss20Regular />}
+                onClick={() => setIsOpen(false)}
+              />
+            }
+          >
+            Verify {type === 'email' ? 'email address' : 'mobile number'}
+          </DrawerHeaderTitle>
+        </DrawerHeader>
+
+        <DrawerBody className="space-y-5 pt-2">
+          <div>
+            <p className="text-body1 font-semibold text-foreground">
+              Enter 6-digit code sent to <span className="tabular">{targetValue}</span>
+            </p>
+            <p className="text-caption1 text-muted-foreground mt-1">
+              We sent a security verification code to your {type === 'email' ? 'inbox' : 'mobile via SMS'}.
+            </p>
           </div>
 
           {errorMessage && (
-            <div className="p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold flex items-center gap-2">
-              <ExclamationCircleIcon className="w-4 h-4 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
+            <MessageBar intent="error">
+              <MessageBarBody>{errorMessage}</MessageBarBody>
+            </MessageBar>
           )}
 
-          {/* 6 Digit Input Boxes */}
-          <div className="flex items-center gap-2 justify-center py-1">
+          <div className="flex items-center gap-2 justify-center py-2">
             {digits.map((digit, idx) => (
               <input
                 key={idx}
@@ -191,47 +210,39 @@ export const OtpVerificationDrawer: React.FC<OtpVerificationDrawerProps> = ({
                 inputMode="numeric"
                 maxLength={1}
                 value={digit}
+                aria-label={`Verification digit ${idx + 1}`}
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
                 onPaste={handlePaste}
                 disabled={isVerifying || isSending}
-                className="w-10 h-12 text-center text-lg font-mono font-bold rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-accent transition-all shadow-xs"
+                className="w-11 h-12 text-center text-subtitle1 font-mono font-semibold tabular rounded-md border border-border bg-card text-foreground focus:outline-none focus:border-brand-stroke"
               />
             ))}
           </div>
 
-          <div className="flex items-center justify-between pt-1">
-            <button
-              type="button"
+          <div className="flex items-center justify-between pt-2">
+            <Button
+              appearance="subtle"
+              size="small"
+              icon={<ArrowSync16Regular className={isSending ? 'animate-spin' : ''} />}
               onClick={sendOtpCode}
               disabled={cooldown > 0 || isSending || isVerifying}
-              className="text-xs font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50 flex items-center gap-1 cursor-pointer"
             >
-              <ArrowPathIcon className={`w-3.5 h-3.5 ${isSending ? 'animate-spin' : ''}`} />
-              <span>{cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend Code'}</span>
-            </button>
+              {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
+            </Button>
 
-            <button
-              type="button"
+            <Button
+              appearance="primary"
+              icon={isVerifying ? <ArrowSync16Regular className="animate-spin" /> : <Send16Regular />}
               onClick={() => submitCode()}
               disabled={isVerifying || isSending || digits.some((d) => !d)}
-              className="px-4 py-2 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs shadow-xs disabled:opacity-40 flex items-center gap-1.5 cursor-pointer transition-colors"
+              className="min-h-11"
             >
-              {isVerifying ? (
-                <>
-                  <ArrowPathIcon className="w-3.5 h-3.5 animate-spin" />
-                  <span>Verifying...</span>
-                </>
-              ) : (
-                <>
-                  <PaperAirplaneIcon className="w-3.5 h-3.5" />
-                  <span>Confirm Code</span>
-                </>
-              )}
-            </button>
+              {isVerifying ? 'Verifying...' : 'Confirm code'}
+            </Button>
           </div>
-        </div>
-      )}
+        </DrawerBody>
+      </OverlayDrawer>
     </div>
   );
 };

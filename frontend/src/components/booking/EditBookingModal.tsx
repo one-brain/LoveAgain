@@ -1,16 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import {
-  XMarkIcon,
-  ShieldCheckIcon,
-  CheckCircleIcon,
-  InformationCircleIcon,
-  CalendarDaysIcon,
-  AdjustmentsHorizontalIcon,
-  MapPinIcon,
-  ClockIcon,
-  ArrowRightIcon,
-  ArrowLeftIcon,
-} from '@heroicons/react/24/outline';
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Input,
+  Textarea,
+  Field,
+  TabList,
+  Tab,
+  ToggleButton,
+  Badge,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Dismiss20Regular,
+  ShieldCheckmark20Regular,
+  CheckmarkCircle20Regular,
+  Calendar16Regular,
+  Options16Regular,
+  Location16Regular,
+  Clock16Regular,
+  ArrowRight16Regular,
+  ArrowLeft16Regular,
+} from '@fluentui/react-icons';
 import type { BookingSummary } from '../BookingCard';
 import { useUpdateBookingMutation } from '../../store/bookingApi';
 import { formatINR } from '../../utils/currency';
@@ -22,14 +40,14 @@ interface EditBookingModalProps {
 }
 
 const VENUE_SUGGESTIONS = [
-  '☕ Specialty Cafe / Coffee Date',
-  '🍽️ Fine Dining / Restaurant Visit',
-  '🛍️ City Mall / Shopping District',
-  '🎬 Cinema / Multiplex Outing',
-  '🌄 Scenic Spot / Weekend Activity',
-  '🎟️ Concert / Special Event Gala',
-  '🌳 Public Park / Garden',
-  '🎾 Sports Club / Tennis Courts',
+  'Specialty Cafe / Coffee Date',
+  'Fine Dining / Restaurant Visit',
+  'City Mall / Shopping District',
+  'Cinema / Multiplex Outing',
+  'Scenic Spot / Weekend Activity',
+  'Concert / Special Event Gala',
+  'Public Park / Garden',
+  'Sports Club / Tennis Courts',
 ];
 
 const DRESS_CODES = [
@@ -61,15 +79,15 @@ const LANGUAGES = [
 ];
 
 const POPULAR_ACTIVITIES = [
-  '☕ Coffee Date & Cafe Chat',
-  '🍽️ Restaurant Visit & Dining',
-  '🛍️ Shopping & Styling Companion',
-  '🎬 Movies & Cinema Outing',
-  '🌄 Weekend Activity & Day Out',
-  '🎟️ Special Event & Plus-One',
-  '🎾 Sports / Tennis Practice',
-  '🖼️ Art Gallery / Museum Tour',
-  '🌳 City Walk / Mindful Stroll',
+  'Coffee Date & Cafe Chat',
+  'Restaurant Visit & Dining',
+  'Shopping & Styling Companion',
+  'Movies & Cinema Outing',
+  'Weekend Activity & Day Out',
+  'Special Event & Plus-One',
+  'Sports / Tennis Practice',
+  'Art Gallery / Museum Tour',
+  'City Walk / Mindful Stroll',
 ];
 
 export const EditBookingModal: React.FC<EditBookingModalProps> = ({
@@ -90,7 +108,6 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
   const [languagePreference, setLanguagePreference] = useState(LANGUAGES[0]);
   const [specialNotes, setSpecialNotes] = useState('');
 
-  // Date & Time reschedule fields (active when in PendingPayment status)
   const [startDate, setStartDate] = useState('');
   const [startTime, setStartTime] = useState('');
   const [durationHours, setDurationHours] = useState(2);
@@ -134,18 +151,8 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
     setSuccessMsg('');
   }, [booking, isOpen]);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
   if (!isOpen || !booking) return null;
 
-  // Compute estimated rate & dynamic recalculation for Pending bookings
   const originalDurationHours =
     booking.startTime && booking.endTime
       ? Math.max(1, Math.round((new Date(booking.endTime).getTime() - new Date(booking.startTime).getTime()) / 3600000))
@@ -214,410 +221,362 @@ export const EditBookingModal: React.FC<EditBookingModalProps> = ({
   const guestName = booking.providerName || 'Verified Guest';
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="edit-booking-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-    >
-      <div className="bg-card border border-border w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-200">
-        {/* Header: mirrors BookingRequestModal */}
-        <div className="p-5 border-b border-border flex items-center justify-between bg-muted/40">
-          <div className="flex items-center gap-3 min-w-0">
-            {booking.providerPhoto ? (
-              <img
-                src={booking.providerPhoto}
-                alt={guestName}
-                className="w-12 h-12 rounded-2xl object-cover border border-border shadow-xs shrink-0"
+    <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && onClose()}>
+      <DialogSurface className="max-w-xl w-full bg-card border border-border rounded-2xl p-6 max-h-[92vh] overflow-y-auto">
+        <DialogBody>
+          <DialogTitle
+            action={
+              <Button
+                appearance="subtle"
+                aria-label="Close edit booking dialog"
+                icon={<Dismiss20Regular />}
+                onClick={onClose}
               />
-            ) : (
-              <div className="w-12 h-12 rounded-2xl bg-accent/10 text-accent font-serif text-xl font-normal flex items-center justify-center border border-border shadow-xs shrink-0">
-                {guestName.charAt(0)}
-              </div>
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-2">
-                <h2 id="edit-booking-title" className="text-base sm:text-lg font-bold text-foreground font-serif truncate">
-                  Edit Booking: {guestName}
-                </h2>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                  isPendingPayment
-                    ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border border-amber-500/30'
-                    : isConfirmed
-                    ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30'
-                    : 'bg-muted text-muted-foreground'
-                }`}>
-                  {isPendingPayment ? 'Awaiting Escrow' : isConfirmed ? 'Escrow Confirmed' : booking.status}
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground truncate">
-                Step {step} of 2: {step === 1 ? 'Schedule & Activity' : 'Venue & Experience Preferences'} • Ref #{booking.orderId.slice(0, 8)}
-              </p>
-            </div>
-          </div>
-
-          <button
-            onClick={onClose}
-            aria-label="Close edit booking dialog"
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer shrink-0 ml-2"
+            }
           >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Canonical 2-Step Segmented Navigator */}
-        <div className="flex border-b border-border/80">
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
-              step === 1 ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <CalendarDaysIcon className="w-4 h-4" />
-            <span>1. Schedule & Activity</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setStep(2)}
-            className={`flex-1 py-2.5 text-xs font-semibold text-center border-b-2 transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${
-              step === 2 ? 'border-accent text-accent' : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <AdjustmentsHorizontalIcon className="w-4 h-4" />
-            <span>2. Venue & Preferences</span>
-          </button>
-        </div>
-
-        {/* Scrollable Modal Content */}
-        <div className="p-6 overflow-y-auto space-y-5 flex-1 text-xs sm:text-sm">
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs font-medium flex items-center gap-2">
-              <InformationCircleIcon className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {successMsg && (
-            <div className="p-3 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-medium flex items-center gap-2">
-              <CheckCircleIcon className="w-4 h-4 shrink-0" />
-              <span>{successMsg}</span>
-            </div>
-          )}
-
-          {step === 1 ? (
-            /* STEP 1: Schedule & Activity */
-            <form onSubmit={handleStep1Submit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-1.5">
-                  Select Activity / Outing Focus
-                </label>
-                <div className="grid grid-cols-2 gap-2">
-                  {POPULAR_ACTIVITIES.map((act) => {
-                    const cleanName = act.replace(/^[^\w\s]+/, '').trim();
-                    const isSelected = activity === cleanName || activity === act;
-                    return (
-                      <button
-                        key={act}
-                        type="button"
-                        onClick={() => {
-                          setActivity(cleanName);
-                          setCustomActivity('');
-                        }}
-                        className={`p-2.5 rounded-xl border text-left font-medium text-xs transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-accent bg-accent/10 text-accent font-semibold shadow-2xs'
-                            : 'border-border bg-muted/40 text-foreground hover:bg-muted'
-                        }`}
-                      >
-                        ✓ {cleanName}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="mt-2.5">
-                  <input
-                    type="text"
-                    value={customActivity || (POPULAR_ACTIVITIES.some(p => p.includes(activity)) ? '' : activity)}
-                    onChange={(e) => {
-                      setCustomActivity(e.target.value);
-                      setActivity(e.target.value);
-                    }}
-                    placeholder="Or type custom activity (e.g. Badminton practice, Heritage walk)"
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-              </div>
-
-              {/* Schedule Configuration: Reschedule if PendingPayment, locked summary if Confirmed */}
-              {isPendingPayment ? (
-                <div className="pt-2 space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-xs font-bold text-muted-foreground mb-1">
-                        Date
-                      </label>
-                      <input
-                        type="date"
-                        value={startDate}
-                        min={minDateStr}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                        required
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-bold text-muted-foreground mb-1">
-                        Start Time
-                      </label>
-                      <input
-                        type="time"
-                        value={startTime}
-                        onChange={(e) => setStartTime(e.target.value)}
-                        className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Duration Slider: exact match with BookingRequestModal */}
-                  <div className="pt-2">
-                    <div className="flex justify-between items-center mb-1.5">
-                      <span className="text-xs font-bold text-muted-foreground">
-                        Duration: <strong className="text-foreground">{durationHours} {durationHours === 1 ? 'hour' : 'hours'}</strong>
-                      </span>
-                      <span className="text-xs font-bold text-accent font-mono tabular-nums">
-                        {formatINR(hourlyRate)} × {durationHours} = {formatINR(estimatedTotal)}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="1"
-                      max="8"
-                      step="1"
-                      value={durationHours}
-                      onChange={(e) => setDurationHours(Number(e.target.value))}
-                      className="w-full accent-accent cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground px-1 mt-0.5 font-mono">
-                      <span>1 hr</span>
-                      <span>2 hrs</span>
-                      <span>4 hrs</span>
-                      <span>6 hrs</span>
-                      <span>8 hrs</span>
-                    </div>
-                  </div>
-                </div>
+            <div className="flex items-center gap-3 min-w-0">
+              {booking.providerPhoto ? (
+                <img
+                  src={booking.providerPhoto}
+                  alt={guestName}
+                  className="w-12 h-12 rounded-lg object-cover border border-border shrink-0"
+                />
               ) : (
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                    <ClockIcon className="w-4 h-4 text-accent" />
-                    <span>Active Escrow Confirmed Schedule</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Outing timing is locked under confirmed escrow. You can modify your public venue, dress code, and preferences on Step 2. To reschedule timing, please coordinate with your guest in Chat.
-                  </p>
+                <div className="w-12 h-12 rounded-lg bg-accent-light text-brand-fg text-subtitle1 font-semibold flex items-center justify-center border border-border shrink-0">
+                  {guestName.charAt(0)}
                 </div>
               )}
-
-              {/* Escrow Preview Pill */}
-              <div className="p-3.5 rounded-2xl bg-muted/40 border border-border/80 flex items-center justify-between text-xs">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <ShieldCheckIcon className="w-5 h-5 text-emerald-500 shrink-0" />
-                  <span className="text-muted-foreground">Protected Payment (Safe Escrow)</span>
-                </div>
-                <span className="text-sm font-bold font-mono tabular-nums text-foreground">
-                  {formatINR(estimatedTotal)}
-                </span>
-              </div>
-
-              {/* Step 1 CTA */}
-              <div className="pt-3 flex justify-end">
-                <button
-                  type="submit"
-                  className="w-full sm:w-auto min-h-[44px] px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover transition-all flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  <span>Continue to Venue & Preferences</span>
-                  <ArrowRightIcon className="w-4 h-4" />
-                </button>
-              </div>
-            </form>
-          ) : (
-            /* STEP 2: Venue & Preferences */
-            <form onSubmit={handleFinalSubmit} className="space-y-4">
-              {/* Meeting Venue & Quick Chips */}
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-1">
-                  Public Meeting Venue / Spot <span className="text-destructive">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={meetingVenue}
-                  onChange={(e) => setMeetingVenue(e.target.value)}
-                  placeholder="e.g. Third Wave Coffee, Koramangala / Cubbon Park Gate 2"
-                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                  required
-                />
-                <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-                  <MapPinIcon className="w-3.5 h-3.5 text-accent shrink-0" />
-                  <span>Always specify public spaces (cafes, malls, lounges, parks) for verified safety.</span>
-                </p>
-
-                {/* Quick Venue Chips */}
-                <div className="flex flex-wrap gap-1.5 mt-2">
-                  {VENUE_SUGGESTIONS.map((v) => (
-                    <button
-                      key={v}
-                      type="button"
-                      onClick={() => setMeetingVenue(v.replace(/^[^\w\s]+/, '').trim())}
-                      className="px-2 py-0.5 rounded-lg bg-muted text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                    >
-                      {v}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Attire & Transport */}
-              <div className="grid grid-cols-2 gap-3 pt-1">
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Attire / Dress Code
-                  </label>
-                  <select
-                    value={dressCode}
-                    onChange={(e) => setDressCode(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent cursor-pointer"
-                  >
-                    {DRESS_CODES.map((dc) => (
-                      <option key={dc} value={dc}>{dc}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Logistics / Transport
-                  </label>
-                  <select
-                    value={transportMode}
-                    onChange={(e) => setTransportMode(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent cursor-pointer"
-                  >
-                    {TRANSPORT_MODES.map((tm) => (
-                      <option key={tm} value={tm}>{tm}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Diet & Language */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Food / Diet Preference
-                  </label>
-                  <select
-                    value={dietPreference}
-                    onChange={(e) => setDietPreference(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent cursor-pointer"
-                  >
-                    {DIET_PREFERENCES.map((dp) => (
-                      <option key={dp} value={dp}>{dp}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-muted-foreground mb-1">
-                    Preferred Language
-                  </label>
-                  <select
-                    value={languagePreference}
-                    onChange={(e) => setLanguagePreference(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent cursor-pointer"
-                  >
-                    {LANGUAGES.map((lang) => (
-                      <option key={lang} value={lang}>{lang}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Equipment / Gear Required */}
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-1">
-                  Equipment / Gear Required (Optional)
-                </label>
-                <input
-                  type="text"
-                  value={equipmentGear}
-                  onChange={(e) => setEquipmentGear(e.target.value)}
-                  placeholder="e.g. Bring own tennis racket, running shoes, camera"
-                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                />
-              </div>
-
-              {/* Special Notes / Discussion Topics */}
-              <div>
-                <label className="block text-xs font-bold text-muted-foreground mb-1">
-                  Special Notes / Conversation Topics
-                </label>
-                <textarea
-                  rows={2}
-                  value={specialNotes}
-                  onChange={(e) => setSpecialNotes(e.target.value)}
-                  placeholder="Share any special instructions, preferences, or conversation topics..."
-                  className="w-full px-3 py-2.5 rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                />
-              </div>
-
-              {/* Footer Actions: Strictly compliant 44px touch targets */}
-              <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider block">
-                    Total Escrow
+                  <span id="edit-booking-title" className="text-subtitle1 font-semibold text-foreground truncate">
+                    Edit booking: {guestName}
                   </span>
-                  <span className="text-base sm:text-lg font-bold font-mono tabular-nums text-foreground">
+                  <Badge
+                    appearance="tint"
+                    color={isPendingPayment ? 'warning' : isConfirmed ? 'success' : 'informative'}
+                  >
+                    {isPendingPayment ? 'Awaiting escrow' : isConfirmed ? 'Escrow confirmed' : booking.status}
+                  </Badge>
+                </div>
+                <p className="text-caption1 font-normal text-muted-foreground truncate tabular">
+                  Step {step} of 2: {step === 1 ? 'Schedule & activity' : 'Venue & experience preferences'} • Ref #{booking.orderId.slice(0, 8)}
+                </p>
+              </div>
+            </div>
+          </DialogTitle>
+
+          <DialogContent className="space-y-4 pt-4">
+            <TabList
+              selectedValue={step}
+              onTabSelect={(_, data) => setStep(data.value as 1 | 2)}
+              className="border-b border-border"
+            >
+              <Tab value={1} icon={<Calendar16Regular />}>
+                1. Schedule & activity
+              </Tab>
+              <Tab value={2} icon={<Options16Regular />}>
+                2. Venue & preferences
+              </Tab>
+            </TabList>
+
+            {errorMsg && (
+              <MessageBar intent="error">
+                <MessageBarBody>{errorMsg}</MessageBarBody>
+              </MessageBar>
+            )}
+
+            {successMsg && (
+              <MessageBar intent="success">
+                <MessageBarBody>{successMsg}</MessageBarBody>
+              </MessageBar>
+            )}
+
+            {step === 1 ? (
+              <form id="edit-step-1-form" onSubmit={handleStep1Submit} className="space-y-4">
+                <div>
+                  <label className="block text-caption1 font-semibold text-muted-foreground mb-1.5">
+                    Select activity / outing focus
+                  </label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {POPULAR_ACTIVITIES.map((act) => {
+                      const isSelected = activity === act;
+                      return (
+                        <ToggleButton
+                          key={act}
+                          size="small"
+                          checked={isSelected}
+                          appearance={isSelected ? 'primary' : 'outline'}
+                          onClick={() => {
+                            setActivity(act);
+                            setCustomActivity('');
+                          }}
+                          className="justify-start text-left min-h-11"
+                        >
+                          {act}
+                        </ToggleButton>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-2.5">
+                    <Input
+                      value={customActivity || (POPULAR_ACTIVITIES.some((p) => p.includes(activity)) ? '' : activity)}
+                      onChange={(_, data) => {
+                        setCustomActivity(data.value);
+                        setActivity(data.value);
+                      }}
+                      placeholder="Or type custom activity (e.g. Badminton practice, Heritage walk)"
+                      className="w-full"
+                    />
+                  </div>
+                </div>
+
+                {isPendingPayment ? (
+                  <div className="pt-2 space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label="Date" required>
+                        <input
+                          type="date"
+                          value={startDate}
+                          min={minDateStr}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1 font-mono tabular"
+                          required
+                        />
+                      </Field>
+
+                      <Field label="Start time" required>
+                        <input
+                          type="time"
+                          value={startTime}
+                          onChange={(e) => setStartTime(e.target.value)}
+                          className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1 font-mono tabular"
+                          required
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="pt-2">
+                      <div className="flex justify-between items-center mb-1.5">
+                        <span className="text-caption1 font-semibold text-muted-foreground">
+                          Duration: <strong className="text-foreground tabular">{durationHours} {durationHours === 1 ? 'hour' : 'hours'}</strong>
+                        </span>
+                        <span className="text-caption1 font-semibold text-brand-fg font-mono tabular">
+                          {formatINR(hourlyRate)} × {durationHours} = {formatINR(estimatedTotal)}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min="1"
+                        max="8"
+                        step="1"
+                        value={durationHours}
+                        onChange={(e) => setDurationHours(Number(e.target.value))}
+                        className="w-full accent-accent cursor-pointer"
+                      />
+                      <div className="flex justify-between text-caption2 text-muted-foreground px-1 mt-0.5 font-mono tabular">
+                        <span>1 hr</span>
+                        <span>2 hrs</span>
+                        <span>4 hrs</span>
+                        <span>6 hrs</span>
+                        <span>8 hrs</span>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 rounded-lg bg-muted border border-border space-y-1.5">
+                    <div className="flex items-center gap-2 text-caption1 font-semibold text-foreground">
+                      <Clock16Regular className="text-brand-fg" />
+                      <span>Active escrow confirmed schedule</span>
+                    </div>
+                    <p className="text-caption1 text-muted-foreground">
+                      Outing timing is locked under confirmed escrow. You can modify your public venue, dress code, and preferences on Step 2. To reschedule timing, please coordinate with your guest in Chat.
+                    </p>
+                  </div>
+                )}
+
+                <div className="p-3.5 rounded-lg bg-trust-light border border-trust-border flex items-center justify-between text-caption1">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheckmark20Regular className="text-trust shrink-0" />
+                    <span className="text-trust font-semibold">Protected payment (safe escrow)</span>
+                  </div>
+                  <span className="text-body1 font-semibold font-mono tabular text-foreground">
                     {formatINR(estimatedTotal)}
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="min-h-[44px] px-4 py-2.5 rounded-xl border border-border text-xs font-semibold text-muted-foreground hover:bg-muted cursor-pointer transition-colors flex items-center gap-1.5"
+                <DialogActions className="pt-2">
+                  <Button
+                    appearance="secondary"
+                    size="large"
+                    className="min-h-11"
+                    onClick={onClose}
                   >
-                    <ArrowLeftIcon className="w-3.5 h-3.5" />
-                    <span>Back</span>
-                  </button>
-
-                  <button
+                    Cancel
+                  </Button>
+                  <Button
                     type="submit"
-                    disabled={isUpdating}
-                    className="min-h-[44px] px-5 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs shadow-xs hover:bg-accent-hover disabled:opacity-50 transition-all flex items-center gap-2 cursor-pointer"
+                    appearance="primary"
+                    size="large"
+                    className="min-h-11"
+                    icon={<ArrowRight16Regular />}
+                    iconPosition="after"
                   >
-                    {isUpdating ? (
-                      <>
-                        <span className="w-3.5 h-3.5 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                        <span>Saving...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Save Changes</span>
-                        <CheckCircleIcon className="w-4 h-4" />
-                      </>
-                    )}
-                  </button>
+                    Continue to venue & preferences
+                  </Button>
+                </DialogActions>
+              </form>
+            ) : (
+              <form id="edit-step-2-form" onSubmit={handleFinalSubmit} className="space-y-4">
+                <div>
+                  <Field
+                    label="Public meeting venue / spot"
+                    required
+                    hint="Always specify public spaces (cafes, malls, lounges, parks) for verified safety."
+                  >
+                    <Input
+                      value={meetingVenue}
+                      onChange={(_, data) => setMeetingVenue(data.value)}
+                      placeholder="e.g. Third Wave Coffee, Koramangala / Cubbon Park Gate 2"
+                      contentBefore={<Location16Regular className="text-brand-fg" />}
+                      required
+                    />
+                  </Field>
+
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {VENUE_SUGGESTIONS.map((v) => (
+                      <ToggleButton
+                        key={v}
+                        size="small"
+                        checked={meetingVenue === v}
+                        appearance={meetingVenue === v ? 'primary' : 'subtle'}
+                        onClick={() => setMeetingVenue(v)}
+                      >
+                        {v}
+                      </ToggleButton>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            </form>
-          )}
-        </div>
-      </div>
-    </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-caption1 font-semibold text-muted-foreground mb-1">
+                      Attire / dress code
+                    </label>
+                    <select
+                      value={dressCode}
+                      onChange={(e) => setDressCode(e.target.value)}
+                      className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1"
+                    >
+                      {DRESS_CODES.map((dc) => (
+                        <option key={dc} value={dc}>{dc}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-caption1 font-semibold text-muted-foreground mb-1">
+                      Logistics / transport
+                    </label>
+                    <select
+                      value={transportMode}
+                      onChange={(e) => setTransportMode(e.target.value)}
+                      className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1"
+                    >
+                      {TRANSPORT_MODES.map((tm) => (
+                        <option key={tm} value={tm}>{tm}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-caption1 font-semibold text-muted-foreground mb-1">
+                      Food / diet preference
+                    </label>
+                    <select
+                      value={dietPreference}
+                      onChange={(e) => setDietPreference(e.target.value)}
+                      className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1"
+                    >
+                      {DIET_PREFERENCES.map((dp) => (
+                        <option key={dp} value={dp}>{dp}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-caption1 font-semibold text-muted-foreground mb-1">
+                      Preferred language
+                    </label>
+                    <select
+                      value={languagePreference}
+                      onChange={(e) => setLanguagePreference(e.target.value)}
+                      className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1"
+                    >
+                      {LANGUAGES.map((lang) => (
+                        <option key={lang} value={lang}>{lang}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <Field label="Equipment / gear required (optional)">
+                  <Input
+                    value={equipmentGear}
+                    onChange={(_, data) => setEquipmentGear(data.value)}
+                    placeholder="e.g. Bring own tennis racket, running shoes, camera"
+                  />
+                </Field>
+
+                <Field label="Special notes / conversation topics">
+                  <Textarea
+                    rows={2}
+                    value={specialNotes}
+                    onChange={(_, data) => setSpecialNotes(data.value)}
+                    placeholder="Share any special instructions, preferences, or conversation topics..."
+                  />
+                </Field>
+
+                <div className="pt-3 border-t border-border flex items-center justify-between gap-3">
+                  <div>
+                    <span className="text-caption2 text-muted-foreground font-semibold block">
+                      Total escrow
+                    </span>
+                    <span className="text-subtitle2 font-semibold font-mono tabular text-foreground">
+                      {formatINR(estimatedTotal)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      appearance="secondary"
+                      size="large"
+                      className="min-h-11"
+                      icon={<ArrowLeft16Regular />}
+                      onClick={() => setStep(1)}
+                    >
+                      Back
+                    </Button>
+
+                    <Button
+                      type="submit"
+                      appearance="primary"
+                      size="large"
+                      className="min-h-11"
+                      disabled={isUpdating}
+                      icon={isUpdating ? <Spinner size="tiny" /> : <CheckmarkCircle20Regular />}
+                    >
+                      {isUpdating ? 'Saving...' : 'Save changes'}
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            )}
+          </DialogContent>
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
   );
 };

@@ -1,26 +1,26 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Button, Badge, Tag } from '@fluentui/react-components';
+import {
+  Chat20Regular,
+  Calendar16Regular,
+  Clock16Regular,
+  Location16Regular,
+  CheckmarkCircle20Regular,
+  Payment20Regular,
+  ShieldCheckmark20Regular,
+  ShieldCheckmark16Regular,
+  ShieldError16Regular,
+  CheckmarkStarburst16Filled,
+  Star16Filled,
+  ArrowUpRight16Regular,
+  Edit16Regular,
+  Dismiss16Regular,
+} from '@fluentui/react-icons';
 import { useGetBookingReviewStatusQuery } from '../store/reviewApi';
 import { LeaveReviewModal } from './booking/LeaveReviewModal';
-import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
-import { useNavigate } from 'react-router-dom';
 import { formatINR } from '../utils/currency';
 import { resolveProviderInfo } from '../utils/providerData';
-import {
-  ChatBubbleLeftRightIcon,
-  CalendarDaysIcon,
-  ClockIcon,
-  MapPinIcon,
-  CheckCircleIcon,
-  CreditCardIcon,
-  ShieldCheckIcon,
-  ShieldExclamationIcon,
-  CheckBadgeIcon,
-  StarIcon,
-  ArrowUpRightIcon,
-  PencilSquareIcon,
-  XMarkIcon,
-  SparklesIcon,
-} from '@heroicons/react/24/outline';
 
 export interface BookingSummary {
   orderId: string;
@@ -74,37 +74,31 @@ interface BookingCardProps {
 
 const STATUS_CONFIG: Record<
   string,
-  { label: string; badgeClass: string; dotClass: string }
+  { label: string; color: 'warning' | 'success' | 'informative' | 'danger' | 'brand' }
 > = {
   PendingPayment: {
-    label: 'Awaiting Escrow',
-    badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25',
-    dotClass: 'bg-amber-500',
+    label: 'Awaiting escrow',
+    color: 'warning',
   },
   Confirmed: {
-    label: 'Escrow Confirmed',
-    badgeClass: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
-    dotClass: 'bg-emerald-500',
+    label: 'Escrow confirmed',
+    color: 'success',
   },
   InProgress: {
-    label: 'Outing in Progress',
-    badgeClass: 'bg-sky-500/10 text-sky-700 dark:text-sky-400 border-sky-500/25',
-    dotClass: 'bg-sky-500 animate-ping',
+    label: 'Outing in progress',
+    color: 'informative',
   },
   Completed: {
-    label: 'Completed & Settled',
-    badgeClass: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
-    dotClass: 'bg-emerald-500',
+    label: 'Completed & settled',
+    color: 'success',
   },
   Cancelled: {
     label: 'Cancelled',
-    badgeClass: 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/25',
-    dotClass: 'bg-rose-500',
+    color: 'danger',
   },
   Disputed: {
-    label: 'Under Escrow Review',
-    badgeClass: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/25',
-    dotClass: 'bg-amber-500',
+    label: 'Under escrow review',
+    color: 'warning',
   },
 };
 
@@ -149,7 +143,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
     skip: !isCompleted,
   });
 
-  // Resolve participant profile details strictly according to perspective
   const isCompanionView = roleMode === 'companion';
   const providerInfo = resolveProviderInfo(booking.providerId, liveProviders);
 
@@ -197,7 +190,6 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   const isCancelled = booking.status === 'Cancelled';
   const isDisputed = booking.status === 'Disputed';
 
-  // Gather concise outing requirement chips
   const tags: string[] = [];
   if (booking.requirements?.dressCode) {
     tags.push(booking.requirements.dressCode);
@@ -213,36 +205,30 @@ export const BookingCard: React.FC<BookingCardProps> = ({
   }
 
   return (
-    <div className="relative rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs hover:shadow-md transition-all duration-200 flex flex-col justify-between gap-5 group overflow-hidden">
+    <div className="relative rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col justify-between gap-5 overflow-hidden">
       {/* Top Ledger Strip: Reference & Semantic Status */}
       <div>
-        <div className="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-border/60">
+        <div className="flex items-center justify-between gap-2 pb-3 mb-4 border-b border-border">
           <div className="flex items-center gap-2 min-w-0">
-            <span className="text-[11px] font-mono tracking-wider text-muted-foreground uppercase">
+            <span className="text-caption1 font-mono tabular text-muted-foreground">
               Ref #{booking.orderId.slice(0, 8)}
             </span>
             {showRoleBadge && (
-              <span
-                className={`px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                  isCompanionView
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
-                    : 'bg-accent/10 text-accent border border-accent/20'
-                }`}
+              <Badge
+                appearance="tint"
+                color={isCompanionView ? 'success' : 'brand'}
               >
-                {isCompanionView ? 'Attending as Guest' : 'Hosting Outing'}
-              </span>
+                {isCompanionView ? 'Attending as guest' : 'Hosting outing'}
+              </Badge>
             )}
           </div>
 
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border ${statusInfo.badgeClass}`}
-          >
-            <span className={`w-1.5 h-1.5 rounded-full ${statusInfo.dotClass}`} />
-            <span>{statusInfo.label}</span>
-          </span>
+          <Badge appearance="tint" color={statusInfo.color}>
+            {statusInfo.label}
+          </Badge>
         </div>
 
-        {/* Participant & Experience Header (Instrument Serif Typography & Clean Presentation) */}
+        {/* Participant & Experience Header */}
         <div className="flex items-start gap-3.5 mb-4">
           <div
             onClick={!isCompanionView && booking.providerId ? handleViewProfile : undefined}
@@ -255,19 +241,19 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 src={photoUrl}
                 alt={displayName}
                 loading="lazy"
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-1 ring-border shadow-2xs group-hover:ring-accent/40 transition-all"
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg object-cover border border-border"
               />
             ) : (
-              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-accent/10 text-accent font-serif text-2xl font-normal flex items-center justify-center ring-1 ring-border shadow-2xs">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-lg bg-accent-light text-brand-fg text-title3 font-semibold flex items-center justify-center border border-border">
                 {displayName.charAt(0)}
               </div>
             )}
             {isVerified && (
               <span
-                className="absolute -bottom-1 -right-1 bg-amber-500 text-white p-0.5 rounded-full shadow-2xs"
+                className="absolute -bottom-1 -right-1 bg-trust-light text-trust border border-trust-border p-0.5 rounded-full shadow-xs"
                 title="Verified Identity"
               >
-                <CheckBadgeIcon className="w-4 h-4" />
+                <CheckmarkStarburst16Filled />
               </span>
             )}
           </div>
@@ -276,9 +262,9 @@ export const BookingCard: React.FC<BookingCardProps> = ({
             <div className="flex items-baseline justify-between gap-1">
               <h3
                 onClick={!isCompanionView && booking.providerId ? handleViewProfile : undefined}
-                className={`font-serif text-lg sm:text-xl font-normal text-foreground leading-tight truncate ${
+                className={`text-subtitle2 font-semibold text-foreground truncate ${
                   !isCompanionView && booking.providerId
-                    ? 'cursor-pointer hover:text-accent transition-colors'
+                    ? 'cursor-pointer hover:text-brand-fg transition-colors'
                     : ''
                 }`}
               >
@@ -289,27 +275,26 @@ export const BookingCard: React.FC<BookingCardProps> = ({
                 <button
                   type="button"
                   onClick={handleViewProfile}
-                  className="text-[11px] font-medium text-accent hover:text-accent-hover inline-flex items-center gap-0.5 shrink-0 transition-colors cursor-pointer"
+                  className="text-caption1 font-semibold text-brand-fg inline-flex items-center gap-0.5 shrink-0 cursor-pointer"
                   title="View full guest profile"
                 >
                   <span>Profile</span>
-                  <ArrowUpRightIcon className="w-3 h-3" />
+                  <ArrowUpRight16Regular />
                 </button>
               )}
             </div>
 
             <div className="flex flex-wrap items-center gap-2 mt-1">
               {rating ? (
-                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-600 dark:text-amber-400 font-mono">
-                  <StarIcon className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                <span className="inline-flex items-center gap-1 text-caption1 font-semibold text-trust font-mono tabular">
+                  <Star16Filled />
                   <span>{rating.toFixed(2)}</span>
                 </span>
               ) : null}
 
               {activityTitle ? (
-                <span className="inline-flex items-center gap-1 text-xs text-muted-foreground truncate font-medium">
+                <span className="inline-flex items-center gap-1 text-caption1 text-muted-foreground truncate">
                   {rating ? <span className="text-border">•</span> : null}
-                  <SparklesIcon className="w-3 h-3 text-accent/70 shrink-0" />
                   <span className="truncate">{activityTitle}</span>
                 </span>
               ) : null}
@@ -318,60 +303,54 @@ export const BookingCard: React.FC<BookingCardProps> = ({
         </div>
 
         {/* Outing Schedule & Logistics Card Body */}
-        <div className="space-y-2.5 text-xs text-foreground/80 py-3 border-t border-border/60">
-          {/* Date & Time Window */}
+        <div className="space-y-2.5 text-caption1 text-foreground py-3 border-t border-border">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
-              <CalendarDaysIcon className="w-4 h-4 text-accent shrink-0" />
+              <Calendar16Regular className="text-brand-fg shrink-0" />
               <span className="font-semibold text-foreground truncate">
                 {formatBookingDate(booking.startTime)}
               </span>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0 bg-muted/60 px-2 py-0.5 rounded-md border border-border/40 font-mono text-[11px] text-foreground tabular-nums">
-              <ClockIcon className="w-3.5 h-3.5 text-muted-foreground" />
+            <div className="flex items-center gap-1.5 shrink-0 bg-muted px-2 py-0.5 rounded border border-border font-mono text-caption1 text-foreground tabular">
+              <Clock16Regular className="text-muted-foreground" />
               <span>{formatBookingTimeRange(booking.startTime, booking.endTime)}</span>
             </div>
           </div>
 
-          {/* Meeting Address / Location */}
           <div className="flex items-start gap-2 pt-0.5">
-            <MapPinIcon className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
+            <Location16Regular className="text-muted-foreground shrink-0 mt-0.5" />
             <span className="text-muted-foreground line-clamp-1">
               {booking.meetingAddress || 'Venue details confirmed with guest'}
             </span>
           </div>
 
-          {/* Activity Tags & Style Specifications */}
           {tags.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pt-1">
               {tags.map((tag, idx) => (
-                <span
-                  key={idx}
-                  className="px-2 py-0.5 rounded-md bg-muted/50 border border-border/50 text-[10px] font-medium text-muted-foreground"
-                >
+                <Tag key={idx} size="extra-small" appearance="outline">
                   {tag}
-                </span>
+                </Tag>
               ))}
             </div>
           )}
         </div>
 
-        {/* Confirmed Meeting Check-In Voucher (Concierge Verification Ticket) */}
+        {/* Confirmed Meeting Check-In Voucher */}
         {isConfirmed && !isCompanionView && (
-          <div className="mt-3 p-3.5 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-between gap-3">
+          <div className="mt-3 p-3.5 rounded-lg bg-accent-light border border-border flex items-center justify-between gap-3">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
-                Session Arrival PIN
+              <span className="text-caption2 font-mono text-brand-fg font-semibold block">
+                Session arrival PIN
               </span>
-              <span className="text-2xl font-mono font-bold tracking-[0.2em] text-foreground tabular-nums">
+              <span className="text-title3 font-mono font-semibold tracking-widest text-foreground tabular">
                 {booking.checkInPin ? booking.checkInPin : '••••••'}
               </span>
             </div>
             <div className="text-right max-w-[170px]">
-              <span className="text-[11px] font-semibold text-foreground block">
-                {booking.checkInPin ? 'Present at Meetup' : 'Check-In Security'}
+              <span className="text-caption1 font-semibold text-foreground block">
+                {booking.checkInPin ? 'Present at meetup' : 'Check-in security'}
               </span>
-              <span className="text-[10px] text-muted-foreground leading-tight block">
+              <span className="text-caption2 text-muted-foreground block">
                 {booking.checkInPin
                   ? 'Present this 6-digit PIN to guest upon arrival to begin your outing.'
                   : 'PIN generated securely upon arrival check-in.'}
@@ -380,22 +359,22 @@ export const BookingCard: React.FC<BookingCardProps> = ({
           </div>
         )}
 
-        {/* In-Progress Outing Completion Voucher (Guest holds Completion PIN to disclose to Host) */}
+        {/* In-Progress Outing Completion Voucher */}
         {isInProgress && isCompanionView && (
-          <div className="mt-3 p-3.5 rounded-xl bg-accent/5 border border-accent/20 flex items-center justify-between gap-3">
+          <div className="mt-3 p-3.5 rounded-lg bg-accent-light border border-border flex items-center justify-between gap-3">
             <div>
-              <span className="text-[10px] font-mono uppercase tracking-wider text-accent font-semibold block">
-                Outing Completion PIN
+              <span className="text-caption2 font-mono text-brand-fg font-semibold block">
+                Outing completion PIN
               </span>
-              <span className="text-2xl font-mono font-bold tracking-[0.2em] text-foreground tabular-nums">
+              <span className="text-title3 font-mono font-semibold tracking-widest text-foreground tabular">
                 {booking.completionPin ? booking.completionPin : '••••••'}
               </span>
             </div>
             <div className="text-right max-w-[180px]">
-              <span className="text-[11px] font-semibold text-foreground block">
-                {booking.completionPin ? 'Provide to Host' : 'Escrow Release Code'}
+              <span className="text-caption1 font-semibold text-foreground block">
+                {booking.completionPin ? 'Provide to host' : 'Escrow release code'}
               </span>
-              <span className="text-[10px] text-muted-foreground leading-tight block">
+              <span className="text-caption2 text-muted-foreground block">
                 {booking.completionPin
                   ? 'Disclose this PIN to host when outing concludes to authorize escrow release.'
                   : 'PIN available during active session.'}
@@ -406,19 +385,19 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
         {/* Cancelled or Disputed Status Banner */}
         {(isCancelled || isDisputed) && (
-          <div className="mt-3 p-3 rounded-xl bg-muted/60 border border-border/80 space-y-1.5 text-xs">
+          <div className="mt-3 p-3 rounded-lg bg-muted border border-border space-y-1.5 text-caption1">
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold text-foreground flex items-center gap-1.5">
-                <ShieldCheckIcon className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                <span>100% Escrow Protected</span>
+                <ShieldCheckmark16Regular className="text-trust" />
+                <span>100% escrow protected</span>
               </span>
-              <span className="text-[11px] font-mono text-muted-foreground uppercase">
+              <span className="text-caption1 font-mono text-muted-foreground">
                 {booking.status}
               </span>
             </div>
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
+            <p className="text-caption1 text-muted-foreground">
               {booking.cancellationReason
-                ? `Cancellation Note: "${booking.cancellationReason}"`
+                ? `Cancellation note: "${booking.cancellationReason}"`
                 : 'Session ended prior to fulfillment. Funds held in the escrow vault were returned to your wallet or original payment method.'}
             </p>
           </div>
@@ -426,159 +405,165 @@ export const BookingCard: React.FC<BookingCardProps> = ({
 
         {/* Live Meetup Bar & SOS Trigger */}
         {isInProgress && (
-          <div className="mt-3 p-3 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-between gap-2">
+          <div className="mt-3 p-3 rounded-lg bg-accent-light border border-border flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-ping" />
-              <span className="text-xs font-bold text-sky-700 dark:text-sky-300">
-                Outing in Progress
+              <span className="w-2.5 h-2.5 rounded-full bg-brand-fg" />
+              <span className="text-caption1 font-semibold text-brand-fg">
+                Outing in progress
               </span>
             </div>
             {onOpenSos && (
-              <button
-                type="button"
+              <Button
+                appearance="outline"
+                size="small"
+                icon={<ShieldError16Regular />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onOpenSos(booking);
                 }}
-                className="px-2.5 py-1 min-h-[32px] rounded-lg bg-destructive/15 text-destructive hover:bg-destructive/25 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                className="text-destructive border-destructive"
               >
-                <ShieldExclamationIcon className="w-3.5 h-3.5" />
-                <span>Safety SOS</span>
-              </button>
+                Safety SOS
+              </Button>
             )}
           </div>
         )}
       </div>
 
       {/* Card Ledger & Actions Section */}
-      <div className="pt-3 border-t border-border/70 space-y-3">
-        {/* Total Ledger & Escrow Guarantee */}
+      <div className="pt-3 border-t border-border space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div>
-            <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium block">
-              {isPendingPayment ? 'Escrow Deposit' : 'Total Escrow Hold'}
+            <span className="text-caption2 text-muted-foreground font-semibold block">
+              {isPendingPayment ? 'Escrow deposit' : 'Total escrow hold'}
             </span>
-            <span className="text-xl font-bold font-mono tabular-nums text-foreground">
+            <span className="text-subtitle1 font-semibold font-mono tabular text-foreground">
               {formatINR(booking.totalAmount)}
             </span>
           </div>
 
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground bg-muted/40 px-2 py-1 rounded-md border border-border/40 font-medium">
-            <ShieldCheckIcon className="w-3.5 h-3.5 text-accent" />
-            <span>Escrow Protected</span>
-          </div>
+          <Badge
+            appearance="tint"
+            color="warning"
+            icon={<ShieldCheckmark16Regular />}
+            className="bg-trust-light text-trust border border-trust-border"
+          >
+            Escrow protected
+          </Badge>
         </div>
 
         {/* Action Controls Matrix: strictly compliant 44px touch targets */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
-          {/* Primary Action Button */}
           {isPendingPayment && !isCompanionView && onPay && (
-            <button
-              type="button"
+            <Button
+              appearance="primary"
+              size="large"
+              icon={<Payment20Regular />}
               onClick={(e) => {
                 e.stopPropagation();
                 onPay(booking);
               }}
-              className="flex-1 min-w-[130px] min-h-[44px] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+              className="flex-1 min-w-[130px] min-h-11"
             >
-              <CreditCardIcon className="w-4 h-4" />
-              <span>Deposit Escrow</span>
-            </button>
+              Deposit escrow
+            </Button>
           )}
 
           {isConfirmed && isCompanionView && onCheckIn && (
-            <button
-              type="button"
+            <Button
+              appearance="primary"
+              size="large"
+              icon={<ShieldCheckmark20Regular />}
               onClick={(e) => {
                 e.stopPropagation();
                 onCheckIn(booking);
               }}
-              className="flex-1 min-w-[130px] min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 cursor-pointer"
+              className="flex-1 min-w-[130px] min-h-11"
             >
-              <ShieldCheckIcon className="w-4 h-4" />
-              <span>Verify PIN</span>
-            </button>
+              Verify PIN
+            </Button>
           )}
 
           {isInProgress && !isCompanionView && onComplete && (
-            <button
-              type="button"
+            <Button
+              appearance="primary"
+              size="large"
+              icon={<CheckmarkCircle20Regular />}
               onClick={(e) => {
                 e.stopPropagation();
                 onComplete(booking);
               }}
-              className="flex-1 min-w-[150px] min-h-[44px] px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
+              className="flex-1 min-w-[150px] min-h-11"
             >
-              <CheckCircleIcon className="w-4 h-4" />
-              <span>Complete Outing</span>
-            </button>
+              Complete outing
+            </Button>
           )}
 
           {isCompleted && (
             reviewStatus?.hasReviewed ? (
-              <div className="flex items-center gap-1.5 px-3 py-2 min-h-[44px] rounded-xl bg-amber-500/10 border border-amber-500/20 text-[#C5A059] text-xs font-semibold">
-                <SolidStarIcon className="w-4 h-4 text-[#C5A059]" />
+              <div className="flex items-center gap-1.5 px-3 py-2 min-h-11 rounded-md bg-trust-light border border-trust-border text-trust text-caption1 font-semibold tabular">
+                <Star16Filled />
                 <span>Reviewed ({reviewStatus.myReview?.rating || 5}/5)</span>
               </div>
             ) : (
-              <button
-                type="button"
+              <Button
+                appearance="primary"
+                size="large"
+                icon={<Star16Filled />}
                 onClick={(e) => {
                   e.stopPropagation();
                   setIsReviewModalOpen(true);
                 }}
-                className="flex-1 min-w-[130px] min-h-[44px] px-4 py-2.5 rounded-xl bg-[#C5A059] hover:bg-[#b08e4c] text-white font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="flex-1 min-w-[130px] min-h-11"
               >
-                <SolidStarIcon className="w-4 h-4" />
-                <span>Leave a Review</span>
-              </button>
+                Leave a review
+              </Button>
             )
           )}
 
-          {/* Secondary Actions Group */}
           <div className="flex items-center gap-1.5 ml-auto">
-            {/* Edit Booking (Only host can edit requirements/venue while pending or confirmed) */}
             {(isPendingPayment || isConfirmed) && !isCompanionView && onEdit && (
-              <button
-                type="button"
+              <Button
+                appearance="outline"
+                size="large"
+                icon={<Edit16Regular />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onEdit(booking);
                 }}
-                className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl border border-border hover:border-accent/40 text-foreground hover:text-accent hover:bg-muted text-xs font-medium transition-colors flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
                 title="Edit venue, requirements, or schedule"
+                className="min-h-11"
               >
-                <PencilSquareIcon className="w-4 h-4" />
                 <span className="hidden sm:inline">Edit</span>
-              </button>
+              </Button>
             )}
 
-            {/* Cancel Booking */}
             {onCancel && !isCancelled && !isDisputed && !isCompleted && !isInProgress && (
-              <button
-                type="button"
+              <Button
+                appearance="outline"
+                size="large"
+                icon={<Dismiss16Regular />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onCancel(booking);
                 }}
-                className="min-h-[44px] min-w-[44px] px-3 py-2 rounded-xl border border-border hover:border-destructive/40 text-muted-foreground hover:text-destructive hover:bg-destructive/5 text-xs font-medium transition-colors flex items-center justify-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-destructive/50 cursor-pointer"
                 title="Cancel booking"
+                className="min-h-11 text-destructive border-border"
               >
-                <XMarkIcon className="w-4 h-4 sm:hidden" />
                 <span className="hidden sm:inline">Cancel</span>
-              </button>
+              </Button>
             )}
 
-            {/* Chat with guest / host */}
-            <button
-              type="button"
+            <Button
+              appearance="outline"
+              size="large"
+              icon={<Chat20Regular className="text-brand-fg" />}
               onClick={handleOpenChat}
-              className="min-h-[44px] min-w-[44px] px-3.5 py-2 rounded-xl border border-border hover:bg-muted text-foreground font-medium text-xs transition-all flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent cursor-pointer"
               title="Open secure chat"
+              className="min-h-11"
             >
-              <ChatBubbleLeftRightIcon className="w-4 h-4 text-accent" />
               <span className="hidden sm:inline">Chat</span>
-            </button>
+            </Button>
           </div>
         </div>
       </div>

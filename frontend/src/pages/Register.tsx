@@ -2,6 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import {
+  Badge,
+  Button,
+  Card,
+  Field,
+  Input,
+  MessageBar,
+  MessageBarBody,
+  Select,
+  Tab,
+  TabList,
+} from '@fluentui/react-components';
+import {
+  Sparkle16Regular,
+  ShieldCheckmark16Regular,
+  LockClosed20Regular,
+  Mail20Regular,
+  Person20Regular,
+  Phone20Regular,
+  Eye20Regular,
+  EyeOff20Regular,
+  Calendar20Regular,
+} from '@fluentui/react-icons';
+import {
   useRegisterMutation,
   useSendMobileOtpMutation,
   useVerifyMobileOtpMutation,
@@ -9,18 +32,6 @@ import {
 import { loginSuccess } from '../store/slices/authSlice';
 import { resetAllApiCaches } from '../utils/sessionManager';
 import { isLegalAge, getMaxLegalBirthdate } from '../utils/dateUtils';
-import {
-  SparklesIcon,
-  ShieldCheckIcon,
-  LockClosedIcon,
-  EnvelopeIcon,
-  UserIcon,
-  PhoneIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  CheckCircleIcon,
-  CalendarIcon,
-} from '@heroicons/react/24/outline';
 
 const Register: React.FC = () => {
   const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile');
@@ -71,8 +82,7 @@ const Register: React.FC = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleEmailChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name]) {
@@ -249,459 +259,378 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-140px)] flex flex-col lg:flex-row">
-      {/* Left side: Editorial quote & Brand Moment */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary text-primary-foreground flex-col justify-between p-16 relative overflow-hidden border-r border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold">
-            <SparklesIcon className="w-5 h-5" />
+    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12 bg-background">
+      <Card className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-md bg-accent flex items-center justify-center text-accent-foreground font-semibold">
+              <Sparkle16Regular />
+            </div>
+            <span className="text-subtitle2 font-semibold text-foreground">Cue</span>
           </div>
-          <span className="text-xl font-bold font-serif text-primary-foreground">Cue</span>
+          <div className="flex items-center gap-1 text-caption1 text-muted-foreground">
+            <ShieldCheckmark16Regular className="text-success" />
+            <span>Identity Verified</span>
+          </div>
         </div>
 
-        <div className="space-y-6 max-w-lg">
-          <h2 className="text-3xl sm:text-4xl font-bold font-serif leading-tight text-primary-foreground">
-            {rawRedirect?.includes('apply-companion')
-              ? 'Monetize your passions with guaranteed escrow earnings.'
-              : 'Share experiences. Learn new skills. Connect genuinely.'}
-          </h2>
-          <p className="text-sm sm:text-base text-primary-foreground/85 leading-relaxed">
-            {rawRedirect?.includes('apply-companion')
-              ? 'Set your own schedule, connect with clients for social outings, dining, city tours, or sports, and get paid securely with zero escrow payment defaults.'
-              : 'Join thousands finding companions for activities, from tennis rallies to cooking workshops to museum strolls, with verified community trust.'}
+        <div>
+          {rawRedirect?.includes('apply-companion') && (
+            <div className="mb-2">
+              <Badge appearance="tint" color="brand" size="medium" icon={<Sparkle16Regular />}>
+                Companion Application • Step 1 of 2
+              </Badge>
+            </div>
+          )}
+          <h1 className="text-title2 font-semibold text-foreground">
+            Create your account
+          </h1>
+          <p className="text-body1 text-muted-foreground mt-1">
+            Already have an account?{' '}
+            <Link
+              to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
+              className="font-semibold text-brand-fg hover:underline"
+            >
+              Sign in
+            </Link>
           </p>
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-primary-foreground/80">
-          <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />
-          <span>Identity-verified safety checks & escrow guarantees.</span>
-        </div>
-      </div>
+        {/* Auth Method Switcher */}
+        <TabList
+          selectedValue={authMethod}
+          onTabSelect={(_, data) => {
+            setAuthMethod(data.value as 'mobile' | 'email');
+            setErrors({});
+          }}
+          className="w-full"
+        >
+          <Tab value="mobile" icon={<Phone20Regular />}>
+            Mobile & OTP
+          </Tab>
+          <Tab value="email" icon={<Mail20Regular />}>
+            Email & Password
+          </Tab>
+        </TabList>
 
-      {/* Right side: Registration Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-8 py-12">
-        <div className="w-full max-w-md space-y-6">
-          <div>
-            {rawRedirect?.includes('apply-companion') && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 text-accent text-xs font-semibold mb-3 border border-accent/25">
-                <SparklesIcon className="w-3.5 h-3.5" />
-                <span>Companion Application &bull; Step 1 of 2</span>
+        {errors.form && (
+          <MessageBar intent="error">
+            <MessageBarBody>{errors.form}</MessageBarBody>
+          </MessageBar>
+        )}
+
+        {infoMessage && (
+          <MessageBar intent="info">
+            <MessageBarBody>{infoMessage}</MessageBarBody>
+          </MessageBar>
+        )}
+
+        {/* MOBILE & OTP REGISTRATION */}
+        {authMethod === 'mobile' ? (
+          <form onSubmit={handleMobileSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field
+                label="First name"
+                required
+                validationMessage={errors.mobileFirstName}
+                validationState={errors.mobileFirstName ? 'error' : 'none'}
+              >
+                <Input
+                  id="mobileFirstName"
+                  type="text"
+                  required
+                  value={mobileFirstName}
+                  onChange={(_, data) => setMobileFirstName(data.value)}
+                  placeholder="Alex"
+                  contentBefore={<Person20Regular className="text-muted-foreground" />}
+                />
+              </Field>
+
+              <Field label="Last name">
+                <Input
+                  id="mobileLastName"
+                  type="text"
+                  value={mobileLastName}
+                  onChange={(_, data) => setMobileLastName(data.value)}
+                  placeholder="Rivera"
+                  contentBefore={<Person20Regular className="text-muted-foreground" />}
+                />
+              </Field>
+            </div>
+
+            <Field
+              label="Date of birth (must be 18+)"
+              required
+              hint={`Born on or before ${maxLegalDate}`}
+              validationMessage={errors.mobileDateOfBirth}
+              validationState={errors.mobileDateOfBirth ? 'error' : 'none'}
+            >
+              <Input
+                id="mobileDateOfBirth"
+                type="date"
+                required
+                max={maxLegalDate}
+                value={mobileDateOfBirth}
+                onChange={(_, data) => {
+                  setMobileDateOfBirth(data.value);
+                  if (errors.mobileDateOfBirth) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.mobileDateOfBirth;
+                      return next;
+                    });
+                  }
+                }}
+                contentBefore={<Calendar20Regular className="text-muted-foreground" />}
+                className="tabular"
+              />
+            </Field>
+
+            <Field
+              label="Mobile Number"
+              required
+              validationMessage={errors.phoneNumber}
+              validationState={errors.phoneNumber ? 'error' : 'none'}
+            >
+              <div className="flex gap-2">
+                <Select
+                  value={countryCode}
+                  onChange={(_, data) => setCountryCode(data.value)}
+                  aria-label="Country code"
+                  className="w-24 tabular"
+                >
+                  <option value="+91">IN +91</option>
+                  <option value="+1">US +1</option>
+                  <option value="+44">UK +44</option>
+                  <option value="+971">AE +971</option>
+                  <option value="+65">SG +65</option>
+                </Select>
+                <Input
+                  id="phoneNumber"
+                  type="tel"
+                  required
+                  value={phoneNumber}
+                  onChange={(_, data) => setPhoneNumber(data.value.replace(/\D/g, ''))}
+                  placeholder="98765 43210"
+                  maxLength={12}
+                  contentBefore={<Phone20Regular className="text-muted-foreground" />}
+                  className="flex-1 tabular"
+                />
+                <Button
+                  type="button"
+                  appearance="secondary"
+                  onClick={handleSendMobileOtp}
+                  disabled={isSendingOtp || (otpSent && countdown > 0)}
+                  className="shrink-0 tabular"
+                >
+                  {isSendingOtp
+                    ? 'Sending...'
+                    : otpSent && countdown > 0
+                    ? `Resend (${countdown}s)`
+                    : otpSent
+                    ? 'Resend'
+                    : 'Get OTP'}
+                </Button>
+              </div>
+            </Field>
+
+            {otpSent && (
+              <div className="space-y-4">
+                <Field
+                  label="6-Digit Verification Code"
+                  required
+                  validationMessage={errors.otp}
+                  validationState={errors.otp ? 'error' : 'none'}
+                >
+                  <Input
+                    id="otp"
+                    type="text"
+                    required
+                    autoFocus
+                    value={otp}
+                    onChange={(_, data) => setOtp(data.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="123456"
+                    maxLength={6}
+                    contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                    className="w-full font-mono tabular"
+                  />
+                </Field>
+
+                <Button
+                  type="submit"
+                  appearance="primary"
+                  size="large"
+                  disabled={isVerifyingOtp}
+                  className="w-full min-h-11"
+                >
+                  {isVerifyingOtp ? 'Completing signup...' : 'Verify OTP & Create Account'}
+                </Button>
               </div>
             )}
-            <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
-              Create your account
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              Already have an account?{' '}
-              <Link
-                to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
-                className="font-semibold text-accent hover:underline"
+          </form>
+        ) : (
+          /* EMAIL & PASSWORD REGISTRATION */
+          <form onSubmit={handleEmailSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <Field
+                label="First name"
+                required
+                validationMessage={errors.firstName}
+                validationState={errors.firstName ? 'error' : 'none'}
               >
-                Sign in
-              </Link>
-            </p>
-          </div>
+                <Input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  required
+                  value={formData.firstName}
+                  onChange={(_, data) => handleEmailChange('firstName', data.value)}
+                  contentBefore={<Person20Regular className="text-muted-foreground" />}
+                />
+              </Field>
 
-          {/* Segmented Auth Method Switcher */}
-          <div className="grid grid-cols-2 p-1 rounded-2xl bg-muted/60 border border-border/80">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod('mobile');
-                setErrors({});
-              }}
-              className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authMethod === 'mobile'
-                  ? 'bg-card text-foreground shadow-xs border border-border/60'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <PhoneIcon className="w-3.5 h-3.5 text-accent" />
-              <span>Mobile & OTP</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod('email');
-                setErrors({});
-              }}
-              className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authMethod === 'email'
-                  ? 'bg-card text-foreground shadow-xs border border-border/60'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <EnvelopeIcon className="w-3.5 h-3.5 text-accent" />
-              <span>Email & Password</span>
-            </button>
-          </div>
-
-          {errors.form && (
-            <div className="p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold animate-in fade-in duration-150">
-              {errors.form}
+              <Field
+                label="Last name"
+                required
+                validationMessage={errors.lastName}
+                validationState={errors.lastName ? 'error' : 'none'}
+              >
+                <Input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  required
+                  value={formData.lastName}
+                  onChange={(_, data) => handleEmailChange('lastName', data.value)}
+                  contentBefore={<Person20Regular className="text-muted-foreground" />}
+                />
+              </Field>
             </div>
-          )}
 
-          {infoMessage && (
-            <div className="p-3.5 rounded-2xl bg-accent/10 border border-accent/20 text-accent text-xs font-medium flex items-center gap-2 animate-in fade-in duration-150">
-              <CheckCircleIcon className="w-4 h-4 shrink-0 text-accent" />
-              <span>{infoMessage}</span>
-            </div>
-          )}
+            <Field
+              label="Date of birth (must be 18+)"
+              required
+              hint={`Born on or before ${maxLegalDate}`}
+              validationMessage={errors.dateOfBirth}
+              validationState={errors.dateOfBirth ? 'error' : 'none'}
+            >
+              <Input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                required
+                max={maxLegalDate}
+                value={formData.dateOfBirth}
+                onChange={(_, data) => handleEmailChange('dateOfBirth', data.value)}
+                contentBefore={<Calendar20Regular className="text-muted-foreground" />}
+                className="tabular"
+              />
+            </Field>
 
-          {/* MOBILE & OTP REGISTRATION */}
-          {authMethod === 'mobile' ? (
-            <form onSubmit={handleMobileSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="mobileFirstName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    First name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="mobileFirstName"
-                      type="text"
-                      required
-                      value={mobileFirstName}
-                      onChange={(e) => setMobileFirstName(e.target.value)}
-                      placeholder="Alex"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  {errors.mobileFirstName && (
-                    <p className="mt-1 text-[11px] text-destructive">{errors.mobileFirstName}</p>
-                  )}
-                </div>
+            <Field
+              label="Email address"
+              required
+              validationMessage={errors.email}
+              validationState={errors.email ? 'error' : 'none'}
+            >
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                value={formData.email}
+                onChange={(_, data) => handleEmailChange('email', data.value)}
+                placeholder="you@example.com"
+                contentBefore={<Mail20Regular className="text-muted-foreground" />}
+              />
+            </Field>
 
-                <div>
-                  <label htmlFor="mobileLastName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    Last name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="mobileLastName"
-                      type="text"
-                      value={mobileLastName}
-                      onChange={(e) => setMobileLastName(e.target.value)}
-                      placeholder="Rivera"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="mobileDateOfBirth" className="block text-xs font-semibold text-muted-foreground">
-                    Date of birth <span className="text-muted-foreground/70 font-normal">(must be 18+)</span>
-                  </label>
-                  <span className="text-[10px] text-muted-foreground/80 font-medium">Born on or before {maxLegalDate}</span>
-                </div>
-                <div className="relative">
-                  <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <input
-                    id="mobileDateOfBirth"
-                    type="date"
-                    required
-                    max={maxLegalDate}
-                    value={mobileDateOfBirth}
-                    onChange={(e) => {
-                      setMobileDateOfBirth(e.target.value);
-                      if (errors.mobileDateOfBirth) {
-                        setErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.mobileDateOfBirth;
-                          return next;
-                        });
-                      }
-                    }}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                {errors.mobileDateOfBirth && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.mobileDateOfBirth}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="phoneNumber" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Mobile Number
-                </label>
-                <div className="flex gap-2">
-                  <select
-                    value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-24 px-2 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
-                  >
-                    <option value="+91">🇮🇳 +91</option>
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+971">🇦🇪 +971</option>
-                    <option value="+65">🇸🇬 +65</option>
-                  </select>
-                  <div className="relative flex-1">
-                    <PhoneIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="phoneNumber"
-                      type="tel"
-                      required
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                      placeholder="98765 43210"
-                      maxLength={12}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleSendMobileOtp}
-                    disabled={isSendingOtp || (otpSent && countdown > 0)}
-                    className="px-3.5 py-2.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground font-semibold text-xs border border-border/80 transition-colors disabled:opacity-40 shrink-0 cursor-pointer"
-                  >
-                    {isSendingOtp ? (
-                      'Sending...'
-                    ) : otpSent && countdown > 0 ? (
-                      `Resend (${countdown}s)`
-                    ) : (
-                      otpSent ? 'Resend' : 'Get OTP'
-                    )}
-                  </button>
-                </div>
-                {errors.phoneNumber && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.phoneNumber}</p>
-                )}
-              </div>
-
-              {otpSent && (
-                <div className="space-y-4 animate-in fade-in duration-200">
-                  <div>
-                    <label htmlFor="otp" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                      6-Digit Verification Code
-                    </label>
-                    <div className="relative">
-                      <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        id="otp"
-                        type="text"
-                        required
-                        autoFocus
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="123456"
-                        maxLength={6}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm tracking-widest font-mono focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                    </div>
-                    {errors.otp && (
-                      <p className="mt-1 text-[11px] text-destructive">{errors.otp}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isVerifyingOtp}
-                    className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 cursor-pointer"
-                  >
-                    {isVerifyingOtp ? 'Completing signup...' : 'Verify OTP & Create Account'}
-                  </button>
-                </div>
-              )}
-            </form>
-          ) : (
-            /* EMAIL & PASSWORD REGISTRATION */
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="firstName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    First name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      required
-                      value={formData.firstName}
-                      onChange={handleEmailChange}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  {errors.firstName && (
-                    <p className="mt-1 text-[11px] text-destructive">{errors.firstName}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="lastName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    Last name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      required
-                      value={formData.lastName}
-                      onChange={handleEmailChange}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  {errors.lastName && (
-                    <p className="mt-1 text-[11px] text-destructive">{errors.lastName}</p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="dateOfBirth" className="block text-xs font-semibold text-muted-foreground">
-                    Date of birth <span className="text-muted-foreground/70 font-normal">(must be 18+)</span>
-                  </label>
-                  <span className="text-[10px] text-muted-foreground/80 font-medium">Born on or before {maxLegalDate}</span>
-                </div>
-                <div className="relative">
-                  <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
-                    required
-                    max={maxLegalDate}
-                    value={formData.dateOfBirth}
-                    onChange={handleEmailChange}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                {errors.dateOfBirth && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.dateOfBirth}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Email address
-                </label>
-                <div className="relative">
-                  <EnvelopeIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleEmailChange}
-                    placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.email}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Password (min 8 chars)
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={formData.password}
-                    onChange={handleEmailChange}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                  <button
-                    type="button"
+            <Field
+              label="Password (min 8 chars)"
+              required
+              validationMessage={errors.password}
+              validationState={errors.password ? 'error' : 'none'}
+            >
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={formData.password}
+                onChange={(_, data) => handleEmailChange('password', data.value)}
+                placeholder="••••••••"
+                contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  <Button
+                    appearance="transparent"
+                    size="small"
+                    icon={showPassword ? <EyeOff20Regular /> : <Eye20Regular />}
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-4 h-4" />
-                    ) : (
-                      <EyeIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.password}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleEmailChange}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
                   />
-                  <button
-                    type="button"
+                }
+              />
+            </Field>
+
+            <Field
+              label="Confirm Password"
+              required
+              validationMessage={errors.confirmPassword}
+              validationState={errors.confirmPassword ? 'error' : 'none'}
+            >
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                required
+                value={formData.confirmPassword}
+                onChange={(_, data) => handleEmailChange('confirmPassword', data.value)}
+                placeholder="••••••••"
+                contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  <Button
+                    appearance="transparent"
+                    size="small"
+                    icon={showConfirmPassword ? <EyeOff20Regular /> : <Eye20Regular />}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                     aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="w-4 h-4" />
-                    ) : (
-                      <EyeIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.confirmPassword}</p>
-                )}
-              </div>
+                  />
+                }
+              />
+            </Field>
 
-              <button
-                type="submit"
-                disabled={isEmailLoading}
-                className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 mt-2 cursor-pointer"
-              >
-                {isEmailLoading ? 'Creating account...' : 'Create Cue Account'}
-              </button>
-            </form>
-          )}
+            <Button
+              type="submit"
+              appearance="primary"
+              size="large"
+              disabled={isEmailLoading}
+              className="w-full min-h-11 mt-1"
+            >
+              {isEmailLoading ? 'Creating account...' : 'Create Cue Account'}
+            </Button>
+          </form>
+        )}
 
-          <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-            By signing up, you agree to our{' '}
-            <Link to="/terms" className="text-accent underline font-medium hover:text-accent-hover">
-              Terms of Service
-            </Link>
-            ,{' '}
-            <Link to="/privacy" className="text-accent underline font-medium hover:text-accent-hover">
-              Privacy Policy
-            </Link>
-            ,{' '}
-            <Link to="/community-guidelines" className="text-accent underline font-medium hover:text-accent-hover">
-              Community Guidelines
-            </Link>
-            , and{' '}
-            <Link to="/cancellation-policy" className="text-accent underline font-medium hover:text-accent-hover">
-              Escrow Cancellation Policy
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
+        <p className="text-caption1 text-muted-foreground text-center leading-relaxed pt-1">
+          By signing up, you agree to our{' '}
+          <Link to="/terms" className="text-brand-fg underline font-semibold">
+            Terms of Service
+          </Link>
+          ,{' '}
+          <Link to="/privacy" className="text-brand-fg underline font-semibold">
+            Privacy Policy
+          </Link>
+          ,{' '}
+          <Link to="/community-guidelines" className="text-brand-fg underline font-semibold">
+            Community Guidelines
+          </Link>
+          , and{' '}
+          <Link to="/cancellation-policy" className="text-brand-fg underline font-semibold">
+            Escrow Cancellation Policy
+          </Link>
+          .
+        </p>
+      </Card>
     </div>
   );
 };

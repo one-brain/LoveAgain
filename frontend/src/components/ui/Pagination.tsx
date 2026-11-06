@@ -1,10 +1,11 @@
 import React from 'react';
+import { Button, Select } from '@fluentui/react-components';
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon,
-} from '@heroicons/react/24/outline';
+  ChevronLeft16Regular,
+  ChevronRight16Regular,
+  ChevronDoubleLeft16Regular,
+  ChevronDoubleRight16Regular,
+} from '@fluentui/react-icons';
 
 export interface PaginationProps {
   currentPage: number;
@@ -36,10 +37,9 @@ export const Pagination: React.FC<PaginationProps> = ({
   const startEntry = Math.min((currentPage - 1) * pageSize + 1, totalCount);
   const endEntry = Math.min(currentPage * pageSize, totalCount);
 
-  // Generate page numbers to display with smart ellipsis
   const getPageNumbers = () => {
     const pages: (number | string)[] = [];
-    const delta = 1; // Number of pages to show around current page
+    const delta = 1;
 
     const left = Math.max(2, currentPage - delta);
     const right = Math.min(totalPages - 1, currentPage + delta);
@@ -72,83 +72,79 @@ export const Pagination: React.FC<PaginationProps> = ({
   return (
     <nav
       aria-label="Pagination Navigation"
-      className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-3.5 px-4 bg-card/60 border-t border-border/70 ${className}`}
+      className={`flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-4 bg-card border-t border-border ${className}`}
     >
       {/* Entries range & Page size */}
-      <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground font-sans">
+      <div className="flex flex-wrap items-center gap-3 text-caption1 text-muted-foreground">
         <div>
           Showing{' '}
-          <span className="font-mono font-medium text-foreground tabular-nums">
+          <span className="font-mono font-semibold text-foreground tabular">
             {startEntry.toLocaleString('en-IN')}
           </span>{' '}
           to{' '}
-          <span className="font-mono font-medium text-foreground tabular-nums">
+          <span className="font-mono font-semibold text-foreground tabular">
             {endEntry.toLocaleString('en-IN')}
           </span>{' '}
           of{' '}
-          <span className="font-mono font-medium text-foreground tabular-nums">
+          <span className="font-mono font-semibold text-foreground tabular">
             {totalCount.toLocaleString('en-IN')}
           </span>{' '}
           results
         </div>
 
         {onPageSizeChange && (
-          <div className="flex items-center gap-1.5 pl-3 border-l border-border/60">
+          <div className="flex items-center gap-2 pl-3 border-l border-border">
             <label htmlFor="pagination-page-size" className="text-muted-foreground whitespace-nowrap">
               Rows per page:
             </label>
-            <select
+            <Select
               id="pagination-page-size"
               aria-label="Rows per page"
-              value={pageSize}
+              size="small"
+              value={String(pageSize)}
               disabled={isLoading}
-              onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="bg-background text-foreground border border-border/80 rounded-lg px-2 py-1 text-xs font-mono font-medium focus:ring-1 focus:ring-accent focus:border-accent outline-none cursor-pointer disabled:opacity-50"
+              onChange={(_, data) => onPageSizeChange(Number(data.value))}
+              className="tabular"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
                   {opt}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         )}
       </div>
 
       {/* Page Navigation Controls */}
       <div className="flex items-center gap-1">
-        {/* First Page */}
-        <button
-          type="button"
+        <Button
+          appearance="secondary"
+          size="small"
+          icon={<ChevronDoubleLeft16Regular />}
           onClick={() => onPageChange(1)}
           disabled={currentPage <= 1 || isLoading}
           title="First page"
           aria-label="First page"
-          className="min-h-[38px] min-w-[38px] sm:min-h-[34px] sm:min-w-[34px] inline-flex items-center justify-center rounded-lg border border-border/70 bg-background text-muted-foreground hover:text-foreground hover:bg-muted/70 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-background transition-colors duration-150"
-        >
-          <ChevronDoubleLeftIcon className="w-4 h-4" />
-        </button>
+        />
 
-        {/* Previous Page */}
-        <button
-          type="button"
+        <Button
+          appearance="secondary"
+          size="small"
+          icon={<ChevronLeft16Regular />}
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage <= 1 || isLoading}
           title="Previous page"
           aria-label="Previous page"
-          className="min-h-[38px] min-w-[38px] sm:min-h-[34px] sm:min-w-[34px] inline-flex items-center justify-center rounded-lg border border-border/70 bg-background text-muted-foreground hover:text-foreground hover:bg-muted/70 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-background transition-colors duration-150"
-        >
-          <ChevronLeftIcon className="w-4 h-4" />
-        </button>
+        />
 
-        {/* Page numbers */}
         <div className="flex items-center gap-1 mx-1">
           {pageNumbers.map((page, idx) => {
             if (typeof page === 'string') {
               return (
                 <span
                   key={`ellipsis-${idx}`}
-                  className="min-h-[38px] min-w-[34px] sm:min-h-[34px] inline-flex items-center justify-center text-xs font-mono text-muted-foreground/70"
+                  className="min-w-7 inline-flex items-center justify-center text-caption1 font-mono text-muted-foreground"
                 >
                   …
                 </span>
@@ -157,49 +153,41 @@ export const Pagination: React.FC<PaginationProps> = ({
 
             const isActive = page === currentPage;
             return (
-              <button
+              <Button
                 key={page}
-                type="button"
+                appearance={isActive ? 'primary' : 'secondary'}
+                size="small"
                 onClick={() => onPageChange(page)}
                 disabled={isLoading}
                 aria-current={isActive ? 'page' : undefined}
-                className={`min-h-[38px] min-w-[38px] sm:min-h-[34px] sm:min-w-[34px] px-2.5 rounded-lg text-xs font-mono font-medium transition-colors duration-150 ${
-                  isActive
-                    ? 'bg-accent text-white shadow-2xs font-semibold'
-                    : 'border border-border/70 bg-background text-foreground/80 hover:bg-muted/70 hover:text-foreground'
-                }`}
+                className="tabular min-w-8"
               >
                 {page}
-              </button>
+              </Button>
             );
           })}
         </div>
 
-        {/* Next Page */}
-        <button
-          type="button"
+        <Button
+          appearance="secondary"
+          size="small"
+          icon={<ChevronRight16Regular />}
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage >= totalPages || isLoading}
           title="Next page"
           aria-label="Next page"
-          className="min-h-[38px] min-w-[38px] sm:min-h-[34px] sm:min-w-[34px] inline-flex items-center justify-center rounded-lg border border-border/70 bg-background text-muted-foreground hover:text-foreground hover:bg-muted/70 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-background transition-colors duration-150"
-        >
-          <ChevronRightIcon className="w-4 h-4" />
-        </button>
+        />
 
-        {/* Last Page */}
-        <button
-          type="button"
+        <Button
+          appearance="secondary"
+          size="small"
+          icon={<ChevronDoubleRight16Regular />}
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage >= totalPages || isLoading}
           title="Last page"
           aria-label="Last page"
-          className="min-h-[38px] min-w-[38px] sm:min-h-[34px] sm:min-w-[34px] inline-flex items-center justify-center rounded-lg border border-border/70 bg-background text-muted-foreground hover:text-foreground hover:bg-muted/70 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-background transition-colors duration-150"
-        >
-          <ChevronDoubleRightIcon className="w-4 h-4" />
-        </button>
+        />
       </div>
     </nav>
   );
 };
-

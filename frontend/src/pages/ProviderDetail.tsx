@@ -1,10 +1,38 @@
 import React, { useState, useMemo } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import {
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Badge,
+  Tag,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Star16Filled,
+  Star16Regular,
+  CheckmarkStarburst20Filled,
+  ShieldCheckmark24Regular,
+  ShieldCheckmark20Regular,
+  ShieldCheckmark16Regular,
+  Clock20Regular,
+  Location16Regular,
+  ArrowLeft16Regular,
+  Calendar16Regular,
+  Video20Regular,
+  CheckmarkCircle24Regular,
+  CheckmarkCircle20Regular,
+  Image16Regular,
+  LockClosed16Regular,
+} from '@fluentui/react-icons';
 import { useGetProviderQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
 import { useGetProviderReviewsQuery, type ReviewDto } from '../store/reviewApi';
-import { StarIcon as SolidStarIcon } from '@heroicons/react/24/solid';
 import { BookingCheckoutModal } from '../components/payment/BookingCheckoutModal';
 import { BookingRequestModal, type BookingRequirementData } from '../components/booking/BookingRequestModal';
 import { RateBadge } from '../components/ui/RateBadge';
@@ -12,22 +40,6 @@ import { formatINR, formatRate } from '../utils/currency';
 import { resolveNearestHub } from '../utils/location';
 import { toProviderGuid } from '../utils/providerData';
 import type { RootState } from '../store';
-import {
-  StarIcon,
-  CheckBadgeIcon,
-  ShieldCheckIcon,
-  ClockIcon,
-  MapPinIcon,
-  ArrowLeftIcon,
-  CalendarDaysIcon,
-  SparklesIcon,
-  VideoCameraIcon,
-  CheckCircleIcon,
-  PhotoIcon,
-  LockClosedIcon,
-} from '@heroicons/react/24/outline';
-
-
 
 const ProviderDetail: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
@@ -44,7 +56,6 @@ const ProviderDetail: React.FC = () => {
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
 
   const resolvedUserId = userId ? toProviderGuid(userId) : '';
-  // Fetch API data
   const { data: apiProvider, isLoading } = useGetProviderQuery(
     resolvedUserId,
     { skip: !resolvedUserId }
@@ -57,7 +68,6 @@ const ProviderDetail: React.FC = () => {
 
   const [createBooking] = useCreateBookingMutation();
 
-  // Resolve provider data directly from API
   const provider = useMemo<any>(() => {
     if (apiProvider) {
       return apiProvider;
@@ -79,8 +89,8 @@ const ProviderDetail: React.FC = () => {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading guest profile...</p>
+          <Spinner size="large" />
+          <p className="text-body1 text-muted-foreground">Loading guest profile...</p>
         </div>
       </div>
     );
@@ -89,20 +99,22 @@ const ProviderDetail: React.FC = () => {
   if (!provider) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-4">
-        <div className="w-16 h-16 rounded-full bg-rose-50 dark:bg-rose-950/30 flex items-center justify-center text-rose-500 mb-4">
-          <ShieldCheckIcon className="w-8 h-8" />
+        <div className="w-16 h-16 rounded-full bg-destructive-light flex items-center justify-center text-destructive mb-4">
+          <ShieldCheckmark24Regular />
         </div>
-        <h2 className="text-2xl font-serif text-foreground font-semibold mb-2">Guest Not Found</h2>
-        <p className="text-muted-foreground max-w-md mb-6">
+        <h2 className="text-title2 text-foreground font-semibold mb-2">Guest not found</h2>
+        <p className="text-body1 text-muted-foreground max-w-md mb-6">
           The guest profile you are looking for does not exist or may have been unlisted.
         </p>
-        <button
+        <Button
+          appearance="primary"
+          size="large"
+          icon={<ArrowLeft16Regular />}
           onClick={() => navigate('/discovery')}
-          className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-medium hover:bg-accent/90 transition-colors cursor-pointer"
+          className="min-h-11"
         >
-          <ArrowLeftIcon className="w-4 h-4" />
-          <span>Browse Active Guests</span>
-        </button>
+          Browse active guests
+        </Button>
       </div>
     );
   }
@@ -171,61 +183,60 @@ const ProviderDetail: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Breadcrumb / Back button */}
       <div>
-        <button
+        <Button
+          appearance="subtle"
+          icon={<ArrowLeft16Regular />}
           onClick={() => navigate('/discovery')}
-          className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors group"
+          className="min-h-11"
         >
-          <ArrowLeftIcon className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-          <span>Back to all guests</span>
-        </button>
+          Back to all guests
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left 2 Columns: Companion Profile Details */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Main Card */}
-          <div className="bg-card rounded-3xl border border-border overflow-hidden shadow-xs">
+          <div className="bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
             {/* Portrait Header */}
             <div className="relative h-80 sm:h-96 bg-muted overflow-hidden">
               <img
                 src={currentHeroPhoto}
                 alt={provider.displayName}
-                className="w-full h-full object-cover transition-all duration-300"
+                className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
 
               {galleryImages.length > 1 && (
-                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-white flex items-center gap-1.5 border border-white/15">
-                  <PhotoIcon className="w-4 h-4 text-accent" />
+                <div className="absolute top-4 right-4 bg-card/90 px-3 py-1 rounded-full text-caption1 font-semibold text-foreground flex items-center gap-1.5 border border-border tabular">
+                  <Image16Regular className="text-brand-fg" />
                   <span>
                     Photo {activePhotoIdx + 1} of {galleryImages.length}
                   </span>
                 </div>
               )}
 
-              <div className="absolute bottom-6 left-6 right-6 text-white flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+              <div className="absolute bottom-4 left-4 right-4 bg-card/90 border border-border rounded-2xl p-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4 shadow-md">
                 <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <h1 className="text-4xl sm:text-5xl font-normal tracking-tight font-display text-white">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h1 className="text-title2 font-semibold text-foreground">
                       {provider.displayName}
                     </h1>
                     {provider.isVerified && (
-                      <CheckBadgeIcon className="w-7 h-7 text-emerald-400" title="Verified Identity" />
+                      <CheckmarkStarburst20Filled className="text-trust" title="Verified Identity" />
                     )}
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-white/90">
-                    <div className="flex items-center gap-1">
-                      <StarIcon className="w-4 h-4 text-amber-400 fill-amber-400" />
-                      <span className="font-semibold font-mono">{provider.averageRating.toFixed(2)}</span>
+                  <div className="flex flex-wrap items-center gap-3 text-caption1 text-muted-foreground">
+                    <div className="flex items-center gap-1 text-trust font-semibold tabular">
+                      <Star16Filled />
+                      <span>{provider.averageRating.toFixed(2)}</span>
                     </div>
                     <span>•</span>
-                    <div className="flex items-center gap-1">
-                      <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />
-                      <span>{provider.trustScore}% Trust Score</span>
+                    <div className="flex items-center gap-1 tabular">
+                      <ShieldCheckmark16Regular className="text-success" />
+                      <span>{provider.trustScore}% trust score</span>
                     </div>
                     <span>•</span>
-                    <div className="flex items-center gap-1">
-                      <MapPinIcon className="w-4 h-4 text-accent" />
+                    <div className="flex items-center gap-1 tabular">
+                      <Location16Regular className="text-brand-fg" />
                       <span>{baseHub ? `${baseHub.hubName} • ` : ''}Within {provider.maxRadiusKm} km</span>
                     </div>
                   </div>
@@ -242,9 +253,9 @@ const ProviderDetail: React.FC = () => {
 
             {/* 3-Photo Interactive Gallery Strip */}
             {galleryImages.length > 1 && (
-              <div className="px-6 pt-5 pb-2 bg-muted/20 border-b border-border flex items-center gap-3 overflow-x-auto">
-                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground whitespace-nowrap">
-                  Profile Gallery ({galleryImages.length}):
+              <div className="px-6 py-4 bg-muted border-b border-border flex items-center gap-3 overflow-x-auto">
+                <span className="text-caption1 font-semibold text-muted-foreground whitespace-nowrap tabular">
+                  Profile gallery ({galleryImages.length}):
                 </span>
                 <div className="flex items-center gap-2.5">
                   {galleryImages.map((imgUrl, idx) => (
@@ -253,9 +264,9 @@ const ProviderDetail: React.FC = () => {
                       type="button"
                       onClick={() => setActivePhotoIdx(idx)}
                       aria-label={`Select photo ${idx + 1} of ${provider.displayName}`}
-                      className={`relative w-16 h-16 rounded-xl overflow-hidden border-2 transition-all flex-shrink-0 ${
+                      className={`relative w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors shrink-0 cursor-pointer ${
                         activePhotoIdx === idx
-                          ? 'border-accent ring-2 ring-accent/30 scale-105'
+                          ? 'border-accent'
                           : 'border-border opacity-70 hover:opacity-100'
                       }`}
                     >
@@ -274,40 +285,34 @@ const ProviderDetail: React.FC = () => {
 
             {/* Profile Content Body */}
             <div className="p-6 sm:p-8 space-y-8">
-              {/* About */}
               <div>
-                <h2 className="text-lg font-bold text-foreground font-serif mb-3">About Me</h2>
-                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed whitespace-pre-line">
+                <h2 className="text-subtitle1 font-semibold text-foreground mb-3">About me</h2>
+                <p className="text-body1 text-muted-foreground whitespace-pre-line">
                   {provider.bio}
                 </p>
               </div>
 
-              {/* Specialties / Skills */}
               {provider.specialties && provider.specialties.length > 0 && (
                 <div>
-                  <h2 className="text-lg font-bold text-foreground font-serif mb-3">Specialties & Activities</h2>
+                  <h2 className="text-subtitle1 font-semibold text-foreground mb-3">Specialties & activities</h2>
                   <div className="flex flex-wrap gap-2">
                     {provider.specialties.map((spec: string) => (
-                      <span
-                        key={spec}
-                        className="px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-accent/10 text-accent border border-accent/20"
-                      >
+                      <Tag key={spec} size="medium" appearance="brand">
                         {spec}
-                      </span>
+                      </Tag>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Offered Services & Gigs (If available) */}
               {provider.services && provider.services.length > 0 && (
                 <div className="space-y-3">
-                  <h2 className="text-lg font-bold text-foreground font-serif">💼 Offered Services & Gigs</h2>
+                  <h2 className="text-subtitle1 font-semibold text-foreground">Offered services & gigs</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {provider.services.map((svc: string) => (
-                      <div key={svc} className="p-4 rounded-2xl bg-card border border-border flex items-center gap-3">
-                        <CheckCircleIcon className="w-5 h-5 text-accent shrink-0" />
-                        <span className="text-xs sm:text-sm font-semibold text-foreground">{svc}</span>
+                      <div key={svc} className="p-4 rounded-lg bg-card border border-border flex items-center gap-3">
+                        <CheckmarkCircle20Regular className="text-brand-fg shrink-0" />
+                        <span className="text-body1 font-semibold text-foreground">{svc}</span>
                       </div>
                     ))}
                   </div>
@@ -315,72 +320,71 @@ const ProviderDetail: React.FC = () => {
               )}
 
               {/* Trust & Verification Badges */}
-              <div className="p-5 rounded-2xl bg-background border border-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
-                <div className="space-y-1">
-                  <ShieldCheckIcon className="w-6 h-6 text-success mx-auto" />
-                  <div className="text-xs font-bold text-foreground">Government ID</div>
-                  <div className="text-[11px] text-muted-foreground">Fully Verified</div>
+              <div className="p-5 rounded-lg bg-muted border border-border grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+                <div className="space-y-1 flex flex-col items-center">
+                  <ShieldCheckmark24Regular className="text-success" />
+                  <div className="text-caption1 font-semibold text-foreground">Government ID</div>
+                  <div className="text-caption1 text-muted-foreground">Fully verified</div>
                 </div>
-                <div className="space-y-1">
-                  <ClockIcon className="w-6 h-6 text-accent mx-auto" />
-                  <div className="text-xs font-bold text-foreground">Response Time</div>
-                  <div className="text-[11px] text-muted-foreground">&lt; 15 Minutes</div>
+                <div className="space-y-1 flex flex-col items-center">
+                  <Clock20Regular className="text-brand-fg" />
+                  <div className="text-caption1 font-semibold text-foreground">Response time</div>
+                  <div className="text-caption1 text-muted-foreground tabular">&lt; 15 minutes</div>
                 </div>
-                <div className="space-y-1">
-                  <SparklesIcon className="w-6 h-6 text-amber-500 mx-auto" />
-                  <div className="text-xs font-bold text-foreground">Escrow Payout</div>
-                  <div className="text-[11px] text-muted-foreground">100% Protected</div>
+                <div className="space-y-1 flex flex-col items-center">
+                  <ShieldCheckmark24Regular className="text-trust" />
+                  <div className="text-caption1 font-semibold text-foreground">Escrow payout</div>
+                  <div className="text-caption1 text-muted-foreground tabular">100% protected</div>
                 </div>
               </div>
 
-              {/* Introduction Video if exists */}
               {provider.introVideoUrl && (
-                <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-card">
+                <div className="flex items-center justify-between p-4 rounded-lg border border-border bg-card">
                   <div className="flex items-center gap-3">
-                    <VideoCameraIcon className="w-6 h-6 text-accent" />
+                    <Video20Regular className="text-brand-fg" />
                     <div>
-                      <div className="text-sm font-semibold text-foreground">Video Introduction</div>
-                      <div className="text-xs text-muted-foreground">Watch a 60-second video message</div>
+                      <div className="text-body1 font-semibold text-foreground">Video introduction</div>
+                      <div className="text-caption1 text-muted-foreground">Watch a 60-second video message</div>
                     </div>
                   </div>
                   <a
                     href={provider.introVideoUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="px-4 py-2 rounded-lg bg-muted hover:bg-accent/15 text-xs font-semibold text-accent transition-colors"
+                    className="px-4 py-2 rounded-md bg-muted hover:bg-subtle text-caption1 font-semibold text-brand-fg transition-colors"
                   >
-                    Watch Video
+                    Watch video
                   </a>
                 </div>
               )}
 
               {/* Verified Client Reviews Section */}
-              <div className="space-y-4 pt-4 border-t border-border/80">
+              <div className="space-y-4 pt-4 border-t border-border">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div>
-                    <h2 className="text-xl sm:text-2xl font-bold font-serif text-foreground">
-                      Verified Client Reviews
+                    <h2 className="text-subtitle1 font-semibold text-foreground">
+                      Verified client reviews
                     </h2>
-                    <p className="text-xs text-muted-foreground">
-                      Authentic ratings from completed Safe Escrow bookings
+                    <p className="text-caption1 text-muted-foreground">
+                      Authentic ratings from completed safe escrow bookings
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 bg-amber-500/10 border border-amber-500/20 px-3 py-1.5 rounded-2xl">
-                    <SolidStarIcon className="w-4 h-4 text-[#C5A059]" />
-                    <span className="font-mono font-bold text-sm text-[#C5A059] tabular-nums">
+                  <div className="flex items-center gap-2 bg-trust-light border border-trust-border px-3 py-1.5 rounded-lg">
+                    <Star16Filled className="text-trust" />
+                    <span className="font-mono font-semibold text-body1 text-trust tabular">
                       {(reviewsData?.averageRating ?? provider.averageRating).toFixed(1)}
                     </span>
-                    <span className="text-xs text-muted-foreground font-medium">
+                    <span className="text-caption1 text-muted-foreground tabular">
                       ({reviewsData?.totalReviews ?? 0} {reviewsData?.totalReviews === 1 ? 'review' : 'reviews'})
                     </span>
                   </div>
                 </div>
 
                 {!reviewsData || reviewsData.items.length === 0 ? (
-                  <div className="p-8 rounded-3xl bg-muted/20 border border-border/70 text-center space-y-2">
-                    <ShieldCheckIcon className="w-8 h-8 text-muted-foreground/60 mx-auto" />
-                    <p className="font-serif text-base font-semibold text-foreground">No public reviews yet</p>
-                    <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                  <div className="p-8 rounded-2xl bg-muted border border-border text-center space-y-2">
+                    <ShieldCheckmark24Regular className="text-muted-foreground mx-auto" />
+                    <p className="text-subtitle2 font-semibold text-foreground">No public reviews yet</p>
+                    <p className="text-caption1 text-muted-foreground max-w-sm mx-auto">
                       Be among the first to experience a verified outing with {provider.displayName} and leave a rating after completion.
                     </p>
                   </div>
@@ -389,7 +393,7 @@ const ProviderDetail: React.FC = () => {
                     {reviewsData.items.map((rev: ReviewDto) => (
                       <div
                         key={rev.id}
-                        className="p-5 rounded-3xl bg-card border border-border/70 shadow-xs space-y-3 hover:border-accent/30 transition-all"
+                        className="p-5 rounded-2xl bg-card border border-border shadow-sm space-y-3"
                       >
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <div className="flex items-center gap-3">
@@ -397,23 +401,23 @@ const ProviderDetail: React.FC = () => {
                               <img
                                 src={rev.reviewerPhotoUrl}
                                 alt={rev.reviewerName}
-                                className="w-10 h-10 rounded-2xl object-cover border border-border"
+                                className="w-10 h-10 rounded-lg object-cover border border-border"
                               />
                             ) : (
-                              <div className="w-10 h-10 rounded-2xl bg-accent/10 border border-accent/20 flex items-center justify-center font-serif font-bold text-accent text-sm">
+                              <div className="w-10 h-10 rounded-lg bg-accent-light border border-border flex items-center justify-center font-semibold text-brand-fg text-body1">
                                 {rev.reviewerName.charAt(0)}
                               </div>
                             )}
                             <div>
                               <div className="flex items-center gap-1.5">
-                                <span className="font-semibold text-sm text-foreground">
+                                <span className="font-semibold text-body1 text-foreground">
                                   {rev.reviewerName}
                                 </span>
-                                <span className="inline-flex items-center gap-0.5 px-2 py-0.2 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                  Verified Client
-                                </span>
+                                <Badge appearance="tint" color="success">
+                                  Verified client
+                                </Badge>
                               </div>
-                              <span className="font-mono text-[11px] text-muted-foreground">
+                              <span className="font-mono tabular text-caption1 text-muted-foreground">
                                 {new Date(rev.createdAt).toLocaleDateString('en-IN', {
                                   month: 'short',
                                   day: 'numeric',
@@ -423,34 +427,30 @@ const ProviderDetail: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Star Rating Badge */}
-                          <div className="flex items-center gap-1 bg-muted/40 px-2.5 py-1 rounded-xl border border-border/60">
-                            {[1, 2, 3, 4, 5].map((s) => (
-                              <SolidStarIcon
-                                key={s}
-                                className={`w-3.5 h-3.5 ${
-                                  s <= rev.rating ? 'text-[#C5A059]' : 'text-muted-foreground/30'
-                                }`}
-                              />
-                            ))}
+                          <div className="flex items-center gap-1 bg-muted px-2.5 py-1 rounded-md border border-border">
+                            {[1, 2, 3, 4, 5].map((s) =>
+                              s <= rev.rating ? (
+                                <Star16Filled key={s} className="text-trust" />
+                              ) : (
+                                <Star16Regular key={s} className="text-muted-foreground" />
+                              )
+                            )}
                           </div>
                         </div>
 
-                        {/* Review Commentary */}
-                        <p className="text-sm text-foreground/90 leading-relaxed">
+                        <p className="text-body1 text-foreground">
                           {rev.comment}
                         </p>
 
-                        {/* Sub-Score Badges (if present) */}
                         {(rev.timelinessScore || rev.communicationScore) && (
                           <div className="flex items-center gap-2 pt-1 flex-wrap">
                             {rev.timelinessScore && (
-                              <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border border-border/50">
+                              <span className="text-caption1 font-mono tabular px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
                                 Punctuality: <strong className="text-foreground">{rev.timelinessScore}/5</strong>
                               </span>
                             )}
                             {rev.communicationScore && (
-                              <span className="text-[11px] font-mono px-2 py-0.5 rounded-lg bg-muted text-muted-foreground border border-border/50">
+                              <span className="text-caption1 font-mono tabular px-2 py-0.5 rounded bg-muted text-muted-foreground border border-border">
                                 Communication: <strong className="text-foreground">{rev.communicationScore}/5</strong>
                               </span>
                             )}
@@ -467,25 +467,25 @@ const ProviderDetail: React.FC = () => {
 
         {/* Right Column: Sticky "Book with Escrow" Reservation Hub */}
         <div className="lg:col-span-1">
-          <div className="sticky top-24 bg-card rounded-3xl border border-border p-6 shadow-md space-y-6">
+          <div className="sticky top-24 bg-card rounded-2xl border border-border p-6 shadow-md space-y-6">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-accent block mb-1">
-                Protected Experience
+              <span className="text-caption1 font-semibold text-trust block mb-1">
+                Protected experience
               </span>
-              <h2 className="text-2xl font-bold font-serif text-foreground">
-                Host an Outing
+              <h2 className="text-title3 font-semibold text-foreground">
+                Host an outing
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-caption1 text-muted-foreground mt-1">
                 100% of your payment is held safely in escrow and released only after your outing concludes safely.
               </p>
             </div>
 
             {/* Rate & Escrow Guarantee Summary */}
-            <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 space-y-2.5 text-xs">
+            <div className="p-4 rounded-lg bg-muted border border-border space-y-2.5 text-caption1">
               <div className="flex justify-between items-center text-foreground">
-                <span className="text-muted-foreground">Guest Rate:</span>
+                <span className="text-muted-foreground">Guest rate:</span>
                 {isAuthenticated ? (
-                  <span className="text-base font-bold font-serif text-accent">{formatRate(provider.hourlyRate)}</span>
+                  <span className="text-body2 font-semibold font-mono tabular text-brand-fg">{formatRate(provider.hourlyRate)}</span>
                 ) : (
                   <RateBadge
                     variant="row-item"
@@ -496,42 +496,42 @@ const ProviderDetail: React.FC = () => {
                 )}
               </div>
               <div className="flex justify-between items-center text-foreground">
-                <span className="text-muted-foreground">Estimated Deposit ({durationHours || 2} hrs):</span>
+                <span className="text-muted-foreground tabular">Estimated deposit ({durationHours || 2} hrs):</span>
                 {isAuthenticated ? (
-                  <span className="font-mono font-semibold text-foreground">{formatINR(provider.hourlyRate * (durationHours || 2))}</span>
+                  <span className="font-mono tabular font-semibold text-foreground">{formatINR(provider.hourlyRate * (durationHours || 2))}</span>
                 ) : (
-                  <span className="font-mono font-semibold text-muted-foreground flex items-center gap-1">
-                    <LockClosedIcon className="w-3.5 h-3.5 text-accent" />
+                  <span className="font-mono tabular font-semibold text-muted-foreground flex items-center gap-1">
+                    <LockClosed16Regular className="text-brand-fg" />
                     <span>₹••••</span>
                   </span>
                 )}
               </div>
-              <div className="pt-2 border-t border-border/60 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[11px]">
-                <ShieldCheckIcon className="w-4 h-4 text-emerald-500 shrink-0" />
-                <span>100% Refund Guarantee if Cancelled</span>
+              <div className="pt-2 border-t border-border flex items-center gap-1.5 text-success font-semibold text-caption1">
+                <ShieldCheckmark16Regular className="shrink-0" />
+                <span>100% refund guarantee if cancelled</span>
               </div>
             </div>
 
             {/* Time Slot Picker (Optional Quick Pick) */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-                  <CalendarDaysIcon className="w-4 h-4 text-accent" />
-                  <span>Available Windows (Optional)</span>
+                <label className="text-caption1 font-semibold text-muted-foreground flex items-center gap-1.5">
+                  <Calendar16Regular className="text-brand-fg" />
+                  <span>Available windows (optional)</span>
                 </label>
                 {selectedSlot && (
                   <button
                     type="button"
                     onClick={() => setSelectedSlot(null)}
-                    className="text-[11px] text-accent hover:underline font-medium cursor-pointer"
+                    className="text-caption1 text-brand-fg hover:underline font-semibold cursor-pointer"
                   >
-                    Clear Selection
+                    Clear selection
                   </button>
                 )}
               </div>
 
               {availableSlots.length === 0 ? (
-                <div className="p-4 rounded-xl bg-muted/60 text-center text-xs text-muted-foreground">
+                <div className="p-4 rounded-lg bg-muted text-center text-caption1 text-muted-foreground">
                   No predefined windows. You can customize date & hours in the booking request.
                 </div>
               ) : (
@@ -552,10 +552,10 @@ const ProviderDetail: React.FC = () => {
                           }
                           setSelectedSlot(isSelected ? null : slot.slotId);
                         }}
-                        className={`w-full p-3 rounded-xl border text-left transition-all text-xs flex items-center justify-between shadow-2xs cursor-pointer ${
+                        className={`w-full p-3 rounded-lg border text-left transition-colors text-caption1 flex items-center justify-between cursor-pointer ${
                           isSelected
-                            ? 'border-accent bg-accent/15 text-foreground ring-1 ring-accent'
-                            : 'border-border bg-card hover:border-accent/40 text-foreground'
+                            ? 'border-accent bg-accent-light text-foreground'
+                            : 'border-border bg-card hover:bg-muted text-foreground'
                         }`}
                       >
                         <div>
@@ -566,16 +566,16 @@ const ProviderDetail: React.FC = () => {
                               day: 'numeric',
                             })}
                           </div>
-                          <div className="text-foreground/70 text-[11px] mt-0.5">
-                            {startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} -{' '}
+                          <div className="text-muted-foreground text-caption1 font-mono tabular mt-0.5">
+                            {startDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} –{' '}
                             {endDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                           </div>
                         </div>
 
                         {isSelected && (
-                          <div className="w-5 h-5 rounded-full bg-accent text-accent-foreground flex items-center justify-center text-xs font-bold">
-                            ✓
-                          </div>
+                          <Badge appearance="filled" color="brand">
+                            Selected
+                          </Badge>
                         )}
                       </button>
                     );
@@ -585,20 +585,22 @@ const ProviderDetail: React.FC = () => {
             </div>
 
             {/* Safety & Boundary Highlights */}
-            <div className="p-3.5 rounded-2xl bg-accent/5 border border-accent/15 text-[11px] text-foreground/80 space-y-1.5">
-              <div className="font-bold text-accent flex items-center gap-1.5">
-                <SparklesIcon className="w-3.5 h-3.5" />
-                <span>Cue Safety Standard</span>
+            <div className="p-3.5 rounded-lg bg-accent-light border border-border text-caption1 text-foreground space-y-1">
+              <div className="font-semibold text-brand-fg flex items-center gap-1.5">
+                <ShieldCheckmark16Regular />
+                <span>Cue safety standard</span>
               </div>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-muted-foreground">
                 Meetups occur exclusively at public venues (cafes, restaurants, sports clubs, art plazas). Platonic conduct boundaries strictly guaranteed.
               </p>
             </div>
 
             {/* Primary Action Button: Book with Escrow */}
             <div className="space-y-2">
-              <button
-                type="button"
+              <Button
+                appearance="primary"
+                size="large"
+                icon={<ShieldCheckmark20Regular />}
                 onClick={() => {
                   if (!isAuthenticated) {
                     setAuthPromptModal(true);
@@ -606,13 +608,13 @@ const ProviderDetail: React.FC = () => {
                   }
                   setIsRequestModalOpen(true);
                 }}
-                className="w-full py-3.5 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm shadow-md transition-all cursor-pointer hover:scale-[1.01] flex items-center justify-center gap-2"
+                className="w-full min-h-11"
               >
-                <ShieldCheckIcon className="w-5 h-5" />
-                <span>{isAuthenticated ? 'Book Outing with Escrow \u2192' : 'Sign In to Book Outing \u2192'}</span>
-              </button>
-              <p className="text-[11px] text-muted-foreground text-center mt-2">
-                🔒 Protected Payment: Released only after mutual session PIN check-in.
+                {isAuthenticated ? 'Book outing with escrow →' : 'Sign in to book outing →'}
+              </Button>
+              <p className="text-caption1 text-muted-foreground text-center mt-2 flex items-center justify-center gap-1">
+                <ShieldCheckmark16Regular className="text-trust shrink-0" />
+                <span>Protected payment: Released only after mutual session PIN check-in.</span>
               </p>
             </div>
           </div>
@@ -620,72 +622,89 @@ const ProviderDetail: React.FC = () => {
       </div>
 
       {/* Confirmation Modal */}
-      {bookingSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl bg-card border border-border p-6 sm:p-8 text-center space-y-4 shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-success/15 text-success flex items-center justify-center mx-auto">
-              <CheckCircleIcon className="w-10 h-10" />
-            </div>
-            <h3 className="text-2xl font-bold font-serif text-foreground">
-              Booking Reserved!
-            </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Your experience request with <strong>{provider.displayName}</strong> has been secured in escrow. You can now coordinate specifics in the encrypted chat.
-            </p>
-            <div className="pt-2 flex flex-col gap-2">
-              <button
+      <Dialog open={bookingSuccessModal} onOpenChange={(_, data) => !data.open && setBookingSuccessModal(false)}>
+        <DialogSurface className="max-w-md w-full rounded-2xl bg-card border border-border p-6 text-center">
+          <DialogBody>
+            <DialogTitle>
+              <div className="w-14 h-14 rounded-full bg-success-light text-success flex items-center justify-center mx-auto mb-2">
+                <CheckmarkCircle24Regular />
+              </div>
+              <span className="text-subtitle1 font-semibold text-foreground block text-center">
+                Booking reserved!
+              </span>
+            </DialogTitle>
+            <DialogContent className="pt-2 text-center">
+              <p className="text-body1 text-muted-foreground">
+                Your experience request with <strong>{provider.displayName}</strong> has been secured in escrow. You can now coordinate specifics in the encrypted chat.
+              </p>
+            </DialogContent>
+            <DialogActions className="pt-4 flex flex-col gap-2">
+              <Button
+                appearance="primary"
+                size="large"
                 onClick={() => navigate('/bookings')}
-                className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors"
+                className="w-full min-h-11"
               >
-                View My Bookings
-              </button>
-              <button
+                View my bookings
+              </Button>
+              <Button
+                appearance="secondary"
+                size="large"
                 onClick={() => setBookingSuccessModal(false)}
-                className="w-full py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-xs transition-colors"
+                className="w-full min-h-11"
               >
-                Keep Exploring
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                Keep exploring
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
 
-      {/* Auth Prompt Modal (For guest visitors) */}
-      {authPromptModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-          <div className="w-full max-w-md rounded-3xl bg-card border border-border p-6 sm:p-8 text-center space-y-4 shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-accent/15 text-accent flex items-center justify-center mx-auto">
-              <SparklesIcon className="w-9 h-9" />
-            </div>
-            <h3 className="text-2xl font-bold font-serif text-foreground">
-              Sign In to Unlock Pricing & Reserve
-            </h3>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              To guarantee guest privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
-            </p>
-            <div className="pt-2 flex flex-col gap-2">
-              <Link
-                to="/register"
-                className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors block"
+      {/* Auth Prompt Modal */}
+      <Dialog open={authPromptModal} onOpenChange={(_, data) => !data.open && setAuthPromptModal(false)}>
+        <DialogSurface className="max-w-md w-full rounded-2xl bg-card border border-border p-6 text-center">
+          <DialogBody>
+            <DialogTitle>
+              <div className="w-14 h-14 rounded-full bg-accent-light text-brand-fg flex items-center justify-center mx-auto mb-2">
+                <ShieldCheckmark24Regular />
+              </div>
+              <span className="text-subtitle1 font-semibold text-foreground block text-center">
+                Sign in to unlock pricing & reserve
+              </span>
+            </DialogTitle>
+            <DialogContent className="pt-2 text-center">
+              <p className="text-body1 text-muted-foreground">
+                To guarantee guest privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
+              </p>
+            </DialogContent>
+            <DialogActions className="pt-4 flex flex-col gap-2">
+              <Button
+                appearance="primary"
+                size="large"
+                onClick={() => navigate('/register')}
+                className="w-full min-h-11"
               >
-                Create Account (Quick & Free)
-              </Link>
-              <Link
-                to="/login"
-                className="w-full py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-xs transition-colors block"
+                Create account (quick & free)
+              </Button>
+              <Button
+                appearance="secondary"
+                size="large"
+                onClick={() => navigate('/login')}
+                className="w-full min-h-11"
               >
-                Existing User Log In
-              </Link>
-              <button
+                Existing user log in
+              </Button>
+              <Button
+                appearance="subtle"
                 onClick={() => setAuthPromptModal(false)}
-                className="text-xs text-muted-foreground hover:underline pt-2"
+                className="w-full min-h-11"
               >
                 Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
 
       {/* Single Canonical Booking Flow: Escrow Request Modal */}
       {isRequestModalOpen && (

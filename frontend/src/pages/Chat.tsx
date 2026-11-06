@@ -1,6 +1,13 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import * as signalR from '@microsoft/signalr';
+import { Button, Textarea, Badge } from '@fluentui/react-components';
+import {
+  ArrowLeft20Regular,
+  Send20Regular,
+  ShieldCheckmark16Regular,
+  Info16Regular,
+} from '@fluentui/react-icons';
 import {
   useGetOrderMessagesQuery,
   useSendMessageMutation,
@@ -8,12 +15,6 @@ import {
   type ChatMessageDto,
 } from '../store/chatApi';
 import { useGetMyBookingsQuery } from '../store/bookingApi';
-import {
-  ArrowLeftIcon,
-  PaperAirplaneIcon,
-  ShieldCheckIcon,
-  SparklesIcon,
-} from '@heroicons/react/24/outline';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
@@ -47,7 +48,6 @@ const Chat: React.FC = () => {
   const [sendMessageMutation] = useSendMessageMutation();
   const [markAsRead] = useMarkMessagesAsReadMutation();
 
-  // Initialize SignalR
   useEffect(() => {
     if (!orderId) return;
 
@@ -94,7 +94,6 @@ const Chat: React.FC = () => {
     };
   }, [orderId, canChat, markAsRead]);
 
-  // Load history messages when data changes
   useEffect(() => {
     if (historyMessages && historyMessages.length > 0) {
       setMessages((prev) => {
@@ -109,7 +108,6 @@ const Chat: React.FC = () => {
     }
   }, [historyMessages, orderId, markAsRead]);
 
-  // Auto-scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
@@ -131,19 +129,16 @@ const Chat: React.FC = () => {
       isRead: false,
     };
 
-    // Optimistic local update
     setMessages((prev) => [...prev, localMessage]);
     setNewMessage('');
 
     try {
-      // 1. Deliver via authoritative REST service (persists to PostgreSQL & broadcasts)
       const res = await sendMessageMutation({ orderId, content: text, messageType: 'Text' }).unwrap();
       setMessages((prev) =>
         prev.map((m) => (m.id === localId ? res : m))
       );
       refetchMessages();
-    } catch (err) {
-      // 2. Fallback via SignalR hub invocation if REST network hiccup
+    } catch {
       if (connection && connection.state === signalR.HubConnectionState.Connected) {
         try {
           await connection.invoke('SendMessage', orderId, text, 0);
@@ -156,7 +151,7 @@ const Chat: React.FC = () => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -166,54 +161,60 @@ const Chat: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 flex-1 flex flex-col min-h-[calc(100vh-140px)]">
       {/* Top Header Card */}
-      <div className="bg-card rounded-2xl border border-border p-4 shadow-xs flex items-center justify-between gap-4 mb-4">
+      <div className="bg-card rounded-2xl border border-border p-4 shadow-sm flex items-center justify-between gap-4 mb-4">
         <div className="flex items-center gap-3">
-          <button
+          <Button
+            appearance="outline"
+            icon={<ArrowLeft20Regular />}
             onClick={() => navigate('/bookings')}
-            className="p-2 rounded-xl border border-border hover:bg-muted text-foreground transition-colors"
             aria-label="Back to bookings"
-          >
-            <ArrowLeftIcon className="w-5 h-5" />
-          </button>
+            className="min-h-11 min-w-11"
+          />
 
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-10 h-10 rounded-full bg-accent/20 text-accent font-bold flex items-center justify-center border border-accent/30">
+              <div className="w-10 h-10 rounded-full bg-accent-light text-brand-fg font-semibold flex items-center justify-center border border-border">
                 C
               </div>
-              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-card" />
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-success rounded-full border-2 border-card" />
             </div>
 
             <div>
-              <h2 className="text-sm font-bold text-foreground">
-                Outing Coordination
+              <h2 className="text-subtitle2 font-semibold text-foreground">
+                Outing coordination
               </h2>
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="text-emerald-500 font-medium">Online</span>
+              <div className="flex items-center gap-2 text-caption1 text-muted-foreground">
+                <span className="text-success font-semibold">Online</span>
                 <span>•</span>
-                <span>Order #{orderId?.slice(0, 8)}</span>
+                <span className="tabular">Order #{orderId?.slice(0, 8)}</span>
               </div>
             </div>
           </div>
         </div>
 
         {/* Escrow safety badge */}
-        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success/10 border border-success/20 text-success text-xs font-semibold">
-          <ShieldCheckIcon className="w-4 h-4" />
-          <span>Escrow Protected Session</span>
+        <div className="hidden sm:flex">
+          <Badge
+            appearance="tint"
+            color="warning"
+            icon={<ShieldCheckmark16Regular />}
+            className="bg-trust-light text-trust border border-trust-border"
+          >
+            Escrow protected session
+          </Badge>
         </div>
       </div>
 
       {/* Safety Guideline Banner */}
-      <div className="bg-accent/10 border border-accent/20 rounded-xl p-3 mb-4 text-xs text-foreground flex items-center gap-2 shadow-2xs">
-        <SparklesIcon className="w-4 h-4 text-accent flex-shrink-0" />
+      <div className="bg-accent-light border border-border rounded-lg p-3 mb-4 text-caption1 text-foreground flex items-center gap-2">
+        <Info16Regular className="text-brand-fg shrink-0" />
         <span>
-          <strong>Community Safety Tip:</strong> Always meet in well-lit public venues. For emergencies, tap safety support at any time.
+          <strong>Community safety tip:</strong> Always meet in well-lit public venues. For emergencies, tap safety support at any time.
         </span>
       </div>
 
       {/* Chat Messages Log */}
-      <div className="flex-1 bg-card rounded-2xl border border-border p-4 sm:p-6 shadow-xs overflow-y-auto space-y-4 mb-4 min-h-[350px] max-h-[550px]">
+      <div className="flex-1 bg-card rounded-2xl border border-border p-4 sm:p-6 shadow-sm overflow-y-auto space-y-4 mb-4 min-h-[350px] max-h-[550px]">
         {messages.map((msg) => {
           const isOwn = msg.senderId === currentUserId;
 
@@ -223,7 +224,7 @@ const Chat: React.FC = () => {
               className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}
             >
               <div
-                className={`max-w-[80%] sm:max-w-[70%] px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-xs ${
+                className={`max-w-[80%] sm:max-w-[70%] px-4 py-3 rounded-2xl text-body1 shadow-sm ${
                   isOwn
                     ? 'bg-accent text-accent-foreground rounded-br-xs'
                     : 'bg-muted border border-border text-foreground rounded-bl-xs'
@@ -231,8 +232,8 @@ const Chat: React.FC = () => {
               >
                 <p className="whitespace-pre-wrap break-words">{msg.content}</p>
                 <div
-                  className={`text-[10px] mt-1 text-right ${
-                    isOwn ? 'text-accent-foreground/80' : 'text-foreground/70'
+                  className={`text-caption2 mt-1 text-right tabular ${
+                    isOwn ? 'text-accent-foreground/80' : 'text-muted-foreground'
                   }`}
                 >
                   {new Date(msg.sentAt).toLocaleTimeString('en-US', {
@@ -248,36 +249,39 @@ const Chat: React.FC = () => {
       </div>
 
       {/* Quick Reply Suggestions */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-3 scrollbar-none">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 mb-3">
         {SUGGESTED_REPLIES.map((reply) => (
-          <button
+          <Button
             key={reply}
+            appearance="outline"
+            size="small"
             onClick={() => handleSend(reply)}
-            className="px-3 py-1 rounded-full text-xs bg-card border border-border hover:border-accent/50 text-muted-foreground hover:text-foreground whitespace-nowrap transition-colors"
+            className="whitespace-nowrap shrink-0"
           >
             {reply}
-          </button>
+          </Button>
         ))}
       </div>
 
       {/* Message Input Box */}
-      <div className="bg-card rounded-2xl border border-border p-2 shadow-xs flex items-center gap-2">
-        <input
-          type="text"
+      <div className="bg-card rounded-2xl border border-border p-2 shadow-sm flex items-end gap-2">
+        <Textarea
+          rows={1}
           value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
+          onChange={(_, data) => setNewMessage(data.value)}
           onKeyDown={handleKeyDown}
           placeholder="Type an encrypted message..."
-          className="flex-1 px-4 py-2.5 bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none text-sm"
+          className="flex-1"
         />
-        <button
+        <Button
+          appearance="primary"
+          size="large"
           onClick={() => handleSend()}
           disabled={!newMessage.trim() || isSending}
-          className="p-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-xs"
+          icon={<Send20Regular />}
           aria-label="Send message"
-        >
-          <PaperAirplaneIcon className="w-5 h-5" />
-        </button>
+          className="min-h-11 min-w-11"
+        />
       </div>
     </div>
   );

@@ -1,15 +1,30 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  CreditCardIcon,
-  QrCodeIcon,
-  BuildingLibraryIcon,
-  ShieldCheckIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  XMarkIcon,
-  ArrowPathIcon,
-  DevicePhoneMobileIcon,
-} from '@heroicons/react/24/outline';
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Input,
+  Field,
+  TabList,
+  Tab,
+  ToggleButton,
+  Badge,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Payment16Regular,
+  QrCode20Regular,
+  BuildingBank16Regular,
+  ShieldCheckmark16Regular,
+  CheckmarkCircle20Regular,
+  DismissCircle16Regular,
+  Dismiss20Regular,
+  Phone16Regular,
+} from '@fluentui/react-icons';
 import { formatINR } from '../../utils/currency';
 
 export interface RazorpaySandboxPaymentResult {
@@ -33,11 +48,11 @@ interface RazorpaySandboxModalProps {
 }
 
 const UPI_APPS = [
-  { name: 'Google Pay', icon: '🟢', id: 'gpay' },
-  { name: 'PhonePe', icon: '🟣', id: 'phonepe' },
-  { name: 'Paytm UPI', icon: '🔵', id: 'paytm' },
-  { name: 'BHIM', icon: '🟠', id: 'bhim' },
-  { name: 'Cred UPI', icon: '⚫', id: 'cred' },
+  { name: 'Google Pay', id: 'gpay' },
+  { name: 'PhonePe', id: 'phonepe' },
+  { name: 'Paytm UPI', id: 'paytm' },
+  { name: 'BHIM', id: 'bhim' },
+  { name: 'Cred UPI', id: 'cred' },
 ];
 
 const TEST_CARDS = [
@@ -47,11 +62,11 @@ const TEST_CARDS = [
 ];
 
 const NETBANKING_BANKS = [
-  { name: 'HDFC Bank', code: 'HDFC', icon: '🏦' },
-  { name: 'ICICI Bank', code: 'ICIC', icon: '🏦' },
-  { name: 'State Bank of India', code: 'SBIN', icon: '🏦' },
-  { name: 'Axis Bank', code: 'UTIB', icon: '🏦' },
-  { name: 'Kotak Mahindra Bank', code: 'KKBK', icon: '🏦' },
+  { name: 'HDFC Bank', code: 'HDFC' },
+  { name: 'ICICI Bank', code: 'ICIC' },
+  { name: 'State Bank of India', code: 'SBIN' },
+  { name: 'Axis Bank', code: 'UTIB' },
+  { name: 'Kotak Mahindra Bank', code: 'KKBK' },
 ];
 
 export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
@@ -59,8 +74,8 @@ export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
   orderId,
   amount,
   currency: _currency = 'INR',
-  title = 'Safe Payment',
-  description = 'Protected Companion Session Checkout',
+  title = 'Safe payment',
+  description = 'Protected companion session checkout',
   onSuccess,
   onError,
   onClose,
@@ -73,17 +88,6 @@ export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStatus, setProcessingStatus] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && !isProcessing) {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isProcessing, onClose]);
-
   if (!isOpen) return null;
 
   const handleSimulateSuccess = () => {
@@ -95,7 +99,7 @@ export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
     }, 400);
 
     setTimeout(() => {
-      setProcessingStatus('Payment Authorized! Returning to Cue...');
+      setProcessingStatus('Payment authorized! Returning to Cue...');
     }, 800);
 
     setTimeout(() => {
@@ -127,268 +131,221 @@ export const RazorpaySandboxModal: React.FC<RazorpaySandboxModalProps> = ({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="razorpay-sandbox-title"
-      className="fixed inset-0 z-60 flex items-center justify-center p-3 sm:p-4 bg-black/70 backdrop-blur-xs animate-in fade-in duration-150"
-    >
-      <div className="relative w-full max-w-md bg-card text-card-foreground rounded-3xl border border-border/90 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-150">
-        {/* Top Razorpay Sandbox Bar */}
-        <div className="bg-linear-to-r from-sky-600 to-indigo-700 text-white px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-bold tracking-tight text-sm font-sans flex items-center gap-1.5">
-              <span className="px-1.5 py-0.5 rounded bg-white/20 text-[10px] font-mono uppercase tracking-widest">
-                Sandbox
-              </span>
-              <span>Razorpay Simulator</span>
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] opacity-85 font-mono">Test Mode</span>
-            {!isProcessing && (
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close Razorpay Sandbox modal"
-                className="w-6 h-6 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
-              >
-                <XMarkIcon className="w-4 h-4 text-white" />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Order Header */}
-        <div className="p-5 border-b border-border/70 bg-muted/20">
-          <div className="flex items-start justify-between gap-3">
+    <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && !isProcessing && onClose()}>
+      <DialogSurface className="max-w-md w-full bg-card text-card-foreground rounded-2xl border border-border p-6">
+        <DialogBody>
+          <DialogTitle
+            action={
+              !isProcessing ? (
+                <Button
+                  appearance="subtle"
+                  aria-label="Close Razorpay Sandbox modal"
+                  icon={<Dismiss20Regular />}
+                  onClick={onClose}
+                />
+              ) : undefined
+            }
+          >
             <div>
-              <h3 id="razorpay-sandbox-title" className="text-sm font-bold text-foreground">
-                {title}
-              </h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5">{description}</p>
-              <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground font-mono">
-                <span>Order:</span>
-                <span className="px-1.5 py-0.2 rounded bg-muted border border-border/80 truncate max-w-[140px]">
-                  {orderId}
+              <div className="flex items-center gap-2 mb-1">
+                <Badge appearance="filled" color="brand">
+                  Sandbox
+                </Badge>
+                <span className="text-caption1 font-normal text-muted-foreground">
+                  Razorpay simulator (test mode)
                 </span>
               </div>
-            </div>
-            <div className="text-right shrink-0">
-              <span className="text-[10px] uppercase font-semibold text-muted-foreground block">Amount</span>
-              <span className="text-xl font-bold font-mono text-accent tabular-nums">
-                {formatINR(amount)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Processing Overlay */}
-        {isProcessing ? (
-          <div className="py-14 px-6 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="relative">
-              <div className="w-14 h-14 rounded-2xl bg-accent/15 flex items-center justify-center text-accent">
-                <ArrowPathIcon className="w-7 h-7 animate-spin" />
-              </div>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-foreground">{processingStatus}</h4>
-              <p className="text-xs text-muted-foreground mt-1">
-                Please do not close this window or hit refresh.
-              </p>
-            </div>
-          </div>
-        ) : (
-          <div className="p-5 space-y-4">
-            {/* Method Tabs */}
-            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-muted/60 border border-border/60">
-              <button
-                type="button"
-                onClick={() => setActiveTab('upi')}
-                className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                  activeTab === 'upi'
-                    ? 'bg-card text-foreground shadow-xs border border-border/60'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <DevicePhoneMobileIcon className="w-3.5 h-3.5 text-accent" />
-                <span>UPI / QR</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('card')}
-                className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                  activeTab === 'card'
-                    ? 'bg-card text-foreground shadow-xs border border-border/60'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <CreditCardIcon className="w-3.5 h-3.5 text-accent" />
-                <span>Cards</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('netbanking')}
-                className={`py-1.5 px-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                  activeTab === 'netbanking'
-                    ? 'bg-card text-foreground shadow-xs border border-border/60'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <BuildingLibraryIcon className="w-3.5 h-3.5 text-accent" />
-                <span>NetBanking</span>
-              </button>
-            </div>
-
-            {/* UPI Tab Content */}
-            {activeTab === 'upi' && (
-              <div className="space-y-3">
-                <div className="text-[11px] font-semibold text-muted-foreground">Select Test UPI App:</div>
-                <div className="grid grid-cols-3 gap-2">
-                  {UPI_APPS.map((app) => (
-                    <button
-                      key={app.id}
-                      type="button"
-                      onClick={() => setSelectedUpiApp(app.id)}
-                      className={`p-2 rounded-xl border text-left flex items-center gap-2 transition-all ${
-                        selectedUpiApp === app.id
-                          ? 'bg-accent/10 border-accent text-foreground shadow-2xs'
-                          : 'bg-card border-border/80 text-muted-foreground hover:bg-muted/50'
-                      }`}
-                    >
-                      <span className="text-sm">{app.icon}</span>
-                      <span className="text-xs font-medium truncate">{app.name}</span>
-                    </button>
-                  ))}
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <span id="razorpay-sandbox-title" className="text-subtitle1 font-semibold text-foreground block">
+                    {title}
+                  </span>
+                  <span className="text-caption1 font-normal text-muted-foreground block">
+                    {description}
+                  </span>
+                  <span className="text-caption2 font-mono tabular text-muted-foreground block mt-0.5 truncate max-w-[200px]">
+                    Order: {orderId}
+                  </span>
                 </div>
-
-                <div className="pt-1">
-                  <label htmlFor="test-vpa" className="text-[11px] font-semibold text-muted-foreground block mb-1">
-                    Or Enter Test UPI ID (VPA):
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="test-vpa"
-                      type="text"
-                      value={customVpa}
-                      onChange={(e) => setCustomVpa(e.target.value)}
-                      placeholder="e.g. success@razorpay"
-                      className="w-full px-3 py-2 rounded-xl border border-border/80 bg-background text-foreground text-xs font-mono focus:ring-2 focus:ring-accent focus:outline-hidden"
-                    />
-                    <span className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-emerald-600 font-bold">
-                      ✓ Verified
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60 flex items-center gap-2 text-[11px] text-muted-foreground">
-                  <QrCodeIcon className="w-4 h-4 text-accent shrink-0" />
-                  <span>Simulating QR scan & instant UPI auto-approval.</span>
+                <div className="text-right shrink-0">
+                  <span className="text-caption2 text-muted-foreground block">Amount</span>
+                  <span className="text-subtitle1 font-semibold font-mono text-brand-fg tabular">
+                    {formatINR(amount)}
+                  </span>
                 </div>
               </div>
-            )}
-
-            {/* Cards Tab Content */}
-            {activeTab === 'card' && (
-              <div className="space-y-3">
-                <div className="text-[11px] font-semibold text-muted-foreground">Select Pre-Configured Test Card:</div>
-                <div className="space-y-2">
-                  {TEST_CARDS.map((card, idx) => (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => setSelectedCardIdx(idx)}
-                      className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        selectedCardIdx === idx
-                          ? 'bg-accent/10 border-accent text-foreground shadow-2xs'
-                          : 'bg-card border-border/80 text-muted-foreground hover:bg-muted/50'
-                      }`}
-                    >
-                      <div>
-                        <p className="text-xs font-bold text-foreground">{card.brand}</p>
-                        <p className="text-[11px] font-mono text-muted-foreground mt-0.5">{card.number}</p>
-                      </div>
-                      <div className="text-right text-[10px] font-mono text-muted-foreground">
-                        <div>EXP: {card.exp}</div>
-                        <div>CVV: {card.cvv}</div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-
-                <div className="p-2.5 rounded-xl bg-muted/40 border border-border/60 flex items-center justify-between text-[11px] text-muted-foreground">
-                  <span>3D Secure Test OTP:</span>
-                  <span className="font-mono font-bold text-accent">123456 (Auto-submitted)</span>
-                </div>
-              </div>
-            )}
-
-            {/* NetBanking Tab Content */}
-            {activeTab === 'netbanking' && (
-              <div className="space-y-3">
-                <div className="text-[11px] font-semibold text-muted-foreground">Select Test Bank:</div>
-                <div className="space-y-1.5">
-                  {NETBANKING_BANKS.map((bank) => (
-                    <button
-                      key={bank.code}
-                      type="button"
-                      onClick={() => setSelectedBank(bank.code)}
-                      className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                        selectedBank === bank.code
-                          ? 'bg-accent/10 border-accent text-foreground shadow-2xs'
-                          : 'bg-card border-border/80 text-muted-foreground hover:bg-muted/50'
-                      }`}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span>{bank.icon}</span>
-                        <span className="text-xs font-semibold text-foreground">{bank.name}</span>
-                      </div>
-                      <span className="text-[10px] font-mono text-muted-foreground">{bank.code}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Security Guarantee Strip */}
-            <div className="flex items-center gap-2 p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[11px] text-emerald-700 dark:text-emerald-400">
-              <ShieldCheckIcon className="w-4 h-4 shrink-0" />
-              <span>Sandbox Mode: No real funds are debited from your bank account.</span>
             </div>
+          </DialogTitle>
 
-            {/* Simulator Action Buttons */}
-            <div className="pt-2 space-y-2">
-              <button
-                type="button"
-                onClick={handleSimulateSuccess}
-                className="w-full py-3 px-4 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-xs flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <CheckCircleIcon className="w-4 h-4" />
-                <span>Simulate Successful Payment ({formatINR(amount)})</span>
-              </button>
-
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={handleSimulateFailure}
-                  className="py-2 px-3 rounded-xl font-semibold text-xs border border-rose-500/30 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition-all flex items-center justify-center gap-1"
+          <DialogContent className="space-y-4 pt-4">
+            {isProcessing ? (
+              <div className="py-12 px-4 flex flex-col items-center justify-center text-center space-y-4">
+                <Spinner size="large" />
+                <div>
+                  <h4 className="text-body1 font-semibold text-foreground">{processingStatus}</h4>
+                  <p className="text-caption1 text-muted-foreground mt-1">
+                    Please do not close this window or hit refresh.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <>
+                <TabList
+                  selectedValue={activeTab}
+                  onTabSelect={(_, data) => setActiveTab(data.value as 'upi' | 'card' | 'netbanking')}
+                  className="border-b border-border"
                 >
-                  <XCircleIcon className="w-3.5 h-3.5" />
-                  <span>Simulate Failure</span>
-                </button>
+                  <Tab value="upi" icon={<Phone16Regular />}>
+                    UPI / QR
+                  </Tab>
+                  <Tab value="card" icon={<Payment16Regular />}>
+                    Cards
+                  </Tab>
+                  <Tab value="netbanking" icon={<BuildingBank16Regular />}>
+                    NetBanking
+                  </Tab>
+                </TabList>
 
-                <button
-                  type="button"
+                {activeTab === 'upi' && (
+                  <div className="space-y-3">
+                    <div className="text-caption1 font-semibold text-muted-foreground">Select test UPI app:</div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {UPI_APPS.map((app) => (
+                        <ToggleButton
+                          key={app.id}
+                          size="small"
+                          checked={selectedUpiApp === app.id}
+                          appearance={selectedUpiApp === app.id ? 'primary' : 'outline'}
+                          onClick={() => setSelectedUpiApp(app.id)}
+                          className="min-h-10"
+                        >
+                          {app.name}
+                        </ToggleButton>
+                      ))}
+                    </div>
+
+                    <Field label="Or enter test UPI ID (VPA)">
+                      <Input
+                        id="test-vpa"
+                        value={customVpa}
+                        onChange={(_, data) => setCustomVpa(data.value)}
+                        placeholder="e.g. success@razorpay"
+                        contentAfter={
+                          <Badge appearance="tint" color="success">
+                            Verified
+                          </Badge>
+                        }
+                        className="font-mono"
+                      />
+                    </Field>
+
+                    <div className="p-2.5 rounded-lg bg-muted border border-border flex items-center gap-2 text-caption1 text-muted-foreground">
+                      <QrCode20Regular className="text-brand-fg shrink-0" />
+                      <span>Simulating QR scan & instant UPI auto-approval.</span>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'card' && (
+                  <div className="space-y-3">
+                    <div className="text-caption1 font-semibold text-muted-foreground">Select pre-configured test card:</div>
+                    <div className="space-y-2">
+                      {TEST_CARDS.map((card, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSelectedCardIdx(idx)}
+                          className={`w-full p-3 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer ${
+                            selectedCardIdx === idx
+                              ? 'bg-accent-light border-accent text-foreground'
+                              : 'bg-card border-border text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          <div>
+                            <p className="text-caption1 font-semibold text-foreground">{card.brand}</p>
+                            <p className="text-caption1 font-mono tabular text-muted-foreground mt-0.5">{card.number}</p>
+                          </div>
+                          <div className="text-right text-caption2 font-mono tabular text-muted-foreground">
+                            <div>EXP: {card.exp}</div>
+                            <div>CVV: {card.cvv}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="p-2.5 rounded-lg bg-muted border border-border flex items-center justify-between text-caption1 text-muted-foreground">
+                      <span>3D Secure test OTP:</span>
+                      <span className="font-mono tabular font-semibold text-brand-fg">123456 (Auto-submitted)</span>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === 'netbanking' && (
+                  <div className="space-y-3">
+                    <div className="text-caption1 font-semibold text-muted-foreground">Select test bank:</div>
+                    <div className="space-y-1.5">
+                      {NETBANKING_BANKS.map((bank) => (
+                        <button
+                          key={bank.code}
+                          type="button"
+                          onClick={() => setSelectedBank(bank.code)}
+                          className={`w-full p-2.5 rounded-lg border text-left flex items-center justify-between transition-colors cursor-pointer ${
+                            selectedBank === bank.code
+                              ? 'bg-accent-light border-accent text-foreground'
+                              : 'bg-card border-border text-muted-foreground hover:bg-muted'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            <BuildingBank16Regular className="text-brand-fg" />
+                            <span className="text-caption1 font-semibold text-foreground">{bank.name}</span>
+                          </div>
+                          <span className="text-caption2 font-mono text-muted-foreground">{bank.code}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-2 p-2.5 rounded-lg bg-success-light border border-border text-caption1 text-success">
+                  <ShieldCheckmark16Regular className="shrink-0" />
+                  <span>Sandbox mode: No real funds are debited from your bank account.</span>
+                </div>
+              </>
+            )}
+          </DialogContent>
+
+          {!isProcessing && (
+            <DialogActions className="pt-4 flex flex-col gap-2">
+              <Button
+                appearance="primary"
+                size="large"
+                onClick={handleSimulateSuccess}
+                icon={<CheckmarkCircle20Regular />}
+                className="w-full min-h-11 tabular"
+              >
+                Simulate successful payment ({formatINR(amount)})
+              </Button>
+              <div className="grid grid-cols-2 gap-2 w-full">
+                <Button
+                  appearance="outline"
+                  onClick={handleSimulateFailure}
+                  icon={<DismissCircle16Regular />}
+                  className="min-h-11 text-destructive border-destructive"
+                >
+                  Simulate failure
+                </Button>
+                <Button
+                  appearance="secondary"
                   onClick={onClose}
-                  className="py-2 px-3 rounded-xl font-semibold text-xs border border-border text-muted-foreground hover:bg-muted transition-all"
+                  className="min-h-11"
                 >
                   Cancel
-                </button>
+                </Button>
               </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
+            </DialogActions>
+          )}
+        </DialogBody>
+      </DialogSurface>
+    </Dialog>
   );
 };

@@ -1,13 +1,36 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
-  BanknotesIcon,
-  ArrowPathIcon,
-  MagnifyingGlassIcon,
-  ClipboardDocumentIcon,
-  CheckIcon,
-  EyeIcon,
-} from '@heroicons/react/24/outline';
+  Badge,
+  Button,
+  Card,
+  Input,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
+  Spinner,
+  Tab,
+  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableCellLayout,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from '@fluentui/react-components';
+import {
+  Money20Regular,
+  ArrowSync16Regular,
+  Search16Regular,
+  Copy16Regular,
+  Checkmark16Regular,
+  Eye16Regular,
+  MoreHorizontal16Regular,
+  Dismiss16Regular,
+} from '@fluentui/react-icons';
 import type { AdminBookingLedgerItem } from '../../store/adminApi';
 import { formatINR } from '../../utils/currency';
 import { Pagination } from '../ui/Pagination';
@@ -35,6 +58,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
   onPageChange,
   onPageSizeChange,
 }) => {
+  const navigate = useNavigate();
   const [statusFilter, setStatusFilter] = useState<string>('All');
   const [search, setSearch] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -65,7 +89,13 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
   const isEscrowStatus = (status?: string) => {
     if (!status) return false;
     const s = status.toLowerCase();
-    return s === 'confirmed' || s === 'inprogress' || s === 'inescrow' || s === 'pending' || s === 'pendingpayment';
+    return (
+      s === 'confirmed' ||
+      s === 'inprogress' ||
+      s === 'inescrow' ||
+      s === 'pending' ||
+      s === 'pendingpayment'
+    );
   };
 
   const filteredBookings = bookings.filter((b) => {
@@ -85,10 +115,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
 
     const q = search.trim().toLowerCase();
     const matchesSearch =
-      !q ||
-      rawId.toLowerCase().includes(q) ||
-      seeker.includes(q) ||
-      provider.includes(q);
+      !q || rawId.toLowerCase().includes(q) || seeker.includes(q) || provider.includes(q);
 
     return matchesFilter && matchesSearch;
   });
@@ -97,14 +124,19 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
     ? filteredBookings
     : filteredBookings.slice((activePage - 1) * activePageSize, activePage * activePageSize);
 
-  const activeTotalCount = isServerPaged ? (totalCount ?? filteredBookings.length) : filteredBookings.length;
+  const activeTotalCount = isServerPaged
+    ? (totalCount ?? filteredBookings.length)
+    : filteredBookings.length;
   const activeTotalPages = isServerPaged
     ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
     : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
 
   const totalGmv = filteredBookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
   const totalPlatformFee = filteredBookings.reduce((sum, b) => sum + (b.platformFee || 0), 0);
-  const totalProviderNet = filteredBookings.reduce((sum, b) => sum + (b.providerEarnings || 0), 0);
+  const totalProviderNet = filteredBookings.reduce(
+    (sum, b) => sum + (b.providerEarnings || 0),
+    0
+  );
 
   const handleCopy = (id: string) => {
     navigator.clipboard.writeText(id);
@@ -112,144 +144,150 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  const filterTabs = [
+    { key: 'All', label: 'All bookings', count: bookings.length },
+    {
+      key: 'InEscrow',
+      label: 'In escrow / active',
+      count: bookings.filter((b) => isEscrowStatus(b.status)).length,
+    },
+    {
+      key: 'Completed',
+      label: 'Completed',
+      count: bookings.filter((b) => b.status === 'Completed').length,
+    },
+    {
+      key: 'Cancelled',
+      label: 'Cancelled',
+      count: bookings.filter((b) => b.status === 'Cancelled').length,
+    },
+    {
+      key: 'Disputed',
+      label: 'Disputed',
+      count: bookings.filter((b) => b.status === 'Disputed').length,
+    },
+  ];
+
   return (
     <section aria-label="Bookings and Revenue Ledger" className="space-y-4">
       {/* Controls & Search Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/80 p-3 sm:p-4 rounded-2xl shadow-2xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { key: 'All', label: 'All Bookings', count: bookings.length },
-            { key: 'InEscrow', label: 'In Escrow / Active', count: bookings.filter((b) => isEscrowStatus(b.status)).length },
-            { key: 'Completed', label: 'Completed', count: bookings.filter((b) => b.status === 'Completed').length },
-            { key: 'Cancelled', label: 'Cancelled', count: bookings.filter((b) => b.status === 'Cancelled').length },
-            {
-              key: 'Disputed',
-              label: 'Disputed',
-              count: bookings.filter((b) => b.status === 'Disputed').length,
-            },
-          ].map((pill) => {
-            const isActive = statusFilter === pill.key;
-            return (
-              <button
-                key={pill.key}
-                type="button"
-                onClick={() => setStatusFilter(pill.key)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
-                  isActive
-                    ? 'bg-accent text-accent-foreground border-accent shadow-xs'
-                    : 'bg-card text-muted-foreground border-border/80 hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <span>{pill.label}</span>
-                {pill.count !== undefined && (
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      isActive ? 'bg-background/20 text-accent-foreground' : 'bg-muted text-muted-foreground'
-                    }`}
-                  >
+      <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border p-3 rounded-2xl shadow-sm">
+        <div className="overflow-x-auto">
+          <TabList
+            size="small"
+            selectedValue={statusFilter}
+            onTabSelect={(_e, data) => setStatusFilter(String(data.value))}
+          >
+            {filterTabs.map((pill) => (
+              <Tab key={pill.key} value={pill.key}>
+                <span className="flex items-center gap-1.5">
+                  <span>{pill.label}</span>
+                  <Badge appearance="tint" color="informative" size="small" className="tabular">
                     {pill.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                  </Badge>
+                </span>
+              </Tab>
+            ))}
+          </TabList>
         </div>
 
         <div className="flex items-center gap-2">
-          <div className="relative w-full sm:w-64">
-            <MagnifyingGlassIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by ID, host, guest..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-xl border border-border/80 bg-background text-foreground text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-2 focus:ring-accent"
-            />
-            {search && (
-              <button
-                type="button"
-                onClick={() => setSearch('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
-              >
-                ×
-              </button>
-            )}
-          </div>
+          <Input
+            size="small"
+            contentBefore={<Search16Regular />}
+            contentAfter={
+              search ? (
+                <Button
+                  appearance="transparent"
+                  size="small"
+                  icon={<Dismiss16Regular />}
+                  onClick={() => setSearch('')}
+                  aria-label="Clear search"
+                />
+              ) : undefined
+            }
+            value={search}
+            onChange={(_e, data) => setSearch(data.value)}
+            placeholder="Search by ID, host, guest..."
+            className="w-full sm:w-64"
+          />
 
-          <button
-            type="button"
+          <Button
+            appearance="outline"
+            size="small"
+            icon={<ArrowSync16Regular />}
             onClick={onRefresh}
-            className="p-2 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all shadow-2xs"
-            title="Refresh Ledger"
-          >
-            <ArrowPathIcon className="w-4 h-4" />
-          </button>
+            title="Refresh ledger"
+            aria-label="Refresh ledger"
+          />
         </div>
-      </div>
+      </Card>
 
       {/* Mini Financial Summary Banner */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-card border border-border/70 p-3 rounded-2xl text-xs">
-        <div>
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">Showing Records</span>
-          <p className="font-mono font-bold text-sm text-foreground mt-0.5 tabular-nums">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <Card className="bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <span className="text-caption1 font-semibold text-muted-foreground">
+            Showing records
+          </span>
+          <p className="font-mono font-semibold text-subtitle2 text-foreground mt-0.5 tabular">
             {filteredBookings.length} bookings
           </p>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">Total Booking Amount</span>
-          <p className="font-mono font-bold text-sm text-foreground mt-0.5 tabular-nums">
+        </Card>
+        <Card className="bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <span className="text-caption1 font-semibold text-muted-foreground">
+            Total booking amount
+          </span>
+          <p className="font-mono font-semibold text-subtitle2 text-foreground mt-0.5 tabular">
             {formatINR(totalGmv)}
           </p>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
-            Platform Fee (15%)
-          </span>
-          <p className="font-mono font-bold text-sm text-amber-600 dark:text-amber-400 mt-0.5 tabular-nums">
+        </Card>
+        <Card className="bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <span className="text-caption1 font-semibold text-warning">Platform fee (15%)</span>
+          <p className="font-mono font-semibold text-subtitle2 text-warning mt-0.5 tabular">
             {formatINR(totalPlatformFee)}
           </p>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
-            Guest Earnings (85%)
-          </span>
-          <p className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
+        </Card>
+        <Card className="bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <span className="text-caption1 font-semibold text-success">Guest earnings (85%)</span>
+          <p className="font-mono font-semibold text-subtitle2 text-success mt-0.5 tabular">
             {formatINR(totalProviderNet)}
           </p>
-        </div>
+        </Card>
       </div>
 
-      {/* Tabular Ledger Table */}
-      <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-2xs">
+      {/* Fluent Table Ledger */}
+      <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-0">
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs text-muted-foreground font-medium">Loading platform bookings...</p>
+          <div className="py-20 flex flex-col items-center justify-center">
+            <Spinner label="Loading platform bookings..." />
           </div>
         ) : filteredBookings.length === 0 ? (
           <div className="text-center py-16 p-8">
-            <BanknotesIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-foreground">No booking records found</h3>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
-              {search ? 'No bookings match your current search query.' : 'No transactions exist for this filter.'}
+            <Money20Regular className="text-muted-foreground mx-auto mb-3" />
+            <h3 className="text-body1 font-semibold text-foreground">No booking records found</h3>
+            <p className="text-caption1 text-muted-foreground mt-1 max-w-sm mx-auto">
+              {search
+                ? 'No bookings match your current search query.'
+                : 'No transactions exist for this filter.'}
             </p>
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="px-5 py-3.5">Booking ID</th>
-                  <th className="px-4 py-3.5">Host</th>
-                  <th className="px-4 py-3.5">Guest</th>
-                  <th className="px-4 py-3.5 text-right">Total Amount</th>
-                  <th className="px-4 py-3.5 text-right">Platform Fee (15%)</th>
-                  <th className="px-4 py-3.5 text-right">Guest Earnings (85%)</th>
-                  <th className="px-4 py-3.5">Status</th>
-                  <th className="px-5 py-3.5">Created At</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+            <Table size="small" aria-label="Bookings ledger table">
+              <TableHeader>
+                <TableRow>
+                  <TableHeaderCell>Booking ID</TableHeaderCell>
+                  <TableHeaderCell>Host</TableHeaderCell>
+                  <TableHeaderCell>Guest</TableHeaderCell>
+                  <TableHeaderCell>Total amount</TableHeaderCell>
+                  <TableHeaderCell>Platform fee (15%)</TableHeaderCell>
+                  <TableHeaderCell>Guest earnings (85%)</TableHeaderCell>
+                  <TableHeaderCell>Status</TableHeaderCell>
+                  <TableHeaderCell>Created</TableHeaderCell>
+                  <TableHeaderCell>Actions</TableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {displayedBookings.map((b) => {
                   const displayId = b.bookingId || b.id || 'N/A';
                   const isCompleted = b.status === 'Completed';
@@ -257,98 +295,134 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
                   const isDisputed = b.status === 'Disputed';
                   const isInEscrow = isEscrowStatus(b.status);
 
+                  const badgeColor: 'success' | 'danger' | 'warning' | 'informative' =
+                    isCompleted
+                      ? 'success'
+                      : isCancelled || isDisputed
+                      ? 'danger'
+                      : isInEscrow
+                      ? 'warning'
+                      : 'informative';
+
                   return (
-                    <tr key={displayId} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-5 py-3.5 font-mono text-[11px] text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <span>{displayId.length > 8 ? `${displayId.slice(0, 8)}...` : displayId}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopy(displayId)}
-                            title="Copy full Booking ID"
-                            className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer"
-                          >
-                            {copiedId === displayId ? (
-                              <CheckIcon className="w-3 h-3 text-emerald-500" />
-                            ) : (
-                              <ClipboardDocumentIcon className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
+                    <TableRow key={displayId}>
+                      <TableCell>
+                        <TableCellLayout>
+                          <div className="flex items-center gap-1 font-mono text-caption1 tabular">
+                            <span>
+                              {displayId.length > 8 ? `${displayId.slice(0, 8)}...` : displayId}
+                            </span>
+                            <Button
+                              appearance="subtle"
+                              size="small"
+                              icon={
+                                copiedId === displayId ? (
+                                  <Checkmark16Regular className="text-success" />
+                                ) : (
+                                  <Copy16Regular />
+                                )
+                              }
+                              onClick={() => handleCopy(displayId)}
+                              title="Copy full Booking ID"
+                              aria-label="Copy full Booking ID"
+                            />
+                          </div>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5 font-semibold text-foreground">
-                        {b.seekerName}
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="font-semibold text-foreground">{b.seekerName}</span>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5 font-semibold">
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-foreground">{b.providerName}</span>
-                          <Link
-                            to={`/provider/${b.providerId}`}
-                            title="View Guest Profile"
-                            className="p-1 rounded text-accent hover:bg-accent/10 transition-colors"
-                          >
-                            <EyeIcon className="w-3.5 h-3.5" />
-                          </Link>
-                        </div>
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="font-semibold text-foreground">{b.providerName}</span>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5 font-mono font-bold text-foreground text-right tabular-nums">
-                        {formatINR(b.totalAmount)}
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="font-mono font-semibold text-foreground tabular">
+                            {formatINR(b.totalAmount)}
+                          </span>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5 font-mono font-bold text-amber-600 dark:text-amber-400 text-right tabular-nums">
-                        {formatINR(b.platformFee)}
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="font-mono font-semibold text-warning tabular">
+                            {formatINR(b.platformFee)}
+                          </span>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5 font-mono font-bold text-emerald-600 dark:text-emerald-400 text-right tabular-nums">
-                        {formatINR(b.providerEarnings)}
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="font-mono font-semibold text-success tabular">
+                            {formatINR(b.providerEarnings)}
+                          </span>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
-                            isCompleted
-                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                              : isCancelled
-                              ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/20'
-                              : isDisputed
-                              ? 'bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-500/40 ring-1 ring-rose-500/20 font-extrabold'
-                              : isInEscrow
-                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                              : 'bg-muted text-muted-foreground border-border'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              isCompleted
-                                ? 'bg-emerald-500'
-                                : isCancelled
-                                ? 'bg-rose-500'
-                                : isDisputed
-                                ? 'bg-rose-600 animate-ping'
-                                : isInEscrow
-                                ? 'bg-amber-500 animate-pulse'
-                                : 'bg-muted-foreground'
-                            }`}
-                          />
-                          <span>{b.status}</span>
-                        </span>
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <Badge appearance="tint" color={badgeColor} size="small">
+                            {b.status}
+                          </Badge>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-5 py-3.5 text-muted-foreground text-[11px] whitespace-nowrap">
-                        {new Date(b.createdAt).toLocaleDateString('en-IN', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}
-                      </td>
-                    </tr>
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="text-caption1 text-muted-foreground tabular">
+                            {new Date(b.createdAt).toLocaleDateString('en-IN', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                            })}
+                          </span>
+                        </TableCellLayout>
+                      </TableCell>
+
+                      <TableCell>
+                        <TableCellLayout>
+                          <Menu>
+                            <MenuTrigger disableButtonEnhancement>
+                              <Button
+                                appearance="subtle"
+                                size="small"
+                                icon={<MoreHorizontal16Regular />}
+                                aria-label="Booking actions"
+                              />
+                            </MenuTrigger>
+                            <MenuPopover>
+                              <MenuList>
+                                <MenuItem
+                                  icon={<Copy16Regular />}
+                                  onClick={() => handleCopy(displayId)}
+                                >
+                                  Copy booking ID
+                                </MenuItem>
+                                {b.providerId && (
+                                  <MenuItem
+                                    icon={<Eye16Regular />}
+                                    onClick={() => navigate(`/provider/${b.providerId}`)}
+                                  >
+                                    View guest profile
+                                  </MenuItem>
+                                )}
+                              </MenuList>
+                            </MenuPopover>
+                          </Menu>
+                        </TableCellLayout>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
 
@@ -361,8 +435,7 @@ export const AdminBookingLedger: React.FC<AdminBookingLedgerProps> = ({
           onPageSizeChange={handlePageSizeChange}
           isLoading={isLoading}
         />
-      </div>
+      </Card>
     </section>
   );
 };
-

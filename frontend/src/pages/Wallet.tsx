@@ -1,14 +1,30 @@
 import React, { useState } from 'react';
 import {
-  BanknotesIcon,
-  ShieldCheckIcon,
-  ArrowDownLeftIcon,
-  ArrowUpRightIcon,
-  SparklesIcon,
-  ArrowPathIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+  Button,
+  Input,
+  TabList,
+  Tab,
+  ToggleButton,
+  Badge,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+  Table,
+  TableHeader,
+  TableRow,
+  TableHeaderCell,
+  TableBody,
+  TableCell,
+} from '@fluentui/react-components';
+import {
+  Wallet24Regular,
+  Wallet20Regular,
+  ShieldCheckmark24Regular,
+  ShieldCheckmark16Regular,
+  ArrowDownLeft16Regular,
+  ArrowUpRight16Regular,
+  Receipt24Regular,
+} from '@fluentui/react-icons';
 import {
   useGetWalletBalanceQuery,
   useGetWalletTransactionsQuery,
@@ -16,6 +32,7 @@ import {
   useVerifyTopUpMutation,
 } from '../store/paymentApi';
 import { loadRazorpayScript } from '../utils/razorpay';
+import { cueBrand } from '../theme/fluentTheme';
 import { RazorpaySandboxModal, type RazorpaySandboxPaymentResult } from '../components/payment/RazorpaySandboxModal';
 import { ProviderEarningsCard } from '../components/payment/ProviderEarningsCard';
 
@@ -98,7 +115,7 @@ export const WalletPage: React.FC = () => {
               name: 'Host',
             },
             theme: {
-              color: '#E11D48',
+              color: cueBrand[80],
             },
             handler: async (response: any) => {
               await processTopUpVerification(
@@ -116,7 +133,6 @@ export const WalletPage: React.FC = () => {
         }
       }
 
-      // Default or Sandbox Simulator mode
       setSandboxOrderData({
         orderId: order.orderId,
         amount: currentAmount,
@@ -132,74 +148,78 @@ export const WalletPage: React.FC = () => {
   });
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8 animate-in fade-in duration-200">
+    <div className="container mx-auto px-4 py-8 max-w-6xl space-y-8">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold font-sans text-foreground tracking-tight">Cue Wallet</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Pre-funded instant checkout with complete 100% Escrow Protection
+          <h1 className="text-title2 font-semibold text-foreground">Cue wallet</h1>
+          <p className="text-body1 text-muted-foreground mt-1">
+            Pre-funded instant checkout with complete 100% escrow protection
           </p>
         </div>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-xs font-semibold self-start sm:self-auto">
-          <ShieldCheckIcon className="w-4 h-4" />
-          <span>India UPI & Razorpay Secured</span>
-        </div>
+        <Badge
+          appearance="tint"
+          color="success"
+          icon={<ShieldCheckmark16Regular />}
+          className="self-start sm:self-auto"
+        >
+          India UPI & Razorpay secured
+        </Badge>
       </div>
 
       {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Available Balance */}
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-card via-card to-accent/5 border border-border/80 shadow-md flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Available Balance</span>
-            <div className="p-2 rounded-xl bg-accent/15 text-accent">
-              <BanknotesIcon className="w-5 h-5" />
+            <span className="text-caption1 font-semibold text-muted-foreground">Available balance</span>
+            <div className="p-2 rounded-lg bg-accent-light text-brand-fg">
+              <Wallet24Regular />
             </div>
           </div>
           <div className="my-4">
-            <p className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground">
+            <p className="text-title1 font-semibold font-mono tabular text-foreground">
               {isBalanceLoading ? '...' : `₹${availableBalance.toLocaleString('en-IN')}`}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Instant 1-click booking checkout</p>
+            <p className="text-caption1 text-muted-foreground mt-1">Instant 1-click booking checkout</p>
           </div>
-          <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+          <div className="text-caption1 text-success font-semibold flex items-center gap-1">
             <span>● Ready to use</span>
           </div>
         </div>
 
         {/* Escrow / Pending Balance */}
-        <div className="p-6 rounded-3xl bg-card border border-border/80 shadow-md flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Protected for Meetups</span>
-            <div className="p-2 rounded-xl bg-sky-500/15 text-sky-600">
-              <ShieldCheckIcon className="w-5 h-5" />
+            <span className="text-caption1 font-semibold text-muted-foreground">Protected for meetups</span>
+            <div className="p-2 rounded-lg bg-trust-light text-trust">
+              <ShieldCheckmark24Regular />
             </div>
           </div>
           <div className="my-4">
-            <p className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground">
+            <p className="text-title1 font-semibold font-mono tabular text-foreground">
               {isBalanceLoading ? '...' : `₹${pendingBalance.toLocaleString('en-IN')}`}
             </p>
-            <p className="text-xs text-muted-foreground mt-1">Held safely until meetups are complete</p>
+            <p className="text-caption1 text-muted-foreground mt-1">Held safely until meetups are complete</p>
           </div>
-          <div className="text-[11px] text-sky-600 font-semibold flex items-center gap-1">
-            <span>● Safe Escrow Guarantee</span>
+          <div className="text-caption1 text-trust font-semibold flex items-center gap-1">
+            <span>● Safe escrow guarantee</span>
           </div>
         </div>
 
         {/* Platform Take Rate Notice */}
-        <div className="p-6 rounded-3xl bg-card border border-border/80 shadow-md flex flex-col justify-between">
+        <div className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Fair Marketplace</span>
-            <div className="p-2 rounded-xl bg-amber-500/15 text-amber-600">
-              <SparklesIcon className="w-5 h-5" />
+            <span className="text-caption1 font-semibold text-muted-foreground">Fair marketplace</span>
+            <div className="p-2 rounded-lg bg-muted text-foreground">
+              <Receipt24Regular />
             </div>
           </div>
           <div className="my-4">
-            <p className="text-3xl sm:text-4xl font-extrabold font-mono text-foreground">15%</p>
-            <p className="text-xs text-muted-foreground mt-1">Transparent platform service fee</p>
+            <p className="text-title1 font-semibold font-mono tabular text-foreground">15%</p>
+            <p className="text-caption1 text-muted-foreground mt-1">Transparent platform service fee</p>
           </div>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-caption1 text-muted-foreground tabular">
             85% goes directly to the guest upon outing completion.
           </p>
         </div>
@@ -209,29 +229,18 @@ export const WalletPage: React.FC = () => {
       <ProviderEarningsCard />
 
       {/* Top-Up Section */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border/80 shadow-md space-y-6">
+      <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-6">
         <div>
-          <h2 className="text-lg font-bold text-foreground">Add Money to Wallet</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">
+          <h2 className="text-subtitle1 font-semibold text-foreground">Add money to wallet</h2>
+          <p className="text-caption1 text-muted-foreground mt-0.5">
             Add funds using Google Pay, PhonePe, Paytm, UPI QR, Netbanking, or Debit/Credit Cards.
           </p>
         </div>
 
         {statusMessage && (
-          <div
-            className={`flex items-center gap-2 p-3.5 rounded-2xl text-xs border ${
-              statusMessage.type === 'success'
-                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
-                : 'bg-destructive/10 text-destructive border-destructive/20'
-            }`}
-          >
-            {statusMessage.type === 'success' ? (
-              <CheckCircleIcon className="w-4 h-4 flex-shrink-0" />
-            ) : (
-              <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
-            )}
-            <span>{statusMessage.text}</span>
-          </div>
+          <MessageBar intent={statusMessage.type === 'success' ? 'success' : 'error'}>
+            <MessageBarBody>{statusMessage.text}</MessageBarBody>
+          </MessageBar>
         )}
 
         {/* Amount Chips */}
@@ -239,122 +248,119 @@ export const WalletPage: React.FC = () => {
           {PRESET_AMOUNTS.map((amt) => {
             const isSelected = selectedAmount === amt && !customAmount;
             return (
-              <button
+              <ToggleButton
                 key={amt}
-                type="button"
+                size="large"
+                checked={isSelected}
+                appearance={isSelected ? 'primary' : 'outline'}
                 onClick={() => {
                   setSelectedAmount(amt);
                   setCustomAmount('');
                 }}
-                className={`py-3 px-4 rounded-2xl font-bold font-mono text-base border transition-all cursor-pointer ${
-                  isSelected
-                    ? 'border-accent bg-accent/15 text-accent shadow-xs ring-2 ring-accent/30'
-                    : 'border-border bg-muted/40 hover:bg-muted text-foreground'
-                }`}
+                className="min-h-11 font-mono tabular"
               >
                 ₹{amt.toLocaleString('en-IN')}
-              </button>
+              </ToggleButton>
             );
           })}
         </div>
 
         {/* Custom Amount Input & Button */}
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-mono font-bold">₹</span>
-            <input
-              type="number"
-              placeholder="Or enter custom amount (e.g. 1500)"
-              value={customAmount}
-              onChange={(e) => setCustomAmount(e.target.value)}
-              className="w-full pl-9 pr-4 py-3 rounded-2xl bg-muted/30 border border-border text-foreground font-mono text-sm focus:outline-none focus:ring-2 focus:ring-accent"
-              min="10"
-            />
-          </div>
-          <button
-            type="button"
+          <Input
+            type="number"
+            size="large"
+            placeholder="Or enter custom amount (e.g. 1500)"
+            value={customAmount}
+            onChange={(_, data) => setCustomAmount(data.value)}
+            contentBefore={<span className="font-mono font-semibold">₹</span>}
+            min={10}
+            className="flex-1 font-mono tabular"
+          />
+          <Button
+            appearance="primary"
+            size="large"
             onClick={handleTopUp}
             disabled={isCreatingOrder || isVerifying || currentAmount <= 0}
-            className="py-3 px-6 rounded-2xl font-bold text-sm bg-accent text-accent-foreground hover:opacity-95 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer flex-shrink-0"
+            icon={isCreatingOrder || isVerifying ? <Spinner size="tiny" /> : <Wallet20Regular />}
+            className="min-h-11 tabular shrink-0"
           >
-            {isCreatingOrder || isVerifying ? (
-              <>
-                <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                <span>Launching UPI Gateway...</span>
-              </>
-            ) : (
-              <>
-                <BanknotesIcon className="w-5 h-5" />
-                <span>Add ₹{currentAmount ? currentAmount.toLocaleString('en-IN') : '0'} via UPI</span>
-              </>
-            )}
-          </button>
+            {isCreatingOrder || isVerifying
+              ? 'Launching UPI gateway...'
+              : `Add ₹${currentAmount ? currentAmount.toLocaleString('en-IN') : '0'} via UPI`}
+          </Button>
         </div>
       </div>
 
       {/* Transaction History */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border/80 shadow-md space-y-6">
+      <div className="p-6 rounded-2xl bg-card border border-border shadow-sm space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-lg font-bold text-foreground">Transaction History</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Immutable double-entry ledger records</p>
+            <h2 className="text-subtitle1 font-semibold text-foreground">Transaction history</h2>
+            <p className="text-caption1 text-muted-foreground mt-0.5">Immutable double-entry ledger records</p>
           </div>
 
-          {/* Filter Pills */}
-          <div className="flex flex-wrap gap-1.5 p-1 rounded-2xl bg-muted/50 border border-border/60">
-            {(['All', 'TopUp', 'BookingPayment', 'Payout'] as const).map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                  activeFilter === filter
-                    ? 'bg-card text-foreground shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                {filter === 'All'
-                  ? 'All Activity'
-                  : filter === 'TopUp'
-                  ? 'Deposits'
-                  : filter === 'BookingPayment'
-                  ? 'Bookings'
-                  : 'Withdrawals'}
-              </button>
-            ))}
-          </div>
+          <TabList
+            selectedValue={activeFilter}
+            onTabSelect={(_, data) =>
+              setActiveFilter(data.value as 'All' | 'TopUp' | 'BookingPayment' | 'Payout')
+            }
+          >
+            <Tab value="All">All activity</Tab>
+            <Tab value="TopUp">Deposits</Tab>
+            <Tab value="BookingPayment">Bookings</Tab>
+            <Tab value="Payout">Withdrawals</Tab>
+          </TabList>
         </div>
 
-        {/* Ledger List */}
+        {/* Ledger Table */}
         {isTxnsLoading ? (
-          <div className="py-12 text-center text-xs text-muted-foreground">Loading transaction ledger...</div>
+          <div className="py-12 text-center text-caption1 text-muted-foreground flex flex-col items-center gap-2">
+            <Spinner size="medium" />
+            <span>Loading transaction ledger...</span>
+          </div>
         ) : !filteredTransactions || filteredTransactions.length === 0 ? (
-          <div className="py-12 text-center text-xs text-muted-foreground space-y-2">
-            <BanknotesIcon className="w-10 h-10 text-muted-foreground/50 mx-auto" />
+          <div className="py-12 text-center text-caption1 text-muted-foreground space-y-2">
+            <Wallet24Regular className="mx-auto text-muted-foreground" />
             <p>No transactions found under this category.</p>
           </div>
         ) : (
-          <div className="divide-y divide-border/60">
-            {filteredTransactions.map((txn) => {
-              const isCredit = txn.direction === 'Credit';
-              return (
-                <div key={txn.id} className="py-4 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`p-2.5 rounded-2xl ${
-                        isCredit
-                          ? 'bg-emerald-500/15 text-emerald-600'
-                          : 'bg-rose-500/15 text-rose-600'
-                      }`}
-                    >
-                      {isCredit ? (
-                        <ArrowDownLeftIcon className="w-4 h-4" />
-                      ) : (
-                        <ArrowUpRightIcon className="w-4 h-4" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold text-foreground">{txn.description || txn.type}</p>
-                      <p className="text-[11px] text-muted-foreground">
+          <div className="overflow-x-auto">
+            <Table aria-label="Wallet transactions ledger">
+              <TableHeader>
+                <TableRow>
+                  <TableHeaderCell>Description</TableHeaderCell>
+                  <TableHeaderCell>Date & time</TableHeaderCell>
+                  <TableHeaderCell className="text-right">Amount</TableHeaderCell>
+                  <TableHeaderCell className="text-right">Balance after</TableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredTransactions.map((txn) => {
+                  const isCredit = txn.direction === 'Credit';
+                  return (
+                    <TableRow key={txn.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3 py-2">
+                          <div
+                            className={`p-2 rounded-lg shrink-0 ${
+                              isCredit
+                                ? 'bg-success-light text-success'
+                                : 'bg-destructive-light text-destructive'
+                            }`}
+                          >
+                            {isCredit ? (
+                              <ArrowDownLeft16Regular />
+                            ) : (
+                              <ArrowUpRight16Regular />
+                            )}
+                          </div>
+                          <span className="text-body1 font-semibold text-foreground">
+                            {txn.description || txn.type}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-caption1 text-muted-foreground tabular">
                         {new Date(txn.createdAt).toLocaleDateString('en-IN', {
                           day: 'numeric',
                           month: 'short',
@@ -362,25 +368,24 @@ export const WalletPage: React.FC = () => {
                           hour: '2-digit',
                           minute: '2-digit',
                         })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <p
-                      className={`font-mono font-bold text-sm sm:text-base ${
-                        isCredit ? 'text-emerald-600' : 'text-foreground'
-                      }`}
-                    >
-                      {isCredit ? '+' : '-'} ₹{txn.amount.toLocaleString('en-IN')}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-mono">
-                      Bal: ₹{txn.balanceAfter.toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <span
+                          className={`font-mono tabular font-semibold text-body1 ${
+                            isCredit ? 'text-success' : 'text-foreground'
+                          }`}
+                        >
+                          {isCredit ? '+' : '-'} ₹{txn.amount.toLocaleString('en-IN')}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right font-mono tabular text-caption1 text-muted-foreground">
+                        ₹{txn.balanceAfter.toLocaleString('en-IN')}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
@@ -390,7 +395,7 @@ export const WalletPage: React.FC = () => {
           isOpen={Boolean(sandboxOrderData)}
           orderId={sandboxOrderData.orderId}
           amount={sandboxOrderData.amount}
-          title="Cue Wallet Balance Top-Up"
+          title="Cue wallet balance top-up"
           description="Add INR funds to your platform balance"
           onSuccess={(result: RazorpaySandboxPaymentResult) => {
             processTopUpVerification(
@@ -412,4 +417,3 @@ export const WalletPage: React.FC = () => {
 };
 
 export default WalletPage;
-

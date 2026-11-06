@@ -1,14 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ShieldCheckIcon,
-  CheckCircleIcon,
-  MagnifyingGlassIcon,
-  IdentificationIcon,
-  ExclamationCircleIcon,
-  UserIcon,
-  ArrowsPointingOutIcon,
-  XMarkIcon,
-} from '@heroicons/react/24/outline';
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  Field,
+  Input,
+  Spinner,
+  Tab,
+  TabList,
+  Textarea,
+} from '@fluentui/react-components';
+import {
+  ShieldCheckmark20Regular,
+  CheckmarkCircle16Regular,
+  DismissCircle16Regular,
+  Search16Regular,
+  ContactCard20Regular,
+  FullScreenMaximize16Regular,
+  Dismiss16Regular,
+} from '@fluentui/react-icons';
 import type { AdminKycVerificationItem } from '../../store/adminApi';
 import { Pagination } from '../ui/Pagination';
 
@@ -49,12 +66,20 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
   onPageChange,
   onPageSizeChange,
 }) => {
-  const [filter, setFilter] = useState<'All' | 'PendingReview' | 'Approved' | 'Rejected'>('PendingReview');
+  const [filter, setFilter] = useState<'All' | 'PendingReview' | 'Approved' | 'Rejected'>(
+    'PendingReview'
+  );
   const [search, setSearch] = useState('');
-  const [selectedItemForReject, setSelectedItemForReject] = useState<AdminKycVerificationItem | null>(null);
+  const [selectedItem, setSelectedItem] = useState<AdminKycVerificationItem | null>(null);
+  const [selectedItemForReject, setSelectedItemForReject] =
+    useState<AdminKycVerificationItem | null>(null);
   const [rejectReason, setRejectReason] = useState('');
-  const [comparisonModalItem, setComparisonModalItem] = useState<AdminKycVerificationItem | null>(null);
-  const [activeImagePreview, setActiveImagePreview] = useState<{ url: string; label: string } | null>(null);
+  const [comparisonModalItem, setComparisonModalItem] =
+    useState<AdminKycVerificationItem | null>(null);
+  const [activeImagePreview, setActiveImagePreview] = useState<{
+    url: string;
+    label: string;
+  } | null>(null);
   const [localPage, setLocalPage] = useState(1);
   const [localPageSize, setLocalPageSize] = useState(20);
 
@@ -95,7 +120,9 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
     ? filteredItems
     : filteredItems.slice((activePage - 1) * activePageSize, activePage * activePageSize);
 
-  const activeTotalCount = isServerPaged ? (totalCount ?? filteredItems.length) : filteredItems.length;
+  const activeTotalCount = isServerPaged
+    ? (totalCount ?? filteredItems.length)
+    : filteredItems.length;
   const activeTotalPages = isServerPaged
     ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
     : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
@@ -105,16 +132,10 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
   const rejectedCount = kycItems.filter((v) => v.status === 'Rejected').length;
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (activeImagePreview) setActiveImagePreview(null);
-        else if (comparisonModalItem) setComparisonModalItem(null);
-        else if (selectedItemForReject) setSelectedItemForReject(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeImagePreview, comparisonModalItem, selectedItemForReject]);
+    if (displayedItems.length > 0 && !selectedItem) {
+      setSelectedItem(displayedItems[0]);
+    }
+  }, [displayedItems, selectedItem]);
 
   const handleOpenReject = (item: AdminKycVerificationItem) => {
     setSelectedItemForReject(item);
@@ -129,7 +150,9 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
       if (comparisonModalItem?.id === selectedItemForReject.id) {
         setComparisonModalItem(null);
       }
-    } catch {}
+    } catch {
+      // handled by parent
+    }
   };
 
   const handleApproveItem = async (item: AdminKycVerificationItem) => {
@@ -138,216 +161,320 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
       if (comparisonModalItem?.id === item.id) {
         setComparisonModalItem(null);
       }
-    } catch {}
+    } catch {
+      // handled by parent
+    }
   };
 
+  const filterTabs: {
+    key: 'PendingReview' | 'All' | 'Approved' | 'Rejected';
+    label: string;
+    count: number;
+  }[] = [
+    { key: 'PendingReview', label: 'Pending review', count: pendingCount },
+    { key: 'All', label: 'All', count: kycItems.length },
+    { key: 'Approved', label: 'Approved', count: approvedCount },
+    { key: 'Rejected', label: 'Rejected', count: rejectedCount },
+  ];
+
+  const activeDetail =
+    (selectedItem && displayedItems.find((i) => i.id === selectedItem.id)) ||
+    selectedItem ||
+    displayedItems[0] ||
+    null;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Controls & Filter Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-stretch sm:items-center bg-card p-4 rounded-2xl border border-border shadow-xs">
-        <div className="flex flex-wrap items-center gap-2">
-          {(['PendingReview', 'All', 'Approved', 'Rejected'] as const).map((tab) => {
-            const count =
-              tab === 'PendingReview' ? pendingCount : tab === 'Approved' ? approvedCount : tab === 'Rejected' ? rejectedCount : kycItems.length;
-            const label = tab === 'PendingReview' ? 'Pending Review' : tab;
-            return (
-              <button
-                key={tab}
-                type="button"
-                onClick={() => setFilter(tab)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  filter === tab
-                    ? 'bg-foreground text-background shadow-xs'
-                    : 'bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <span>{label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    filter === tab ? 'bg-background text-foreground' : 'bg-background/80 text-muted-foreground'
-                  }`}
-                >
-                  {count}
+      <Card className="flex flex-col sm:flex-row gap-3 justify-between items-stretch sm:items-center bg-card p-3 rounded-2xl border border-border shadow-sm">
+        <div className="overflow-x-auto">
+          <TabList
+            size="small"
+            selectedValue={filter}
+            onTabSelect={(_e, data) =>
+              setFilter(data.value as 'All' | 'PendingReview' | 'Approved' | 'Rejected')
+            }
+          >
+            {filterTabs.map((tab) => (
+              <Tab key={tab.key} value={tab.key}>
+                <span className="flex items-center gap-1.5">
+                  <span>{tab.label}</span>
+                  <Badge
+                    appearance="tint"
+                    color={
+                      tab.key === 'PendingReview' && tab.count > 0 ? 'warning' : 'informative'
+                    }
+                    size="small"
+                    className="tabular"
+                  >
+                    {tab.count}
+                  </Badge>
                 </span>
-              </button>
-            );
-          })}
+              </Tab>
+            ))}
+          </TabList>
         </div>
 
-        {/* Search Input */}
-        <div className="relative w-full sm:w-64">
-          <MagnifyingGlassIcon className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by user or document..."
-            className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-accent"
-          />
-        </div>
-      </div>
+        <Input
+          size="small"
+          contentBefore={<Search16Regular />}
+          contentAfter={
+            search ? (
+              <Button
+                appearance="transparent"
+                size="small"
+                icon={<Dismiss16Regular />}
+                onClick={() => setSearch('')}
+                aria-label="Clear search"
+              />
+            ) : undefined
+          }
+          value={search}
+          onChange={(_e, data) => setSearch(data.value)}
+          placeholder="Search by user or document..."
+          className="w-full sm:w-64"
+        />
+      </Card>
 
-      {/* Main Grid */}
+      {/* Master-Detail Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map((n) => (
-            <div key={n} className="bg-card rounded-2xl border border-border p-5 space-y-4 animate-pulse">
-              <div className="h-6 bg-muted rounded-md w-3/4" />
-              <div className="h-32 bg-muted rounded-xl" />
-              <div className="h-10 bg-muted rounded-xl" />
-            </div>
-          ))}
+        <div className="py-20 flex flex-col items-center justify-center">
+          <Spinner label="Loading KYC documents..." />
         </div>
       ) : filteredItems.length === 0 ? (
-        <div className="bg-card rounded-3xl border border-dashed border-border/80 p-12 text-center max-w-lg mx-auto space-y-3">
-          <div className="w-12 h-12 rounded-2xl bg-muted/60 text-muted-foreground flex items-center justify-center mx-auto">
-            <IdentificationIcon className="w-6 h-6" />
-          </div>
-          <h3 className="text-sm font-bold text-foreground">No KYC submissions found</h3>
-          <p className="text-xs text-muted-foreground">
+        <Card className="bg-card rounded-2xl border border-border p-12 text-center max-w-lg mx-auto space-y-2 shadow-sm">
+          <ContactCard20Regular className="text-muted-foreground mx-auto" />
+          <h3 className="text-body1 font-semibold text-foreground">No KYC submissions found</h3>
+          <p className="text-caption1 text-muted-foreground">
             {filter === 'PendingReview'
-              ? 'Great work! All user identity documents have been reviewed.'
+              ? 'All user identity documents have been reviewed.'
               : 'No documents match the current search or status filter.'}
           </p>
-        </div>
+        </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {displayedItems.map((item) => (
-            <div
-              key={item.id}
-              className="bg-card rounded-2xl border border-border/80 shadow-xs hover:shadow-md transition-all flex flex-col justify-between overflow-hidden"
-            >
-              <div className="p-5 space-y-4">
-                {/* Header info */}
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center text-accent font-bold text-sm shrink-0 overflow-hidden">
-                      {item.photoUrl ? (
-                        <img src={item.photoUrl} alt={item.fullName} className="w-full h-full object-cover" />
-                      ) : (
-                        item.fullName?.charAt(0) || <UserIcon className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-bold text-foreground leading-tight">{item.fullName}</h4>
-                      <p className="text-[11px] text-muted-foreground">{item.email}</p>
-                      {item.phone && <p className="text-[10px] text-muted-foreground/80">{item.phone}</p>}
-                    </div>
-                  </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
+          {/* Master Queue List */}
+          <div className="lg:col-span-5 space-y-3">
+            {displayedItems.map((item) => {
+              const isSelected = activeDetail?.id === item.id;
+              const statusColor: 'success' | 'danger' | 'warning' =
+                item.status === 'Approved'
+                  ? 'success'
+                  : item.status === 'Rejected'
+                  ? 'danger'
+                  : 'warning';
 
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 border ${
-                      item.status === 'Approved'
-                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
-                        : item.status === 'Rejected'
-                          ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
-                          : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
-                    }`}
-                  >
-                    {item.status === 'PendingReview' ? 'Pending Review' : item.status}
-                  </span>
-                </div>
-
-                {/* Document Metadata */}
-                <div className="bg-muted/40 rounded-xl p-3 border border-border/60 text-xs space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-[11px]">Document Type:</span>
-                    <span className="font-semibold text-foreground">{item.documentType}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-[11px]">Document Number:</span>
-                    <span className="font-mono font-bold text-foreground">{item.documentNumberMasked}</span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground text-[11px]">Submitted:</span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(item.submittedAt).toLocaleDateString(undefined, {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Thumbnail Previews: Front, Back, Selfie */}
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveImagePreview({ url: item.frontImageUrl, label: `${item.fullName} - Front ID` })}
-                    className="group relative aspect-4/3 rounded-lg overflow-hidden border border-border bg-muted/60 cursor-pointer"
-                  >
-                    <img src={item.frontImageUrl} alt="Front ID" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] text-white text-center py-0.5 font-medium">Front</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveImagePreview({ url: item.backImageUrl, label: `${item.fullName} - Back ID` })}
-                    className="group relative aspect-4/3 rounded-lg overflow-hidden border border-border bg-muted/60 cursor-pointer"
-                  >
-                    <img src={item.backImageUrl} alt="Back ID" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] text-white text-center py-0.5 font-medium">Back</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveImagePreview({ url: item.selfieImageUrl, label: `${item.fullName} - Live Selfie` })}
-                    className="group relative aspect-4/3 rounded-lg overflow-hidden border border-border bg-muted/60 cursor-pointer"
-                  >
-                    <img src={item.selfieImageUrl} alt="Live Selfie" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                    <span className="absolute bottom-0 inset-x-0 bg-black/60 text-[9px] text-white text-center py-0.5 font-medium">Selfie</span>
-                  </button>
-                </div>
-
-                {/* If rejected, show rejection reason note */}
-                {item.status === 'Rejected' && item.rejectionReason && (
-                  <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-[11px] text-rose-700 dark:text-rose-300">
-                    <span className="font-bold">Rejection Note: </span>
-                    {item.rejectionReason}
-                  </div>
-                )}
-              </div>
-
-              {/* Action Toolbar */}
-              <div className="p-4 bg-muted/20 border-t border-border flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => setComparisonModalItem(item)}
-                  className="px-3 py-1.5 rounded-xl bg-card border border-border hover:bg-muted text-foreground text-xs font-semibold flex items-center gap-1.5 transition-all shadow-2xs cursor-pointer"
+              return (
+                <Card
+                  key={item.id}
+                  onClick={() => setSelectedItem(item)}
+                  className={`rounded-2xl p-4 shadow-sm cursor-pointer transition-colors border ${
+                    isSelected
+                      ? 'bg-accent-light border-brand-stroke'
+                      : 'bg-card border-border hover:border-border-strong'
+                  }`}
                 >
-                  <ArrowsPointingOutIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>Side-by-Side</span>
-                </button>
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3">
+                      <Avatar
+                        size={36}
+                        name={item.fullName}
+                        image={item.photoUrl ? { src: item.photoUrl } : undefined}
+                      />
+                      <div>
+                        <h4 className="text-body1 font-semibold text-foreground leading-tight">
+                          {item.fullName}
+                        </h4>
+                        <p className="text-caption1 text-muted-foreground">{item.email}</p>
+                        {item.phone && (
+                          <p className="text-caption2 text-muted-foreground tabular">
+                            {item.phone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleOpenReject(item)}
-                    disabled={isRejecting}
-                    className="px-3 py-1.5 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-bold transition-all disabled:opacity-50 cursor-pointer"
+                    <Badge appearance="tint" color={statusColor} size="small">
+                      {item.status === 'PendingReview' ? 'Pending review' : item.status}
+                    </Badge>
+                  </div>
+
+                  <div className="bg-muted rounded-md p-2.5 border border-border text-caption1 space-y-1 mb-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Document type:</span>
+                      <span className="font-semibold text-foreground">{item.documentType}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Document number:</span>
+                      <span className="font-mono font-semibold text-foreground tabular">
+                        {item.documentNumberMasked}
+                      </span>
+                    </div>
+                  </div>
+
+                  {item.status === 'Rejected' && item.rejectionReason && (
+                    <div className="mb-3 p-2 rounded-md bg-destructive-light border border-border text-caption1 text-destructive">
+                      <span className="font-semibold">Rejection note: </span>
+                      {item.rejectionReason}
+                    </div>
+                  )}
+
+                  <div
+                    className="pt-2.5 border-t border-border flex items-center justify-between gap-2"
+                    onClick={(e) => e.stopPropagation()}
                   >
-                    Reject
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleApproveItem(item)}
-                    disabled={isApproving || item.status === 'Approved'}
-                    className="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs hover:shadow-sm transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1"
+                    <Button
+                      appearance="subtle"
+                      size="small"
+                      icon={<FullScreenMaximize16Regular />}
+                      onClick={() => setComparisonModalItem(item)}
+                    >
+                      Side-by-side
+                    </Button>
+
+                    <div className="flex items-center gap-1.5">
+                      <Button
+                        appearance="outline"
+                        size="small"
+                        icon={<DismissCircle16Regular />}
+                        disabled={isRejecting}
+                        onClick={() => handleOpenReject(item)}
+                        className="text-destructive"
+                      >
+                        Reject
+                      </Button>
+                      <Button
+                        appearance="primary"
+                        size="small"
+                        icon={<CheckmarkCircle16Regular />}
+                        disabled={isApproving || item.status === 'Approved'}
+                        onClick={() => handleApproveItem(item)}
+                      >
+                        Approve
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* Detail Inspector Card */}
+          {activeDetail && (
+            <Card className="lg:col-span-7 bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5 lg:sticky lg:top-20">
+              <div className="flex items-center justify-between pb-3 border-b border-border">
+                <div className="flex items-center gap-3">
+                  <ShieldCheckmark20Regular className="text-brand-fg" />
+                  <div>
+                    <h3 className="text-subtitle1 font-semibold text-foreground">
+                      {activeDetail.fullName}
+                    </h3>
+                    <p className="text-caption1 text-muted-foreground tabular">
+                      {activeDetail.documentType} · Document #{activeDetail.documentNumberMasked}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  appearance="outline"
+                  size="small"
+                  icon={<FullScreenMaximize16Regular />}
+                  onClick={() => setComparisonModalItem(activeDetail)}
+                >
+                  Full comparison
+                </Button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="space-y-1.5">
+                  <span className="text-caption1 font-semibold text-foreground block">
+                    Front of ID card
+                  </span>
+                  <div
+                    className="rounded-lg overflow-hidden border border-border bg-muted aspect-4/3 cursor-pointer"
+                    onClick={() =>
+                      setActiveImagePreview({
+                        url: activeDetail.frontImageUrl,
+                        label: `${activeDetail.fullName} - Front ID`,
+                      })
+                    }
                   >
-                    <CheckCircleIcon className="w-3.5 h-3.5" />
-                    <span>Approve</span>
-                  </button>
+                    <img
+                      src={activeDetail.frontImageUrl}
+                      alt="Front ID"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-caption1 font-semibold text-foreground block">
+                    Back of ID card
+                  </span>
+                  <div
+                    className="rounded-lg overflow-hidden border border-border bg-muted aspect-4/3 cursor-pointer"
+                    onClick={() =>
+                      setActiveImagePreview({
+                        url: activeDetail.backImageUrl,
+                        label: `${activeDetail.fullName} - Back ID`,
+                      })
+                    }
+                  >
+                    <img
+                      src={activeDetail.backImageUrl}
+                      alt="Back ID"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <span className="text-caption1 font-semibold text-foreground block">
+                    Live facial selfie
+                  </span>
+                  <div
+                    className="rounded-lg overflow-hidden border border-border bg-muted aspect-4/3 cursor-pointer"
+                    onClick={() =>
+                      setActiveImagePreview({
+                        url: activeDetail.selfieImageUrl,
+                        label: `${activeDetail.fullName} - Live selfie`,
+                      })
+                    }
+                  >
+                    <img
+                      src={activeDetail.selfieImageUrl}
+                      alt="Live Selfie"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-border">
+                <Button
+                  appearance="outline"
+                  icon={<DismissCircle16Regular />}
+                  disabled={isRejecting}
+                  onClick={() => handleOpenReject(activeDetail)}
+                  className="text-destructive min-h-11"
+                >
+                  Reject submission
+                </Button>
+                <Button
+                  appearance="primary"
+                  icon={<CheckmarkCircle16Regular />}
+                  disabled={isApproving || activeDetail.status === 'Approved'}
+                  onClick={() => handleApproveItem(activeDetail)}
+                  className="min-h-11"
+                >
+                  Verify & approve user
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       )}
 
-      <div className="mt-4 rounded-2xl overflow-hidden border border-border/80 bg-card shadow-2xs">
+      <Card className="mt-4 rounded-2xl overflow-hidden border border-border bg-card shadow-sm p-0">
         <Pagination
           currentPage={activePage}
           totalPages={activeTotalPages}
@@ -357,216 +484,204 @@ export const AdminKycVerificationStudio: React.FC<AdminKycVerificationStudioProp
           onPageSizeChange={handlePageSizeChange}
           isLoading={isLoading}
         />
-      </div>
+      </Card>
 
-      {/* Side-by-Side Full-Screen Comparison Modal */}
-      {comparisonModalItem && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-150">
-          <div className="bg-card border border-border rounded-3xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
-            {/* Modal Header */}
-            <div className="p-5 border-b border-border flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <ShieldCheckIcon className="w-6 h-6 text-accent" />
-                <div>
-                  <h3 className="text-base font-bold text-foreground">
-                    Identity Verification Comparison: {comparisonModalItem.fullName}
-                  </h3>
-                  <p className="text-xs text-muted-foreground">
-                    {comparisonModalItem.documentType} • Document #{comparisonModalItem.documentNumberMasked}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setComparisonModalItem(null)}
-                className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
+      {/* Side-by-Side Comparison Dialog */}
+      <Dialog
+        open={Boolean(comparisonModalItem)}
+        onOpenChange={(_e, data) => {
+          if (!data.open) setComparisonModalItem(null);
+        }}
+      >
+        <DialogSurface className="max-w-5xl">
+          {comparisonModalItem && (
+            <DialogBody>
+              <DialogTitle
+                action={
+                  <Button
+                    appearance="subtle"
+                    icon={<Dismiss16Regular />}
+                    onClick={() => setComparisonModalItem(null)}
+                    aria-label="Close comparison dialog"
+                  />
+                }
               >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-
-            {/* Side-by-Side Images */}
-            <div className="p-6 overflow-y-auto flex-1 grid grid-cols-1 md:grid-cols-3 gap-6 bg-muted/10">
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-foreground flex items-center justify-between">
-                  <span>Front of ID Card</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImagePreview({ url: comparisonModalItem.frontImageUrl, label: 'Front ID' })}
-                    className="text-[10px] text-accent font-semibold hover:underline"
-                  >
-                    Zoom in
-                  </button>
+                Identity verification comparison: {comparisonModalItem.fullName}
+              </DialogTitle>
+              <DialogContent className="space-y-4">
+                <p className="text-caption1 text-muted-foreground tabular">
+                  {comparisonModalItem.documentType} · Document #
+                  {comparisonModalItem.documentNumberMasked}
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-1.5">
+                    <span className="text-caption1 font-semibold text-foreground">
+                      Front of ID card
+                    </span>
+                    <img
+                      src={comparisonModalItem.frontImageUrl}
+                      alt="Front of ID"
+                      className="w-full rounded-lg border border-border object-contain max-h-80 cursor-pointer"
+                      onClick={() =>
+                        setActiveImagePreview({
+                          url: comparisonModalItem.frontImageUrl,
+                          label: 'Front ID',
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-caption1 font-semibold text-foreground">
+                      Back of ID card
+                    </span>
+                    <img
+                      src={comparisonModalItem.backImageUrl}
+                      alt="Back of ID"
+                      className="w-full rounded-lg border border-border object-contain max-h-80 cursor-pointer"
+                      onClick={() =>
+                        setActiveImagePreview({
+                          url: comparisonModalItem.backImageUrl,
+                          label: 'Back ID',
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <span className="text-caption1 font-semibold text-foreground">
+                      Live facial selfie
+                    </span>
+                    <img
+                      src={comparisonModalItem.selfieImageUrl}
+                      alt="Live facial selfie"
+                      className="w-full rounded-lg border border-border object-contain max-h-80 cursor-pointer"
+                      onClick={() =>
+                        setActiveImagePreview({
+                          url: comparisonModalItem.selfieImageUrl,
+                          label: 'Live selfie',
+                        })
+                      }
+                    />
+                  </div>
                 </div>
-                <div className="rounded-2xl overflow-hidden border border-border bg-black/5 dark:bg-black/40 aspect-3/4 flex items-center justify-center shadow-xs">
-                  <img
-                    src={comparisonModalItem.frontImageUrl}
-                    alt="Front of ID"
-                    className="w-full h-full object-contain cursor-zoom-in"
-                    onClick={() => setActiveImagePreview({ url: comparisonModalItem.frontImageUrl, label: 'Front ID' })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-foreground flex items-center justify-between">
-                  <span>Back of ID Card</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImagePreview({ url: comparisonModalItem.backImageUrl, label: 'Back ID' })}
-                    className="text-[10px] text-accent font-semibold hover:underline"
-                  >
-                    Zoom in
-                  </button>
-                </div>
-                <div className="rounded-2xl overflow-hidden border border-border bg-black/5 dark:bg-black/40 aspect-3/4 flex items-center justify-center shadow-xs">
-                  <img
-                    src={comparisonModalItem.backImageUrl}
-                    alt="Back of ID"
-                    className="w-full h-full object-contain cursor-zoom-in"
-                    onClick={() => setActiveImagePreview({ url: comparisonModalItem.backImageUrl, label: 'Back ID' })}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="text-xs font-bold text-foreground flex items-center justify-between">
-                  <span>Live Facial Selfie</span>
-                  <button
-                    type="button"
-                    onClick={() => setActiveImagePreview({ url: comparisonModalItem.selfieImageUrl, label: 'Live Selfie' })}
-                    className="text-[10px] text-accent font-semibold hover:underline"
-                  >
-                    Zoom in
-                  </button>
-                </div>
-                <div className="rounded-2xl overflow-hidden border border-border bg-black/5 dark:bg-black/40 aspect-3/4 flex items-center justify-center shadow-xs ring-2 ring-accent/20">
-                  <img
-                    src={comparisonModalItem.selfieImageUrl}
-                    alt="Live Facial Selfie"
-                    className="w-full h-full object-contain cursor-zoom-in"
-                    onClick={() => setActiveImagePreview({ url: comparisonModalItem.selfieImageUrl, label: 'Live Selfie' })}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Modal Actions */}
-            <div className="p-5 border-t border-border flex items-center justify-between bg-card">
-              <span className="text-xs text-muted-foreground">
-                Examine facial structure, portrait on ID card, and document holograms carefully before approving.
-              </span>
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
+              </DialogContent>
+              <DialogActions>
+                <Button
+                  appearance="outline"
                   onClick={() => handleOpenReject(comparisonModalItem)}
-                  className="px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30 text-xs font-bold transition-all cursor-pointer"
+                  className="text-destructive"
                 >
-                  Reject Submission
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleApproveItem(comparisonModalItem)}
+                  Reject submission
+                </Button>
+                <Button
+                  appearance="primary"
+                  icon={<CheckmarkCircle16Regular />}
                   disabled={isApproving || comparisonModalItem.status === 'Approved'}
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-md transition-all disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                  onClick={() => handleApproveItem(comparisonModalItem)}
                 >
-                  <CheckCircleIcon className="w-4 h-4" />
-                  <span>Verify & Approve User</span>
-                </button>
+                  Verify & approve user
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          )}
+        </DialogSurface>
+      </Dialog>
+
+      {/* Reject Reason Dialog */}
+      <Dialog
+        open={Boolean(selectedItemForReject)}
+        onOpenChange={(_e, data) => {
+          if (!data.open) setSelectedItemForReject(null);
+        }}
+      >
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>Reject identity verification</DialogTitle>
+            <DialogContent className="space-y-4">
+              {selectedItemForReject && (
+                <p className="text-caption1 text-muted-foreground">
+                  Provide actionable feedback for{' '}
+                  <strong className="text-foreground">{selectedItemForReject.fullName}</strong>.
+                  They will be notified and asked to resubmit.
+                </p>
+              )}
+
+              <div className="space-y-1.5">
+                <span className="text-caption1 font-semibold text-muted-foreground block">
+                  Quick templates
+                </span>
+                <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
+                  {KYC_REJECTION_TEMPLATES.map((tmpl, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => setRejectReason(tmpl)}
+                      className="text-caption2 text-left px-2.5 py-1.5 rounded-md bg-muted hover:bg-subtle border border-border text-foreground transition-colors"
+                    >
+                      {tmpl}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Reject Modal */}
-      {selectedItemForReject && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
-            <div className="flex items-center gap-3 text-rose-600 dark:text-rose-400">
-              <ExclamationCircleIcon className="w-6 h-6 shrink-0" />
-              <h3 className="text-base font-bold">Reject Identity Verification</h3>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Provide actionable feedback for <span className="font-semibold text-foreground">{selectedItemForReject.fullName}</span>. They will be notified and asked to resubmit.
-            </p>
-
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-bold text-muted-foreground">Quick Templates</label>
-              <div className="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
-                {KYC_REJECTION_TEMPLATES.map((tmpl, idx) => (
-                  <button
-                    key={idx}
-                    type="button"
-                    onClick={() => setRejectReason(tmpl)}
-                    className="text-[10px] text-left px-2.5 py-1.5 rounded-lg bg-muted/50 hover:bg-muted border border-border text-foreground transition-colors cursor-pointer"
-                  >
-                    {tmpl}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-[11px] font-bold text-foreground">Specific Rejection Reason *</label>
-              <textarea
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                rows={3}
-                placeholder="Describe clearly why the documents could not be verified..."
-                className="w-full p-3 rounded-xl bg-background border border-border text-xs text-foreground placeholder:text-muted-foreground/60 focus:outline-hidden focus:ring-2 focus:ring-rose-500 resize-none"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setSelectedItemForReject(null)}
-                className="px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold cursor-pointer"
-              >
+              <Field label="Specific rejection reason" required>
+                <Textarea
+                  value={rejectReason}
+                  onChange={(_e, data) => setRejectReason(data.value)}
+                  rows={3}
+                  placeholder="Describe clearly why the documents could not be verified..."
+                />
+              </Field>
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="outline" onClick={() => setSelectedItemForReject(null)}>
                 Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmReject}
+              </Button>
+              <Button
+                appearance="primary"
                 disabled={isRejecting || !rejectReason.trim()}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer shadow-xs"
+                onClick={handleConfirmReject}
+                className="bg-destructive text-destructive-foreground"
               >
-                {isRejecting ? 'Rejecting...' : 'Confirm Rejection'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+                {isRejecting ? 'Rejecting...' : 'Confirm rejection'}
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
 
-      {/* Single High-Res Image Lightbox */}
-      {activeImagePreview && (
-        <div
-          className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
-          onClick={() => setActiveImagePreview(null)}
-        >
-          <div className="relative max-w-4xl w-full max-h-[90vh] flex flex-col items-center justify-center" onClick={(e) => e.stopPropagation()}>
-            <div className="absolute top-2 right-2 flex items-center gap-2 z-10">
-              <span className="bg-black/60 text-white text-xs px-3 py-1 rounded-full font-semibold">
-                {activeImagePreview.label}
-              </span>
-              <button
-                type="button"
-                onClick={() => setActiveImagePreview(null)}
-                className="p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors cursor-pointer"
-              >
-                <XMarkIcon className="w-5 h-5" />
-              </button>
-            </div>
-            <img
-              src={activeImagePreview.url}
-              alt={activeImagePreview.label}
-              className="max-h-[85vh] w-auto max-w-full rounded-2xl object-contain shadow-2xl border border-white/10"
-            />
-          </div>
-        </div>
-      )}
+      {/* High-Res Image Lightbox Dialog */}
+      <Dialog
+        open={Boolean(activeImagePreview)}
+        onOpenChange={(_e, data) => {
+          if (!data.open) setActiveImagePreview(null);
+        }}
+      >
+        <DialogSurface className="max-w-4xl">
+          <DialogBody>
+            <DialogTitle
+              action={
+                <Button
+                  appearance="subtle"
+                  icon={<Dismiss16Regular />}
+                  onClick={() => setActiveImagePreview(null)}
+                  aria-label="Close image preview"
+                />
+              }
+            >
+              {activeImagePreview?.label}
+            </DialogTitle>
+            <DialogContent>
+              {activeImagePreview && (
+                <img
+                  src={activeImagePreview.url}
+                  alt={activeImagePreview.label}
+                  className="max-h-[80vh] w-auto mx-auto rounded-lg object-contain"
+                />
+              )}
+            </DialogContent>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
     </div>
   );
 };

@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import {
-  CreditCardIcon,
-  BanknotesIcon,
-  ShieldCheckIcon,
-  CheckCircleIcon,
-  XMarkIcon,
-  ArrowPathIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Badge,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Payment20Regular,
+  Wallet24Regular,
+  ShieldCheckmark20Regular,
+  CheckmarkCircle24Regular,
+  Dismiss20Regular,
+} from '@fluentui/react-icons';
 import {
   useGetWalletBalanceQuery,
   useCheckoutWithWalletMutation,
@@ -18,6 +29,7 @@ import {
 import { bookingApi } from '../../store/bookingApi';
 import { loadRazorpayScript } from '../../utils/razorpay';
 import { formatINR } from '../../utils/currency';
+import { cueBrand } from '../../theme/fluentTheme';
 import { RazorpaySandboxModal, type RazorpaySandboxPaymentResult } from './RazorpaySandboxModal';
 
 interface BookingCheckoutModalProps {
@@ -49,17 +61,6 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
     orderId: string;
     amount: number;
   } | null>(null);
-
-  React.useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -114,7 +115,6 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
 
       await refetchWallet();
 
-      // Automatically proceed to wallet escrow checkout
       await checkoutWithWallet({ orderId }).unwrap();
       dispatch(bookingApi.util.invalidateTags(['Bookings']));
       setSandboxOrderData(null);
@@ -132,11 +132,9 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   const handleTopUpAndPay = async () => {
     setErrorMessage(null);
     try {
-      // Top up exactly the shortage amount or round up to nearest ₹100
       const topUpAmount = Math.ceil(shortage / 100) * 100 || shortage;
       const order = await createTopUpOrder({ amount: topUpAmount, currency: 'INR' }).unwrap();
 
-      // Check if real live Razorpay test key is provided (not placeholder)
       const isPlaceholder =
         !order.keyId ||
         order.keyId === 'rzp_test_placeholder' ||
@@ -157,7 +155,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
               name: 'Host',
             },
             theme: {
-              color: '#E11D48',
+              color: cueBrand[80],
             },
             handler: async (response: any) => {
               await processVerificationAndEscrow(
@@ -168,9 +166,7 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
               );
             },
             modal: {
-              ondismiss: () => {
-                // User closed Razorpay modal
-              },
+              ondismiss: () => {},
             },
           };
 
@@ -180,7 +176,6 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
         }
       }
 
-      // Default or Sandbox Simulator mode
       setSandboxOrderData({
         orderId: order.orderId,
         amount: topUpAmount,
@@ -191,159 +186,160 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="checkout-modal-title"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150"
-    >
-      <div className="relative w-full max-w-lg bg-card text-card-foreground rounded-3xl border border-border/80 shadow-2xl p-6 sm:p-8 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-border/60">
-          <div>
-            <h3 id="checkout-modal-title" className="text-xl font-bold font-serif text-foreground">Confirm & Pay for Meetup</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Booking with {providerName}</p>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close checkout modal"
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-
-        {isSuccess ? (
-          <div className="py-8 text-center space-y-3">
-            <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto animate-in zoom-in-75 duration-300 ease-out" />
-            <h4 className="text-lg font-bold text-foreground">Payment Safely Protected!</h4>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              {formatINR(totalAmount)} is held safely. Payment will only be released to {providerName} after your outing is completed.
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Price Breakdown */}
-            <div className="p-4 rounded-2xl bg-muted/40 border border-border/50 space-y-2 text-sm">
-              <div className="flex justify-between text-muted-foreground">
-                <span>Outing Total:</span>
-                <span className="font-semibold text-foreground">{formatINR(totalAmount)}</span>
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Platform Service Fee (15%):</span>
-                <span>{formatINR(platformFee)}</span>
-              </div>
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Guest Earnings (85%):</span>
-                <span>{formatINR(guestEarnings)}</span>
-              </div>
-              <div className="pt-2 border-t border-border/40 flex justify-between font-bold text-foreground text-base">
-                <span>Total Payable:</span>
-                <span className="text-accent font-mono">{formatINR(totalAmount)}</span>
-              </div>
-            </div>
-
-            {/* Wallet Balance Card */}
-            <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-accent/15 text-accent">
-                  <BanknotesIcon className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Cue Wallet Available
-                  </p>
-                  <p className="text-xl font-bold font-mono text-foreground">
-                    {walletLoading ? '...' : formatINR(availableBalance)}
-                  </p>
-                </div>
-              </div>
-              {hasSufficientBalance ? (
-                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 border border-emerald-500/30">
-                  Ready to Pay
-                </span>
-              ) : (
-                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-500/15 text-amber-600 border border-amber-500/30">
-                  Short by {formatINR(shortage)}
-                </span>
-              )}
-            </div>
-
-            {/* Escrow Guarantee Banner */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-xs text-sky-800 dark:text-sky-300">
-              <ShieldCheckIcon className="w-5 h-5 flex-shrink-0 text-sky-600 dark:text-sky-400 mt-0.5" />
+    <>
+      <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && onClose()}>
+        <DialogSurface className="max-w-lg w-full bg-card text-card-foreground rounded-2xl border border-border p-6">
+          <DialogBody>
+            <DialogTitle
+              action={
+                <Button
+                  appearance="subtle"
+                  aria-label="Close checkout modal"
+                  icon={<Dismiss20Regular />}
+                  onClick={onClose}
+                />
+              }
+            >
               <div>
-                <p className="font-bold">Protected Payment Guarantee</p>
-                <p className="mt-0.5 opacity-90 leading-relaxed">
-                  Your payment is held safely in escrow. The guest receives payment only after your outing has ended successfully.
-                </p>
+                <span id="checkout-modal-title" className="text-subtitle1 font-semibold text-foreground block">
+                  Confirm & pay for meetup
+                </span>
+                <span className="text-caption1 font-normal text-muted-foreground block">
+                  Booking with {providerName}
+                </span>
               </div>
-            </div>
+            </DialogTitle>
 
-            {/* Error Message */}
-            {errorMessage && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-xs border border-destructive/20">
-                <ExclamationCircleIcon className="w-4 h-4 flex-shrink-0" />
-                <span>{errorMessage}</span>
-              </div>
-            )}
-
-            {/* Actions */}
-            <div className="pt-2 space-y-3">
-              {hasSufficientBalance ? (
-                <button
-                  type="button"
-                  onClick={handleWalletPayment}
-                  disabled={isPayingWallet}
-                  className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-accent text-accent-foreground hover:opacity-95 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-                >
-                  {isPayingWallet ? (
-                    <>
-                      <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                      <span>Processing Safe Payment...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShieldCheckIcon className="w-5 h-5" />
-                      <span>Pay {formatINR(totalAmount)} with Wallet</span>
-                    </>
-                  )}
-                </button>
+            <DialogContent className="space-y-5 pt-4">
+              {isSuccess ? (
+                <div className="py-8 text-center space-y-3">
+                  <div className="w-14 h-14 rounded-full bg-success-light text-success flex items-center justify-center mx-auto">
+                    <CheckmarkCircle24Regular />
+                  </div>
+                  <h4 className="text-subtitle1 font-semibold text-foreground">Payment safely protected!</h4>
+                  <p className="text-caption1 text-muted-foreground max-w-sm mx-auto tabular">
+                    {formatINR(totalAmount)} is held safely. Payment will only be released to {providerName} after your outing is completed.
+                  </p>
+                </div>
               ) : (
-                <button
-                  type="button"
-                  onClick={handleTopUpAndPay}
-                  disabled={isCreatingTopUp || isVerifyingTopUp || isPayingWallet}
-                  className="w-full py-3.5 px-4 rounded-2xl font-bold text-sm bg-accent text-accent-foreground hover:opacity-95 transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
-                >
-                  {isCreatingTopUp || isVerifyingTopUp || isPayingWallet ? (
-                    <>
-                      <ArrowPathIcon className="w-4 h-4 animate-spin" />
-                      <span>Processing Payment...</span>
-                    </>
-                  ) : (
-                    <>
-                      <CreditCardIcon className="w-5 h-5" />
-                      <span>Add {formatINR(shortage)} & Pay Securely</span>
-                    </>
-                  )}
-                </button>
-              )}
+                <>
+                  {/* Price Breakdown */}
+                  <div className="p-4 rounded-lg bg-muted border border-border space-y-2 text-body1">
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>Outing total:</span>
+                      <span className="font-semibold text-foreground tabular">{formatINR(totalAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-caption1 text-muted-foreground">
+                      <span>Platform service fee (15%):</span>
+                      <span className="tabular">{formatINR(platformFee)}</span>
+                    </div>
+                    <div className="flex justify-between text-caption1 text-muted-foreground">
+                      <span>Guest earnings (85%):</span>
+                      <span className="tabular">{formatINR(guestEarnings)}</span>
+                    </div>
+                    <div className="pt-2 border-t border-border flex justify-between font-semibold text-foreground text-body2">
+                      <span>Total payable:</span>
+                      <span className="text-brand-fg font-mono tabular">{formatINR(totalAmount)}</span>
+                    </div>
+                  </div>
 
-              <p className="text-[11px] text-center text-muted-foreground flex items-center justify-center gap-1">
-                <span>Secured via Razorpay UPI, GPay, PhonePe, Paytm, and Netbanking</span>
-              </p>
-            </div>
-          </>
-        )}
-      </div>
+                  {/* Wallet Balance Card */}
+                  <div className="p-4 rounded-lg bg-accent-light border border-border flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2.5 rounded-lg bg-card border border-border text-brand-fg">
+                        <Wallet24Regular />
+                      </div>
+                      <div>
+                        <p className="text-caption1 font-semibold text-muted-foreground">
+                          Cue wallet available
+                        </p>
+                        <p className="text-subtitle1 font-semibold font-mono tabular text-foreground">
+                          {walletLoading ? '...' : formatINR(availableBalance)}
+                        </p>
+                      </div>
+                    </div>
+                    {hasSufficientBalance ? (
+                      <Badge appearance="tint" color="success">
+                        Ready to pay
+                      </Badge>
+                    ) : (
+                      <Badge appearance="tint" color="warning" className="tabular">
+                        Short by {formatINR(shortage)}
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Escrow Guarantee Banner */}
+                  <div className="flex items-start gap-3 p-3.5 rounded-lg bg-trust-light border border-trust-border text-caption1 text-trust">
+                    <ShieldCheckmark20Regular className="shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold">Protected payment guarantee</p>
+                      <p className="mt-0.5 text-muted-foreground">
+                        Your payment is held safely in escrow. The guest receives payment only after your outing has ended successfully.
+                      </p>
+                    </div>
+                  </div>
+
+                  {errorMessage && (
+                    <MessageBar intent="error">
+                      <MessageBarBody>{errorMessage}</MessageBarBody>
+                    </MessageBar>
+                  )}
+
+                  <p className="text-caption1 text-center text-muted-foreground">
+                    Secured via Razorpay UPI, GPay, PhonePe, Paytm, and Netbanking
+                  </p>
+                </>
+              )}
+            </DialogContent>
+
+            {!isSuccess && (
+              <DialogActions className="pt-4">
+                <Button
+                  appearance="secondary"
+                  size="large"
+                  className="min-h-11"
+                  onClick={onClose}
+                >
+                  Cancel
+                </Button>
+                {hasSufficientBalance ? (
+                  <Button
+                    appearance="primary"
+                    size="large"
+                    className="min-h-11 tabular"
+                    onClick={handleWalletPayment}
+                    disabled={isPayingWallet}
+                    icon={isPayingWallet ? <Spinner size="tiny" /> : <ShieldCheckmark20Regular />}
+                  >
+                    {isPayingWallet ? 'Processing safe payment...' : `Pay ${formatINR(totalAmount)} with wallet`}
+                  </Button>
+                ) : (
+                  <Button
+                    appearance="primary"
+                    size="large"
+                    className="min-h-11 tabular"
+                    onClick={handleTopUpAndPay}
+                    disabled={isCreatingTopUp || isVerifyingTopUp || isPayingWallet}
+                    icon={isCreatingTopUp || isVerifyingTopUp || isPayingWallet ? <Spinner size="tiny" /> : <Payment20Regular />}
+                  >
+                    {isCreatingTopUp || isVerifyingTopUp || isPayingWallet
+                      ? 'Processing payment...'
+                      : `Add ${formatINR(shortage)} & pay securely`}
+                  </Button>
+                )}
+              </DialogActions>
+            )}
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
 
       {sandboxOrderData && (
         <RazorpaySandboxModal
           isOpen={Boolean(sandboxOrderData)}
           orderId={sandboxOrderData.orderId}
           amount={sandboxOrderData.amount}
-          title={`Safe Payment • ${providerName}`}
+          title={`Safe payment • ${providerName}`}
           description={`Payment held safely for Meetup #${orderId.slice(0, 8)}`}
           onSuccess={(result: RazorpaySandboxPaymentResult) => {
             processVerificationAndEscrow(
@@ -360,7 +356,6 @@ export const BookingCheckoutModal: React.FC<BookingCheckoutModalProps> = ({
           onClose={() => setSandboxOrderData(null)}
         />
       )}
-    </div>
+    </>
   );
 };
-

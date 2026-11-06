@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  SparklesIcon,
-  ArrowRightIcon,
-  ArrowLeftIcon,
-  CheckCircleIcon,
-  ArrowPathIcon,
-  ShareIcon,
-  MapPinIcon,
-  StarIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/outline';
+  Badge,
+  Button,
+  Card,
+  ProgressBar,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Sparkle20Regular,
+  ArrowRight16Regular,
+  ArrowLeft16Regular,
+  CheckmarkCircle20Regular,
+  ArrowCounterclockwise16Regular,
+  Share16Regular,
+  Location16Regular,
+  Star16Filled,
+  ShieldCheckmark16Regular,
+} from '@fluentui/react-icons';
 
 export type ArchetypeId = 'epicurean' | 'intellectual' | 'empathetic' | 'explorer';
 
@@ -44,7 +51,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
   epicurean: {
     id: 'epicurean',
     title: 'The Epicurean Connoisseur',
-    badge: 'Curated Taste & Sensory Elegance',
+    badge: 'Curated taste & sensory elegance',
     subtitle: 'Top 18% Compatibility Match',
     tagline: 'You savor the finer nuances of culinary artistry, vintage design, and unhurried conversation.',
     description:
@@ -52,8 +59,8 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
     traits: ['Artisanal Appreciation', 'Cultured Curiosity', 'Sensory Storytelling', 'Atmospheric Sensitivity'],
     idealMeetup: 'A 4-course curated tasting dinner at an artisanal bistro or a quiet jazz cocktail lounge in Indiranagar / Bandra.',
     conversationSparks: ['Memorable regional culinary secrets', 'Contemporary architecture & design', 'Travels through vintage cities'],
-    accentColor: 'text-[#881337] dark:text-rose-400',
-    bgGlow: 'from-[#881337]/15 via-[#C5A059]/10 to-transparent',
+    accentColor: 'text-brand-fg',
+    bgGlow: '',
     sampleCompanions: [
       {
         id: '158b9ff7-19de-49ce-a57c-b37738591285',
@@ -84,7 +91,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
   intellectual: {
     id: 'intellectual',
     title: 'The Intellectual Debater',
-    badge: 'Mental Stimulation & High-Curiosity',
+    badge: 'Mental stimulation & high curiosity',
     subtitle: 'Top 14% Compatibility Match',
     tagline: 'You crave ideas that challenge premises, contrarian perspectives, and sharp wit.',
     description:
@@ -92,8 +99,8 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
     traits: ['Contrarian Banter', 'Deep Generalist', 'Socratic Sparring', 'Unfiltered Curiosity'],
     idealMeetup: 'A quiet independent roastery café or a historic library coffee walk in Church Street / Fort.',
     conversationSparks: ['Emerging tech & civilization futures', 'Psychological paradoxes & literature', 'Unconventional career pivots'],
-    accentColor: 'text-indigo-600 dark:text-indigo-400',
-    bgGlow: 'from-indigo-600/15 via-[#C5A059]/10 to-transparent',
+    accentColor: 'text-brand-fg',
+    bgGlow: '',
     sampleCompanions: [
       {
         id: '00000000-0000-0000-0000-000000000006',
@@ -124,7 +131,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
   empathetic: {
     id: 'empathetic',
     title: 'The Empathetic Confidant',
-    badge: 'Sanctuary Presence & Warmth',
+    badge: 'Sanctuary presence & warmth',
     subtitle: 'Top 22% Compatibility Match',
     tagline: 'You value genuine psychological safety, deep active listening, and calm warmth.',
     description:
@@ -132,8 +139,8 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
     traits: ['Attentive Presence', 'Emotional Sanctuary', 'Unrushed Patience', 'Grounded Grace'],
     idealMeetup: 'A peaceful botanical garden walk, a serene tea room, or a quiet breakfast by the lake.',
     conversationSparks: ['Navigating life transitions', 'Balancing personal peace with ambition', 'Cherished childhood memories'],
-    accentColor: 'text-emerald-600 dark:text-emerald-400',
-    bgGlow: 'from-emerald-600/15 via-[#C5A059]/10 to-transparent',
+    accentColor: 'text-brand-fg',
+    bgGlow: '',
     sampleCompanions: [
       {
         id: '00000000-0000-0000-0000-000000000008',
@@ -164,7 +171,7 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
   explorer: {
     id: 'explorer',
     title: 'The Dynamic Explorer',
-    badge: 'Spontaneous Energy & Urban Discovery',
+    badge: 'Spontaneous energy & urban discovery',
     subtitle: 'Top 25% Compatibility Match',
     tagline: 'You thrive on unexpected discoveries, lively street energy, and playful adventures.',
     description:
@@ -172,8 +179,8 @@ export const ARCHETYPES: Record<ArchetypeId, ArchetypeProfile> = {
     traits: ['Spontaneous Spirit', 'Urban Discovery', 'Creative Drive', 'Infectious Optimism'],
     idealMeetup: 'A sunset street photography walk followed by an artisanal night food market or indie gig.',
     conversationSparks: ['Hidden city subcultures & secret spots', 'Upcoming music & film festivals', 'Crazy travel adventures'],
-    accentColor: 'text-amber-600 dark:text-amber-400',
-    bgGlow: 'from-amber-600/15 via-[#881337]/10 to-transparent',
+    accentColor: 'text-brand-fg',
+    bgGlow: '',
     sampleCompanions: [
       {
         id: '6d187ed5-aff0-4fa3-856c-9beb89264b15',
@@ -349,10 +356,8 @@ export const ArchetypeQuizSection: React.FC = () => {
     if (currentQuestionIndex < QUESTIONS.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
-      // Finished all questions -> calculate
       setQuizState('analyzing');
 
-      // Tally votes
       const tallies: Record<ArchetypeId, number> = {
         epicurean: 0,
         intellectual: 0,
@@ -374,7 +379,6 @@ export const ArchetypeQuizSection: React.FC = () => {
         }
       }
 
-      // Simulate a brief, luxurious calculation animation
       setTimeout(() => {
         setComputedArchetype(ARCHETYPES[bestArchetype]);
         setQuizState('result');
@@ -393,94 +397,91 @@ export const ArchetypeQuizSection: React.FC = () => {
 
   const handleCopyShare = () => {
     if (!computedArchetype) return;
-    const shareText = `✨ My Cue Companionship Archetype is "${computedArchetype.title}" — ${computedArchetype.tagline}\n\nDiscover your companion wavelength on Cue: ${window.location.origin}`;
+    const shareText = `My Cue Companionship Archetype is "${computedArchetype.title}" — ${computedArchetype.tagline}\n\nDiscover your companion wavelength on Cue: ${window.location.origin}`;
     navigator.clipboard?.writeText(shareText);
     setCopyFeedback(true);
     setTimeout(() => setCopyFeedback(false), 2500);
   };
 
   const currentQ = QUESTIONS[currentQuestionIndex];
-  const progressPercent = Math.round(((currentQuestionIndex + 1) / QUESTIONS.length) * 100);
+  const progressFraction = (currentQuestionIndex + 1) / QUESTIONS.length;
 
   return (
-    <section className="relative overflow-hidden py-12 sm:py-16">
+    <section className="py-8 sm:py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* 1. Idle Teaser State */}
         {quizState === 'idle' && (
-          <div className="relative rounded-3xl border border-border/80 bg-gradient-to-br from-card via-card/95 to-muted/30 p-8 sm:p-12 shadow-xl overflow-hidden group">
-            {/* Ambient luxury glow */}
-            <div className="absolute -top-24 -right-24 w-80 h-80 rounded-full bg-gradient-to-br from-[#881337]/10 via-[#C5A059]/10 to-transparent blur-3xl pointer-events-none" />
-
-            <div className="relative z-10 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#881337]/10 border border-[#881337]/20 text-[#881337] dark:text-rose-400 text-xs font-semibold uppercase tracking-wider mb-4">
-                <SparklesIcon className="w-4 h-4 text-[#C5A059]" />
-                <span>60-Second Vibe Diagnosis</span>
+          <Card className="rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-sm">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent-light border border-border text-brand-fg text-caption1 font-semibold mb-3">
+                <Sparkle20Regular className="text-trust" />
+                <span>60-second vibe diagnosis</span>
               </div>
 
-              <h2 className="text-3xl sm:text-5xl font-bold text-foreground font-serif tracking-tight leading-tight mb-4">
-                Discover Your Ideal Companion Archetype
+              <h2 className="text-title2 sm:text-title1 font-semibold text-foreground mb-3">
+                Discover your ideal companion archetype
               </h2>
 
-              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed mb-8 text-pretty">
-                Not sure where to begin? Answer four quick, high-taste questions to diagnose your natural connection style. We'll match you with verified companions who share your exact conversational wavelength.
+              <p className="text-body2 text-muted-foreground leading-relaxed mb-6">
+                Not sure where to begin? Answer four quick questions to diagnose your natural connection style. We'll match you with verified companions who share your exact conversational wavelength.
               </p>
 
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                <button
-                  type="button"
+                <Button
+                  appearance="primary"
+                  size="large"
+                  icon={<ArrowRight16Regular />}
+                  iconPosition="after"
                   onClick={startQuiz}
-                  className="min-h-[48px] px-8 py-3.5 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white font-bold text-sm sm:text-base transition-all shadow-md hover:scale-[1.02] flex items-center justify-center gap-2.5 cursor-pointer"
+                  className="min-h-11"
                 >
-                  <span>Start 60s Quiz</span>
-                  <ArrowRightIcon className="w-4 h-4" />
-                </button>
+                  Start 60s quiz
+                </Button>
 
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                <div className="flex items-center gap-3 text-caption1 text-muted-foreground">
                   <span className="flex items-center gap-1">
-                    <ShieldCheckIcon className="w-4 h-4 text-[#C5A059]" />
-                    100% Private & Free
+                    <ShieldCheckmark16Regular className="text-trust" />
+                    100% private & free
                   </span>
                   <span>•</span>
-                  <span>1,200+ Members Diagnosed</span>
+                  <span className="tabular">1,200+ members diagnosed</span>
                 </div>
               </div>
             </div>
-          </div>
+          </Card>
         )}
 
         {/* 2. Active Quiz State */}
         {quizState === 'active' && currentQ && (
-          <div className="relative rounded-3xl border border-border bg-card p-6 sm:p-10 shadow-2xl overflow-hidden animate-in fade-in duration-200">
+          <Card className="rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-sm">
             {/* Top progress and back row */}
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-border/60">
-              <button
-                type="button"
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-border">
+              <Button
+                appearance="subtle"
+                size="medium"
+                icon={<ArrowLeft16Regular />}
                 onClick={handleBack}
-                className="min-h-[44px] min-w-[44px] -ml-2 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+                className="min-h-11"
               >
-                <ArrowLeftIcon className="w-4 h-4" />
-                <span>{currentQuestionIndex === 0 ? 'Cancel' : 'Previous'}</span>
-              </button>
+                {currentQuestionIndex === 0 ? 'Cancel' : 'Previous'}
+              </Button>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs font-mono font-semibold text-muted-foreground">
+                <span className="text-caption1 font-mono tabular font-semibold text-muted-foreground">
                   Step {currentQuestionIndex + 1} of {QUESTIONS.length}
                 </span>
-                <div className="w-24 sm:w-32 h-2 rounded-full bg-muted overflow-hidden">
-                  <div
-                    className="h-full bg-[#881337] transition-all duration-300 ease-out"
-                    style={{ width: `${progressPercent}%` }}
-                  />
+                <div className="w-24 sm:w-32">
+                  <ProgressBar value={progressFraction} thickness="medium" />
                 </div>
               </div>
             </div>
 
             {/* Question prompt */}
-            <div className="mb-8 max-w-2xl">
-              <h3 className="text-2xl sm:text-4xl font-bold text-foreground font-serif tracking-tight leading-snug mb-2">
+            <div className="mb-6 max-w-2xl">
+              <h3 className="text-title3 sm:text-title2 font-semibold text-foreground mb-1.5">
                 {currentQ.prompt}
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground">
+              <p className="text-body1 text-muted-foreground">
                 {currentQ.context}
               </p>
             </div>
@@ -488,23 +489,23 @@ export const ArchetypeQuizSection: React.FC = () => {
             {/* 4 Interactive option cards (strictly 44px+ touch targets) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {currentQ.options.map((opt, idx) => {
-                const letter = String.fromCharCode(65 + idx); // A, B, C, D
+                const letter = String.fromCharCode(65 + idx);
                 return (
                   <button
                     key={opt.label}
                     type="button"
                     onClick={() => handleSelectOption(opt.archetype)}
-                    className="min-h-[64px] p-5 rounded-2xl border border-border/80 bg-card hover:border-[#881337] hover:bg-[#881337]/5 dark:hover:bg-[#881337]/10 transition-all text-left flex items-start gap-4 group cursor-pointer shadow-2xs hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99]"
+                    className="min-h-16 p-4 sm:p-5 rounded-2xl border border-border bg-card hover:border-border-strong hover:bg-muted transition-colors text-left flex items-start gap-3.5 group cursor-pointer shadow-2xs card-hover-effect"
                   >
-                    <div className="min-w-[32px] min-h-[32px] w-8 h-8 rounded-full bg-muted group-hover:bg-[#881337] group-hover:text-white border border-border/80 flex items-center justify-center font-mono font-bold text-xs text-foreground transition-colors shrink-0 mt-0.5">
+                    <div className="min-w-8 min-h-8 w-8 h-8 rounded-full bg-muted group-hover:bg-accent group-hover:text-accent-foreground border border-border flex items-center justify-center font-mono tabular font-semibold text-caption1 text-foreground transition-colors shrink-0 mt-0.5">
                       {letter}
                     </div>
 
                     <div className="flex-1">
-                      <div className="text-sm sm:text-base font-semibold text-foreground group-hover:text-[#881337] dark:group-hover:text-rose-400 transition-colors leading-snug mb-1">
+                      <div className="text-body1 sm:text-body2 font-semibold text-foreground group-hover:text-brand-fg transition-colors mb-1">
                         {opt.label}
                       </div>
-                      <div className="text-xs text-muted-foreground leading-relaxed">
+                      <div className="text-caption1 text-muted-foreground leading-relaxed">
                         {opt.subtext}
                       </div>
                     </div>
@@ -512,117 +513,107 @@ export const ArchetypeQuizSection: React.FC = () => {
                 );
               })}
             </div>
-          </div>
+          </Card>
         )}
 
-        {/* 3. Analyzing Pulse State */}
+        {/* 3. Analyzing State */}
         {quizState === 'analyzing' && (
-          <div className="rounded-3xl border border-border bg-card p-12 sm:p-20 text-center shadow-xl">
-            <div className="w-16 h-16 rounded-full bg-[#881337]/10 border border-[#881337]/20 flex items-center justify-center mx-auto mb-6 animate-spin">
-              <SparklesIcon className="w-8 h-8 text-[#881337]" />
-            </div>
-            <h3 className="text-2xl sm:text-3xl font-bold text-foreground font-serif mb-2">
-              Synthesizing Your Conversational Wavelength...
+          <Card className="rounded-2xl border border-border bg-card p-12 sm:p-16 text-center shadow-sm flex flex-col items-center gap-4">
+            <Spinner size="large" />
+            <h3 className="text-title3 font-semibold text-foreground">
+              Synthesizing your conversational wavelength...
             </h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <p className="text-body1 text-muted-foreground max-w-md mx-auto">
               Mapping your preferences against verified companions in Bengaluru, Mumbai, and Delhi-NCR.
             </p>
-          </div>
+          </Card>
         )}
 
-        {/* 4. Luxury Result Reveal */}
+        {/* 4. Result Reveal */}
         {quizState === 'result' && computedArchetype && (
-          <div className="relative rounded-3xl border border-[#C5A059]/40 bg-card p-6 sm:p-10 shadow-2xl overflow-hidden animate-in fade-in duration-300">
-            {/* Ambient luxury glow */}
-            <div className={`absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br ${computedArchetype.bgGlow} blur-3xl pointer-events-none`} />
-
-            {/* Result Header Badge */}
-            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-border/70">
+          <Card className="rounded-2xl border border-border bg-card p-6 sm:p-10 shadow-sm">
+            {/* Result Header */}
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 pb-6 border-b border-border">
               <div>
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C5A059]/15 border border-[#C5A059]/30 text-[#C5A059] text-xs font-semibold uppercase tracking-wider mb-2">
-                  <SparklesIcon className="w-3.5 h-3.5" />
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-trust-light border border-trust-border text-trust text-caption1 font-semibold mb-2">
+                  <Sparkle20Regular />
                   <span>{computedArchetype.badge}</span>
                 </div>
-                <h2 className="text-3xl sm:text-5xl font-bold text-foreground font-serif tracking-tight leading-tight">
+                <h2 className="text-title2 sm:text-title1 font-semibold text-foreground">
                   {computedArchetype.title}
                 </h2>
-                <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
-                  {computedArchetype.subtitle} • Tailored Platonic Compatibility
+                <p className="text-body1 text-muted-foreground mt-1 tabular">
+                  {computedArchetype.subtitle} • Tailored platonic compatibility
                 </p>
               </div>
 
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
+                <Button
+                  appearance="secondary"
+                  size="large"
+                  icon={copyFeedback ? <CheckmarkCircle20Regular className="text-success" /> : <Share16Regular />}
                   onClick={handleCopyShare}
-                  className="min-h-[44px] px-4 py-2.5 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold border border-border flex items-center gap-2 transition-all cursor-pointer"
+                  className="min-h-11"
                 >
-                  {copyFeedback ? (
-                    <>
-                      <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
-                      <span>Copied Summary!</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShareIcon className="w-4 h-4 text-muted-foreground" />
-                      <span>Share Result</span>
-                    </>
-                  )}
-                </button>
+                  {copyFeedback ? 'Copied summary!' : 'Share result'}
+                </Button>
 
-                <button
-                  type="button"
+                <Button
+                  appearance="subtle"
+                  size="large"
+                  icon={<ArrowCounterclockwise16Regular />}
                   onClick={startQuiz}
-                  className="min-h-[44px] px-4 py-2.5 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold border border-border/80 flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="min-h-11"
                 >
-                  <ArrowPathIcon className="w-3.5 h-3.5" />
-                  <span>Retake</span>
-                </button>
+                  Retake
+                </Button>
               </div>
             </div>
 
             {/* Archetype Description & Core Traits Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
               <div className="lg:col-span-2 space-y-4">
-                <p className="text-base sm:text-lg font-medium text-foreground leading-relaxed font-serif">
+                <p className="text-subtitle2 font-semibold text-foreground leading-relaxed">
                   "{computedArchetype.tagline}"
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed">
+                <p className="text-body1 text-muted-foreground leading-relaxed">
                   {computedArchetype.description}
                 </p>
 
                 {/* Best Meetup Recommendation */}
-                <div className="p-4 rounded-2xl bg-muted/40 border border-border/80 mt-4">
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#881337] dark:text-rose-400 mb-1">
-                    Ideal First Meetup Setting
+                <div className="p-4 rounded-2xl bg-muted border border-border mt-4">
+                  <div className="text-caption1 font-semibold text-brand-fg mb-1">
+                    Ideal first meetup setting
                   </div>
-                  <div className="text-xs sm:text-sm text-foreground/90 font-medium leading-normal">
+                  <div className="text-body1 text-foreground">
                     {computedArchetype.idealMeetup}
                   </div>
                 </div>
               </div>
 
               {/* Core Traits & Topics */}
-              <div className="bg-muted/30 rounded-2xl border border-border/70 p-5 flex flex-col justify-between">
+              <div className="bg-muted rounded-2xl border border-border p-5 flex flex-col justify-between">
                 <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-                    Your Core Connection Traits
+                  <div className="text-caption1 font-semibold text-foreground mb-3">
+                    Your core connection traits
                   </div>
-                  <div className="flex flex-wrap gap-1.5 mb-6">
+                  <div className="flex flex-wrap gap-1.5 mb-5">
                     {computedArchetype.traits.map((trait) => (
-                      <span
+                      <Badge
                         key={trait}
-                        className="px-2.5 py-1 rounded-md bg-card border border-border text-xs font-medium text-foreground shadow-2xs"
+                        appearance="outline"
+                        color="informative"
+                        size="medium"
                       >
                         {trait}
-                      </span>
+                      </Badge>
                     ))}
                   </div>
 
-                  <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">
-                    Conversation Sparks
+                  <div className="text-caption1 font-semibold text-foreground mb-2">
+                    Conversation sparks
                   </div>
-                  <ul className="space-y-1.5 text-xs text-foreground/80 list-disc list-inside">
+                  <ul className="space-y-1.5 text-caption1 text-muted-foreground list-disc list-inside">
                     {computedArchetype.conversationSparks.map((spark) => (
                       <li key={spark}>{spark}</li>
                     ))}
@@ -632,90 +623,93 @@ export const ArchetypeQuizSection: React.FC = () => {
             </div>
 
             {/* Matched Verified Companions Showcase */}
-            <div className="pt-8 border-t border-border/80">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-6">
+            <div className="pt-6 border-t border-border">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-5">
                 <div>
-                  <h3 className="text-xl sm:text-2xl font-bold text-foreground font-serif">
-                    Top Verified Companions Matching Your Archetype
+                  <h3 className="text-subtitle1 font-semibold text-foreground">
+                    Top verified companions matching your archetype
                   </h3>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-caption1 text-muted-foreground">
                     Available for public coffee, dining, and cultural outings in Bengaluru & Mumbai.
                   </p>
                 </div>
 
-                <button
-                  type="button"
+                <Button
+                  appearance="subtle"
+                  size="medium"
+                  icon={<ArrowRight16Regular />}
+                  iconPosition="after"
                   onClick={() => navigate('/discovery')}
-                  className="min-h-[44px] text-xs font-bold text-[#881337] dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer self-start sm:self-auto"
+                  className="min-h-11 self-start sm:self-auto !text-brand-fg"
                 >
-                  <span>View All Companions</span>
-                  <ArrowRightIcon className="w-3.5 h-3.5" />
-                </button>
+                  View all companions
+                </Button>
               </div>
 
               {/* Companions Card Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {computedArchetype.sampleCompanions.map((comp) => (
                   <div
                     key={comp.id}
-                    className="p-5 rounded-2xl border border-border/90 bg-card hover:border-[#881337]/60 hover:shadow-lg transition-all flex flex-col sm:flex-row items-start sm:items-center gap-4 group"
+                    className="p-4 rounded-2xl border border-border bg-card shadow-sm card-hover-effect flex flex-col sm:flex-row items-start sm:items-center gap-4"
                   >
                     <img
                       src={comp.photoUrl}
                       alt={comp.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shrink-0 shadow-sm border border-border/80"
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover shrink-0 border border-border"
                     />
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 w-full">
                       <div className="flex items-center gap-2 mb-0.5">
-                        <span className="font-bold text-base text-foreground font-serif truncate">
+                        <span className="font-semibold text-subtitle2 text-foreground truncate">
                           {comp.name}
                         </span>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C5A059]/15 text-[#C5A059] border border-[#C5A059]/30">
+                        <span className="px-2 py-0.5 rounded-full text-caption2 font-semibold tabular bg-trust-light text-trust border border-trust-border">
                           {comp.trustScore}% Trust
                         </span>
                       </div>
 
-                      <p className="text-xs text-muted-foreground truncate mb-2">
+                      <p className="text-caption1 text-muted-foreground truncate mb-2">
                         {comp.headline}
                       </p>
 
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mb-3">
-                        <span className="flex items-center gap-0.5">
-                          <MapPinIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                      <div className="flex items-center gap-3 text-caption1 text-muted-foreground mb-3">
+                        <span className="flex items-center gap-1">
+                          <Location16Regular className="text-muted-foreground" />
                           {comp.area}, {comp.city}
                         </span>
                         <span>•</span>
-                        <span className="flex items-center gap-0.5 text-amber-500 font-semibold">
-                          <StarIcon className="w-3.5 h-3.5 fill-current" />
+                        <span className="flex items-center gap-1 text-trust font-semibold tabular">
+                          <Star16Filled className="text-trust" />
                           {comp.rating}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2 border-t border-border/60">
-                        <div className="text-xs font-mono font-bold text-foreground">
+                      <div className="flex items-center justify-between pt-2 border-t border-border">
+                        <div className="text-body1 font-mono tabular font-semibold text-foreground">
                           ₹{comp.rate.toLocaleString('en-IN')}{' '}
-                          <span className="text-[10px] font-normal text-muted-foreground">/ hr</span>
+                          <span className="text-caption1 font-normal text-muted-foreground">/ hr</span>
                         </div>
 
-                        <button
-                          type="button"
+                        <Button
+                          appearance="primary"
+                          size="small"
+                          icon={<ArrowRight16Regular />}
+                          iconPosition="after"
                           onClick={() => navigate(`/providers/${comp.id}`)}
-                          className="min-h-[44px] px-3.5 py-1.5 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white text-xs font-bold transition-all shadow-2xs hover:scale-105 cursor-pointer flex items-center gap-1"
+                          className="min-h-11 sm:min-h-8"
                         >
-                          <span>Reserve</span>
-                          <ArrowRightIcon className="w-3 h-3" />
-                        </button>
+                          Reserve
+                        </Button>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </Card>
         )}
       </div>
     </section>
   );
 };
-
