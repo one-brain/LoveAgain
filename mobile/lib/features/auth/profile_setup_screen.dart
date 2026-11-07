@@ -64,6 +64,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Complete Your Profile'),
       ),
@@ -74,36 +75,6 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
             vertical: FluentSpacing.xl,
           ),
           children: [
-            // Header Icon & Title
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(FluentSpacing.l),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: const Icon(
-                  Icons.person_outline_rounded,
-                  size: 36,
-                  color: AppColors.brandForeground,
-                ),
-              ),
-            ),
-            const SizedBox(height: FluentSpacing.xl),
-            Text(
-              'Welcome to Cue',
-              textAlign: TextAlign.center,
-              style: FluentType.title2.copyWith(color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: FluentSpacing.s),
-            Text(
-              'Please tell us your name to finish creating your account.',
-              textAlign: TextAlign.center,
-              style: FluentType.body2.copyWith(color: AppColors.textSecondary),
-            ),
-            const SizedBox(height: FluentSpacing.xxl),
-
             // Verified Mobile Card
             Container(
               padding: const EdgeInsets.symmetric(
@@ -144,9 +115,8 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                         ),
                         Text(
                           widget.phone,
-                          style: FluentType.numeric(FluentType.body2Strong).copyWith(
-                            color: AppColors.textPrimary,
-                          ),
+                          style: FluentType.numeric(FluentType.body2Strong)
+                              .copyWith(color: AppColors.textPrimary),
                         ),
                       ],
                     ),
@@ -172,135 +142,175 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: FluentSpacing.xxl),
-
-            // First Name Field
-            TextField(
-              controller: _firstNameController,
-              autofocus: true,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: 'First Name',
-                hintText: 'e.g. Alex',
-                prefixIcon: const Icon(
-                  Icons.person_outline,
-                  color: AppColors.textSecondary,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(FluentRadius.large),
-                  borderSide: const BorderSide(color: AppColors.borderStrong),
-                ),
-              ),
-            ),
             const SizedBox(height: FluentSpacing.l),
 
-            // Last Name Field
-            TextField(
-              controller: _lastNameController,
-              textCapitalization: TextCapitalization.words,
-              decoration: InputDecoration(
-                labelText: 'Last Name',
-                hintText: 'e.g. Seeker',
-                prefixIcon: const Icon(
-                  Icons.badge_outlined,
-                  color: AppColors.textSecondary,
-                ),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(FluentRadius.large),
-                  borderSide: const BorderSide(color: AppColors.borderStrong),
-                ),
+            // Profile Details Card Surface
+            Container(
+              padding: const EdgeInsets.all(FluentSpacing.xl),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+                border: Border.all(color: AppColors.border),
+                boxShadow: FluentShadows.shadow4,
               ),
-            ),
-            const SizedBox(height: FluentSpacing.xl),
-
-            // Membership Type Selection
-            Text(
-              'Membership type',
-              style: FluentType.caption1Strong.copyWith(
-                color: AppColors.textPrimary,
-              ),
-            ),
-            const SizedBox(height: FluentSpacing.s),
-            Row(
-              children: [
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Guest (Book Outings)'),
-                    selected: _selectedRole == 'Guest',
-                    selectedColor: AppColors.primaryLight,
-                    onSelected: (val) => setState(() => _selectedRole = 'Guest'),
-                  ),
-                ),
-                const SizedBox(width: FluentSpacing.s),
-                Expanded(
-                  child: ChoiceChip(
-                    label: const Text('Host (Offer Companionship)'),
-                    selected: _selectedRole == 'Host',
-                    selectedColor: AppColors.primaryLight,
-                    onSelected: (val) => setState(() => _selectedRole = 'Host'),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: FluentSpacing.xxl),
-
-            // Error notice if any
-            if (auth.error != null) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: FluentSpacing.m,
-                  vertical: FluentSpacing.mNudge,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.dangerBackground,
-                  borderRadius: BorderRadius.circular(FluentRadius.large),
-                  border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 18,
-                      color: AppColors.dangerForeground,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'Welcome to Cue',
+                    style: FluentType.title3.copyWith(
+                      color: AppColors.textPrimary,
                     ),
-                    const SizedBox(width: FluentSpacing.s),
-                    Expanded(
-                      child: Text(
-                        auth.error!,
-                        style: FluentType.caption1Strong.copyWith(
-                          color: AppColors.dangerForeground,
+                  ),
+                  const SizedBox(height: FluentSpacing.xxs),
+                  Text(
+                    'Tell us your name to finish creating your verified profile.',
+                    style: FluentType.caption1.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: FluentSpacing.xl),
+
+                  // First Name Field
+                  TextField(
+                    controller: _firstNameController,
+                    autofocus: true,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      labelText: 'First Name',
+                      hintText: 'e.g. Alex',
+                      prefixIcon: const Icon(
+                        Icons.person_outline,
+                        color: AppColors.textSecondary,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderStrong,
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: FluentSpacing.l),
-            ],
+                  ),
+                  const SizedBox(height: FluentSpacing.l),
 
-            // Submit Button
-            FilledButton(
-              onPressed: auth.isLoading ? null : _handleCompleteSetup,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(FluentRadius.large),
-                ),
-              ),
-              child: auth.isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
+                  // Last Name Field
+                  TextField(
+                    controller: _lastNameController,
+                    textCapitalization: TextCapitalization.words,
+                    decoration: InputDecoration(
+                      labelText: 'Last Name',
+                      hintText: 'e.g. Rivera',
+                      prefixIcon: const Icon(
+                        Icons.badge_outlined,
+                        color: AppColors.textSecondary,
                       ),
-                    )
-                  : Text(
-                      'Complete Account Setup',
-                      style: FluentType.body2Strong.copyWith(color: Colors.white),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                        borderSide: const BorderSide(
+                          color: AppColors.borderStrong,
+                        ),
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: FluentSpacing.xl),
+
+                  // Membership Type Selection
+                  Text(
+                    'Membership type',
+                    style: FluentType.caption1Strong.copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: FluentSpacing.s),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Guest (Book Outings)'),
+                          selected: _selectedRole == 'Guest',
+                          selectedColor: AppColors.primaryLight,
+                          onSelected: (_) =>
+                              setState(() => _selectedRole = 'Guest'),
+                        ),
+                      ),
+                      const SizedBox(width: FluentSpacing.s),
+                      Expanded(
+                        child: ChoiceChip(
+                          label: const Text('Host (Offer Companionship)'),
+                          selected: _selectedRole == 'Host',
+                          selectedColor: AppColors.primaryLight,
+                          onSelected: (_) =>
+                              setState(() => _selectedRole = 'Host'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: FluentSpacing.xxl),
+
+                  // Error notice if any
+                  if (auth.error != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: FluentSpacing.m,
+                        vertical: FluentSpacing.mNudge,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.dangerBackground,
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                        border: Border.all(
+                          color: AppColors.danger.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 18,
+                            color: AppColors.dangerForeground,
+                          ),
+                          const SizedBox(width: FluentSpacing.s),
+                          Expanded(
+                            child: Text(
+                              auth.error!,
+                              style: FluentType.caption1Strong.copyWith(
+                                color: AppColors.dangerForeground,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: FluentSpacing.l),
+                  ],
+
+                  // Submit Button
+                  FilledButton(
+                    onPressed: auth.isLoading ? null : _handleCompleteSetup,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                      ),
+                    ),
+                    child: auth.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Complete Account Setup',
+                            style: FluentType.body2Strong.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

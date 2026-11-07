@@ -4,18 +4,14 @@ import { useDispatch } from 'react-redux';
 import {
   Badge,
   Button,
-  Card,
   Field,
   Input,
   MessageBar,
   MessageBarBody,
   Select,
-  Tab,
-  TabList,
 } from '@fluentui/react-components';
 import {
   Sparkle16Regular,
-  ShieldCheckmark16Regular,
   LockClosed20Regular,
   Mail20Regular,
   Person20Regular,
@@ -23,6 +19,10 @@ import {
   Eye20Regular,
   EyeOff20Regular,
   Calendar20Regular,
+  CheckmarkCircle16Regular,
+  Circle16Regular,
+  Edit16Regular,
+  ArrowRight16Regular,
 } from '@fluentui/react-icons';
 import {
   useRegisterMutation,
@@ -32,7 +32,8 @@ import {
 import { loginSuccess } from '../store/slices/authSlice';
 import { resetAllApiCaches } from '../utils/sessionManager';
 import { isLegalAge, getMaxLegalBirthdate } from '../utils/dateUtils';
-import { BrandLogo } from '../components/ui/BrandLogo';
+import { AuthShell } from '../components/auth/AuthShell';
+import { OtpCodeInput } from '../components/auth/OtpCodeInput';
 
 const Register: React.FC = () => {
   const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile');
@@ -68,7 +69,8 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const rawRedirect = searchParams.get('redirect');
-  const redirectTarget = rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
+  const redirectTarget =
+    rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
   const dispatch = useDispatch();
 
   const [register, { isLoading: isEmailLoading }] = useRegisterMutation();
@@ -95,7 +97,8 @@ const Register: React.FC = () => {
     }
   };
 
-  const handleSendMobileOtp = async () => {
+  const handleSendMobileOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setErrors({});
     setInfoMessage(null);
 
@@ -108,22 +111,30 @@ const Register: React.FC = () => {
       return;
     }
     if (!isLegalAge(mobileDateOfBirth)) {
-      setErrors({ mobileDateOfBirth: `You must be at least 18 years old to join Cue (born on or before ${maxLegalDate})` });
+      setErrors({
+        mobileDateOfBirth: `You must be at least 18 years old to join Cue (born on or before ${maxLegalDate})`,
+      });
       return;
     }
     if (!phoneNumber.trim() || phoneNumber.trim().length < 8) {
-      setErrors({ phoneNumber: 'Please enter a valid mobile number' });
+      setErrors({ phoneNumber: 'Please enter a valid 10-digit mobile number' });
       return;
     }
 
     try {
-      const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber.trim()}`;
+      const fullPhone = phoneNumber.startsWith('+')
+        ? phoneNumber
+        : `${countryCode}${phoneNumber.trim()}`;
       const res = await sendMobileOtp({ phone: fullPhone, purpose: 'register' }).unwrap();
       setOtpSent(true);
       setCountdown(30);
       setInfoMessage(res.message);
     } catch (err: any) {
-      setErrors({ form: err?.data?.error || 'Failed to send verification code. Please check your number.' });
+      setErrors({
+        form:
+          err?.data?.error ||
+          'Failed to send verification code. Please check your number.',
+      });
     }
   };
 
@@ -131,10 +142,17 @@ const Register: React.FC = () => {
     e.preventDefault();
     setErrors({});
 
-    const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber.trim()}`;
+    if (!otpSent) {
+      await handleSendMobileOtp();
+      return;
+    }
+
+    const fullPhone = phoneNumber.startsWith('+')
+      ? phoneNumber
+      : `${countryCode}${phoneNumber.trim()}`;
     const cleanOtp = otp.trim();
 
-    if (!cleanOtp) {
+    if (cleanOtp.length < 6) {
       setErrors({ otp: 'Please enter the 6-digit verification code' });
       return;
     }
@@ -180,7 +198,12 @@ const Register: React.FC = () => {
         setErrors(fieldErrors);
         return;
       }
-      setErrors({ form: err?.data?.error || err?.data?.title || 'Invalid OTP code. Please try again.' });
+      setErrors({
+        form:
+          err?.data?.error ||
+          err?.data?.title ||
+          'Invalid OTP code. Please try again.',
+      });
     }
   };
 
@@ -254,261 +277,364 @@ const Register: React.FC = () => {
         setErrors(fieldErrors);
         return;
       }
-      const msg = err?.data?.message || err?.data?.detail || err?.data?.error || err?.data?.title || 'Registration failed. Please check your credentials or try a different email.';
+      const msg =
+        err?.data?.message ||
+        err?.data?.detail ||
+        err?.data?.error ||
+        err?.data?.title ||
+        'Registration failed. Please check your credentials or try a different email.';
       setErrors({ form: msg });
     }
   };
 
+  const hasMinLength = formData.password.length >= 8;
+  const passwordsMatch =
+    formData.password.length > 0 &&
+    formData.confirmPassword.length > 0 &&
+    formData.password === formData.confirmPassword;
+
   return (
-    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12 bg-background">
-      <Card className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
-        <div className="flex items-center justify-between">
-          <Link to="/">
-            <BrandLogo size="sm" subtitle="Curated outings" />
+    <AuthShell
+      title="Create your account"
+      subtitle={
+        <>
+          Already have an account?{' '}
+          <Link
+            to={
+              rawRedirect
+                ? `/login?redirect=${encodeURIComponent(rawRedirect)}`
+                : '/login'
+            }
+            className="font-semibold text-brand-fg hover:underline"
+          >
+            Sign in
           </Link>
-          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-trust-light border border-trust-border text-caption2 font-semibold text-trust">
-            <ShieldCheckmark16Regular className="shrink-0" />
-            <span>Identity Verified</span>
-          </div>
-        </div>
-
+        </>
+      }
+      badgeText="Identity Verified"
+      editorialTitle="Verified companionship for life's best moments."
+      editorialSubtitle="Every Cue member is age-verified (18+) and protected by RBI-compliant escrow from reservation through arrival."
+      footer={
+        <p className="text-caption2 text-muted-foreground text-center leading-relaxed">
+          By joining Cue, you agree to our{' '}
+          <Link to="/terms" className="text-brand-fg hover:underline font-semibold">
+            Terms
+          </Link>
+          ,{' '}
+          <Link to="/privacy" className="text-brand-fg hover:underline font-semibold">
+            Privacy Policy
+          </Link>
+          ,{' '}
+          <Link
+            to="/community-guidelines"
+            className="text-brand-fg hover:underline font-semibold"
+          >
+            Community Guidelines
+          </Link>
+          , and{' '}
+          <Link
+            to="/cancellation-policy"
+            className="text-brand-fg hover:underline font-semibold"
+          >
+            Escrow Policy
+          </Link>
+          .
+        </p>
+      }
+    >
+      {rawRedirect?.includes('apply-companion') && (
         <div>
-          {rawRedirect?.includes('apply-companion') && (
-            <div className="mb-2">
-              <Badge appearance="tint" color="brand" size="medium" icon={<Sparkle16Regular />}>
-                Companion Application • Step 1 of 2
-              </Badge>
-            </div>
-          )}
-          <h1 className="text-title2 font-semibold text-foreground">
-            Create your account
-          </h1>
-          <p className="text-body1 text-muted-foreground mt-1">
-            Already have an account?{' '}
-            <Link
-              to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
-              className="font-semibold text-brand-fg hover:underline"
-            >
-              Sign in
-            </Link>
-          </p>
+          <Badge appearance="tint" color="brand" size="medium" icon={<Sparkle16Regular />}>
+            Companion Application • Step 1 of 2
+          </Badge>
         </div>
+      )}
 
-        {/* Auth Method Switcher */}
-        <TabList
-          selectedValue={authMethod}
-          onTabSelect={(_, data) => {
-            setAuthMethod(data.value as 'mobile' | 'email');
+      {/* Segmented Auth Method Switcher */}
+      <div
+        role="tablist"
+        aria-label="Registration method"
+        className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted border border-border"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={authMethod === 'mobile'}
+          onClick={() => {
+            setAuthMethod('mobile');
             setErrors({});
           }}
-          className="w-full"
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-caption1 font-semibold transition-colors cursor-pointer ${
+            authMethod === 'mobile'
+              ? 'bg-card text-brand-fg border border-border shadow-xs'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
         >
-          <Tab value="mobile" icon={<Phone20Regular />}>
-            Mobile & OTP
-          </Tab>
-          <Tab value="email" icon={<Mail20Regular />}>
-            Email & Password
-          </Tab>
-        </TabList>
+          <Phone20Regular className="shrink-0" />
+          <span>Mobile & OTP</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={authMethod === 'email'}
+          onClick={() => {
+            setAuthMethod('email');
+            setErrors({});
+          }}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-caption1 font-semibold transition-colors cursor-pointer ${
+            authMethod === 'email'
+              ? 'bg-card text-brand-fg border border-border shadow-xs'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
+        >
+          <Mail20Regular className="shrink-0" />
+          <span>Email & Password</span>
+        </button>
+      </div>
 
-        {errors.form && (
-          <MessageBar intent="error">
-            <MessageBarBody>{errors.form}</MessageBarBody>
-          </MessageBar>
-        )}
+      {errors.form && (
+        <MessageBar intent="error">
+          <MessageBarBody>{errors.form}</MessageBarBody>
+        </MessageBar>
+      )}
 
-        {infoMessage && (
-          <MessageBar intent="info">
-            <MessageBarBody>{infoMessage}</MessageBarBody>
-          </MessageBar>
-        )}
+      {infoMessage && (
+        <MessageBar intent="info">
+          <MessageBarBody>{infoMessage}</MessageBarBody>
+        </MessageBar>
+      )}
 
-        {/* MOBILE & OTP REGISTRATION */}
-        {authMethod === 'mobile' ? (
-          <form onSubmit={handleMobileSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+      {/* 1. MOBILE & OTP REGISTRATION */}
+      {authMethod === 'mobile' ? (
+        <form
+          onSubmit={otpSent ? handleMobileSubmit : (e) => handleSendMobileOtp(e)}
+          className="space-y-4"
+        >
+          {!otpSent ? (
+            /* Step 1: Enter Details & Mobile Number */
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field
+                  label="First name"
+                  required
+                  validationMessage={errors.mobileFirstName}
+                  validationState={errors.mobileFirstName ? 'error' : 'none'}
+                >
+                  <Input
+                    id="mobileFirstName"
+                    type="text"
+                    required
+                    value={mobileFirstName}
+                    onChange={(_, data) => setMobileFirstName(data.value)}
+                    placeholder="Alex"
+                    contentBefore={<Person20Regular className="text-muted-foreground" />}
+                  />
+                </Field>
+
+                <Field label="Last name">
+                  <Input
+                    id="mobileLastName"
+                    type="text"
+                    value={mobileLastName}
+                    onChange={(_, data) => setMobileLastName(data.value)}
+                    placeholder="Rivera"
+                    contentBefore={<Person20Regular className="text-muted-foreground" />}
+                  />
+                </Field>
+              </div>
+
               <Field
-                label="First name"
+                label="Date of birth (18+)"
                 required
-                validationMessage={errors.mobileFirstName}
-                validationState={errors.mobileFirstName ? 'error' : 'none'}
+                hint={`Born on or before ${maxLegalDate}`}
+                validationMessage={errors.mobileDateOfBirth}
+                validationState={errors.mobileDateOfBirth ? 'error' : 'none'}
               >
                 <Input
-                  id="mobileFirstName"
-                  type="text"
+                  id="mobileDateOfBirth"
+                  type="date"
                   required
-                  value={mobileFirstName}
-                  onChange={(_, data) => setMobileFirstName(data.value)}
-                  placeholder="Alex"
-                  contentBefore={<Person20Regular className="text-muted-foreground" />}
+                  max={maxLegalDate}
+                  value={mobileDateOfBirth}
+                  onChange={(_, data) => {
+                    setMobileDateOfBirth(data.value);
+                    if (errors.mobileDateOfBirth) {
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.mobileDateOfBirth;
+                        return next;
+                      });
+                    }
+                  }}
+                  contentBefore={<Calendar20Regular className="text-muted-foreground" />}
+                  className="tabular"
                 />
               </Field>
 
-              <Field label="Last name">
-                <Input
-                  id="mobileLastName"
-                  type="text"
-                  value={mobileLastName}
-                  onChange={(_, data) => setMobileLastName(data.value)}
-                  placeholder="Rivera"
-                  contentBefore={<Person20Regular className="text-muted-foreground" />}
-                />
+              <Field
+                label="Mobile number"
+                required
+                validationMessage={errors.phoneNumber}
+                validationState={errors.phoneNumber ? 'error' : 'none'}
+              >
+                <div className="flex gap-2">
+                  <Select
+                    value={countryCode}
+                    onChange={(_, data) => setCountryCode(data.value)}
+                    aria-label="Country code"
+                    className="w-28 shrink-0 tabular"
+                  >
+                    <option value="+91">IN +91</option>
+                    <option value="+1">US +1</option>
+                    <option value="+44">UK +44</option>
+                    <option value="+971">AE +971</option>
+                    <option value="+65">SG +65</option>
+                  </Select>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    inputMode="numeric"
+                    required
+                    value={phoneNumber}
+                    onChange={(_, data) =>
+                      setPhoneNumber(data.value.replace(/\D/g, ''))
+                    }
+                    placeholder="98765 43210"
+                    maxLength={12}
+                    contentBefore={<Phone20Regular className="text-muted-foreground" />}
+                    className="flex-1 tabular"
+                  />
+                </div>
               </Field>
-            </div>
 
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                disabled={isSendingOtp}
+                icon={<ArrowRight16Regular />}
+                iconPosition="after"
+                className="w-full min-h-11"
+              >
+                {isSendingOtp ? 'Sending code...' : 'Get OTP'}
+              </Button>
+            </>
+          ) : (
+            /* Step 2: Verify 6-Digit OTP */
+            <>
+              <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-muted border border-border">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CheckmarkCircle16Regular className="text-success shrink-0" />
+                  <span className="text-caption1 text-muted-foreground truncate">
+                    {mobileFirstName} ·
+                  </span>
+                  <span className="text-body2 font-semibold text-foreground tabular truncate">
+                    {countryCode} {phoneNumber}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp('');
+                    setErrors({});
+                    setInfoMessage(null);
+                  }}
+                  className="inline-flex items-center gap-1 text-caption1 font-semibold text-brand-fg hover:underline shrink-0 cursor-pointer"
+                >
+                  <Edit16Regular />
+                  <span>Edit</span>
+                </button>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="otp" className="text-body1 font-semibold text-foreground">
+                    6-digit verification code
+                  </label>
+                  <button
+                    type="button"
+                    disabled={isSendingOtp || countdown > 0}
+                    onClick={() => handleSendMobileOtp()}
+                    className="text-caption1 font-semibold text-brand-fg hover:underline disabled:text-muted-foreground disabled:no-underline tabular cursor-pointer disabled:cursor-default"
+                  >
+                    {isSendingOtp
+                      ? 'Sending...'
+                      : countdown > 0
+                        ? `Resend in ${countdown}s`
+                        : 'Resend code'}
+                  </button>
+                </div>
+
+                <OtpCodeInput
+                  id="otp"
+                  value={otp}
+                  onChange={setOtp}
+                  disabled={isVerifyingOtp}
+                  hasError={Boolean(errors.otp)}
+                />
+                {errors.otp && (
+                  <p className="text-caption1 text-destructive">{errors.otp}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                disabled={isVerifyingOtp}
+                className="w-full min-h-11"
+              >
+                {isVerifyingOtp ? 'Joining...' : 'Verify & join'}
+              </Button>
+            </>
+          )}
+        </form>
+      ) : (
+        /* 2. EMAIL & PASSWORD REGISTRATION */
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field
-              label="Date of birth (must be 18+)"
+              label="First name"
               required
-              hint={`Born on or before ${maxLegalDate}`}
-              validationMessage={errors.mobileDateOfBirth}
-              validationState={errors.mobileDateOfBirth ? 'error' : 'none'}
+              validationMessage={errors.firstName}
+              validationState={errors.firstName ? 'error' : 'none'}
             >
               <Input
-                id="mobileDateOfBirth"
-                type="date"
+                id="firstName"
+                name="firstName"
+                type="text"
                 required
-                max={maxLegalDate}
-                value={mobileDateOfBirth}
-                onChange={(_, data) => {
-                  setMobileDateOfBirth(data.value);
-                  if (errors.mobileDateOfBirth) {
-                    setErrors((prev) => {
-                      const next = { ...prev };
-                      delete next.mobileDateOfBirth;
-                      return next;
-                    });
-                  }
-                }}
-                contentBefore={<Calendar20Regular className="text-muted-foreground" />}
-                className="tabular"
+                placeholder="Alex"
+                value={formData.firstName}
+                onChange={(_, data) => handleEmailChange('firstName', data.value)}
+                contentBefore={<Person20Regular className="text-muted-foreground" />}
               />
             </Field>
 
             <Field
-              label="Mobile Number"
+              label="Last name"
               required
-              validationMessage={errors.phoneNumber}
-              validationState={errors.phoneNumber ? 'error' : 'none'}
+              validationMessage={errors.lastName}
+              validationState={errors.lastName ? 'error' : 'none'}
             >
-              <div className="flex gap-2">
-                <Select
-                  value={countryCode}
-                  onChange={(_, data) => setCountryCode(data.value)}
-                  aria-label="Country code"
-                  className="w-24 tabular"
-                >
-                  <option value="+91">IN +91</option>
-                  <option value="+1">US +1</option>
-                  <option value="+44">UK +44</option>
-                  <option value="+971">AE +971</option>
-                  <option value="+65">SG +65</option>
-                </Select>
-                <Input
-                  id="phoneNumber"
-                  type="tel"
-                  required
-                  value={phoneNumber}
-                  onChange={(_, data) => setPhoneNumber(data.value.replace(/\D/g, ''))}
-                  placeholder="98765 43210"
-                  maxLength={12}
-                  contentBefore={<Phone20Regular className="text-muted-foreground" />}
-                  className="flex-1 tabular"
-                />
-                <Button
-                  type="button"
-                  appearance="secondary"
-                  onClick={handleSendMobileOtp}
-                  disabled={isSendingOtp || (otpSent && countdown > 0)}
-                  className="shrink-0 tabular"
-                >
-                  {isSendingOtp
-                    ? 'Sending...'
-                    : otpSent && countdown > 0
-                    ? `Resend (${countdown}s)`
-                    : otpSent
-                    ? 'Resend'
-                    : 'Get OTP'}
-                </Button>
-              </div>
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                placeholder="Rivera"
+                value={formData.lastName}
+                onChange={(_, data) => handleEmailChange('lastName', data.value)}
+                contentBefore={<Person20Regular className="text-muted-foreground" />}
+              />
             </Field>
+          </div>
 
-            {otpSent && (
-              <div className="space-y-4">
-                <Field
-                  label="6-Digit Verification Code"
-                  required
-                  validationMessage={errors.otp}
-                  validationState={errors.otp ? 'error' : 'none'}
-                >
-                  <Input
-                    id="otp"
-                    type="text"
-                    required
-                    autoFocus
-                    value={otp}
-                    onChange={(_, data) => setOtp(data.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="123456"
-                    maxLength={6}
-                    contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
-                    className="w-full font-mono tabular"
-                  />
-                </Field>
-
-                <Button
-                  type="submit"
-                  appearance="primary"
-                  size="large"
-                  disabled={isVerifyingOtp}
-                  className="w-full min-h-11"
-                >
-                  {isVerifyingOtp ? 'Joining...' : 'Verify & join'}
-                </Button>
-              </div>
-            )}
-          </form>
-        ) : (
-          /* EMAIL & PASSWORD REGISTRATION */
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <Field
-                label="First name"
-                required
-                validationMessage={errors.firstName}
-                validationState={errors.firstName ? 'error' : 'none'}
-              >
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  type="text"
-                  required
-                  value={formData.firstName}
-                  onChange={(_, data) => handleEmailChange('firstName', data.value)}
-                  contentBefore={<Person20Regular className="text-muted-foreground" />}
-                />
-              </Field>
-
-              <Field
-                label="Last name"
-                required
-                validationMessage={errors.lastName}
-                validationState={errors.lastName ? 'error' : 'none'}
-              >
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  type="text"
-                  required
-                  value={formData.lastName}
-                  onChange={(_, data) => handleEmailChange('lastName', data.value)}
-                  contentBefore={<Person20Regular className="text-muted-foreground" />}
-                />
-              </Field>
-            </div>
-
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field
-              label="Date of birth (must be 18+)"
+              label="Date of birth (18+)"
               required
-              hint={`Born on or before ${maxLegalDate}`}
               validationMessage={errors.dateOfBirth}
               validationState={errors.dateOfBirth ? 'error' : 'none'}
             >
@@ -535,6 +661,7 @@ const Register: React.FC = () => {
                 id="email"
                 name="email"
                 type="email"
+                autoComplete="email"
                 required
                 value={formData.email}
                 onChange={(_, data) => handleEmailChange('email', data.value)}
@@ -542,9 +669,11 @@ const Register: React.FC = () => {
                 contentBefore={<Mail20Regular className="text-muted-foreground" />}
               />
             </Field>
+          </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field
-              label="Password (min 8 chars)"
+              label="Password"
               required
               validationMessage={errors.password}
               validationState={errors.password ? 'error' : 'none'}
@@ -553,13 +682,15 @@ const Register: React.FC = () => {
                 id="password"
                 name="password"
                 type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 required
                 value={formData.password}
                 onChange={(_, data) => handleEmailChange('password', data.value)}
-                placeholder="••••••••"
+                placeholder="8+ characters"
                 contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
                 contentAfter={
                   <Button
+                    type="button"
                     appearance="transparent"
                     size="small"
                     icon={showPassword ? <EyeOff20Regular /> : <Eye20Regular />}
@@ -571,7 +702,7 @@ const Register: React.FC = () => {
             </Field>
 
             <Field
-              label="Confirm Password"
+              label="Confirm password"
               required
               validationMessage={errors.confirmPassword}
               validationState={errors.confirmPassword ? 'error' : 'none'}
@@ -580,56 +711,65 @@ const Register: React.FC = () => {
                 id="confirmPassword"
                 name="confirmPassword"
                 type={showConfirmPassword ? 'text' : 'password'}
+                autoComplete="new-password"
                 required
                 value={formData.confirmPassword}
-                onChange={(_, data) => handleEmailChange('confirmPassword', data.value)}
-                placeholder="••••••••"
+                onChange={(_, data) =>
+                  handleEmailChange('confirmPassword', data.value)
+                }
+                placeholder="Repeat password"
                 contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
                 contentAfter={
                   <Button
+                    type="button"
                     appearance="transparent"
                     size="small"
                     icon={showConfirmPassword ? <EyeOff20Regular /> : <Eye20Regular />}
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    aria-label={
+                      showConfirmPassword ? 'Hide password' : 'Show password'
+                    }
                   />
                 }
               />
             </Field>
+          </div>
 
-            <Button
-              type="submit"
-              appearance="primary"
-              size="large"
-              disabled={isEmailLoading}
-              className="w-full min-h-11 mt-1"
+          {/* Live Password & Age Checklist */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2 rounded-xl bg-muted border border-border text-caption2">
+            <span
+              className={`inline-flex items-center gap-1 font-semibold ${
+                hasMinLength ? 'text-success' : 'text-muted-foreground'
+              }`}
             >
-              {isEmailLoading ? 'Creating...' : 'Create account'}
-            </Button>
-          </form>
-        )}
+              {hasMinLength ? <CheckmarkCircle16Regular /> : <Circle16Regular />}
+              <span>8+ characters</span>
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 font-semibold ${
+                passwordsMatch ? 'text-success' : 'text-muted-foreground'
+              }`}
+            >
+              {passwordsMatch ? <CheckmarkCircle16Regular /> : <Circle16Regular />}
+              <span>Passwords match</span>
+            </span>
+            <span className="text-muted-foreground ml-auto tabular">
+              18+ (on/before {maxLegalDate})
+            </span>
+          </div>
 
-        <p className="text-caption1 text-muted-foreground text-center leading-relaxed pt-1">
-          By signing up, you agree to our{' '}
-          <Link to="/terms" className="text-brand-fg underline font-semibold">
-            Terms of Service
-          </Link>
-          ,{' '}
-          <Link to="/privacy" className="text-brand-fg underline font-semibold">
-            Privacy Policy
-          </Link>
-          ,{' '}
-          <Link to="/community-guidelines" className="text-brand-fg underline font-semibold">
-            Community Guidelines
-          </Link>
-          , and{' '}
-          <Link to="/cancellation-policy" className="text-brand-fg underline font-semibold">
-            Escrow Cancellation Policy
-          </Link>
-          .
-        </p>
-      </Card>
-    </div>
+          <Button
+            type="submit"
+            appearance="primary"
+            size="large"
+            disabled={isEmailLoading}
+            className="w-full min-h-11 mt-1"
+          >
+            {isEmailLoading ? 'Creating...' : 'Create account'}
+          </Button>
+        </form>
+      )}
+    </AuthShell>
   );
 };
 

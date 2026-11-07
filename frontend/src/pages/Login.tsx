@@ -3,23 +3,22 @@ import { useDispatch } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Button,
-  Card,
   Field,
   Input,
   MessageBar,
   MessageBarBody,
   Select,
-  Tab,
-  TabList,
 } from '@fluentui/react-components';
 import {
-  ShieldCheckmark16Regular,
   LockClosed20Regular,
   Mail20Regular,
   Phone20Regular,
   Eye20Regular,
   EyeOff20Regular,
   Person20Regular,
+  CheckmarkCircle16Regular,
+  Edit16Regular,
+  ArrowRight16Regular,
 } from '@fluentui/react-icons';
 import { loginSuccess } from '../store/slices/authSlice';
 import {
@@ -28,7 +27,8 @@ import {
   useVerifyMobileOtpMutation,
 } from '../store/authApi';
 import { useGetSeekerProfileQuery } from '../store/api';
-import { BrandLogo } from '../components/ui/BrandLogo';
+import { AuthShell } from '../components/auth/AuthShell';
+import { OtpCodeInput } from '../components/auth/OtpCodeInput';
 import { resetAllApiCaches } from '../utils/sessionManager';
 
 const Login: React.FC = () => {
@@ -56,7 +56,8 @@ const Login: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const rawRedirect = searchParams.get('redirect');
-  const redirectTarget = rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
+  const redirectTarget =
+    rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
 
   const [login, { isLoading: isEmailLoading }] = useLoginMutation();
   const [sendMobileOtp, { isLoading: isSendingOtp }] = useSendMobileOtpMutation();
@@ -66,7 +67,7 @@ const Login: React.FC = () => {
   // Check for expired session notice
   useEffect(() => {
     if (searchParams.get('session_expired') === 'true') {
-      setInfoMessage('Your session has expired. Please log in again to continue.');
+      setInfoMessage('Your session has expired. Please sign in again to continue.');
     }
   }, [searchParams]);
 
@@ -79,7 +80,8 @@ const Login: React.FC = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleSendOtp = async (overridePhone?: string) => {
+  const handleSendOtp = async (e?: React.FormEvent, overridePhone?: string) => {
+    if (e) e.preventDefault();
     setError(null);
     setInfoMessage(null);
     const targetPhone = overridePhone || phoneNumber.trim();
@@ -90,7 +92,9 @@ const Login: React.FC = () => {
     }
 
     try {
-      const fullPhone = targetPhone.startsWith('+') ? targetPhone : `${countryCode}${targetPhone}`;
+      const fullPhone = targetPhone.startsWith('+')
+        ? targetPhone
+        : `${countryCode}${targetPhone}`;
       const res = await sendMobileOtp({ phone: fullPhone }).unwrap();
       setOtpSent(true);
       setCountdown(30);
@@ -104,11 +108,23 @@ const Login: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber.trim()}`;
+    if (!otpSent) {
+      await handleSendOtp();
+      return;
+    }
+
+    const fullPhone = phoneNumber.startsWith('+')
+      ? phoneNumber
+      : `${countryCode}${phoneNumber.trim()}`;
     const cleanOtp = otp.trim();
 
-    if (!cleanOtp) {
-      setError('Please enter the 6-digit verification code.');
+    if (cleanOtp.length < 6) {
+      setError('Please enter all 6 digits of your verification code.');
+      return;
+    }
+
+    if (isNewUserStep && !firstName.trim()) {
+      setError('Please enter your first name to finish setting up your account.');
       return;
     }
 
@@ -122,7 +138,7 @@ const Login: React.FC = () => {
 
       if (res.isNewUser && !isNewUserStep) {
         setIsNewUserStep(true);
-        setInfoMessage('Mobile verified! Please tell us your name to finish setup.');
+        setInfoMessage('Mobile verified! Tell us your name to complete your profile.');
         return;
       }
 
@@ -162,7 +178,9 @@ const Login: React.FC = () => {
       resetAllApiCaches(dispatch);
 
       const user = result.user;
-      const isAdmin = user?.roles?.includes('Admin') || email.trim().toLowerCase() === 'admin@cue.local';
+      const isAdmin =
+        user?.roles?.includes('Admin') ||
+        email.trim().toLowerCase() === 'admin@cue.local';
 
       if (isAdmin) {
         dispatch(
@@ -180,7 +198,9 @@ const Login: React.FC = () => {
             },
           })
         );
-        navigate(rawRedirect && rawRedirect.startsWith('/admin') ? rawRedirect : '/admin', { replace: true });
+        navigate(rawRedirect && rawRedirect.startsWith('/admin') ? rawRedirect : '/admin', {
+          replace: true,
+        });
         return;
       }
 
@@ -231,241 +251,306 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12 bg-background">
-      <Card className="w-full max-w-[440px] bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-5">
-        <div className="flex items-center justify-between">
-          <Link to="/">
-            <BrandLogo size="sm" subtitle="Curated outings" />
+    <AuthShell
+      title={isNewUserStep ? 'Complete your profile' : 'Welcome back'}
+      subtitle={
+        <>
+          New to Cue?{' '}
+          <Link
+            to={
+              rawRedirect
+                ? `/register?redirect=${encodeURIComponent(rawRedirect)}`
+                : '/register'
+            }
+            className="font-semibold text-brand-fg hover:underline"
+          >
+            Create an account
           </Link>
-          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-trust-light border border-trust-border text-caption2 font-semibold text-trust">
-            <ShieldCheckmark16Regular className="shrink-0" />
-            <span>Escrow Protected</span>
-          </div>
-        </div>
-
-        <div>
-          <h1 className="text-title2 font-semibold text-foreground">
-            Welcome back
-          </h1>
-          <p className="text-body1 text-muted-foreground mt-1">
-            New to Cue?{' '}
-            <Link
-              to={rawRedirect ? `/register?redirect=${encodeURIComponent(rawRedirect)}` : '/register'}
-              className="font-semibold text-brand-fg hover:underline"
-            >
-              Create an account
-            </Link>
-          </p>
-        </div>
-
-        {/* Auth Method Switcher */}
-        <TabList
-          selectedValue={authMethod}
-          onTabSelect={(_, data) => {
-            setAuthMethod(data.value as 'mobile' | 'email');
+        </>
+      }
+      badgeText="Escrow Protected"
+    >
+      {/* Segmented Auth Method Switcher */}
+      <div
+        role="tablist"
+        aria-label="Sign in method"
+        className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted border border-border"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={authMethod === 'mobile'}
+          onClick={() => {
+            setAuthMethod('mobile');
             setError(null);
           }}
-          className="w-full"
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-caption1 font-semibold transition-colors cursor-pointer ${
+            authMethod === 'mobile'
+              ? 'bg-card text-brand-fg border border-border shadow-xs'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
         >
-          <Tab value="mobile" icon={<Phone20Regular />}>
-            Mobile & OTP
-          </Tab>
-          <Tab value="email" icon={<Mail20Regular />}>
-            Email & Password
-          </Tab>
-        </TabList>
+          <Phone20Regular className="shrink-0" />
+          <span>Mobile & OTP</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={authMethod === 'email'}
+          onClick={() => {
+            setAuthMethod('email');
+            setError(null);
+          }}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-caption1 font-semibold transition-colors cursor-pointer ${
+            authMethod === 'email'
+              ? 'bg-card text-brand-fg border border-border shadow-xs'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
+        >
+          <Mail20Regular className="shrink-0" />
+          <span>Email & Password</span>
+        </button>
+      </div>
 
-        {/* Status alerts */}
-        {error && (
-          <MessageBar intent="error">
-            <MessageBarBody>{error}</MessageBarBody>
-          </MessageBar>
-        )}
+      {/* Status Alerts */}
+      {error && (
+        <MessageBar intent="error">
+          <MessageBarBody>{error}</MessageBarBody>
+        </MessageBar>
+      )}
 
-        {infoMessage && (
-          <MessageBar intent="info">
-            <MessageBarBody>{infoMessage}</MessageBarBody>
-          </MessageBar>
-        )}
+      {infoMessage && (
+        <MessageBar intent="info">
+          <MessageBarBody>{infoMessage}</MessageBarBody>
+        </MessageBar>
+      )}
 
-        {/* MOBILE & OTP FORM */}
-        {authMethod === 'mobile' ? (
-          <form onSubmit={handleVerifyOtp} className="space-y-4">
-            <Field label="Mobile Number">
-              <div className="flex gap-2">
-                <Select
-                  value={countryCode}
-                  onChange={(_, data) => setCountryCode(data.value)}
-                  aria-label="Country code"
-                  className="w-24 tabular"
-                >
-                  <option value="+91">IN +91</option>
-                  <option value="+1">US +1</option>
-                  <option value="+44">UK +44</option>
-                  <option value="+971">AE +971</option>
-                  <option value="+65">SG +65</option>
-                </Select>
-                <Input
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  type="tel"
-                  required
-                  value={phoneNumber}
-                  onChange={(_, data) => setPhoneNumber(data.value.replace(/\D/g, ''))}
-                  placeholder="98765 43210"
-                  maxLength={12}
-                  contentBefore={<Phone20Regular className="text-muted-foreground" />}
-                  className="flex-1 tabular"
-                />
-                <Button
-                  type="button"
-                  appearance="secondary"
-                  onClick={() => handleSendOtp()}
-                  disabled={isSendingOtp || (otpSent && countdown > 0)}
-                  className="shrink-0 tabular"
-                >
-                  {isSendingOtp
-                    ? 'Sending...'
-                    : otpSent && countdown > 0
-                    ? `Resend (${countdown}s)`
-                    : otpSent
-                    ? 'Resend'
-                    : 'Get OTP'}
-                </Button>
-              </div>
-            </Field>
-
-            {otpSent && (
-              <div className="space-y-4">
-                <Field label="6-Digit Verification Code" required>
+      {/* 1. MOBILE & OTP FLOW */}
+      {authMethod === 'mobile' ? (
+        <form onSubmit={otpSent ? handleVerifyOtp : (e) => handleSendOtp(e)} className="space-y-4">
+          {!otpSent ? (
+            /* Step 1: Enter Mobile Number */
+            <>
+              <Field
+                label="Mobile number"
+                required
+                hint="We'll send a 6-digit SMS code. First-time numbers are registered automatically."
+              >
+                <div className="flex gap-2">
+                  <Select
+                    value={countryCode}
+                    onChange={(_, data) => setCountryCode(data.value)}
+                    aria-label="Country code"
+                    className="w-28 shrink-0 tabular"
+                  >
+                    <option value="+91">IN +91</option>
+                    <option value="+1">US +1</option>
+                    <option value="+44">UK +44</option>
+                    <option value="+971">AE +971</option>
+                    <option value="+65">SG +65</option>
+                  </Select>
                   <Input
-                    id="otp"
-                    name="otp"
-                    type="text"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
                     required
                     autoFocus
-                    value={otp}
-                    onChange={(_, data) => setOtp(data.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="123456"
-                    maxLength={6}
-                    contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
-                    className="w-full font-mono tabular"
+                    value={phoneNumber}
+                    onChange={(_, data) => setPhoneNumber(data.value.replace(/\D/g, ''))}
+                    placeholder="98765 43210"
+                    maxLength={12}
+                    contentBefore={<Phone20Regular className="text-muted-foreground" />}
+                    className="flex-1 tabular"
                   />
-                </Field>
+                </div>
+              </Field>
 
-                {/* Prompt for First Name & Last Name if First-Time Mobile User */}
-                {isNewUserStep && (
-                  <div className="p-3.5 rounded-2xl bg-muted border border-border space-y-3">
-                    <span className="text-caption1 font-semibold text-foreground block">
-                      Complete your mobile profile:
-                    </span>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <Field label="First Name" required>
-                        <Input
-                          id="firstName"
-                          type="text"
-                          required
-                          value={firstName}
-                          onChange={(_, data) => setFirstName(data.value)}
-                          placeholder="First name"
-                          contentBefore={<Person20Regular className="text-muted-foreground" />}
-                        />
-                      </Field>
-                      <Field label="Last Name" required>
-                        <Input
-                          id="lastName"
-                          type="text"
-                          required
-                          value={lastName}
-                          onChange={(_, data) => setLastName(data.value)}
-                          placeholder="Last name"
-                          contentBefore={<Person20Regular className="text-muted-foreground" />}
-                        />
-                      </Field>
-                    </div>
-                  </div>
-                )}
-
-                <Button
-                  type="submit"
-                  appearance="primary"
-                  size="large"
-                  disabled={isVerifyingOtp}
-                  className="w-full min-h-11"
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                disabled={isSendingOtp}
+                icon={<ArrowRight16Regular />}
+                iconPosition="after"
+                className="w-full min-h-11"
+              >
+                {isSendingOtp ? 'Sending code...' : 'Get OTP'}
+              </Button>
+            </>
+          ) : (
+            /* Step 2 & 3: Verify OTP or Complete New User Name */
+            <>
+              {/* Target Mobile Summary Pill */}
+              <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-muted border border-border">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CheckmarkCircle16Regular className="text-success shrink-0" />
+                  <span className="text-caption1 text-muted-foreground">Code sent to</span>
+                  <span className="text-body2 font-semibold text-foreground tabular truncate">
+                    {countryCode} {phoneNumber}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setIsNewUserStep(false);
+                    setOtp('');
+                    setError(null);
+                    setInfoMessage(null);
+                  }}
+                  className="inline-flex items-center gap-1 text-caption1 font-semibold text-brand-fg hover:underline shrink-0 cursor-pointer"
                 >
-                  {isVerifyingOtp ? 'Verifying...' : 'Verify'}
-                </Button>
+                  <Edit16Regular />
+                  <span>Change</span>
+                </button>
               </div>
-            )}
-          </form>
-        ) : (
-          /* EMAIL & PASSWORD FORM */
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
-            <Field label="Email Address" required>
+
+              {!isNewUserStep ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="otp" className="text-body1 font-semibold text-foreground">
+                      6-digit verification code
+                    </label>
+                    <button
+                      type="button"
+                      disabled={isSendingOtp || countdown > 0}
+                      onClick={() => handleSendOtp()}
+                      className="text-caption1 font-semibold text-brand-fg hover:underline disabled:text-muted-foreground disabled:no-underline tabular cursor-pointer disabled:cursor-default"
+                    >
+                      {isSendingOtp
+                        ? 'Sending...'
+                        : countdown > 0
+                          ? `Resend in ${countdown}s`
+                          : 'Resend code'}
+                    </button>
+                  </div>
+                  <OtpCodeInput
+                    id="otp"
+                    value={otp}
+                    onChange={setOtp}
+                    disabled={isVerifyingOtp}
+                    hasError={Boolean(error)}
+                  />
+                </div>
+              ) : (
+                /* Step 3: First-Time Mobile User Name Prompt */
+                <div className="p-4 rounded-xl bg-muted border border-border space-y-3">
+                  <p className="text-caption1 font-semibold text-foreground">
+                    Almost there — tell us your name to finish creating your profile:
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Field label="First name" required>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        required
+                        autoFocus
+                        value={firstName}
+                        onChange={(_, data) => setFirstName(data.value)}
+                        placeholder="Alex"
+                        contentBefore={<Person20Regular className="text-muted-foreground" />}
+                      />
+                    </Field>
+                    <Field label="Last name">
+                      <Input
+                        id="lastName"
+                        type="text"
+                        value={lastName}
+                        onChange={(_, data) => setLastName(data.value)}
+                        placeholder="Rivera"
+                        contentBefore={<Person20Regular className="text-muted-foreground" />}
+                      />
+                    </Field>
+                  </div>
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                disabled={isVerifyingOtp}
+                className="w-full min-h-11"
+              >
+                {isVerifyingOtp
+                  ? 'Verifying...'
+                  : isNewUserStep
+                    ? 'Complete sign in'
+                    : 'Verify & sign in'}
+              </Button>
+            </>
+          )}
+        </form>
+      ) : (
+        /* 2. EMAIL & PASSWORD FLOW */
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <Field label="Email address" required>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(_, data) => setEmail(data.value)}
+              placeholder="you@example.com"
+              contentBefore={<Mail20Regular className="text-muted-foreground" />}
+              className="w-full"
+            />
+          </Field>
+
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label htmlFor="password" className="text-body1 font-semibold text-foreground">
+                Password
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-caption1 font-semibold text-brand-fg hover:underline"
+              >
+                Forgot password?
+              </Link>
+            </div>
+            <Field>
               <Input
-                id="email"
-                name="email"
-                type="email"
-                autoComplete="email"
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
                 required
-                value={email}
-                onChange={(_, data) => setEmail(data.value)}
-                placeholder="you@example.com"
-                contentBefore={<Mail20Regular className="text-muted-foreground" />}
+                value={password}
+                onChange={(_, data) => setPassword(data.value)}
+                placeholder="Enter your password"
+                contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  <Button
+                    type="button"
+                    appearance="transparent"
+                    size="small"
+                    icon={showPassword ? <EyeOff20Regular /> : <Eye20Regular />}
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  />
+                }
                 className="w-full"
               />
             </Field>
+          </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-1">
-                <label htmlFor="password" className="text-body1 text-foreground">
-                  Password
-                </label>
-                <Link
-                  to="/forgot-password"
-                  className="text-caption1 font-semibold text-brand-fg hover:underline"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-              <Field>
-                <Input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  required
-                  value={password}
-                  onChange={(_, data) => setPassword(data.value)}
-                  placeholder="••••••••"
-                  contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
-                  contentAfter={
-                    <Button
-                      appearance="transparent"
-                      size="small"
-                      icon={showPassword ? <EyeOff20Regular /> : <Eye20Regular />}
-                      onClick={() => setShowPassword(!showPassword)}
-                      aria-label={showPassword ? 'Hide password' : 'Show password'}
-                    />
-                  }
-                  className="w-full"
-                />
-              </Field>
-            </div>
-
-            <Button
-              type="submit"
-              appearance="primary"
-              size="large"
-              disabled={isEmailLoading}
-              className="w-full min-h-11"
-            >
-              {isEmailLoading ? 'Signing in...' : 'Sign in'}
-            </Button>
-          </form>
-        )}
-      </Card>
-    </div>
+          <Button
+            type="submit"
+            appearance="primary"
+            size="large"
+            disabled={isEmailLoading}
+            className="w-full min-h-11"
+          >
+            {isEmailLoading ? 'Signing in...' : 'Sign in'}
+          </Button>
+        </form>
+      )}
+    </AuthShell>
   );
 };
 

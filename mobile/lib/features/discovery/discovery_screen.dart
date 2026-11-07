@@ -148,7 +148,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
             child: SizedBox(
               height: 44,
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: FluentSpacing.l),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: FluentSpacing.l),
                 scrollDirection: Axis.horizontal,
                 itemCount: _categories.length,
                 separatorBuilder: (context, index) =>
@@ -162,7 +163,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                     selectedColor: AppColors.primaryLight,
                     backgroundColor: AppColors.surface,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(FluentRadius.circular),
+                      borderRadius:
+                          BorderRadius.circular(FluentRadius.circular),
                     ),
                     labelStyle: (isSelected
                             ? FluentType.caption1Strong
@@ -173,13 +175,13 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                           : AppColors.textPrimary,
                     ),
                     side: BorderSide(
-                      color: isSelected
-                          ? AppColors.brandStroke
-                          : AppColors.border,
+                      color:
+                          isSelected ? AppColors.brandStroke : AppColors.border,
                     ),
                     onSelected: (selected) {
                       ref.read(discoveryFilterProvider.notifier).update(
-                            (s) => s.copyWith(specialty: selected ? cat : 'All'),
+                            (s) =>
+                                s.copyWith(specialty: selected ? cat : 'All'),
                           );
                     },
                   );
@@ -203,7 +205,8 @@ class _DiscoveryScreenState extends ConsumerState<DiscoveryScreen> {
                   providersAsync.when(
                     data: (list) => Text(
                       'Available companions (${list.length})',
-                      style: FluentType.numeric(FluentType.body1Strong).copyWith(
+                      style:
+                          FluentType.numeric(FluentType.body1Strong).copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
@@ -563,7 +566,8 @@ class ProviderCard extends StatelessWidget {
                         size: 15,
                       ),
                       const SizedBox(width: FluentSpacing.mNudge),
-                      TrustScoreBadge(score: provider.trustScore, compact: true),
+                      TrustScoreBadge(
+                          score: provider.trustScore, compact: true),
                     ],
                   ),
                   Row(

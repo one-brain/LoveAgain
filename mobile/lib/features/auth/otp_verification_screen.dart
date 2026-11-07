@@ -148,7 +148,6 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
 
   void _onDigitChanged(int index, String value) {
     if (value.length > 1) {
-      // User pasted multiple characters (e.g., full OTP from SMS or clipboard)
       final digits = value.replaceAll(RegExp(r'\D'), '');
       for (int i = 0; i < _otpLength; i++) {
         if (i < digits.length) {
@@ -179,6 +178,7 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
     final auth = ref.watch(authControllerProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text('Verify Identity'),
         leading: IconButton(
@@ -202,190 +202,233 @@ class _OtpVerificationScreenState extends ConsumerState<OtpVerificationScreen> {
             vertical: FluentSpacing.xl,
           ),
           children: [
-            // Shield & Target Header
-            Center(
-              child: Container(
-                padding: const EdgeInsets.all(FluentSpacing.l),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Icon(
-                  _isPhone
-                      ? Icons.phone_android_outlined
-                      : Icons.mark_email_read_outlined,
-                  size: 36,
-                  color: AppColors.brandForeground,
-                ),
+            Container(
+              padding: const EdgeInsets.all(FluentSpacing.xl),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+                border: Border.all(color: AppColors.border),
+                boxShadow: FluentShadows.shadow4,
               ),
-            ),
-            const SizedBox(height: FluentSpacing.xl),
-            Text(
-              'Enter 6-digit code',
-              textAlign: TextAlign.center,
-              style: FluentType.title2.copyWith(color: AppColors.textPrimary),
-            ),
-            const SizedBox(height: FluentSpacing.s),
-            Text.rich(
-              TextSpan(
-                style: FluentType.body2.copyWith(color: AppColors.textSecondary),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const TextSpan(text: 'We sent a verification passcode to\n'),
-                  TextSpan(
-                    text: widget.email,
-                    style: FluentType.numeric(FluentType.body2Strong).copyWith(
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: FluentSpacing.xxxl),
-
-            // 6 Segmented Digit Boxes
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: List.generate(_otpLength, (index) {
-                return SizedBox(
-                  width: 48,
-                  height: 56,
-                  child: KeyboardListener(
-                    focusNode: FocusNode(),
-                    onKeyEvent: (event) {
-                      if (event is KeyDownEvent &&
-                          event.logicalKey == LogicalKeyboardKey.backspace) {
-                        if (_controllers[index].text.isEmpty && index > 0) {
-                          _controllers[index - 1].clear();
-                          _focusNodes[index - 1].requestFocus();
-                        }
-                      }
-                    },
-                    child: TextField(
-                      controller: _controllers[index],
-                      focusNode: _focusNodes[index],
-                      keyboardType: TextInputType.number,
-                      textAlign: TextAlign.center,
-                      autofocus: index == 0,
-                      maxLength: 1,
-                      style: FluentType.numeric(FluentType.title2).copyWith(
-                        color: AppColors.brandForeground,
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(FluentSpacing.m),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryLight,
+                          borderRadius:
+                              BorderRadius.circular(FluentRadius.large),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Icon(
+                          _isPhone
+                              ? Icons.phone_android_outlined
+                              : Icons.mark_email_read_outlined,
+                          size: 24,
+                          color: AppColors.brandForeground,
+                        ),
                       ),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
-                      decoration: InputDecoration(
-                        counterText: '',
-                        contentPadding: EdgeInsets.zero,
-                        filled: true,
-                        fillColor: AppColors.surface,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(FluentRadius.large),
-                          borderSide: const BorderSide(color: AppColors.borderStrong),
+                      const SizedBox(width: FluentSpacing.m),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Enter 6-digit code',
+                              style: FluentType.title3.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: FluentSpacing.xxs),
+                            Text.rich(
+                              TextSpan(
+                                style: FluentType.caption1.copyWith(
+                                  color: AppColors.textSecondary,
+                                ),
+                                children: [
+                                  const TextSpan(
+                                    text: 'Sent to ',
+                                  ),
+                                  TextSpan(
+                                    text: widget.email,
+                                    style: FluentType.numeric(
+                                      FluentType.caption1Strong,
+                                    ).copyWith(color: AppColors.textPrimary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(FluentRadius.large),
-                          borderSide: const BorderSide(color: AppColors.borderStrong),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: FluentSpacing.xxl),
+
+                  // 6 Segmented Digit Boxes
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: List.generate(_otpLength, (index) {
+                      return SizedBox(
+                        width: 46,
+                        height: 54,
+                        child: KeyboardListener(
+                          focusNode: FocusNode(),
+                          onKeyEvent: (event) {
+                            if (event is KeyDownEvent &&
+                                event.logicalKey ==
+                                    LogicalKeyboardKey.backspace) {
+                              if (_controllers[index].text.isEmpty &&
+                                  index > 0) {
+                                _controllers[index - 1].clear();
+                                _focusNodes[index - 1].requestFocus();
+                              }
+                            }
+                          },
+                          child: TextField(
+                            controller: _controllers[index],
+                            focusNode: _focusNodes[index],
+                            keyboardType: TextInputType.number,
+                            textAlign: TextAlign.center,
+                            autofocus: index == 0,
+                            maxLength: 1,
+                            style: FluentType.numeric(FluentType.title2)
+                                .copyWith(color: AppColors.brandForeground),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
+                            decoration: InputDecoration(
+                              counterText: '',
+                              contentPadding: EdgeInsets.zero,
+                              filled: true,
+                              fillColor: AppColors.surfaceMuted,
+                              border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(FluentRadius.large),
+                                borderSide: const BorderSide(
+                                  color: AppColors.borderStrong,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(FluentRadius.large),
+                                borderSide: const BorderSide(
+                                  color: AppColors.borderStrong,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(FluentRadius.large),
+                                borderSide: const BorderSide(
+                                  color: AppColors.brandStroke,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                            onChanged: (val) => _onDigitChanged(index, val),
+                          ),
                         ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(FluentRadius.large),
-                          borderSide: const BorderSide(
-                            color: AppColors.brandStroke,
-                            width: 2,
+                      );
+                    }),
+                  ),
+                  const SizedBox(height: FluentSpacing.xl),
+
+                  // Error notice
+                  if (auth.error != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: FluentSpacing.m,
+                        vertical: FluentSpacing.s,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppColors.dangerBackground,
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                        border: Border.all(
+                          color: AppColors.danger.withValues(alpha: 0.3),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            size: 16,
+                            color: AppColors.dangerForeground,
+                          ),
+                          const SizedBox(width: FluentSpacing.s),
+                          Expanded(
+                            child: Text(
+                              auth.error!,
+                              style: FluentType.caption1Strong.copyWith(
+                                color: AppColors.dangerForeground,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: FluentSpacing.l),
+                  ],
+
+                  // Submit Button
+                  FilledButton(
+                    onPressed: auth.isLoading ? null : _handleVerify,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      backgroundColor: AppColors.primary,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
+                      ),
+                    ),
+                    child: auth.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : Text(
+                            'Verify & Continue',
+                            style: FluentType.body2Strong.copyWith(
+                              color: Colors.white,
+                            ),
+                          ),
+                  ),
+                  const SizedBox(height: FluentSpacing.m),
+
+                  // Resend Countdown Row
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Didn't receive the code? ",
+                        style: FluentType.caption1.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed:
+                            _resendCountdown == 0 ? _handleResend : null,
+                        child: Text(
+                          _resendCountdown > 0
+                              ? 'Resend in ${_resendCountdown}s'
+                              : 'Resend code',
+                          style: FluentType.numeric(FluentType.caption1Strong)
+                              .copyWith(
+                            color: _resendCountdown > 0
+                                ? AppColors.textMuted
+                                : AppColors.brandForeground,
                           ),
                         ),
                       ),
-                      onChanged: (val) => _onDigitChanged(index, val),
-                    ),
+                    ],
                   ),
-                );
-              }),
-            ),
-            const SizedBox(height: FluentSpacing.l),
-
-            // Error notice
-            if (auth.error != null) ...[
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: FluentSpacing.m,
-                  vertical: FluentSpacing.s,
-                ),
-                decoration: BoxDecoration(
-                  color: AppColors.dangerBackground,
-                  borderRadius: BorderRadius.circular(FluentRadius.large),
-                  border: Border.all(color: AppColors.danger.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.error_outline,
-                      size: 16,
-                      color: AppColors.dangerForeground,
-                    ),
-                    const SizedBox(width: FluentSpacing.s),
-                    Expanded(
-                      child: Text(
-                        auth.error!,
-                        style: FluentType.caption1Strong.copyWith(
-                          color: AppColors.dangerForeground,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                ],
               ),
-              const SizedBox(height: FluentSpacing.l),
-            ],
-
-            // Submit Button
-            FilledButton(
-              onPressed: auth.isLoading ? null : _handleVerify,
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(48),
-                backgroundColor: AppColors.primary,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(FluentRadius.large),
-                ),
-              ),
-              child: auth.isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : Text(
-                      'Verify & Continue',
-                      style: FluentType.body2Strong.copyWith(color: Colors.white),
-                    ),
-            ),
-            const SizedBox(height: FluentSpacing.xxl),
-
-            // Resend Countdown Row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Didn't receive the code? ",
-                  style: FluentType.caption1.copyWith(color: AppColors.textSecondary),
-                ),
-                TextButton(
-                  onPressed: _resendCountdown == 0 ? _handleResend : null,
-                  child: Text(
-                    _resendCountdown > 0
-                        ? 'Resend in ${_resendCountdown}s'
-                        : 'Resend code',
-                    style: FluentType.numeric(FluentType.caption1Strong).copyWith(
-                      color: _resendCountdown > 0
-                          ? AppColors.textMuted
-                          : AppColors.brandForeground,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ],
         ),
