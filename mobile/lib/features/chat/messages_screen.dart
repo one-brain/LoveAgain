@@ -42,14 +42,21 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
         children: [
           // Search Field
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+            padding: const EdgeInsets.fromLTRB(
+              FluentSpacing.l,
+              FluentSpacing.m,
+              FluentSpacing.l,
+              FluentSpacing.m,
+            ),
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val.trim()),
               decoration: InputDecoration(
                 hintText: 'Search conversations...',
-                prefixIcon:
-                    const Icon(Icons.search, color: AppColors.textSecondary),
+                prefixIcon: const Icon(
+                  Icons.search,
+                  color: AppColors.textSecondary,
+                ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, size: 18),
@@ -69,61 +76,65 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
             child: visibleBookings.isEmpty
                 ? Center(
                     child: Padding(
-                      padding: const EdgeInsets.all(32),
+                      padding: const EdgeInsets.all(FluentSpacing.xxxl),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.chat_bubble_outline_rounded,
-                              size: 56, color: AppColors.textMuted),
-                          const SizedBox(height: 14),
-                          const Text(
+                          const Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            size: 48,
+                            color: AppColors.textMuted,
+                          ),
+                          const SizedBox(height: FluentSpacing.m),
+                          Text(
                             'No conversations yet',
-                            style: TextStyle(
-                              fontSize: 17,
-                              fontWeight: FontWeight.w700,
+                            style: FluentType.body1Strong.copyWith(
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
+                          const SizedBox(height: FluentSpacing.sNudge),
+                          Text(
                             'Book a companion to begin coordinating your moments and exchanging messages.',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 13, color: AppColors.textSecondary),
+                            style: FluentType.caption1.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: FluentSpacing.xl),
                           FilledButton(
                             onPressed: () => context.go('/'),
-                            child: const Text('Find Curated Hosts'),
+                            child: const Text('Find curated hosts'),
                           ),
                         ],
                       ),
                     ),
                   )
                 : ListView.separated(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: FluentSpacing.s,
+                    ),
                     itemCount: visibleBookings.length,
                     separatorBuilder: (context, index) => const Divider(
                       height: 1,
-                      indent: 76,
+                      indent: 72,
                       color: AppColors.border,
                     ),
                     itemBuilder: (context, index) {
                       final b = visibleBookings[index];
                       return ListTile(
                         contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 20, vertical: 8),
+                          horizontal: FluentSpacing.l,
+                          vertical: FluentSpacing.s,
+                        ),
                         leading: CircleAvatar(
-                          radius: 24,
+                          radius: 22,
                           backgroundColor: AppColors.primaryLight,
                           child: Text(
                             b.providerInitials.isNotEmpty
                                 ? b.providerInitials
                                 : 'CP',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.primaryDark,
+                            style: FluentType.body2Strong.copyWith(
+                              color: AppColors.brandForeground,
                             ),
                           ),
                         ),
@@ -132,23 +143,19 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                           children: [
                             Text(
                               b.providerName,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                              style: FluentType.body2Strong.copyWith(
                                 color: AppColors.textPrimary,
                               ),
                             ),
                             Text(
                               DateFormat('MMM d').format(b.startTime),
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: AppColors.textMuted,
-                              ),
+                              style: FluentType.numeric(FluentType.caption2)
+                                  .copyWith(color: AppColors.textMuted),
                             ),
                           ],
                         ),
                         subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.only(top: FluentSpacing.xs),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
@@ -158,13 +165,11 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                                       'Chat active for booking #${b.orderId.substring(b.orderId.length > 6 ? b.orderId.length - 5 : 0)}',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    fontSize: 13,
-                                    color: AppColors.textSecondary,
-                                  ),
+                                  style: FluentType.numeric(FluentType.caption1)
+                                      .copyWith(color: AppColors.textSecondary),
                                 ),
                               ),
-                              const SizedBox(width: 8),
+                              const SizedBox(width: FluentSpacing.s),
                               BookingStatusChip(status: b.status),
                             ],
                           ),

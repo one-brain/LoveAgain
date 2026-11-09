@@ -18,31 +18,33 @@ class TrustScoreBadge extends StatelessWidget {
   }
 
   Color get _bg {
-    if (score >= 90) return const Color(0xFFECFDF5);
-    if (score >= 75) return const Color(0xFFFFFBEB);
-    return const Color(0xFFFEF2F2);
+    if (score >= 90) return AppColors.successBackground;
+    if (score >= 75) return AppColors.warningBackground;
+    return AppColors.dangerBackground;
   }
 
   @override
   Widget build(BuildContext context) {
     if (compact) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        padding: const EdgeInsets.symmetric(
+          horizontal: FluentSpacing.sNudge,
+          vertical: FluentSpacing.xxs,
+        ),
         decoration: BoxDecoration(
           color: _bg,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: _color.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(FluentRadius.medium),
+          border: Border.all(color: _color.withValues(alpha: 0.25)),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.shield_outlined, size: 12, color: _color),
-            const SizedBox(width: 3),
+            Icon(Icons.verified_user_outlined, size: 12, color: _color),
+            const SizedBox(width: FluentSpacing.xs),
             Text(
               '$score',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+              style: FluentType.numeric(FluentType.caption2).copyWith(
+                fontWeight: FontWeight.w600,
                 color: _color,
               ),
             ),
@@ -52,22 +54,24 @@ class TrustScoreBadge extends StatelessWidget {
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: FluentSpacing.s,
+        vertical: FluentSpacing.xs,
+      ),
       decoration: BoxDecoration(
         color: _bg,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(FluentRadius.medium),
         border: Border.all(color: _color.withValues(alpha: 0.25)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.verified_user_rounded, size: 15, color: _color),
-          const SizedBox(width: 5),
+          Icon(Icons.verified_user_outlined, size: 14, color: _color),
+          const SizedBox(width: FluentSpacing.xs),
           Text(
-            'Trust Score $score%',
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+            'Trust score $score%',
+            style: FluentType.numeric(FluentType.caption2).copyWith(
+              fontWeight: FontWeight.w600,
               color: _color,
             ),
           ),

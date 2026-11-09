@@ -1,5 +1,6 @@
 import React from 'react';
 import { useSelector } from 'react-redux';
+import { Card } from '@fluentui/react-components';
 import {
   useAddServiceSpecialtyMutation,
   useRemoveServiceSpecialtyMutation,
@@ -37,57 +38,44 @@ export const ProfileDashboard: React.FC = () => {
 
   return (
     <div className="space-y-8">
-      {/* Service Management Section */}
-      <section className="rounded-2xl border border-border bg-card p-6 shadow-xs">
-        <h2 className="text-xl font-bold font-sans text-foreground mb-6">
-          Manage Your Services
+      <Card className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <h2 className="text-subtitle1 font-semibold text-foreground mb-4">
+          Manage your services
         </h2>
         <ServiceManagement
           specialties={specialties}
           onAddService={handleAddService}
           onRemoveService={handleRemoveService}
         />
-      </section>
+      </Card>
 
-      {/* Provider Stats */}
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            Active Services
-          </p>
-          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">{specialties.length}</p>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            Upcoming This Week
-          </p>
-          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">
+        <Card className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <p className="text-caption1 text-muted-foreground mb-1">Active services</p>
+          <p className="text-title2 font-semibold text-foreground tabular">{specialties.length}</p>
+        </Card>
+        <Card className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <p className="text-caption1 text-muted-foreground mb-1">Upcoming this week</p>
+          <p className="text-title2 font-semibold text-foreground tabular">
             {bookings.filter((b: any) => new Date(b.startTime) > new Date()).length}
           </p>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            Avg. Rating
-          </p>
-          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">4.95</p>
-        </div>
-        <div className="rounded-2xl border border-border bg-card p-5 shadow-xs">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">
-            Response Time
-          </p>
-          <p className="text-2xl font-bold font-mono text-foreground tabular-nums">&lt; 15m</p>
-        </div>
+        </Card>
+        <Card className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <p className="text-caption1 text-muted-foreground mb-1">Average rating</p>
+          <p className="text-title2 font-semibold text-foreground tabular">4.95</p>
+        </Card>
+        <Card className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <p className="text-caption1 text-muted-foreground mb-1">Response time</p>
+          <p className="text-title2 font-semibold text-foreground tabular">&lt; 15m</p>
+        </Card>
       </section>
 
-      {/* Bookings */}
       <section>
-        <h2 className="text-xl font-bold font-sans text-foreground mb-4">
-          Recent Orders
-        </h2>
+        <h2 className="text-subtitle1 font-semibold text-foreground mb-4">Recent orders</h2>
         {bookings.length === 0 ? (
-          <div className="text-center py-8 bg-card rounded-2xl border border-border">
-            <p className="text-sm text-muted-foreground">No bookings yet.</p>
-          </div>
+          <Card className="text-center py-8 bg-card rounded-2xl border border-border shadow-sm">
+            <p className="text-body1 text-muted-foreground">No bookings yet.</p>
+          </Card>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {bookings.map((booking: any) => (

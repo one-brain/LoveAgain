@@ -208,13 +208,23 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
           context: context,
           barrierDismissible: false,
           builder: (dialogCtx) => AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-            title: const Row(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+            ),
+            title: Row(
               children: [
-                Icon(Icons.check_circle, color: AppColors.sage, size: 28),
-                SizedBox(width: 10),
-                Text('Booking Confirmed!'),
+                const Icon(
+                  Icons.check_circle,
+                  color: AppColors.successForeground,
+                  size: 24,
+                ),
+                const SizedBox(width: FluentSpacing.mNudge),
+                Text(
+                  'Booking confirmed',
+                  style: FluentType.title3.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
               ],
             ),
             content: Column(
@@ -223,47 +233,51 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               children: [
                 Text(
                   'Your booking with ${widget.provider.name} has been placed.',
-                  style: const TextStyle(fontSize: 14, height: 1.4),
+                  style: FluentType.body2.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: FluentSpacing.m),
                 Container(
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.all(FluentSpacing.m),
                   decoration: BoxDecoration(
                     color: AppColors.surfaceMuted,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(FluentRadius.large),
+                    border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Date:',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary)),
+                          Text(
+                            'Date:',
+                            style: FluentType.caption1.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             DateFormat('EEE, MMM d • h:mm a')
                                 .format(_startDateTime),
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w700),
+                            style: FluentType.numeric(FluentType.caption1Strong)
+                                .copyWith(color: AppColors.textPrimary),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: FluentSpacing.sNudge),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Total:',
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.textSecondary)),
+                          Text(
+                            'Total:',
+                            style: FluentType.caption1.copyWith(
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
                           Text(
                             '₹${_totalAmount.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.primary,
-                            ),
+                            style: FluentType.numeric(FluentType.body2Strong)
+                                .copyWith(color: AppColors.brandForeground),
                           ),
                         ],
                       ),
@@ -289,16 +303,18 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             content: Row(
               children: [
                 const Icon(Icons.error_outline, color: Colors.white, size: 20),
-                const SizedBox(width: 8),
+                const SizedBox(width: FluentSpacing.s),
                 Expanded(
                   child: Text(
                     _submissionError ?? 'Booking request failed.',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
+                    style: FluentType.caption1Strong.copyWith(
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ],
             ),
-            backgroundColor: AppColors.statusCancelled,
+            backgroundColor: AppColors.danger,
             duration: const Duration(seconds: 5),
           ),
         );
@@ -312,34 +328,37 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Book a Companion'),
+        title: const Text('Book a companion'),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+        padding: const EdgeInsets.fromLTRB(
+          FluentSpacing.l,
+          FluentSpacing.m,
+          FluentSpacing.l,
+          100,
+        ),
         children: [
           // Provider Header Card
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(FluentSpacing.l),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Row(
               children: [
                 CircleAvatar(
-                  radius: 26,
+                  radius: 24,
                   backgroundColor: AppColors.primaryLight,
                   child: Text(
                     p.initials,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primaryDark,
+                    style: FluentType.body1Strong.copyWith(
+                      color: AppColors.brandForeground,
                     ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: FluentSpacing.m),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -348,25 +367,21 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                         children: [
                           Text(
                             p.name,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
+                            style: FluentType.body1Strong.copyWith(
                               color: AppColors.textPrimary,
                             ),
                           ),
                           if (p.isVerified) ...[
-                            const SizedBox(width: 4),
+                            const SizedBox(width: FluentSpacing.xs),
                             const VerifiedBadge(size: 14),
                           ],
                         ],
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: FluentSpacing.xxs),
                       Text(
                         p.role,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: AppColors.sage,
-                          fontWeight: FontWeight.w600,
+                        style: FluentType.caption1Strong.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -376,17 +391,15 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: FluentSpacing.xxl),
 
           // Availability Slot Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Available Slots',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w700,
+              Text(
+                'Available slots',
+                style: FluentType.body1Strong.copyWith(
                   color: AppColors.textPrimary,
                 ),
               ),
@@ -398,16 +411,18 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: FluentSpacing.sNudge),
           if (_availableSlots.isNotEmpty) ...[
-            const Text(
+            Text(
               'Select an open slot to schedule your outing:',
-              style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+              style: FluentType.caption1.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: FluentSpacing.s),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: FluentSpacing.s,
+              runSpacing: FluentSpacing.s,
               children: _availableSlots.map((slot) {
                 final isSelected = _selectedSlot?.id == slot.id;
                 final localStart = slot.startTime.toLocal();
@@ -419,11 +434,11 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   label: Text('$startStr - $endStr'),
                   selected: isSelected,
                   selectedColor: AppColors.primaryLight,
-                  labelStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  labelStyle: FluentType.numeric(
+                    isSelected ? FluentType.caption1Strong : FluentType.caption1,
+                  ).copyWith(
                     color: isSelected
-                        ? AppColors.primaryDark
+                        ? AppColors.brandForeground
                         : AppColors.textPrimary,
                   ),
                   onSelected: (selected) {
@@ -436,71 +451,77 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             ),
           ] else if (!_loadingSlots) ...[
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(FluentSpacing.m),
               decoration: BoxDecoration(
                 color: AppColors.goldLight,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: AppColors.gold.withValues(alpha: 0.3)),
+                borderRadius: BorderRadius.circular(FluentRadius.large),
+                border: Border.all(color: AppColors.goldBorder),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.info_outline, color: AppColors.goldDark, size: 18),
-                  SizedBox(width: 8),
+                  const Icon(
+                    Icons.info_outline,
+                    color: AppColors.gold,
+                    size: 18,
+                  ),
+                  const SizedBox(width: FluentSpacing.s),
                   Expanded(
                     child: Text(
                       'No pre-scheduled slots loaded. Selecting a custom slot will be subject to host availability.',
-                      style:
-                          TextStyle(fontSize: 12, color: AppColors.goldDark),
+                      style: FluentType.caption2.copyWith(
+                        color: AppColors.gold,
+                      ),
                     ),
                   ),
                 ],
               ),
             ),
           ],
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // Date & Time Picker Card
-          const Text(
-            'Schedule Your Moment',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
+          Text(
+            'Schedule your moment',
+            style: FluentType.body1Strong.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: FluentSpacing.m),
           Row(
             children: [
               Expanded(
                 child: InkWell(
                   onTap: _pickDate,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(FluentSpacing.m),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Date',
-                          style: TextStyle(
-                              fontSize: 11, color: AppColors.textSecondary),
+                          style: FluentType.caption2.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: FluentSpacing.xs),
                         Row(
                           children: [
-                            const Icon(Icons.calendar_month,
-                                size: 16, color: AppColors.primary),
-                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.calendar_month,
+                              size: 16,
+                              color: AppColors.brandForeground,
+                            ),
+                            const SizedBox(width: FluentSpacing.sNudge),
                             Text(
                               DateFormat('MMM d, yyyy').format(_selectedDate),
-                              style: const TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w700),
+                              style: FluentType.numeric(FluentType.caption1Strong)
+                                  .copyWith(color: AppColors.textPrimary),
                             ),
                           ],
                         ),
@@ -509,36 +530,40 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: FluentSpacing.m),
               Expanded(
                 child: InkWell(
                   onTap: _pickTime,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                   child: Container(
-                    padding: const EdgeInsets.all(14),
+                    padding: const EdgeInsets.all(FluentSpacing.m),
                     decoration: BoxDecoration(
                       color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Start Time',
-                          style: TextStyle(
-                              fontSize: 11, color: AppColors.textSecondary),
+                        Text(
+                          'Start time',
+                          style: FluentType.caption2.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: FluentSpacing.xs),
                         Row(
                           children: [
-                            const Icon(Icons.access_time,
-                                size: 16, color: AppColors.primary),
-                            const SizedBox(width: 6),
+                            const Icon(
+                              Icons.access_time,
+                              size: 16,
+                              color: AppColors.brandForeground,
+                            ),
+                            const SizedBox(width: FluentSpacing.sNudge),
                             Text(
                               _selectedTime.format(context),
-                              style: const TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.w700),
+                              style: FluentType.numeric(FluentType.caption1Strong)
+                                  .copyWith(color: AppColors.textPrimary),
                             ),
                           ],
                         ),
@@ -549,14 +574,14 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // Duration Slider Card
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(FluentSpacing.l),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
@@ -565,31 +590,34 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Session Duration',
-                      style:
-                          TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                    Text(
+                      'Session duration',
+                      style: FluentType.body2Strong.copyWith(
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 3),
+                        horizontal: FluentSpacing.s,
+                        vertical: FluentSpacing.xxs,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primaryLight,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(FluentRadius.medium),
                       ),
                       child: Text(
                         '${_duration.toStringAsFixed(1)} hours',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primaryDark,
-                        ),
+                        style: FluentType.numeric(FluentType.caption1Strong)
+                            .copyWith(color: AppColors.brandForeground),
                       ),
                     ),
                   ],
                 ),
                 Slider(
-                  value: _duration.clamp(1.0, _maxDuration > 1.0 ? _maxDuration : 1.0),
+                  value: _duration.clamp(
+                    1.0,
+                    _maxDuration > 1.0 ? _maxDuration : 1.0,
+                  ),
                   min: 1.0,
                   max: _maxDuration > 1.0 ? _maxDuration : 1.0,
                   divisions: (_maxDuration > 1.0)
@@ -603,44 +631,53 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('1 hr',
-                        style: TextStyle(
-                            fontSize: 11, color: AppColors.textSecondary)),
-                    Text('Max ${_maxDuration.toStringAsFixed(1)} hrs',
-                        style: const TextStyle(
-                            fontSize: 11, color: AppColors.textSecondary)),
+                    Text(
+                      '1 hr',
+                      style: FluentType.numeric(FluentType.caption2).copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      'Max ${_maxDuration.toStringAsFixed(1)} hrs',
+                      style: FluentType.numeric(FluentType.caption2).copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // Meeting Location
-          const Text(
-            'Meeting Location',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
+          Text(
+            'Meeting location',
+            style: FluentType.body1Strong.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: FluentSpacing.s),
           TextField(
             controller: _addressController,
             decoration: const InputDecoration(
               hintText: 'Enter specific street address or landmark...',
-              prefixIcon: Icon(Icons.pin_drop_outlined, color: AppColors.primary),
+              prefixIcon: Icon(
+                Icons.pin_drop_outlined,
+                color: AppColors.brandForeground,
+              ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: FluentSpacing.s),
           Wrap(
-            spacing: 6,
-            runSpacing: 6,
+            spacing: FluentSpacing.sNudge,
+            runSpacing: FluentSpacing.sNudge,
             children: _suggestedLocations.map((loc) {
               return ActionChip(
                 label: Text(loc),
-                labelStyle: const TextStyle(fontSize: 11),
+                labelStyle: FluentType.caption2.copyWith(
+                  color: AppColors.textPrimary,
+                ),
                 backgroundColor: AppColors.surface,
                 side: const BorderSide(color: AppColors.border),
                 onPressed: () {
@@ -651,18 +688,16 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // Special Requests Field
-          const Text(
-            'Special Requests / Notes',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
+          Text(
+            'Special requests / notes',
+            style: FluentType.body1Strong.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: FluentSpacing.s),
           TextField(
             controller: _requestController,
             maxLines: 3,
@@ -671,88 +706,87 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                   'Any particular focus, dietary preferences, or plans for this moment?',
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: FluentSpacing.xxl),
 
           // Transparent Price Breakdown
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(FluentSpacing.l),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Price Breakdown',
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                Text(
+                  'Price breakdown',
+                  style: FluentType.body2Strong.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: FluentSpacing.m),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      '₹${p.rate} x ${_duration.toStringAsFixed(1)} hours',
-                      style: const TextStyle(
-                          fontSize: 14, color: AppColors.textSecondary),
+                      '₹${p.rate} × ${_duration.toStringAsFixed(1)} hours',
+                      style: FluentType.numeric(FluentType.caption1).copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                     Text(
                       '₹${_providerEarnings.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.w600, fontFamily: 'monospace'),
+                      style: FluentType.numeric(FluentType.caption1Strong)
+                          .copyWith(color: AppColors.textPrimary),
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: FluentSpacing.s),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Row(
+                    Row(
                       children: [
                         Text(
-                          'Cue Platform & Escrow Fee (10%)',
-                          style: TextStyle(
-                              fontSize: 13, color: AppColors.textSecondary),
+                          'Cue platform & escrow fee (10%)',
+                          style: FluentType.caption1.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                        SizedBox(width: 4),
-                        Icon(Icons.info_outline,
-                            size: 13, color: AppColors.textMuted),
+                        const SizedBox(width: FluentSpacing.xs),
+                        const Icon(
+                          Icons.info_outline,
+                          size: 13,
+                          color: AppColors.textMuted,
+                        ),
                       ],
                     ),
                     Text(
                       '₹${_platformFee.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                          fontSize: 13, color: AppColors.textSecondary, fontFamily: 'monospace'),
+                      style: FluentType.numeric(FluentType.caption1).copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
                 const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: FluentSpacing.m),
                   child: Divider(height: 1, color: AppColors.border),
                 ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Total Escrow Hold',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
+                    Text(
+                      'Total escrow hold',
+                      style: FluentType.body2Strong.copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
                     Text(
                       '₹${_totalAmount.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                        color: AppColors.primary,
-                        fontFamily: 'monospace',
+                      style: FluentType.numeric(FluentType.title3).copyWith(
+                        color: AppColors.brandForeground,
                       ),
                     ),
                   ],
@@ -761,40 +795,40 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
             ),
           ),
           if (_submissionError != null) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: FluentSpacing.l),
             Container(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.all(FluentSpacing.m),
               decoration: BoxDecoration(
-                color: AppColors.statusCancelled.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                color: AppColors.dangerBackground,
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                 border: Border.all(
-                    color: AppColors.statusCancelled.withValues(alpha: 0.3)),
+                  color: AppColors.danger.withValues(alpha: 0.3),
+                ),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.error_outline,
-                      color: AppColors.statusCancelled, size: 20),
-                  const SizedBox(width: 10),
+                  const Icon(
+                    Icons.error_outline,
+                    color: AppColors.dangerForeground,
+                    size: 20,
+                  ),
+                  const SizedBox(width: FluentSpacing.mNudge),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Booking Request Failed',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.statusCancelled,
+                        Text(
+                          'Booking request failed',
+                          style: FluentType.caption1Strong.copyWith(
+                            color: AppColors.dangerForeground,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: FluentSpacing.xs),
                         Text(
                           _submissionError!,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: FluentType.caption2.copyWith(
                             color: AppColors.textPrimary,
-                            height: 1.3,
                           ),
                         ),
                       ],
@@ -807,16 +841,13 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
         ],
       ),
       bottomSheet: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: FluentSpacing.l,
+          vertical: FluentSpacing.m,
+        ),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
-          ],
+          boxShadow: FluentShadows.shadow4,
           border: const Border(top: BorderSide(color: AppColors.border)),
         ),
         child: SafeArea(
@@ -829,12 +860,19 @@ class _BookingScreenState extends ConsumerState<BookingScreen> {
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Icon(Icons.check_circle_outline),
-              label: Text(_submitting
-                  ? 'Requesting...'
-                  : 'Confirm & Request Outing (₹${_totalAmount.toStringAsFixed(0)})'),
+              label: Text(
+                _submitting
+                    ? 'Requesting...'
+                    : 'Confirm & request outing (₹${_totalAmount.toStringAsFixed(0)})',
+                style: FluentType.numeric(FluentType.body2Strong).copyWith(
+                  color: Colors.white,
+                ),
+              ),
             ),
           ),
         ),

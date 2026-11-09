@@ -38,86 +38,86 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 100),
+        padding: const EdgeInsets.fromLTRB(
+          FluentSpacing.l,
+          FluentSpacing.m,
+          FluentSpacing.l,
+          100,
+        ),
         children: [
           // Profile Header Card
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(FluentSpacing.xl),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
               children: [
                 CircleAvatar(
-                  radius: 46,
+                  radius: 44,
                   backgroundColor: AppColors.primaryLight,
                   child: Text(
                     p.initials,
-                    style: const TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primaryDark,
+                    style: FluentType.title1.copyWith(
+                      color: AppColors.brandForeground,
                     ),
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: FluentSpacing.m),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       p.name,
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
+                      style: FluentType.title2.copyWith(
                         color: AppColors.textPrimary,
                       ),
                     ),
                     if (p.isVerified) ...[
-                      const SizedBox(width: 6),
-                      const VerifiedBadge(size: 18),
+                      const SizedBox(width: FluentSpacing.sNudge),
+                      const VerifiedBadge(size: 16),
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: FluentSpacing.xs),
                 Text(
                   p.role,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    color: AppColors.goldDark,
-                    fontWeight: FontWeight.w600,
+                  style: FluentType.body2Strong.copyWith(
+                    color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: FluentSpacing.sNudge),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.location_on_outlined,
-                        size: 15, color: AppColors.textSecondary),
-                    const SizedBox(width: 3),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 15,
+                      color: AppColors.textMuted,
+                    ),
+                    const SizedBox(width: FluentSpacing.xxs),
                     Text(
                       p.city,
-                      style: const TextStyle(
-                        fontSize: 13,
+                      style: FluentType.caption1.copyWith(
                         color: AppColors.textSecondary,
                       ),
                     ),
                     if (p.distanceKm != null) ...[
-                      const SizedBox(width: 8),
+                      const SizedBox(width: FluentSpacing.s),
                       Text(
                         '(${p.distanceKm!.toStringAsFixed(1)} km away)',
-                        style: const TextStyle(
-                          fontSize: 13,
+                        style: FluentType.numeric(FluentType.caption1).copyWith(
                           color: AppColors.textMuted,
                         ),
                       ),
                     ],
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: FluentSpacing.l),
                 const Divider(height: 1, color: AppColors.border),
-                const SizedBox(height: 14),
+                const SizedBox(height: FluentSpacing.m),
                 // Badges & Metrics Row
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -125,11 +125,10 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                     Column(
                       children: [
                         RatingStars(rating: p.rating, size: 16),
-                        const SizedBox(height: 2),
+                        const SizedBox(height: FluentSpacing.xxs),
                         Text(
                           '${p.reviewCount} reviews',
-                          style: const TextStyle(
-                            fontSize: 11,
+                          style: FluentType.numeric(FluentType.caption2).copyWith(
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -141,18 +140,14 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                     Column(
                       children: [
                         Text(
-                          '\$${p.rate}/hr',
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
-                          ),
+                          '₹${p.rate}/hr',
+                          style: FluentType.numeric(FluentType.body1Strong)
+                              .copyWith(color: AppColors.brandForeground),
                         ),
-                        const SizedBox(height: 2),
-                        const Text(
+                        const SizedBox(height: FluentSpacing.xxs),
+                        Text(
                           'Hourly rate',
-                          style: TextStyle(
-                            fontSize: 11,
+                          style: FluentType.caption2.copyWith(
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -163,92 +158,84 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // About Section
-          const Text(
+          Text(
             'About',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+            style: FluentType.body1Strong.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: FluentSpacing.s),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(FluentSpacing.l),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Text(
               p.bio.isNotEmpty
                   ? p.bio
                   : 'Experienced companion ready to accompany you for cultural events, conversation, and memorable shared moments.',
-              style: const TextStyle(
-                fontSize: 14,
-                height: 1.5,
-                color: AppColors.textPrimary,
-              ),
+              style: FluentType.body2.copyWith(color: AppColors.textPrimary),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // Specialties Section
-          const Text(
-            'Specialties & Activities',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
+          Text(
+            'Specialties & activities',
+            style: FluentType.body1Strong.copyWith(
               color: AppColors.textPrimary,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: FluentSpacing.mNudge),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: FluentSpacing.s,
+            runSpacing: FluentSpacing.s,
             children: p.specialties.map((specialty) {
               return Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: FluentSpacing.m,
+                  vertical: FluentSpacing.sNudge,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceMuted,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(FluentRadius.circular),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Text(
                   specialty,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
+                  style: FluentType.caption1Strong.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
               );
             }).toList(),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: FluentSpacing.xxl),
 
           // Available Slots Section
           if (p.upcomingSlots.isNotEmpty) ...[
-            const Text(
-              'Upcoming Availability',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+            Text(
+              'Upcoming availability',
+              style: FluentType.body1Strong.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 8),
-            const Text(
+            const SizedBox(height: FluentSpacing.xs),
+            Text(
               'Select a preferred slot to pre-fill your booking request:',
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: FluentType.caption1.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: FluentSpacing.mNudge),
             Wrap(
-              spacing: 8,
-              runSpacing: 8,
+              spacing: FluentSpacing.s,
+              runSpacing: FluentSpacing.s,
               children: p.upcomingSlots.map((slot) {
                 final isSelected = _selectedSlot?.id == slot.id;
                 final dateStr = DateFormat('EEE, MMM d • h:mm a')
@@ -257,11 +244,11 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                   label: Text(dateStr),
                   selected: isSelected,
                   selectedColor: AppColors.primaryLight,
-                  labelStyle: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                  labelStyle: FluentType.numeric(
+                    isSelected ? FluentType.caption1Strong : FluentType.caption1,
+                  ).copyWith(
                     color: isSelected
-                        ? AppColors.primaryDark
+                        ? AppColors.brandForeground
                         : AppColors.textPrimary,
                   ),
                   onSelected: (selected) {
@@ -272,41 +259,40 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                 );
               }).toList(),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
           ],
 
           // Trust & Safety Highlight
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(FluentSpacing.l),
             decoration: BoxDecoration(
-              color: AppColors.sageLight,
-              borderRadius: BorderRadius.circular(14),
-              border:
-                  Border.all(color: AppColors.sage.withValues(alpha: 0.3)),
+              color: AppColors.goldLight,
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+              border: Border.all(color: AppColors.goldBorder),
             ),
             child: Row(
               children: [
-                const Icon(Icons.security_rounded,
-                    color: AppColors.sageDark, size: 26),
-                const SizedBox(width: 14),
+                const Icon(
+                  Icons.verified_user_rounded,
+                  color: AppColors.gold,
+                  size: 24,
+                ),
+                const SizedBox(width: FluentSpacing.m),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Verified Cue Companion',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.sageDark,
+                      Text(
+                        'Verified Cue companion',
+                        style: FluentType.body2Strong.copyWith(
+                          color: AppColors.gold,
                         ),
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: FluentSpacing.xxs),
                       Text(
                         'Government ID checked. In-person rating threshold maintained above 4.7 stars.',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: AppColors.sageDark.withValues(alpha: 0.9),
+                        style: FluentType.caption1.copyWith(
+                          color: AppColors.textSecondary,
                         ),
                       ),
                     ],
@@ -315,41 +301,40 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: FluentSpacing.xxl),
 
           // Reviews Section
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Reviews & Feedback',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
+              Text(
+                'Reviews & feedback',
+                style: FluentType.body1Strong.copyWith(
                   color: AppColors.textPrimary,
                 ),
               ),
               Text(
                 '${p.reviews.length} shown',
-                style: const TextStyle(
-                  fontSize: 13,
+                style: FluentType.numeric(FluentType.caption1).copyWith(
                   color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: FluentSpacing.m),
           if (p.reviews.isEmpty)
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(FluentSpacing.l),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                 border: Border.all(color: AppColors.border),
               ),
-              child: const Text(
+              child: Text(
                 'No public reviews yet. Be the first to book and share your experience!',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: FluentType.caption1.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
             )
           else
@@ -357,16 +342,13 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
         ],
       ),
       bottomSheet: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: const EdgeInsets.symmetric(
+          horizontal: FluentSpacing.l,
+          vertical: FluentSpacing.m,
+        ),
         decoration: BoxDecoration(
           color: AppColors.surface,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
-          ],
+          boxShadow: FluentShadows.shadow4,
           border: const Border(top: BorderSide(color: AppColors.border)),
         ),
         child: SafeArea(
@@ -376,23 +358,21 @@ class _ProviderDetailScreenState extends State<ProviderDetailScreen> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Price',
-                    style:
-                        TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                    style: FluentType.caption2.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                   Text(
                     '₹${p.rate} / hr',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
-                      fontFamily: 'monospace',
+                    style: FluentType.numeric(FluentType.title3).copyWith(
+                      color: AppColors.brandForeground,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: FluentSpacing.xxl),
               Expanded(
                 child: FilledButton.icon(
                   onPressed: () {
@@ -424,11 +404,11 @@ class _ReviewTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(14),
+      margin: const EdgeInsets.only(bottom: FluentSpacing.m),
+      padding: const EdgeInsets.all(FluentSpacing.l),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -439,23 +419,17 @@ class _ReviewTile extends StatelessWidget {
             children: [
               Text(
                 review.reviewerName,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                style: FluentType.body2Strong.copyWith(
                   color: AppColors.textPrimary,
                 ),
               ),
               RatingStars(rating: review.rating, size: 14),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: FluentSpacing.sNudge),
           Text(
             review.comment,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.textPrimary,
-              height: 1.4,
-            ),
+            style: FluentType.caption1.copyWith(color: AppColors.textPrimary),
           ),
         ],
       ),

@@ -7,10 +7,10 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
 
 const MainLayout: React.FC = () => {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-200">
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Header />
       <main className="flex-1 flex flex-col">
-        <ErrorBoundary fallbackTitle="Page Error Encountered">
+        <ErrorBoundary fallbackTitle="Page error encountered">
           <Outlet />
         </ErrorBoundary>
       </main>

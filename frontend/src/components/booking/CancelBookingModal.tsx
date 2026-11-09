@@ -1,12 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import {
-  ExclamationTriangleIcon,
-  XMarkIcon,
-  CalendarDaysIcon,
-  ClockIcon,
-  ShieldCheckIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/24/outline';
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  RadioGroup,
+  Radio,
+  Textarea,
+  Field,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Warning24Regular,
+  Dismiss20Regular,
+  Calendar16Regular,
+  Clock16Regular,
+  ShieldCheckmark20Regular,
+} from '@fluentui/react-icons';
 import type { BookingSummary } from '../BookingCard';
 import { useCancelBookingMutation } from '../../store/bookingApi';
 import { formatINR } from '../../utils/currency';
@@ -44,15 +59,6 @@ export const CancelBookingModal: React.FC<CancelBookingModalProps> = ({
       setErrorMsg(null);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   if (!isOpen || !booking) return null;
 
@@ -118,177 +124,141 @@ export const CancelBookingModal: React.FC<CancelBookingModalProps> = ({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="cancel-booking-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
-    >
-      <div className="bg-card border border-border w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-150">
-        {/* Header */}
-        <div className="p-6 border-b border-border flex items-start justify-between bg-muted/30">
-          <div className="flex items-center gap-3.5">
-            <div className="w-12 h-12 rounded-2xl bg-destructive/15 text-destructive border border-destructive/20 flex items-center justify-center shrink-0">
-              <ExclamationTriangleIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <h2
-                id="cancel-booking-title"
-                className="text-lg sm:text-xl font-bold font-serif text-foreground"
-              >
-                Cancel Booking #{booking.orderId.slice(0, 8)}
-              </h2>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Please confirm your cancellation request below
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            aria-label="Close cancel dialog"
-            className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Content Body */}
-        <form onSubmit={handleConfirmCancel} className="p-6 space-y-5 text-xs sm:text-sm">
-          {errorMsg && (
-            <div className="p-3.5 rounded-2xl bg-destructive/15 border border-destructive/30 text-destructive text-xs font-medium flex items-center gap-2.5">
-              <InformationCircleIcon className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Booking Summary Box */}
-          <div className="p-4 rounded-2xl bg-muted/40 border border-border space-y-2.5">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground">Guest</span>
-              <span className="font-semibold text-foreground">
-                {booking.providerName || 'Verified Guest'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <CalendarDaysIcon className="w-3.5 h-3.5 text-accent" />
-                <span>Schedule</span>
-              </span>
-              <span className="font-medium text-foreground">
-                {formatBookingDate(booking.startTime)}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground flex items-center gap-1.5">
-                <ClockIcon className="w-3.5 h-3.5 text-accent" />
-                <span>Time Window</span>
-              </span>
-              <span className="font-mono tabular-nums text-foreground">
-                {formatBookingTime(booking.startTime, booking.endTime)}
-              </span>
-            </div>
-
-            {booking.totalAmount > 0 && (
-              <div className="pt-2 border-t border-border/80 flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Order Total</span>
-                <span className="font-mono tabular-nums font-bold text-foreground">
-                  {formatINR(booking.totalAmount)}
-                </span>
+    <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && onClose()}>
+      <DialogSurface className="max-w-lg w-full bg-card border border-border rounded-2xl p-6">
+        <form onSubmit={handleConfirmCancel}>
+          <DialogBody>
+            <DialogTitle
+              action={
+                <Button
+                  appearance="subtle"
+                  aria-label="Close cancel dialog"
+                  icon={<Dismiss20Regular />}
+                  onClick={onClose}
+                />
+              }
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-destructive-light text-destructive flex items-center justify-center shrink-0">
+                  <Warning24Regular />
+                </div>
+                <div>
+                  <span id="cancel-booking-title" className="text-subtitle1 font-semibold text-foreground block tabular">
+                    Cancel booking #{booking.orderId.slice(0, 8)}
+                  </span>
+                  <span className="text-caption1 font-normal text-muted-foreground block">
+                    Please confirm your cancellation request below
+                  </span>
+                </div>
               </div>
-            )}
-          </div>
+            </DialogTitle>
 
-          {/* Escrow & Refund Policy Notice */}
-          <div className="p-3.5 rounded-2xl bg-accent/10 border border-accent/25 flex items-start gap-3">
-            <ShieldCheckIcon className="w-5 h-5 text-accent shrink-0 mt-0.5" />
-            <div className="text-xs space-y-1">
-              <span className="font-bold text-foreground block">
-                {isConfirmed ? 'Protected Escrow Refund' : 'Safe Cancellation'}
-              </span>
-              <p className="text-muted-foreground leading-relaxed text-[11px]">
-                {isConfirmed
-                  ? 'Your escrow payment is protected. Cancelling will automatically refund eligible funds directly to your wallet according to the platform cancellation policy.'
-                  : isPending
-                  ? 'No payment has been charged for this booking yet. Cancelling will immediately release the reserved time slot for other members.'
-                  : 'Cancelling will update this session and release any associated holds.'}
-              </p>
-            </div>
-          </div>
-
-          {/* Reason Selection */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-foreground">
-              Reason for Cancellation <span className="text-destructive">*</span>
-            </label>
-            <div className="space-y-2">
-              {CANCELLATION_REASONS.map((reason) => (
-                <label
-                  key={reason}
-                  className={`flex items-center gap-2.5 p-2.5 rounded-xl border text-xs cursor-pointer transition-colors ${
-                    selectedReason === reason
-                      ? 'border-accent bg-accent/10 text-foreground font-semibold'
-                      : 'border-border bg-card hover:bg-muted text-muted-foreground'
-                  }`}
-                >
-                  <input
-                    type="radio"
-                    name="cancellationReason"
-                    value={reason}
-                    checked={selectedReason === reason}
-                    onChange={() => setSelectedReason(reason)}
-                    className="text-accent focus:ring-accent"
-                  />
-                  <span>{reason}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Optional Additional Notes */}
-          <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-muted-foreground">
-              Additional Details / Comments (Optional)
-            </label>
-            <textarea
-              rows={2}
-              value={customNotes}
-              onChange={(e) => setCustomNotes(e.target.value)}
-              placeholder="Let the guest know why plans changed..."
-              className="w-full px-3 py-2 rounded-xl border border-border bg-muted text-foreground text-xs focus:ring-1 focus:ring-accent placeholder:text-muted-foreground/60"
-            />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="pt-2 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isCancelling}
-              className="px-4 py-2.5 min-h-[44px] rounded-xl border border-border hover:bg-muted text-foreground font-semibold text-xs transition-colors cursor-pointer disabled:opacity-50"
-            >
-              Keep Booking
-            </button>
-            <button
-              type="submit"
-              disabled={isCancelling}
-              className="px-5 py-2.5 min-h-[44px] rounded-xl bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold text-xs transition-all flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
-            >
-              {isCancelling ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-destructive-foreground/30 border-t-destructive-foreground rounded-full animate-spin" />
-                  <span>Cancelling...</span>
-                </>
-              ) : (
-                <span>Confirm Cancellation</span>
+            <DialogContent className="space-y-4 pt-4">
+              {errorMsg && (
+                <MessageBar intent="error">
+                  <MessageBarBody>{errorMsg}</MessageBarBody>
+                </MessageBar>
               )}
-            </button>
-          </div>
+
+              <div className="p-4 rounded-lg bg-muted border border-border space-y-2 text-caption1">
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">Guest</span>
+                  <span className="font-semibold text-foreground">
+                    {booking.providerName || 'Verified Guest'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Calendar16Regular className="text-brand-fg" />
+                    <span>Schedule</span>
+                  </span>
+                  <span className="font-semibold text-foreground">
+                    {formatBookingDate(booking.startTime)}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground flex items-center gap-1.5">
+                    <Clock16Regular className="text-brand-fg" />
+                    <span>Time window</span>
+                  </span>
+                  <span className="font-mono tabular text-foreground">
+                    {formatBookingTime(booking.startTime, booking.endTime)}
+                  </span>
+                </div>
+
+                {booking.totalAmount > 0 && (
+                  <div className="pt-2 border-t border-border flex items-center justify-between">
+                    <span className="text-muted-foreground">Order total</span>
+                    <span className="font-mono tabular font-semibold text-foreground">
+                      {formatINR(booking.totalAmount)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <div className="p-3.5 rounded-lg bg-accent-light border border-border flex items-start gap-3">
+                <ShieldCheckmark20Regular className="text-brand-fg shrink-0 mt-0.5" />
+                <div className="text-caption1 space-y-1">
+                  <span className="font-semibold text-foreground block">
+                    {isConfirmed ? 'Protected escrow refund' : 'Safe cancellation'}
+                  </span>
+                  <p className="text-muted-foreground">
+                    {isConfirmed
+                      ? 'Your escrow payment is protected. Cancelling will automatically refund eligible funds directly to your wallet according to the platform cancellation policy.'
+                      : isPending
+                      ? 'No payment has been charged for this booking yet. Cancelling will immediately release the reserved time slot for other members.'
+                      : 'Cancelling will update this session and release any associated holds.'}
+                  </p>
+                </div>
+              </div>
+
+              <Field label="Reason for cancellation" required>
+                <RadioGroup
+                  value={selectedReason}
+                  onChange={(_, data) => setSelectedReason(data.value)}
+                >
+                  {CANCELLATION_REASONS.map((reason) => (
+                    <Radio key={reason} value={reason} label={reason} />
+                  ))}
+                </RadioGroup>
+              </Field>
+
+              <Field label="Additional details / comments (optional)">
+                <Textarea
+                  rows={2}
+                  value={customNotes}
+                  onChange={(_, data) => setCustomNotes(data.value)}
+                  placeholder="Let the guest know why plans changed..."
+                />
+              </Field>
+            </DialogContent>
+
+            <DialogActions className="pt-4">
+              <Button
+                appearance="secondary"
+                size="large"
+                className="min-h-11"
+                disabled={isCancelling}
+                onClick={onClose}
+              >
+                Keep booking
+              </Button>
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                className="min-h-11 bg-destructive text-destructive-foreground"
+                disabled={isCancelling}
+                icon={isCancelling ? <Spinner size="tiny" /> : undefined}
+              >
+                {isCancelling ? 'Cancelling...' : 'Cancel outing'}
+              </Button>
+            </DialogActions>
+          </DialogBody>
         </form>
-      </div>
-    </div>
+      </DialogSurface>
+    </Dialog>
   );
 };
-

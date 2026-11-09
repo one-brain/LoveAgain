@@ -147,20 +147,26 @@ class _ProviderRouteLoader extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (providerId.isEmpty) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Companion Profile')),
+        appBar: AppBar(title: const Text('Companion profile')),
         body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.person_search_outlined, size: 56, color: AppColors.textMuted),
-              const SizedBox(height: 12),
-              const Text('Please select a companion first', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => context.go('/'),
-                child: const Text('Explore Companions'),
-              ),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.all(FluentSpacing.xxl),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.person_search_outlined, size: 48, color: AppColors.textMuted),
+                const SizedBox(height: FluentSpacing.m),
+                Text(
+                  'Please select a companion first',
+                  style: FluentType.body1Strong.copyWith(color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: FluentSpacing.l),
+                FilledButton(
+                  onPressed: () => context.go('/'),
+                  child: const Text('Explore Companions'),
+                ),
+              ],
+            ),
           ),
         ),
       );
@@ -182,20 +188,26 @@ class _ProviderRouteLoader extends ConsumerWidget {
               : ProviderDetailScreen(provider: provider);
         }
         return Scaffold(
-          appBar: AppBar(title: const Text('Companion Profile')),
+          appBar: AppBar(title: const Text('Companion profile')),
           body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.person_off_outlined, size: 56, color: AppColors.textMuted),
-                const SizedBox(height: 12),
-                const Text('Companion profile not found', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => context.go('/'),
-                  child: const Text('Back to Discovery'),
-                ),
-              ],
+            child: Padding(
+              padding: const EdgeInsets.all(FluentSpacing.xxl),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.person_off_outlined, size: 48, color: AppColors.textMuted),
+                  const SizedBox(height: FluentSpacing.m),
+                  Text(
+                    'Companion profile not found',
+                    style: FluentType.body1Strong.copyWith(color: AppColors.textPrimary),
+                  ),
+                  const SizedBox(height: FluentSpacing.l),
+                  FilledButton(
+                    onPressed: () => context.go('/'),
+                    child: const Text('Back to discovery'),
+                  ),
+                ],
+              ),
             ),
           ),
         );

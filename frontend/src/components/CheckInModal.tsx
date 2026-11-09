@@ -1,11 +1,25 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheckIcon,
-  XMarkIcon,
-  MapPinIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-} from '@heroicons/react/24/outline';
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Input,
+  Field,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  ShieldCheckmark24Regular,
+  ShieldCheckmark20Regular,
+  Dismiss20Regular,
+  Location16Regular,
+  CheckmarkCircle16Regular,
+} from '@fluentui/react-icons';
 import { useCheckInBookingMutation } from '../store/bookingApi';
 
 interface CheckInModalProps {
@@ -52,104 +66,101 @@ export const CheckInModal: React.FC<CheckInModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs">
-      <div
-        className="w-full max-w-md bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200"
-        role="dialog"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-accent/15 text-accent flex items-center justify-center">
-              <ShieldCheckIcon className="w-7 h-7" />
-            </div>
-            <div>
-              <h2 className="text-lg font-bold text-foreground">Venue Check-In Handshake</h2>
-              <p className="text-xs text-muted-foreground">Verify physical presence with {displayName}</p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Venue Reminder */}
-        {meetingAddress && (
-          <div className="p-3.5 rounded-2xl bg-muted/60 border border-border/80 flex items-center gap-2.5 text-xs text-foreground/80">
-            <MapPinIcon className="w-4 h-4 text-accent shrink-0" />
-            <span className="truncate">{meetingAddress}</span>
-          </div>
-        )}
-
-        {/* Instructions */}
-        <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 space-y-1">
-          <div className="flex items-center gap-2 text-xs font-bold text-accent">
-            <CheckCircleIcon className="w-4 h-4" />
-            <span>2-Way Cryptographic Handshake</span>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Ask {displayName} to open their Cue Bookings screen and read or show the 6-digit Meeting PIN.
-          </p>
-        </div>
-
-        {/* PIN Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 text-center">
-              Enter Host's 6-Digit Meeting PIN
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={pin}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '');
-                setPin(val);
-                if (errorMsg) setErrorMsg(null);
-              }}
-              placeholder="••••••"
-              autoFocus
-              className="w-full text-center tracking-[0.5em] text-3xl font-mono font-black py-4 px-3 rounded-2xl bg-muted/50 border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-hidden transition-all text-foreground"
-            />
-          </div>
-
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive font-medium flex items-center gap-2">
-              <ExclamationCircleIcon className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 py-3 px-4 rounded-xl border border-border hover:bg-muted text-foreground text-xs font-bold transition-colors cursor-pointer"
+    <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && onClose()}>
+      <DialogSurface className="max-w-md w-full bg-card border border-border rounded-2xl p-6">
+        <form onSubmit={handleSubmit}>
+          <DialogBody>
+            <DialogTitle
+              action={
+                <Button
+                  appearance="subtle"
+                  aria-label="Close check-in dialog"
+                  icon={<Dismiss20Regular />}
+                  onClick={onClose}
+                />
+              }
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading || pin.length !== 6}
-              className="flex-1 py-3 px-4 rounded-xl bg-accent hover:opacity-90 disabled:opacity-50 text-accent-foreground text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {isLoading ? (
-                <span>Verifying...</span>
-              ) : (
-                <>
-                  <ShieldCheckIcon className="w-4 h-4" />
-                  <span>Start Outing</span>
-                </>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-accent-light text-brand-fg flex items-center justify-center shrink-0">
+                  <ShieldCheckmark24Regular />
+                </div>
+                <div>
+                  <span className="text-subtitle1 font-semibold text-foreground block">
+                    Venue check-in handshake
+                  </span>
+                  <span className="text-caption1 font-normal text-muted-foreground block">
+                    Verify physical presence with {displayName}
+                  </span>
+                </div>
+              </div>
+            </DialogTitle>
+
+            <DialogContent className="space-y-4 pt-4">
+              {meetingAddress && (
+                <div className="p-3 rounded-lg bg-muted border border-border flex items-center gap-2 text-caption1 text-foreground">
+                  <Location16Regular className="text-brand-fg shrink-0" />
+                  <span className="truncate">{meetingAddress}</span>
+                </div>
               )}
-            </button>
-          </div>
+
+              <div className="p-3.5 rounded-lg bg-accent-light border border-border space-y-1">
+                <div className="flex items-center gap-1.5 text-caption1 font-semibold text-brand-fg">
+                  <CheckmarkCircle16Regular />
+                  <span>Two-way verification handshake</span>
+                </div>
+                <p className="text-caption1 text-muted-foreground">
+                  Ask {displayName} to open their Cue Bookings screen and read or show the 6-digit Meeting PIN.
+                </p>
+              </div>
+
+              <Field label="Enter host's 6-digit meeting PIN" required>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pin}
+                  onChange={(_, data) => {
+                    const val = data.value.replace(/\D/g, '');
+                    setPin(val);
+                    if (errorMsg) setErrorMsg(null);
+                  }}
+                  placeholder="••••••"
+                  autoFocus
+                  size="large"
+                  className="w-full text-center font-mono tabular text-title3 font-semibold"
+                />
+              </Field>
+
+              {errorMsg && (
+                <MessageBar intent="error">
+                  <MessageBarBody>{errorMsg}</MessageBarBody>
+                </MessageBar>
+              )}
+            </DialogContent>
+
+            <DialogActions className="pt-4">
+              <Button
+                appearance="secondary"
+                size="large"
+                className="min-h-11"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                className="min-h-11"
+                disabled={isLoading || pin.length !== 6}
+                icon={isLoading ? <Spinner size="tiny" /> : <ShieldCheckmark20Regular />}
+              >
+                {isLoading ? 'Verifying...' : 'Start outing'}
+              </Button>
+            </DialogActions>
+          </DialogBody>
         </form>
-      </div>
-    </div>
+      </DialogSurface>
+    </Dialog>
   );
 };
-

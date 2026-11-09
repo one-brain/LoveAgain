@@ -1,11 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  BanknotesIcon,
-  CheckCircleIcon,
-  ClipboardDocumentIcon,
-  CheckIcon,
-  ArrowPathIcon,
-} from '@heroicons/react/24/outline';
+  Badge,
+  Button,
+  Card,
+  Dialog,
+  DialogActions,
+  DialogBody,
+  DialogContent,
+  DialogSurface,
+  DialogTitle,
+  Field,
+  Input,
+  Menu,
+  MenuItem,
+  MenuList,
+  MenuPopover,
+  MenuTrigger,
+  Spinner,
+  Tab,
+  TabList,
+  Table,
+  TableBody,
+  TableCell,
+  TableCellLayout,
+  TableHeader,
+  TableHeaderCell,
+  TableRow,
+} from '@fluentui/react-components';
+import {
+  Money20Regular,
+  CheckmarkCircle16Regular,
+  Copy16Regular,
+  Checkmark16Regular,
+  ArrowSync16Regular,
+  MoreHorizontal16Regular,
+} from '@fluentui/react-icons';
 import type { AdminPayoutItem } from '../../store/adminApi';
 import { formatINR } from '../../utils/currency';
 import { Pagination } from '../ui/Pagination';
@@ -66,16 +95,6 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
     }
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedPayout) {
-        setSelectedPayout(null);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedPayout]);
-
   const handleCopyUtr = (utr: string) => {
     navigator.clipboard.writeText(utr);
     setCopiedUtr(utr);
@@ -97,7 +116,9 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
     ? filteredPayouts
     : filteredPayouts.slice((activePage - 1) * activePageSize, activePage * activePageSize);
 
-  const activeTotalCount = isServerPaged ? (totalCount ?? filteredPayouts.length) : filteredPayouts.length;
+  const activeTotalCount = isServerPaged
+    ? (totalCount ?? filteredPayouts.length)
+    : filteredPayouts.length;
   const activeTotalPages = isServerPaged
     ? (totalPages ?? Math.max(1, Math.ceil(activeTotalCount / activePageSize)))
     : Math.max(1, Math.ceil(activeTotalCount / activePageSize));
@@ -120,95 +141,89 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
     setPayoutUtr('');
   };
 
+  const filterTabs: { key: 'Pending' | 'Completed' | 'All'; label: string; count: number }[] = [
+    { key: 'Pending', label: 'Pending settlement', count: pendingPayouts.length },
+    { key: 'Completed', label: 'Settled payouts', count: completedPayouts.length },
+    { key: 'All', label: 'All requests', count: payouts.length },
+  ];
+
   return (
     <section aria-label="UPI Payouts and Settlements Hub" className="space-y-4">
       {/* Controls Strip */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border/80 p-3 sm:p-4 rounded-2xl shadow-2xs">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {[
-            { key: 'Pending', label: 'Pending Settlement', count: pendingPayouts.length },
-            { key: 'Completed', label: 'Settled Payouts', count: completedPayouts.length },
-            { key: 'All', label: 'All Requests', count: payouts.length },
-          ].map((pill) => {
-            const isActive = filter === pill.key;
-            return (
-              <button
-                key={pill.key}
-                type="button"
-                onClick={() => setFilter(pill.key as any)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border ${
-                  isActive
-                    ? 'bg-accent text-accent-foreground border-accent shadow-xs'
-                    : 'bg-card text-muted-foreground border-border/80 hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                <span>{pill.label}</span>
-                {pill.count !== undefined && (
-                  <span
-                    className={`px-1.5 py-0.2 rounded-full text-[10px] font-bold ${
-                      isActive
-                        ? 'bg-background/20 text-accent-foreground'
-                        : pill.key === 'Pending' && pill.count > 0
-                        ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-                        : 'bg-muted text-muted-foreground'
-                    }`}
+      <Card className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card border border-border p-3 rounded-2xl shadow-sm">
+        <div className="overflow-x-auto">
+          <TabList
+            size="small"
+            selectedValue={filter}
+            onTabSelect={(_e, data) => setFilter(data.value as 'All' | 'Pending' | 'Completed')}
+          >
+            {filterTabs.map((pill) => (
+              <Tab key={pill.key} value={pill.key}>
+                <span className="flex items-center gap-1.5">
+                  <span>{pill.label}</span>
+                  <Badge
+                    appearance="tint"
+                    color={pill.key === 'Pending' && pill.count > 0 ? 'warning' : 'informative'}
+                    size="small"
+                    className="tabular"
                   >
                     {pill.count}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+                  </Badge>
+                </span>
+              </Tab>
+            ))}
+          </TabList>
         </div>
 
-        <button
-          type="button"
+        <Button
+          appearance="outline"
+          size="small"
+          icon={<ArrowSync16Regular />}
           onClick={onRefresh}
-          className="p-2 rounded-xl border border-border/80 bg-card hover:bg-muted text-muted-foreground hover:text-foreground transition-all shadow-2xs self-end sm:self-center"
-          title="Refresh Payout Queue"
-        >
-          <ArrowPathIcon className="w-4 h-4" />
-        </button>
-      </div>
+          title="Refresh payout queue"
+          aria-label="Refresh payout queue"
+        />
+      </Card>
 
       {/* Mini Settlements Stats Strip */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-card border border-border/70 p-3 rounded-2xl text-xs">
-        <div>
-          <span className="text-[10px] uppercase font-bold text-amber-600 dark:text-amber-400">
-            Pending Disbursal Queue
-          </span>
-          <p className="font-mono font-bold text-sm text-amber-600 dark:text-amber-400 mt-0.5 tabular-nums">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <span className="text-caption1 font-semibold text-warning">Pending disbursal queue</span>
+          <p className="font-mono font-semibold text-subtitle2 text-warning mt-0.5 tabular">
             {formatINR(pendingAmount)} ({pendingPayouts.length} transfers)
           </p>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">
-            Total Settled Disbursals
+        </Card>
+        <Card className="bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <span className="text-caption1 font-semibold text-success">
+            Total settled disbursals
           </span>
-          <p className="font-mono font-bold text-sm text-emerald-600 dark:text-emerald-400 mt-0.5 tabular-nums">
+          <p className="font-mono font-semibold text-subtitle2 text-success mt-0.5 tabular">
             {formatINR(completedAmount)} ({completedPayouts.length} transfers)
           </p>
-        </div>
-        <div>
-          <span className="text-[10px] uppercase font-bold text-muted-foreground">Settlement Rail</span>
-          <p className="font-medium text-xs text-foreground mt-0.5">
-            Instant UPI VPA / RazorpayX Payouts
+        </Card>
+        <Card className="bg-card border border-border p-3 rounded-2xl shadow-sm">
+          <span className="text-caption1 font-semibold text-muted-foreground">
+            Settlement rail
+          </span>
+          <p className="font-semibold text-body1 text-foreground mt-0.5">
+            Instant UPI VPA / RazorpayX payouts
           </p>
-        </div>
+        </Card>
       </div>
 
       {/* Payouts Table */}
-      <div className="bg-card border border-border/80 rounded-2xl overflow-hidden shadow-2xs">
+      <Card className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm p-0">
         {isLoading ? (
-          <div className="py-24 flex flex-col items-center justify-center">
-            <div className="w-8 h-8 border-3 border-accent border-t-transparent rounded-full animate-spin mb-3" />
-            <p className="text-xs text-muted-foreground font-medium">Checking payout settlements queue...</p>
+          <div className="py-20 flex flex-col items-center justify-center">
+            <Spinner label="Checking payout settlements queue..." />
           </div>
         ) : filteredPayouts.length === 0 ? (
           <div className="text-center py-16 p-8">
-            <BanknotesIcon className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-            <h3 className="text-sm font-bold text-foreground">No payout records in this queue</h3>
-            <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+            <Money20Regular className="text-muted-foreground mx-auto mb-3" />
+            <h3 className="text-body1 font-semibold text-foreground">
+              No payout records in this queue
+            </h3>
+            <p className="text-caption1 text-muted-foreground mt-1 max-w-sm mx-auto">
               {filter === 'Pending'
                 ? 'All guest payout requests have been settled.'
                 : 'No payout records match this filter.'}
@@ -216,116 +231,159 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-muted/50 border-b border-border/80 text-muted-foreground font-semibold uppercase tracking-wider text-[10px]">
-                <tr>
-                  <th className="px-5 py-3.5">Guest</th>
-                  <th className="px-4 py-3.5">Net Disbursal Amount</th>
-                  <th className="px-4 py-3.5">UPI Destination VPA</th>
-                  <th className="px-4 py-3.5">Settlement Status</th>
-                  <th className="px-4 py-3.5">Requested At</th>
-                  <th className="px-5 py-3.5 text-right">Settlement Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/60">
+            <Table size="small" aria-label="Payout settlements table">
+              <TableHeader>
+                <TableRow>
+                  <TableHeaderCell>Guest</TableHeaderCell>
+                  <TableHeaderCell>Net disbursal amount</TableHeaderCell>
+                  <TableHeaderCell>UPI destination VPA</TableHeaderCell>
+                  <TableHeaderCell>Settlement status</TableHeaderCell>
+                  <TableHeaderCell>Requested at</TableHeaderCell>
+                  <TableHeaderCell>Settlement action</TableHeaderCell>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {displayedPayouts.map((payout) => {
                   const isPending = payout.status === 'Pending';
 
                   return (
-                    <tr key={payout.id} className="hover:bg-muted/30 transition-colors">
-                      <td className="px-5 py-3.5">
-                        <p className="font-bold text-foreground">{payout.userName}</p>
-                        <p className="text-[11px] text-muted-foreground">{payout.userEmail}</p>
-                      </td>
+                    <TableRow key={payout.id}>
+                      <TableCell>
+                        <TableCellLayout>
+                          <div>
+                            <p className="font-semibold text-foreground">{payout.userName}</p>
+                            <p className="text-caption1 text-muted-foreground">
+                              {payout.userEmail}
+                            </p>
+                          </div>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5 font-mono font-bold text-sm text-foreground tabular-nums">
-                        {formatINR(payout.amount)}
-                      </td>
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="font-mono font-semibold text-body1 text-foreground tabular">
+                            {formatINR(payout.amount)}
+                          </span>
+                        </TableCellLayout>
+                      </TableCell>
 
-                      <td className="px-4 py-3.5 font-mono text-accent">
-                        <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-muted/60 border border-border/60">
-                          <span>{payout.destination}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleCopyVpa(payout.destination)}
-                            title="Copy UPI VPA"
-                            className="p-1 rounded text-muted-foreground hover:text-foreground"
+                      <TableCell>
+                        <TableCellLayout>
+                          <div className="inline-flex items-center gap-1 font-mono text-caption1 text-brand-fg bg-muted px-2 py-0.5 rounded border border-border">
+                            <span>{payout.destination}</span>
+                            <Button
+                              appearance="transparent"
+                              size="small"
+                              icon={
+                                copiedVpa === payout.destination ? (
+                                  <Checkmark16Regular className="text-success" />
+                                ) : (
+                                  <Copy16Regular />
+                                )
+                              }
+                              onClick={() => handleCopyVpa(payout.destination)}
+                              title="Copy UPI VPA"
+                              aria-label="Copy UPI VPA"
+                            />
+                          </div>
+                        </TableCellLayout>
+                      </TableCell>
+
+                      <TableCell>
+                        <TableCellLayout>
+                          <Badge
+                            appearance="tint"
+                            color={isPending ? 'warning' : 'success'}
+                            size="small"
                           >
-                            {copiedVpa === payout.destination ? (
-                              <CheckIcon className="w-3 h-3 text-emerald-500" />
+                            {payout.status}
+                          </Badge>
+                        </TableCellLayout>
+                      </TableCell>
+
+                      <TableCell>
+                        <TableCellLayout>
+                          <span className="text-caption1 text-muted-foreground tabular">
+                            {new Date(payout.createdAt).toLocaleString('en-IN', {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </span>
+                        </TableCellLayout>
+                      </TableCell>
+
+                      <TableCell>
+                        <TableCellLayout>
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isPending ? (
+                              <Button
+                                appearance="primary"
+                                size="small"
+                                onClick={() => handleOpenProcess(payout)}
+                              >
+                                Settle UPI
+                              </Button>
                             ) : (
-                              <ClipboardDocumentIcon className="w-3 h-3" />
-                            )}
-                          </button>
-                        </div>
-                      </td>
-
-                      <td className="px-4 py-3.5">
-                        <span
-                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1 ${
-                            isPending
-                              ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/20'
-                              : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                          }`}
-                        >
-                          <span
-                            className={`w-1.5 h-1.5 rounded-full ${
-                              isPending ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'
-                            }`}
-                          />
-                          <span>{payout.status}</span>
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-3.5 text-muted-foreground text-[11px] whitespace-nowrap">
-                        {new Date(payout.createdAt).toLocaleString('en-IN', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit',
-                        })}
-                      </td>
-
-                      <td className="px-5 py-3.5 text-right">
-                        {isPending ? (
-                          <button
-                            type="button"
-                            onClick={() => handleOpenProcess(payout)}
-                            className="px-3.5 py-1.5 rounded-xl bg-accent text-accent-foreground font-bold text-xs hover:opacity-95 shadow-xs transition-all active:scale-95"
-                          >
-                            Transfer Funds
-                          </button>
-                        ) : (
-                          <div className="inline-flex flex-col items-end gap-1">
-                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold inline-flex items-center gap-1">
-                              <CheckCircleIcon className="w-3.5 h-3.5" />
-                              <span>Completed</span>
-                            </span>
-                            {payout.razorpayPayoutId && (
-                              <div className="inline-flex items-center gap-1 text-[10px] font-mono text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border/60">
-                                <span>UTR: {payout.razorpayPayoutId}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleCopyUtr(payout.razorpayPayoutId!)}
-                                  title="Copy UTR Reference"
-                                  className="text-muted-foreground hover:text-foreground"
+                              <div className="inline-flex items-center gap-1.5">
+                                <Badge
+                                  appearance="tint"
+                                  color="success"
+                                  size="small"
+                                  icon={<CheckmarkCircle16Regular />}
                                 >
-                                  {copiedUtr === payout.razorpayPayoutId ? (
-                                    <CheckIcon className="w-2.5 h-2.5 text-emerald-500" />
-                                  ) : (
-                                    <ClipboardDocumentIcon className="w-2.5 h-2.5" />
-                                  )}
-                                </button>
+                                  Completed
+                                </Badge>
+                                {payout.razorpayPayoutId && (
+                                  <span className="text-caption2 font-mono tabular text-muted-foreground">
+                                    UTR: {payout.razorpayPayoutId}
+                                  </span>
+                                )}
                               </div>
                             )}
+
+                            <Menu>
+                              <MenuTrigger disableButtonEnhancement>
+                                <Button
+                                  appearance="subtle"
+                                  size="small"
+                                  icon={<MoreHorizontal16Regular />}
+                                  aria-label="Payout actions"
+                                />
+                              </MenuTrigger>
+                              <MenuPopover>
+                                <MenuList>
+                                  <MenuItem
+                                    icon={<Copy16Regular />}
+                                    onClick={() => handleCopyVpa(payout.destination)}
+                                  >
+                                    Copy UPI VPA
+                                  </MenuItem>
+                                  {payout.razorpayPayoutId && (
+                                    <MenuItem
+                                      icon={<Copy16Regular />}
+                                      onClick={() => handleCopyUtr(payout.razorpayPayoutId!)}
+                                    >
+                                      Copy UTR ({copiedUtr === payout.razorpayPayoutId ? 'Copied' : payout.razorpayPayoutId})
+                                    </MenuItem>
+                                  )}
+                                  {isPending && (
+                                    <MenuItem onClick={() => handleOpenProcess(payout)}>
+                                      Settle UPI
+                                    </MenuItem>
+                                  )}
+                                </MenuList>
+                              </MenuPopover>
+                            </Menu>
                           </div>
-                        )}
-                      </td>
-                    </tr>
+                        </TableCellLayout>
+                      </TableCell>
+                    </TableRow>
                   );
                 })}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
 
@@ -338,65 +396,65 @@ export const AdminPayoutHub: React.FC<AdminPayoutHubProps> = ({
           onPageSizeChange={handlePageSizeChange}
           isLoading={isLoading}
         />
-      </div>
+      </Card>
 
-      {/* UTR Settlement Modal */}
-      {selectedPayout && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="payout-modal-title"
-          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-        >
-          <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <h3 id="payout-modal-title" className="text-base font-bold text-foreground mb-1">
-              Confirm UPI Payout Settlement
-            </h3>
-            <p className="text-xs text-muted-foreground mb-4">
-              Disbursing <strong>{formatINR(selectedPayout.amount)}</strong> to guest{' '}
-              <strong>{selectedPayout.userName}</strong> ({selectedPayout.destination}).
-            </p>
+      {/* UTR Settlement Dialog */}
+      <Dialog
+        open={Boolean(selectedPayout)}
+        onOpenChange={(_e, data) => {
+          if (!data.open) setSelectedPayout(null);
+        }}
+      >
+        <DialogSurface>
+          <form onSubmit={handleConfirmProcess}>
+            <DialogBody>
+              <DialogTitle>Confirm UPI payout settlement</DialogTitle>
+              <DialogContent className="space-y-4">
+                {selectedPayout && (
+                  <p className="text-caption1 text-muted-foreground">
+                    Disbursing{' '}
+                    <strong className="text-foreground tabular">
+                      {formatINR(selectedPayout.amount)}
+                    </strong>{' '}
+                    to guest <strong className="text-foreground">{selectedPayout.userName}</strong> (
+                    <span className="font-mono">{selectedPayout.destination}</span>).
+                  </p>
+                )}
 
-            <form onSubmit={handleConfirmProcess}>
-              <div className="mb-4">
-                <label htmlFor="payout-utr-input" className="text-xs font-semibold text-foreground block mb-1">
-                  Bank UTR / RazorpayX Payout Reference:
-                </label>
-                <input
-                  id="payout-utr-input"
-                  type="text"
-                  value={payoutUtr}
-                  onChange={(e) => setPayoutUtr(e.target.value)}
-                  placeholder="UTR1234567890"
-                  className="w-full p-3 rounded-xl border border-border/80 bg-background font-mono text-xs text-foreground focus:ring-2 focus:ring-accent focus:outline-hidden"
-                  autoFocus
-                />
-                <span className="text-[11px] text-muted-foreground mt-1 block">
-                  A unique settlement tracking ID generated for auditing and reconciliation.
-                </span>
-              </div>
-
-              <div className="flex justify-end gap-2.5">
-                <button
+                <Field
+                  label="Bank UTR / RazorpayX payout reference"
+                  hint="A unique settlement tracking ID generated for auditing and reconciliation."
+                >
+                  <Input
+                    id="payout-utr-input"
+                    value={payoutUtr}
+                    onChange={(_e, data) => setPayoutUtr(data.value)}
+                    placeholder="UTR1234567890"
+                    className="font-mono tabular"
+                    autoFocus
+                  />
+                </Field>
+              </DialogContent>
+              <DialogActions>
+                <Button
                   type="button"
+                  appearance="outline"
                   onClick={() => setSelectedPayout(null)}
-                  className="px-4 py-2 rounded-xl border border-border text-xs font-semibold text-foreground hover:bg-muted"
                 >
                   Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                   type="submit"
+                  appearance="primary"
                   disabled={isProcessing || !payoutUtr.trim()}
-                  className="px-5 py-2 rounded-xl bg-accent text-accent-foreground font-bold text-xs shadow-xs transition-all disabled:opacity-50"
                 >
-                  {isProcessing ? 'Settling...' : 'Confirm Disbursal'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+                  {isProcessing ? 'Settling...' : 'Settle UPI'}
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </form>
+        </DialogSurface>
+      </Dialog>
     </section>
   );
 };
-

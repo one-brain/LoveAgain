@@ -1,27 +1,33 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import {
+  Badge,
+  Button,
+  Card,
+  Input,
+} from '@fluentui/react-components';
+import {
+  Search20Regular,
+  ShieldCheckmark20Regular,
+  Star16Filled,
+  Sparkle20Regular,
+  Clock20Regular,
+  Location16Regular,
+  CheckmarkStarburst16Filled,
+  ArrowRight16Regular,
+  CheckmarkCircle20Regular,
+  Key20Regular,
+  ChevronDown20Regular,
+  ArrowSync20Regular,
+  Briefcase20Regular,
+  Library20Regular,
+  MusicNote220Regular,
+  FoodCake20Regular,
+} from '@fluentui/react-icons';
 import type { RootState } from '../store';
 import { RateBadge } from '../components/ui/RateBadge';
 import { ArchetypeQuizSection } from '../components/home/ArchetypeQuizSection';
-import {
-  MagnifyingGlassIcon,
-  ShieldCheckIcon,
-  StarIcon,
-  SparklesIcon,
-  ClockIcon,
-  MapPinIcon,
-  CheckBadgeIcon,
-  ArrowRightIcon,
-  CheckCircleIcon,
-  KeyIcon,
-  ChevronDownIcon,
-  ArrowPathIcon,
-  BriefcaseIcon,
-  BuildingLibraryIcon,
-  MusicalNoteIcon,
-  CakeIcon,
-} from '@heroicons/react/24/outline';
 
 interface CuratedOccasion {
   id: string;
@@ -29,7 +35,7 @@ interface CuratedOccasion {
   subtitle: string;
   query: string;
   badge: string;
-  icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
+  icon: React.ComponentType<{ className?: string }>;
   tags: string[];
 }
 
@@ -39,8 +45,8 @@ const OCCASIONS: CuratedOccasion[] = [
     title: 'Specialty Coffee & Literary Dialogue',
     subtitle: 'Quiet roasteries, boutique bookshops, and unhurried intellectual banter with well-read companions.',
     query: 'Coffee',
-    badge: 'Thoughtful & Calm',
-    icon: BuildingLibraryIcon,
+    badge: 'Thoughtful & calm',
+    icon: Library20Regular,
     tags: ['Third-Wave Roasteries', 'Bookshop Cafés', 'Quiet Banter', 'Intellectual Sparks'],
   },
   {
@@ -48,8 +54,8 @@ const OCCASIONS: CuratedOccasion[] = [
     title: 'Fine Dining & Culinary Walks',
     subtitle: 'Artisanal tasting menus, heritage night food trails, and articulate plus-ones for culinary explorations.',
     query: 'Restaurant',
-    badge: 'Sensory & Refined',
-    icon: CakeIcon,
+    badge: 'Sensory & refined',
+    icon: FoodCake20Regular,
     tags: ['Tasting Menus', 'Heritage Food Walks', 'Jazz Lounges', 'Boutique Bistros'],
   },
   {
@@ -57,8 +63,8 @@ const OCCASIONS: CuratedOccasion[] = [
     title: 'Art Previews & Cultural Galas',
     subtitle: 'Contemporary gallery openings, architectural walks, classical music concerts, and theater evenings.',
     query: 'Art Gallery',
-    badge: 'Aesthetic & Inspiring',
-    icon: SparklesIcon,
+    badge: 'Aesthetic & inspiring',
+    icon: Sparkle20Regular,
     tags: ['Gallery Previews', 'Heritage Architecture', 'Classical Recitals', 'Museum Walks'],
   },
   {
@@ -66,8 +72,8 @@ const OCCASIONS: CuratedOccasion[] = [
     title: 'Live Music & Urban Discovery',
     subtitle: 'Intimate acoustic sets, hidden speakeasies, street photography trails, and weekend explorations.',
     query: 'Weekend',
-    badge: 'Spontaneous & Lively',
-    icon: MusicalNoteIcon,
+    badge: 'Spontaneous & lively',
+    icon: MusicNote220Regular,
     tags: ['Acoustic Gigs', 'Vinyl Bars', 'Street Photography', 'Active Weekend Outings'],
   },
 ];
@@ -223,169 +229,218 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="space-y-16 sm:space-y-28 pb-24">
+    <div className="space-y-16 sm:space-y-24 pb-20">
       {/* 1. Authenticated Welcome Ribbon */}
       {isAuthenticated && !isAdmin && (
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 -mb-6 pt-4">
-          <div className="p-4 sm:p-5 rounded-2xl bg-card border border-border shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in duration-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mb-6 pt-4">
+          <Card className="p-4 sm:p-5 rounded-2xl bg-card border border-border shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-foreground">
+                <span className="text-body2 font-semibold text-foreground">
                   Welcome back, {memberName}!
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#C5A059]/15 text-[#C5A059] border border-[#C5A059]/30">
+                <span className="px-2 py-0.5 rounded-full text-caption2 font-semibold bg-trust-light text-trust border border-trust-border">
                   Verified Member
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5">
+              <p className="text-caption1 text-muted-foreground mt-0.5">
                 Explore verified companions for upcoming outings or review your active schedule.
               </p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Link
-                to="/bookings"
-                className="min-h-[44px] px-4 py-2 rounded-xl bg-muted hover:bg-muted/80 text-foreground text-xs font-semibold border border-border transition-all flex items-center gap-1.5 cursor-pointer"
+              <Button
+                appearance="secondary"
+                size="large"
+                icon={<Clock20Regular />}
+                onClick={() => navigate('/bookings')}
+                className="min-h-11"
               >
-                <ClockIcon className="w-3.5 h-3.5 text-[#881337] dark:text-rose-400" aria-hidden="true" />
-                <span>My Outings</span>
-              </Link>
-              <Link
-                to="/discovery"
-                className="min-h-[44px] px-5 py-2 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white text-xs font-bold shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                My Outings
+              </Button>
+              <Button
+                appearance="primary"
+                size="large"
+                icon={<ArrowRight16Regular />}
+                iconPosition="after"
+                onClick={() => navigate('/discovery')}
+                className="min-h-11"
               >
-                <span>Find Companions &rarr;</span>
-              </Link>
+                Explore
+              </Button>
             </div>
-          </div>
+          </Card>
         </div>
       )}
 
-      {/* 2. Hero Section: Refined Editorial Luxury */}
-      <section className="relative overflow-hidden pt-12 pb-14 sm:pt-24 sm:pb-20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          {/* Trust Eyebrow */}
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#C5A059]/10 border border-[#C5A059]/25 text-[#C5A059] text-xs font-semibold uppercase tracking-wider mb-6">
-            <SparklesIcon className="w-3.5 h-3.5" aria-hidden="true" />
-            <span>Discreet Verification • Escrow-Backed Integrity</span>
-          </div>
+      {/* 2. Hero Section: Fluent-calm */}
+      <section className="pt-10 pb-12 sm:pt-16 sm:pb-16 border-b border-border bg-card">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            {/* Hero Copy & Controls */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-trust-light border border-trust-border text-trust text-caption1 font-semibold">
+                <ShieldCheckmark20Regular className="shrink-0" />
+                <span>Discreet verification • Escrow-backed integrity</span>
+              </div>
 
-          {/* Canonical Headline */}
-          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-foreground font-serif max-w-4xl mx-auto leading-[1.12] text-balance">
-            Curated Companionship for <span className="text-[#881337] dark:text-rose-400">Cultured Outings</span>
-          </h1>
+              <h1 className="text-title1 sm:text-large-title font-semibold text-foreground text-balance">
+                Curated Companionship for <span className="text-brand-fg">Cultured Outings</span>
+              </h1>
 
-          {/* Clean Subtitle */}
-          <p className="mt-5 text-base sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed text-pretty">
-            Connect with verified, articulate companions for coffee conversations, fine dining, art previews, and cultural events across India's premier metropolitan cities. 100% platonic, discreet, and protected by platform escrow.
-          </p>
+              <p className="text-body2 text-muted-foreground max-w-2xl leading-relaxed">
+                Connect with verified, articulate companions for coffee conversations, fine dining, art previews, and cultural events across India's premier metropolitan cities. 100% platonic, discreet, and protected by platform escrow.
+              </p>
 
-          {/* Unified Search & Discovery Bar */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="mt-10 max-w-2xl mx-auto p-2 bg-card rounded-2xl border border-border shadow-xl flex flex-col sm:flex-row items-center gap-2 focus-within:ring-2 focus-within:ring-[#881337]/30 transition-all"
-          >
-            <div className="flex-1 flex items-center gap-3 px-3 w-full">
-              <MagnifyingGlassIcon className="w-5 h-5 text-muted-foreground flex-shrink-0" aria-hidden="true" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by occasion, interest, or neighborhood (e.g. 'Coffee in Indiranagar', 'Art Gallery')..."
-                className="w-full bg-transparent border-none text-foreground placeholder:text-muted-foreground focus:outline-none text-sm sm:text-base py-2.5"
-              />
+              {/* Unified Search & Discovery Bar */}
+              <form
+                onSubmit={handleSearchSubmit}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 max-w-2xl"
+              >
+                <Input
+                  size="large"
+                  contentBefore={<Search20Regular className="text-muted-foreground" />}
+                  value={searchQuery}
+                  onChange={(_, data) => setSearchQuery(data.value)}
+                  placeholder="Search by occasion, interest, or neighborhood (e.g. 'Coffee in Indiranagar')..."
+                  aria-label="Search companions by occasion, interest, or neighborhood"
+                  className="flex-1 min-h-11"
+                />
+                <Button
+                  type="submit"
+                  appearance="primary"
+                  size="large"
+                  icon={<ArrowRight16Regular />}
+                  iconPosition="after"
+                  className="min-h-11 shrink-0"
+                >
+                  Explore
+                </Button>
+              </form>
+
+              {/* Primary / Secondary Action Row */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <Button
+                  appearance="primary"
+                  size="large"
+                  onClick={() => navigate('/discovery')}
+                  className="min-h-11"
+                >
+                  Explore companions
+                </Button>
+                <Button
+                  appearance="secondary"
+                  size="large"
+                  icon={<Sparkle20Regular className="text-trust" />}
+                  onClick={scrollToQuiz}
+                  className="min-h-11"
+                >
+                  Match quiz
+                </Button>
+              </div>
+
+              {/* Curated Service Quick Pills */}
+              <div className="flex flex-wrap items-center gap-2 pt-2">
+                {[
+                  { label: 'Specialty Coffee', q: 'Coffee' },
+                  { label: 'Fine Dining', q: 'Restaurant' },
+                  { label: 'Art Previews', q: 'Art Gallery' },
+                  { label: 'Theater & Cinema', q: 'Movies' },
+                  { label: 'Tennis & Active', q: 'Tennis' },
+                  { label: 'Event Plus-One', q: 'Special Events' },
+                ].map((srv) => (
+                  <Button
+                    key={srv.label}
+                    appearance="outline"
+                    size="small"
+                    onClick={() => navigate(`/discovery?q=${encodeURIComponent(srv.q)}`)}
+                    className="!rounded-full min-h-9"
+                  >
+                    {srv.label}
+                  </Button>
+                ))}
+              </div>
+
+              {/* Popular Metros Row */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="text-caption1 font-semibold text-muted-foreground mr-1">Metros:</span>
+                {METROS.map((metro) => (
+                  <button
+                    key={metro.name}
+                    type="button"
+                    onClick={() => navigate(`/discovery?city=${encodeURIComponent(metro.name)}`)}
+                    className="min-h-9 px-3 py-1 rounded-full bg-background hover:bg-muted border border-border text-caption1 text-foreground font-normal transition-colors flex items-center gap-1 cursor-pointer"
+                  >
+                    <span>{metro.name}</span>
+                    <span className="text-caption2 text-muted-foreground tabular">
+                      ({metro.count.split(' ')[0]})
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-            <button
-              type="submit"
-              className="w-full sm:w-auto min-h-[48px] px-8 py-3 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white font-bold text-sm transition-all shadow-sm hover:scale-[1.02] flex items-center justify-center gap-2 flex-shrink-0 cursor-pointer"
-            >
-              <span>Explore</span>
-              <ArrowRightIcon className="w-4 h-4" aria-hidden="true" />
-            </button>
-          </form>
 
-          {/* Curated Service Quick Pills & Quiz Trigger */}
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
-            {[
-              { label: '☕ Specialty Coffee', q: 'Coffee' },
-              { label: '🍽️ Fine Dining', q: 'Restaurant' },
-              { label: '🎨 Art Previews', q: 'Art Gallery' },
-              { label: '🎬 Theater & Cinema', q: 'Movies' },
-              { label: '🎾 Tennis & Active', q: 'Tennis' },
-              { label: '🎟️ Event Plus-One', q: 'Special Events' },
-            ].map((srv) => (
-              <button
-                key={srv.label}
-                type="button"
-                onClick={() => navigate(`/discovery?q=${encodeURIComponent(srv.q)}`)}
-                className="min-h-[44px] px-3.5 py-1.5 rounded-full bg-card hover:bg-[#881337]/5 border border-border/80 hover:border-[#881337]/40 text-xs font-medium text-foreground transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
-              >
-                <span>{srv.label}</span>
-              </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={scrollToQuiz}
-              className="min-h-[44px] px-4 py-1.5 rounded-full bg-[#881337]/10 hover:bg-[#881337]/20 border border-[#881337]/30 text-xs font-bold text-[#881337] dark:text-rose-400 transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-            >
-              <SparklesIcon className="w-3.5 h-3.5 text-[#C5A059]" aria-hidden="true" />
-              <span>Take Archetype Quiz ✨</span>
-            </button>
-          </div>
-
-          {/* Popular Metros Row */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-2 max-w-3xl mx-auto">
-            <span className="text-xs font-semibold text-muted-foreground mr-1">Metros:</span>
-            {METROS.map((metro) => (
-              <button
-                key={metro.name}
-                type="button"
-                onClick={() => navigate(`/discovery?city=${encodeURIComponent(metro.name)}`)}
-                className="min-h-[44px] px-3.5 py-1 rounded-full bg-card hover:bg-muted border border-border/70 hover:border-border text-xs text-foreground/90 font-medium transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <span>{metro.name}</span>
-                <span className="text-[10px] text-muted-foreground">({metro.count.split(' ')[0]})</span>
-              </button>
-            ))}
+            {/* Imagery in an 8px-radius frame */}
+            <div className="lg:col-span-5">
+              <div className="rounded-2xl border border-border bg-background overflow-hidden shadow-sm">
+                <img
+                  src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80"
+                  alt="Curated dining and coffee outing in a public venue"
+                  className="w-full h-72 sm:h-88 object-cover"
+                />
+                <div className="p-4 bg-card border-t border-border flex items-center justify-between gap-4">
+                  <div>
+                    <div className="text-body1 font-semibold text-foreground">
+                      Public venues & mutual PIN verification
+                    </div>
+                    <div className="text-caption1 text-muted-foreground">
+                      Bengaluru · Mumbai · Delhi-NCR · Hyderabad
+                    </div>
+                  </div>
+                  <span className="px-2.5 py-1 rounded-full bg-trust-light text-trust border border-trust-border text-caption1 font-semibold shrink-0">
+                    100% Escrow
+                  </span>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Trust Strip */}
-          <div className="mt-14 pt-8 border-t border-border/60 max-w-4xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
+          <div className="mt-12 pt-8 border-t border-border grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-2xl sm:text-3xl font-extrabold text-foreground font-mono tabular-nums">100%</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Government ID Verified</div>
+              <div className="text-title3 sm:text-title2 font-semibold text-foreground font-mono tabular">100%</div>
+              <div className="text-caption1 text-muted-foreground mt-0.5">Government ID Verified</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif tracking-tight">Escrow Vault</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Zero Pre-payment Risk</div>
+              <div className="text-title3 sm:text-title2 font-semibold text-foreground">Escrow Vault</div>
+              <div className="text-caption1 text-muted-foreground mt-0.5">Zero Pre-payment Risk</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-mono tabular-nums">4-Digit PIN</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Mutual Check-In</div>
+              <div className="text-title3 sm:text-title2 font-semibold text-foreground font-mono tabular">4-Digit PIN</div>
+              <div className="text-caption1 text-muted-foreground mt-0.5">Mutual Check-In</div>
             </div>
             <div>
-              <div className="text-2xl sm:text-3xl font-bold text-foreground font-serif tracking-tight">24/7 SOS</div>
-              <div className="text-xs text-muted-foreground mt-0.5">Safety Dispatch</div>
+              <div className="text-title3 sm:text-title2 font-semibold text-foreground tabular">24/7 SOS</div>
+              <div className="text-caption1 text-muted-foreground mt-0.5">Safety Dispatch</div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. Interactive Archetype Quiz (Lead Magnet & Wavelength Matcher) */}
+      {/* 3. Interactive Archetype Quiz */}
       <div id="archetype-quiz">
         <ArchetypeQuizSection />
       </div>
 
-      {/* 4. Curated Outing Occasions (Clean Editorial Pillars) */}
+      {/* 4. Curated Outing Occasions */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center max-w-2xl mx-auto mb-10">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
-            Tailored Experiences
+          <span className="text-caption1 font-semibold text-brand-fg mb-1 block">
+            Tailored experiences
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
+          <h2 className="text-title2 sm:text-title1 font-semibold text-foreground">
             Curated Outing Occasions
           </h2>
-          <p className="text-muted-foreground mt-2 text-xs sm:text-sm">
+          <p className="text-muted-foreground mt-2 text-body1">
             Whether exploring an art preview or sharing a quiet coffee, choose the setting that matches your mood.
           </p>
         </div>
@@ -397,42 +452,42 @@ export const Home: React.FC = () => {
               <div
                 key={occ.id}
                 onClick={() => navigate(`/discovery?q=${encodeURIComponent(occ.query)}`)}
-                className="p-6 sm:p-8 rounded-3xl border border-border/80 bg-card hover:border-[#881337]/50 shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col justify-between group hover:-translate-y-1"
+                className="p-6 sm:p-8 rounded-2xl border border-border bg-card shadow-sm card-hover-effect cursor-pointer flex flex-col justify-between group"
               >
                 <div>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="w-12 h-12 rounded-2xl bg-muted border border-border flex items-center justify-center group-hover:bg-[#881337]/10 transition-colors">
-                      <Icon className="w-6 h-6 text-[#881337] dark:text-rose-400" aria-hidden="true" />
+                    <div className="w-10 h-10 rounded-2xl bg-accent-light border border-border flex items-center justify-center text-brand-fg">
+                      <Icon />
                     </div>
-                    <span className="px-3 py-1 rounded-full bg-muted/80 text-[11px] font-semibold text-muted-foreground border border-border/60">
+                    <Badge appearance="tint" color="informative" size="medium">
                       {occ.badge}
-                    </span>
+                    </Badge>
                   </div>
 
-                  <h3 className="text-xl font-bold text-foreground font-serif mb-2 group-hover:text-[#881337] dark:group-hover:text-rose-400 transition-colors">
+                  <h3 className="text-subtitle1 font-semibold text-foreground mb-2 group-hover:text-brand-fg transition-colors">
                     {occ.title}
                   </h3>
 
-                  <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed mb-4">
+                  <p className="text-body1 text-muted-foreground leading-relaxed mb-4">
                     {occ.subtitle}
                   </p>
                 </div>
 
-                <div className="pt-4 border-t border-border/60">
+                <div className="pt-4 border-t border-border">
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {occ.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-foreground/80 border border-border/40"
+                        className="px-2 py-0.5 rounded-md bg-muted text-caption1 text-foreground border border-border"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
 
-                  <div className="flex items-center justify-between text-xs font-bold text-[#881337] dark:text-rose-400">
-                    <span>Browse Companions</span>
-                    <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" aria-hidden="true" />
+                  <div className="flex items-center justify-between text-caption1 font-semibold text-brand-fg">
+                    <span>Browse companions</span>
+                    <ArrowRight16Regular />
                   </div>
                 </div>
               </div>
@@ -443,40 +498,43 @@ export const Home: React.FC = () => {
 
       {/* 5. Featured Verified Companions Showcase */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-card rounded-3xl border border-border p-6 sm:p-10 shadow-sm">
+        <div className="bg-card rounded-2xl border border-border p-6 sm:p-10 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-8 gap-4">
             <div>
-              <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
-                Vetted & Active This Week
+              <span className="text-caption1 font-semibold text-brand-fg mb-1 block">
+                Vetted & active this week
               </span>
-              <h2 className="text-2xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
+              <h2 className="text-title2 sm:text-title1 font-semibold text-foreground">
                 Featured Verified Companions
               </h2>
-              <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+              <p className="text-muted-foreground mt-1 text-body1">
                 Every companion has completed government ID & biometric verification and accepts invitations exclusively in public venues.
               </p>
             </div>
-            <Link
-              to="/discovery"
-              className="min-h-[44px] px-4 py-2 rounded-xl border border-border hover:border-[#881337] text-xs sm:text-sm font-semibold text-foreground hover:text-[#881337] dark:hover:text-rose-400 transition-colors flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+            <Button
+              appearance="secondary"
+              size="large"
+              icon={<ArrowRight16Regular />}
+              iconPosition="after"
+              onClick={() => navigate('/discovery')}
+              className="min-h-11 self-start sm:self-auto"
             >
-              <span>Browse All 100+ Companions</span>
-              <ArrowRightIcon className="w-3.5 h-3.5" aria-hidden="true" />
-            </Link>
+              View all
+            </Button>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {FEATURED_COMPANIONS.map((comp) => (
               <div
                 key={comp.id}
                 onClick={() => navigate(`/providers/${comp.id}`)}
-                className="rounded-3xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col group hover:-translate-y-1"
+                className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm card-hover-effect cursor-pointer flex flex-col group"
               >
-                <div className="relative h-64 overflow-hidden bg-muted">
+                <div className="relative h-60 overflow-hidden bg-muted">
                   <img
                     src={comp.image}
                     alt={comp.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                     loading="lazy"
                   />
                   <div className="absolute top-3 right-3 z-10">
@@ -487,8 +545,8 @@ export const Home: React.FC = () => {
                       onAuthPrompt={() => navigate('/login?redirect=/discovery')}
                     />
                   </div>
-                  <div className="absolute top-3 left-3 bg-[#C5A059]/90 backdrop-blur-md px-2.5 py-0.5 rounded-full text-[11px] font-bold text-white flex items-center gap-1 shadow-xs">
-                    <CheckBadgeIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                  <div className="absolute top-3 left-3 bg-trust-light px-2.5 py-0.5 rounded-full text-caption2 font-semibold text-trust border border-trust-border flex items-center gap-1 shadow-2xs">
+                    <CheckmarkStarburst16Filled />
                     <span>Verified</span>
                   </div>
                 </div>
@@ -496,35 +554,35 @@ export const Home: React.FC = () => {
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <h3 className="font-bold text-lg text-foreground font-serif group-hover:text-[#881337] dark:group-hover:text-rose-400 transition-colors">
+                      <h3 className="font-semibold text-subtitle2 text-foreground group-hover:text-brand-fg transition-colors">
                         {comp.name}
                       </h3>
-                      <div className="flex items-center gap-1 text-xs font-semibold text-amber-500">
-                        <StarIcon className="w-4 h-4 fill-amber-400" aria-hidden="true" />
-                        <span className="font-mono tabular-nums">{comp.rating}</span>
+                      <div className="flex items-center gap-1 text-caption1 font-semibold text-trust">
+                        <Star16Filled />
+                        <span className="font-mono tabular">{comp.rating}</span>
                       </div>
                     </div>
-                    <p className="text-xs text-[#881337] dark:text-rose-400 font-medium mb-3 line-clamp-1">{comp.headline}</p>
+                    <p className="text-caption1 text-brand-fg font-semibold mb-3 line-clamp-1">{comp.headline}</p>
 
                     <div className="flex flex-wrap gap-1.5 mb-4">
                       {comp.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="px-2 py-0.5 rounded-md bg-muted text-[11px] font-medium text-muted-foreground border border-border/40"
+                          className="px-2 py-0.5 rounded-md bg-muted text-caption2 text-muted-foreground border border-border"
                         >
-                          #{tag}
+                          {tag}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-border/60 flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">
-                      <MapPinIcon className="w-3.5 h-3.5 text-[#C5A059]" aria-hidden="true" />
+                  <div className="pt-3 border-t border-border flex items-center justify-between text-caption1 text-muted-foreground">
+                    <span className="flex items-center gap-1 tabular">
+                      <Location16Regular className="text-muted-foreground" />
                       {comp.distance}
                     </span>
-                    <span className="font-bold text-[#881337] dark:text-rose-400 group-hover:translate-x-1 transition-transform">
-                      {isAuthenticated ? 'Book with Escrow \u2192' : 'View Profile \u2192'}
+                    <span className="font-semibold text-brand-fg">
+                      {isAuthenticated ? 'Reserve \u2192' : 'View \u2192'}
                     </span>
                   </div>
                 </div>
@@ -534,72 +592,72 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 6. The 3-Step Trust Architecture (How Escrow Protects You) */}
+      {/* 6. The 3-Step Trust Architecture */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
-            Safe, Transparent & Escrow-Protected
+        <div className="text-center max-w-2xl mx-auto mb-10">
+          <span className="text-caption1 font-semibold text-brand-fg mb-1 block">
+            Safe, transparent & escrow-protected
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
+          <h2 className="text-title2 sm:text-title1 font-semibold text-foreground">
             How Cue Protects Every Outing
           </h2>
-          <p className="text-muted-foreground mt-2 text-xs sm:text-sm">
+          <p className="text-muted-foreground mt-2 text-body1">
             Zero cash exchanges, zero upfront payment risk, and guaranteed mutual security.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
-          <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-[#881337]/10 border border-[#881337]/20 flex items-center justify-center text-[#881337] dark:text-rose-400 font-bold text-lg mb-4 font-mono">
+              <div className="w-10 h-10 rounded-2xl bg-accent-light border border-border flex items-center justify-center text-brand-fg font-semibold text-subtitle2 mb-4 font-mono tabular">
                 1
               </div>
-              <h3 className="text-lg font-bold text-foreground font-serif mb-2">
+              <h3 className="text-subtitle2 font-semibold text-foreground mb-2">
                 Select & Escrow Hold
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p className="text-body1 text-muted-foreground leading-relaxed">
                 Choose your companion and specify the public meeting spot. Your payment is held securely in an isolated platform escrow vault — the companion never receives money upfront.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <ShieldCheckIcon className="w-4 h-4" aria-hidden="true" />
-              <span>100% Refundable Before Outing</span>
+            <div className="mt-6 pt-4 border-t border-border text-caption1 font-semibold text-success flex items-center gap-1.5">
+              <ShieldCheckmark20Regular />
+              <span>100% refundable before outing</span>
             </div>
           </div>
 
-          <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <div className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-[#881337]/10 border border-[#881337]/20 flex items-center justify-center text-[#881337] dark:text-rose-400 font-bold text-lg mb-4 font-mono">
+              <div className="w-10 h-10 rounded-2xl bg-accent-light border border-border flex items-center justify-center text-brand-fg font-semibold text-subtitle2 mb-4 font-mono tabular">
                 2
               </div>
-              <h3 className="text-lg font-bold text-foreground font-serif mb-2">
+              <h3 className="text-subtitle2 font-semibold text-foreground mb-2">
                 Public Meetup & 4-Digit Handshake
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p className="text-body1 text-muted-foreground leading-relaxed">
                 Meet at the agreed public venue (café, gallery, or restaurant). Exchange your private 4-digit PIN to confirm check-in and verify that both parties have arrived safely.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-[#881337] dark:text-rose-400 flex items-center gap-1.5">
-              <KeyIcon className="w-4 h-4" aria-hidden="true" />
-              <span>Mutual 4-Digit Security PIN</span>
+            <div className="mt-6 pt-4 border-t border-border text-caption1 font-semibold text-brand-fg flex items-center gap-1.5">
+              <Key20Regular />
+              <span>Mutual 4-digit security PIN</span>
             </div>
           </div>
 
-          <div className="p-6 sm:p-8 rounded-3xl bg-card border border-border shadow-xs flex flex-col justify-between">
+          <div className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between">
             <div>
-              <div className="w-12 h-12 rounded-2xl bg-[#881337]/10 border border-[#881337]/20 flex items-center justify-center text-[#881337] dark:text-rose-400 font-bold text-lg mb-4 font-mono">
+              <div className="w-10 h-10 rounded-2xl bg-accent-light border border-border flex items-center justify-center text-brand-fg font-semibold text-subtitle2 mb-4 font-mono tabular">
                 3
               </div>
-              <h3 className="text-lg font-bold text-foreground font-serif mb-2">
+              <h3 className="text-subtitle2 font-semibold text-foreground mb-2">
                 Outing Concluded & Instant Settlement
               </h3>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              <p className="text-body1 text-muted-foreground leading-relaxed">
                 Once the scheduled time finishes, the outing is completed. Escrow funds transfer directly to the companion's wallet with instant UPI payout, and both parties leave verified feedback.
               </p>
             </div>
-            <div className="mt-6 pt-4 border-t border-border/60 text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-              <CheckCircleIcon className="w-4 h-4" aria-hidden="true" />
-              <span>Instant Payout & Verified Review</span>
+            <div className="mt-6 pt-4 border-t border-border text-caption1 font-semibold text-success flex items-center gap-1.5">
+              <CheckmarkCircle20Regular />
+              <span>Instant payout & verified review</span>
             </div>
           </div>
         </div>
@@ -607,60 +665,58 @@ export const Home: React.FC = () => {
 
       {/* 7. Companion Monetization (Become a Verified Companion) */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-12 rounded-3xl bg-[#140B12] text-white border border-[#2A1824] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-96 h-96 rounded-full bg-gradient-to-br from-[#881337]/20 via-[#C5A059]/10 to-transparent blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+        <div className="p-8 sm:p-10 rounded-2xl bg-card text-foreground border border-border shadow-sm">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-[#C5A059] text-xs font-semibold uppercase tracking-wider mb-4 border border-white/15">
-                <BriefcaseIcon className="w-4 h-4" aria-hidden="true" />
-                <span>Earn With Dignity & Protection</span>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-trust-light text-trust text-caption1 font-semibold mb-4 border border-trust-border">
+                <Briefcase20Regular />
+                <span>Earn with dignity & protection</span>
               </div>
 
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight font-serif mb-4 text-white leading-tight">
+              <h2 className="text-title2 sm:text-title1 font-semibold mb-4 text-foreground">
                 Share your time, culture, and interests with guaranteed escrow payouts
               </h2>
 
-              <p className="text-white/80 text-xs sm:text-base leading-relaxed mb-6">
+              <p className="text-muted-foreground text-body2 leading-relaxed mb-6">
                 Whether you are an art curator, certified sports coach, language mentor, or cultural enthusiast, Cue allows you to publish your schedule, set your hourly rate, and receive guaranteed payouts with zero risk of unpaid invoices.
               </p>
 
               <div className="flex flex-wrap gap-3">
                 <Link
-                  to={isAuthenticated ? "/apply-companion" : "/register?redirect=/apply-companion"}
-                  className="min-h-[44px] px-6 py-3 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white font-bold text-xs sm:text-sm shadow-md transition-all flex items-center cursor-pointer"
+                  to={isAuthenticated ? '/apply-companion' : '/register?redirect=/apply-companion'}
+                  className="min-h-11 px-5 py-2.5 rounded-md bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-body1 shadow-2xs transition-colors flex items-center"
                 >
-                  Apply as a Verified Companion
+                  Become a host
                 </Link>
                 <Link
                   to="/how-it-works"
-                  className="min-h-[44px] px-6 py-3 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-xs sm:text-sm transition-all border border-white/20 flex items-center cursor-pointer"
+                  className="min-h-11 px-5 py-2.5 rounded-md bg-card hover:bg-muted text-foreground font-semibold text-body1 transition-colors border border-border-strong flex items-center"
                 >
-                  Learn About Payouts
+                  Payout guide
                 </Link>
               </div>
             </div>
 
-            <div className="space-y-3 sm:space-y-4">
-              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-3">
-                <CheckCircleIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" aria-hidden="true" />
+            <div className="space-y-3">
+              <div className="p-4 rounded-2xl bg-muted border border-border flex items-center gap-3">
+                <CheckmarkCircle20Regular className="text-success shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-xs sm:text-sm text-white">Guaranteed Escrow Security</h4>
-                  <p className="text-[11px] sm:text-xs text-white/70">Clients deposit funds in escrow prior to meeting. No chasing payments or defaults.</p>
+                  <h4 className="font-semibold text-body1 text-foreground">Guaranteed Escrow Security</h4>
+                  <p className="text-caption1 text-muted-foreground">Clients deposit funds in escrow prior to meeting. No chasing payments or defaults.</p>
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-3">
-                <ShieldCheckIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" aria-hidden="true" />
+              <div className="p-4 rounded-2xl bg-muted border border-border flex items-center gap-3">
+                <ShieldCheckmark20Regular className="text-success shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-xs sm:text-sm text-white">Strict Identity & Safety Vetting</h4>
-                  <p className="text-[11px] sm:text-xs text-white/70">Every member completes biometric verification and government ID checks for mutual safety.</p>
+                  <h4 className="font-semibold text-body1 text-foreground">Strict Identity & Safety Vetting</h4>
+                  <p className="text-caption1 text-muted-foreground">Every member completes biometric verification and government ID checks for mutual safety.</p>
                 </div>
               </div>
-              <div className="p-4 rounded-2xl bg-white/5 backdrop-blur-sm border border-white/10 flex items-center gap-3">
-                <ArrowPathIcon className="w-6 h-6 text-emerald-400 flex-shrink-0" aria-hidden="true" />
+              <div className="p-4 rounded-2xl bg-muted border border-border flex items-center gap-3">
+                <ArrowSync20Regular className="text-success shrink-0" />
                 <div>
-                  <h4 className="font-semibold text-xs sm:text-sm text-white">Instant UPI Disbursements</h4>
-                  <p className="text-[11px] sm:text-xs text-white/70">Withdraw earnings straight to your GPay, PhonePe, or Paytm with zero delay.</p>
+                  <h4 className="font-semibold text-body1 text-foreground">Instant UPI Disbursements</h4>
+                  <p className="text-caption1 text-muted-foreground">Withdraw earnings straight to your GPay, PhonePe, or Paytm with zero delay.</p>
                 </div>
               </div>
             </div>
@@ -668,16 +724,16 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* 8. Frequently Asked Questions (Friction Eliminator) */}
+      {/* 8. Frequently Asked Questions */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <span className="text-xs font-bold uppercase tracking-wider text-[#C5A059] mb-1 block">
-            Clear Answers
+        <div className="text-center mb-8">
+          <span className="text-caption1 font-semibold text-brand-fg mb-1 block">
+            Clear answers
           </span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-foreground font-serif tracking-tight">
+          <h2 className="text-title2 sm:text-title1 font-semibold text-foreground">
             Frequently Asked Questions
           </h2>
-          <p className="text-muted-foreground mt-1 text-xs sm:text-sm">
+          <p className="text-muted-foreground mt-1 text-body1">
             Everything you need to know about safety, reservations, escrow, and outing guidelines.
           </p>
         </div>
@@ -688,26 +744,25 @@ export const Home: React.FC = () => {
             return (
               <div
                 key={faq.question}
-                className="rounded-2xl border border-border bg-card transition-all overflow-hidden"
+                className="rounded-2xl border border-border bg-card overflow-hidden shadow-2xs"
               >
                 <button
                   type="button"
                   onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
-                  className="w-full min-h-[56px] p-4 sm:p-5 flex items-center justify-between text-left gap-4 hover:bg-muted/40 transition-colors cursor-pointer"
+                  className="w-full min-h-14 p-4 sm:p-5 flex items-center justify-between text-left gap-4 hover:bg-muted transition-colors cursor-pointer"
                 >
-                  <span className="text-sm sm:text-base font-bold text-foreground">
+                  <span className="text-body2 font-semibold text-foreground">
                     {faq.question}
                   </span>
-                  <ChevronDownIcon
-                    className={`w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 ${
-                      isOpen ? 'rotate-180 text-[#881337] dark:text-rose-400' : ''
+                  <ChevronDown20Regular
+                    className={`text-muted-foreground shrink-0 transition-transform duration-200 ${
+                      isOpen ? 'rotate-180 text-brand-fg' : ''
                     }`}
-                    aria-hidden="true"
                   />
                 </button>
                 {isOpen && (
-                  <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-0 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/40 mt-1">
-                    <p className="pt-2 text-pretty">{faq.answer}</p>
+                  <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-2 text-body1 text-muted-foreground leading-relaxed border-t border-border">
+                    <p>{faq.answer}</p>
                   </div>
                 )}
               </div>
@@ -718,31 +773,34 @@ export const Home: React.FC = () => {
 
       {/* 9. Final Conversion Invitation */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="p-8 sm:p-14 rounded-3xl bg-card border border-[#C5A059]/30 shadow-xl text-center relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#881337]/5 via-[#C5A059]/10 to-[#881337]/5 pointer-events-none" />
-
-          <h2 className="text-3xl sm:text-5xl font-bold text-foreground font-serif mb-3 text-balance">
+        <div className="p-8 sm:p-12 rounded-2xl bg-card border border-border shadow-sm text-center">
+          <h2 className="text-title2 sm:text-title1 font-semibold text-foreground mb-3 text-balance">
             Experience Connection on Your Own Terms
           </h2>
-          <p className="text-muted-foreground max-w-xl mx-auto text-xs sm:text-base mb-8 text-pretty">
+          <p className="text-muted-foreground max-w-xl mx-auto text-body2 mb-8">
             Join hundreds of verified urban members across Bengaluru, Mumbai, Delhi-NCR, and Hyderabad. Discreet, escrow-backed, and 100% platonic.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link
-              to="/discovery"
-              className="w-full sm:w-auto min-h-[48px] px-8 py-3.5 rounded-xl bg-[#881337] hover:bg-[#9F1239] text-white font-bold text-sm shadow-md transition-all hover:scale-[1.02] flex items-center justify-center cursor-pointer"
+            <Button
+              appearance="primary"
+              size="large"
+              icon={<ArrowRight16Regular />}
+              iconPosition="after"
+              onClick={() => navigate('/discovery')}
+              className="w-full sm:w-auto min-h-11"
             >
-              Explore Verified Companions &rarr;
-            </Link>
-            <button
-              type="button"
+              Explore companions
+            </Button>
+            <Button
+              appearance="secondary"
+              size="large"
+              icon={<Sparkle20Regular className="text-trust" />}
               onClick={scrollToQuiz}
-              className="w-full sm:w-auto min-h-[48px] px-6 py-3.5 rounded-xl bg-card hover:bg-muted text-foreground font-semibold text-sm border border-border transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto min-h-11"
             >
-              <SparklesIcon className="w-4 h-4 text-[#C5A059]" aria-hidden="true" />
-              <span>Take Archetype Quiz</span>
-            </button>
+              Match quiz
+            </Button>
           </div>
         </div>
       </section>

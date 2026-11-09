@@ -1,11 +1,19 @@
 import React, { useState } from 'react';
 import {
-  MapPinIcon,
-  GlobeAmericasIcon,
-  CheckCircleIcon,
-  ArrowPathIcon,
-  InformationCircleIcon,
-} from '@heroicons/react/24/outline';
+  Button,
+  Card,
+  Badge,
+  Dropdown,
+  Option,
+  Field,
+  MessageBar,
+  MessageBarBody,
+} from '@fluentui/react-components';
+import {
+  Location20Regular,
+  Globe20Regular,
+  ArrowSync20Regular,
+} from '@fluentui/react-icons';
 import {
   INDIAN_METRO_HUBS,
   resolveNearestHub,
@@ -32,13 +40,10 @@ export const CompanionLocationCard: React.FC<CompanionLocationCardProps> = ({
   const [lon, setLon] = useState<number | null>(currentLongitude ?? null);
   const [maxRadius, setMaxRadius] = useState<number>(currentMaxRadiusKm || 25);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [selectedHubId, setSelectedHubId] = useState<string>('');
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Derive human-readable hub name
-  const activeHubInfo =
-    lat != null && lon != null
-      ? resolveNearestHub(lat, lon)
-      : null;
+  const activeHubInfo = lat != null && lon != null ? resolveNearestHub(lat, lon) : null;
 
   const handleDetectGps = async () => {
     setIsDetectingGps(true);
@@ -70,9 +75,9 @@ export const CompanionLocationCard: React.FC<CompanionLocationCardProps> = ({
     }
   };
 
-  const handleSelectHub = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const hubId = e.target.value;
+  const handleSelectHubById = async (hubId: string) => {
     if (!hubId) return;
+    setSelectedHubId(hubId);
 
     const selected = INDIAN_METRO_HUBS.find((h) => h.id === hubId);
     if (!selected) return;
@@ -117,57 +122,54 @@ export const CompanionLocationCard: React.FC<CompanionLocationCardProps> = ({
     }
   };
 
+  const selectedHubObj = INDIAN_METRO_HUBS.find((h) => h.id === selectedHubId);
+
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5">
+    <Card className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-border">
         <div>
           <div className="flex items-center gap-2">
-            <span className="p-1.5 rounded-lg bg-accent/10 text-accent">
-              <MapPinIcon className="w-5 h-5" />
+            <span className="p-1.5 rounded-md bg-accent-light text-brand-fg">
+              <Location20Regular />
             </span>
-            <h3 className="text-base font-bold text-foreground">Base Location & Service Area</h3>
+            <h3 className="text-subtitle2 font-semibold text-foreground">Base location & service area</h3>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-caption1 text-muted-foreground mt-1">
             Update your operational base anytime. Seekers will discover you based on your proximity.
           </p>
         </div>
 
-        {/* Current status pill */}
-        <div className="flex items-center gap-1.5 self-start sm:self-auto px-3 py-1.5 rounded-full bg-muted/60 border border-border text-xs font-medium">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="text-foreground">
-            {activeHubInfo ? activeHubInfo.hubName : 'Bengaluru (Default)'}
-          </span>
-        </div>
+        <Badge appearance="tint" color="success" className="self-start sm:self-auto">
+          {activeHubInfo ? activeHubInfo.hubName : 'Bengaluru (Default)'}
+        </Badge>
       </div>
 
-      {/* Coordinate & Area Details */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="p-4 rounded-xl bg-background border border-border space-y-2">
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground block">
-            Active Operating Center
+        <div className="p-4 rounded-lg bg-background border border-border space-y-2">
+          <span className="text-caption1 font-semibold text-muted-foreground block">
+            Active operating center
           </span>
-          <div className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <GlobeAmericasIcon className="w-4 h-4 text-accent" />
+          <div className="text-body1 font-semibold text-foreground flex items-center gap-2">
+            <Globe20Regular className="text-brand-fg" />
             <span>
               {activeHubInfo
                 ? `${activeHubInfo.area}, ${activeHubInfo.city}`
-                : 'Not Set (Set your location below)'}
+                : 'Not set (set your location below)'}
             </span>
           </div>
           {lat != null && lon != null && (
-            <p className="text-xs text-muted-foreground tabular-nums">
+            <p className="text-caption1 text-muted-foreground tabular">
               Coordinates: {lat.toFixed(4)}° N, {lon.toFixed(4)}° E
             </p>
           )}
         </div>
 
-        <div className="p-4 rounded-xl bg-background border border-border space-y-2">
+        <div className="p-4 rounded-lg bg-background border border-border space-y-2">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Maximum Travel Radius
+            <span className="text-caption1 font-semibold text-muted-foreground">
+              Maximum travel radius
             </span>
-            <span className="text-xs font-bold text-accent tabular-nums">{maxRadius} km</span>
+            <span className="text-caption1 font-semibold text-brand-fg tabular">{maxRadius} km</span>
           </div>
           <input
             type="range"
@@ -176,75 +178,54 @@ export const CompanionLocationCard: React.FC<CompanionLocationCardProps> = ({
             step="5"
             value={maxRadius}
             onChange={(e) => handleRadiusChange(Number(e.target.value))}
-            className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-accent"
+            aria-label="Maximum travel radius in kilometers"
+            className="w-full h-2 bg-muted rounded-md appearance-none cursor-pointer accent-accent"
           />
-          <p className="text-[11px] text-muted-foreground">
-            Seekers within {maxRadius} km of your base will find you in nearby discovery.
+          <p className="text-caption1 text-muted-foreground">
+            Seekers within <span className="tabular">{maxRadius} km</span> of your base will find you in nearby discovery.
           </p>
         </div>
       </div>
 
-      {/* Action Controls: GPS vs Quick City Hub Selector */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-        <button
-          type="button"
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 pt-2">
+        <Button
+          appearance="primary"
+          icon={isDetectingGps ? <ArrowSync20Regular className="animate-spin" /> : <Location20Regular />}
           onClick={handleDetectGps}
           disabled={isDetectingGps || isUpdating}
-          className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs transition hover:brightness-105 active:scale-[0.98] disabled:opacity-60"
+          className="flex-1 min-h-11"
         >
-          {isDetectingGps ? (
-            <>
-              <ArrowPathIcon className="w-4 h-4 animate-spin" />
-              <span>Detecting GPS Location...</span>
-            </>
-          ) : (
-            <>
-              <MapPinIcon className="w-4 h-4" />
-              <span>Use My Device GPS (Instant)</span>
-            </>
-          )}
-        </button>
+          {isDetectingGps ? 'Locating...' : 'Locate me'}
+        </Button>
 
-        <div className="flex-1 relative">
-          <select
-            defaultValue=""
-            onChange={handleSelectHub}
-            disabled={isUpdating}
-            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-xs font-medium focus:outline-none focus:ring-1 focus:ring-accent appearance-none pr-8 cursor-pointer"
-          >
-            <option value="" disabled>
-              Select Metro Hub / Travel Relocation...
-            </option>
-            {INDIAN_METRO_HUBS.map((hub) => (
-              <option key={hub.id} value={hub.id}>
-                {hub.city} — {hub.area}
-              </option>
-            ))}
-          </select>
-          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-muted-foreground">
-            <GlobeAmericasIcon className="w-4 h-4" />
-          </div>
+        <div className="flex-1">
+          <Field label="Metro hub / travel relocation">
+            <Dropdown
+              placeholder="Select metro hub..."
+              disabled={isUpdating}
+              value={selectedHubObj ? `${selectedHubObj.city} — ${selectedHubObj.area}` : ''}
+              selectedOptions={selectedHubId ? [selectedHubId] : []}
+              onOptionSelect={(_e, data) => {
+                if (data.optionValue) {
+                  handleSelectHubById(data.optionValue);
+                }
+              }}
+            >
+              {INDIAN_METRO_HUBS.map((hub) => (
+                <Option key={hub.id} value={hub.id} text={`${hub.city} — ${hub.area}`}>
+                  {hub.city} — {hub.area}
+                </Option>
+              ))}
+            </Dropdown>
+          </Field>
         </div>
       </div>
 
-      {/* Notifications / Toast */}
       {statusMessage && (
-        <div
-          className={`flex items-start gap-2 p-3 rounded-xl text-xs font-medium ${
-            statusMessage.type === 'success'
-              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
-              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
-          }`}
-        >
-          {statusMessage.type === 'success' ? (
-            <CheckCircleIcon className="w-4 h-4 shrink-0 mt-0.5" />
-          ) : (
-            <InformationCircleIcon className="w-4 h-4 shrink-0 mt-0.5" />
-          )}
-          <span>{statusMessage.text}</span>
-        </div>
+        <MessageBar intent={statusMessage.type === 'success' ? 'success' : 'error'}>
+          <MessageBarBody>{statusMessage.text}</MessageBarBody>
+        </MessageBar>
       )}
-    </div>
+    </Card>
   );
 };
-

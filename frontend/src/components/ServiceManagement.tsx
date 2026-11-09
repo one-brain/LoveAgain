@@ -1,5 +1,20 @@
 import React, { useState } from 'react';
-import { PlusIcon, XMarkIcon, SparklesIcon, CheckIcon } from '@heroicons/react/24/outline';
+import {
+  Button,
+  Card,
+  Input,
+  Field,
+  Tag,
+  TagGroup,
+  Badge,
+  MessageBar,
+  MessageBarBody,
+} from '@fluentui/react-components';
+import {
+  Add16Regular,
+  Sparkle16Regular,
+  Checkmark16Regular,
+} from '@fluentui/react-icons';
 
 interface ServiceManagementProps {
   specialties: string[];
@@ -12,37 +27,31 @@ interface ServiceManagementProps {
 export const RECOMMENDED_COMPANIONSHIP_SERVICES = [
   {
     name: 'Coffee Dates & Cafe Chats',
-    icon: '☕',
     description: 'Artisanal cafes, pour-over tastings, relaxed conversations & quiet reading sessions',
     defaultTags: ['Specialty Cafes', 'Engaging Conversationalist', 'Third Wave Coffee', 'Quiet Ambience'],
   },
   {
     name: 'Restaurant Visits & Dining',
-    icon: '🍽️',
     description: 'Fine dining dinners, casual lunch meetups, culinary food walks & chef tastings',
     defaultTags: ['Fine Dining Etiquette', 'Foodie Explorer', 'Dinner Outings', 'Cuisine Pairings'],
   },
   {
     name: 'Shopping & Styling Companion',
-    icon: '🛍️',
     description: 'Personal shopping assistant, boutique explorations, wardrobe styling & mall visits',
     defaultTags: ['Wardrobe Styling', 'Boutique Crawls', 'Patient Shopping Buddy', 'Mall Navigation'],
   },
   {
     name: 'Movies & Cinema Outings',
-    icon: '🎬',
     description: 'Multiplex new releases, film festival companion, IMAX screenings & post-show chats',
     defaultTags: ['Cinema Buff', 'IMAX Screenings', 'Film Discussion', 'Popcorn & Movie Dates'],
   },
   {
     name: 'Weekend Activities & Getaways',
-    icon: '🌄',
     description: 'Sunday farmer markets, scenic outdoor spots, day trips, museum trails & picnic outings',
     defaultTags: ['Weekend Day Trips', 'Sunday Markets', 'Scenic Drives', 'Park Walks & Picnics'],
   },
   {
     name: 'Special Events & Plus-One',
-    icon: '🎟️',
     description: 'Wedding plus-one, corporate galas, live concerts, black-tie dinners & art exhibitions',
     defaultTags: ['Wedding Plus-One', 'Gala & Black-Tie', 'Concert Partner', 'Art Gallery Openings'],
   },
@@ -125,82 +134,82 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Current Specialties Chips */}
       <div>
-        <label className="block text-xs font-semibold text-muted-foreground mb-2">
-          Published Specialties
-        </label>
+        <span className="block text-caption1 font-semibold text-muted-foreground mb-2">
+          Published specialties
+        </span>
         <div className="flex flex-wrap gap-2">
           {specialties.length === 0 ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-caption1 text-muted-foreground">
               No services added yet. Add your first specialty below.
             </p>
           ) : (
-            specialties.map((specialty) => (
-              <div
-                key={specialty}
-                className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-accent/15 text-accent border border-accent/25 shadow-2xs"
-              >
-                <span>{specialty}</span>
-                <button
-                  type="button"
-                  onClick={() => handleRemove(specialty)}
-                  className="text-accent/70 hover:text-accent transition-colors"
-                  aria-label={`Remove ${specialty}`}
+            <TagGroup
+              onDismiss={(_e, { value }) => handleRemove(String(value))}
+              aria-label="Published specialties"
+              className="flex flex-wrap gap-2"
+            >
+              {specialties.map((specialty) => (
+                <Tag
+                  key={specialty}
+                  value={specialty}
+                  dismissible
+                  dismissIcon={{ 'aria-label': `Remove ${specialty}` }}
+                  appearance="brand"
+                  shape="rounded"
                 >
-                  <XMarkIcon className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            ))
+                  {specialty}
+                </Tag>
+              ))}
+            </TagGroup>
           )}
         </div>
       </div>
 
-      {/* Specialty Skill Tags Detail Cards */}
       {specialties.length > 0 && (
         <div className="space-y-3">
-          <label className="block text-xs font-semibold text-muted-foreground">
-            Skill & Level Highlights
-          </label>
+          <span className="block text-caption1 font-semibold text-muted-foreground">
+            Skill & level highlights
+          </span>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {specialties.map((specialty) => (
-              <div
+              <Card
                 key={specialty}
-                className="border border-border bg-background rounded-2xl p-4 space-y-3"
+                className="border border-border bg-background rounded-2xl p-4 space-y-3 shadow-sm"
               >
                 <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">
-                    {specialty}
-                  </h4>
-                  <span className="text-[11px] text-muted-foreground">
+                  <h4 className="text-body1 font-semibold text-foreground">{specialty}</h4>
+                  <span className="text-caption1 text-muted-foreground tabular">
                     {(serviceTags[specialty] || []).length} tags
                   </span>
                 </div>
 
-                <div className="flex flex-wrap gap-1.5 min-h-[28px]">
-                  {(serviceTags[specialty] || []).map((tag, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[11px] font-medium bg-card border border-border text-foreground"
+                <div className="flex flex-wrap gap-1.5 min-h-7">
+                  {(serviceTags[specialty] || []).length > 0 && (
+                    <TagGroup
+                      onDismiss={(_e, { value }) => handleRemoveTag(specialty, String(value))}
+                      className="flex flex-wrap gap-1.5"
                     >
-                      <span>{tag}</span>
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveTag(specialty, tag)}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <XMarkIcon className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
+                      {(serviceTags[specialty] || []).map((tag) => (
+                        <Tag
+                          key={tag}
+                          value={tag}
+                          size="small"
+                          dismissible
+                          appearance="outline"
+                        >
+                          {tag}
+                        </Tag>
+                      ))}
+                    </TagGroup>
+                  )}
                 </div>
 
                 <div className="flex gap-2">
-                  <input
-                    type="text"
+                  <Input
                     value={tagInputs[specialty] || ''}
-                    onChange={(e) =>
-                      setTagInputs((prev) => ({ ...prev, [specialty]: e.target.value }))
+                    onChange={(_e, data) =>
+                      setTagInputs((prev) => ({ ...prev, [specialty]: data.value }))
                     }
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
@@ -209,33 +218,33 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
                       }
                     }}
                     placeholder="e.g. Intermediate, Rally partner"
-                    className="flex-1 px-3 py-1.5 text-xs rounded-xl border border-border bg-card text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="flex-1"
                   />
-                  <button
+                  <Button
                     type="button"
+                    appearance="primary"
+                    size="small"
                     onClick={() => handleAddTag(specialty)}
-                    className="px-3 py-1.5 text-xs font-semibold bg-accent text-accent-foreground rounded-xl shadow-2xs hover:bg-accent-hover transition-colors"
                   >
                     Add
-                  </button>
+                  </Button>
                 </div>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
       )}
 
-      {/* Recommended Companionship Services Showcase */}
-      <div className="space-y-3 pt-2 border-t border-border/70">
+      <div className="space-y-3 pt-2 border-t border-border">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <SparklesIcon className="w-4 h-4 text-accent" />
-            <h3 className="text-xs font-bold text-foreground uppercase tracking-wider font-mono">
-              Curated Companionship Services
+            <Sparkle16Regular className="text-brand-fg" />
+            <h3 className="text-body1 font-semibold text-foreground">
+              Curated companionship services
             </h3>
           </div>
-          <span className="text-[11px] text-muted-foreground">
-            Tap to offer or expand your profile
+          <span className="text-caption1 text-muted-foreground">
+            Select to offer or expand your profile
           </span>
         </div>
 
@@ -243,44 +252,36 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
           {RECOMMENDED_COMPANIONSHIP_SERVICES.map((srv) => {
             const isAdded = specialties.includes(srv.name);
             return (
-              <div
+              <Card
                 key={srv.name}
-                className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-2.5 ${
-                  isAdded
-                    ? 'bg-accent/5 border-accent/30 shadow-2xs'
-                    : 'bg-card border-border hover:border-accent/40'
+                className={`p-4 rounded-2xl border flex flex-col justify-between gap-3 shadow-sm ${
+                  isAdded ? 'bg-accent-light border-brand-stroke' : 'bg-card border-border'
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className="text-base" role="img" aria-hidden="true">
-                      {srv.icon}
-                    </span>
+                    <h4 className="text-body1 font-semibold text-foreground">{srv.name}</h4>
                     {isAdded ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent/15 text-accent border border-accent/25">
-                        <CheckIcon className="w-3 h-3" />
-                        <span>Active</span>
-                      </span>
+                      <Badge appearance="tint" color="brand" icon={<Checkmark16Regular />}>
+                        Active
+                      </Badge>
                     ) : (
-                      <span className="text-[10px] font-semibold text-muted-foreground">
+                      <Badge appearance="outline" color="informative">
                         Recommended
-                      </span>
+                      </Badge>
                     )}
                   </div>
-                  <h4 className="text-xs font-bold text-foreground font-serif">
-                    {srv.name}
-                  </h4>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                  <p className="text-caption1 text-muted-foreground mt-0.5 leading-snug">
                     {srv.description}
                   </p>
                 </div>
 
-                <div className="pt-1 flex items-center justify-between">
+                <div className="pt-1 flex items-center justify-between gap-2">
                   <div className="flex flex-wrap gap-1">
                     {srv.defaultTags.slice(0, 2).map((t) => (
                       <span
                         key={t}
-                        className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
+                        className="text-caption2 px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
                       >
                         {t}
                       </span>
@@ -288,52 +289,49 @@ export const ServiceManagement: React.FC<ServiceManagementProps> = ({
                   </div>
 
                   {isAdded ? (
-                    <button
-                      type="button"
+                    <Button
+                      appearance="subtle"
+                      size="small"
                       onClick={() => handleRemove(srv.name)}
-                      className="text-[11px] font-semibold text-muted-foreground hover:text-destructive px-2 py-1 rounded-lg transition-colors cursor-pointer"
                     >
                       Remove
-                    </button>
+                    </Button>
                   ) : (
-                    <button
-                      type="button"
+                    <Button
+                      appearance="primary"
+                      size="small"
+                      icon={<Add16Regular />}
                       onClick={() => handleQuickAddService(srv.name, srv.defaultTags)}
-                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-accent text-accent-foreground text-xs font-semibold hover:bg-accent-hover transition-colors shadow-2xs cursor-pointer"
                     >
-                      <PlusIcon className="w-3 h-3" />
-                      <span>Add</span>
-                    </button>
+                      Add
+                    </Button>
                   )}
                 </div>
-              </div>
+              </Card>
             );
           })}
         </div>
       </div>
 
-      {/* Add New Custom Specialty Input Form */}
-      <form onSubmit={handleAdd} className="space-y-2 pt-2 border-t border-border/70">
-        <label className="block text-xs font-semibold text-muted-foreground">
-          Add Custom Specialty
-        </label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={newSpecialty}
-            onChange={(e) => setNewSpecialty(e.target.value)}
-            placeholder="e.g. Squash, Painting, Cycling, Chess..."
-            className="flex-1 px-4 py-2.5 text-xs sm:text-sm rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-accent"
-          />
-          <button
-            type="submit"
-            className="px-5 py-2.5 text-xs sm:text-sm font-semibold bg-accent text-accent-foreground rounded-xl hover:bg-accent-hover transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
-          >
-            <PlusIcon className="w-4 h-4" />
-            <span>Add Specialty</span>
-          </button>
-        </div>
-        {error && <p className="text-xs text-destructive mt-1 font-medium">{error}</p>}
+      <form onSubmit={handleAdd} className="space-y-2 pt-2 border-t border-border">
+        <Field label="Add custom specialty">
+          <div className="flex gap-2">
+            <Input
+              value={newSpecialty}
+              onChange={(_e, data) => setNewSpecialty(data.value)}
+              placeholder="e.g. Squash, Painting, Cycling, Chess..."
+              className="flex-1"
+            />
+            <Button type="submit" appearance="primary" icon={<Add16Regular />}>
+              Add specialty
+            </Button>
+          </div>
+        </Field>
+        {error && (
+          <MessageBar intent="error">
+            <MessageBarBody>{error}</MessageBarBody>
+          </MessageBar>
+        )}
       </form>
     </div>
   );

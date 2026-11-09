@@ -31,41 +31,64 @@ class BookingsScreen extends ConsumerWidget {
         children: [
           // Filter Section: Status Pills and Role Scope
           Container(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 10),
+            padding: const EdgeInsets.fromLTRB(
+              FluentSpacing.l,
+              FluentSpacing.s,
+              FluentSpacing.l,
+              FluentSpacing.mNudge,
+            ),
             color: AppColors.background,
             child: Column(
               children: [
                 // Status Filter Pills (Active, Completed, Cancelled)
                 Row(
                   children: [
-                    _buildTabChip('active', 'Active (${state.activeBookings.length})',
-                        state.selectedTab, controller),
-                    const SizedBox(width: 8),
                     _buildTabChip(
-                        'completed',
-                        'Completed (${state.completedBookings.length})',
-                        state.selectedTab,
-                        controller),
-                    const SizedBox(width: 8),
+                      'active',
+                      'Active (${state.activeBookings.length})',
+                      state.selectedTab,
+                      controller,
+                    ),
+                    const SizedBox(width: FluentSpacing.s),
                     _buildTabChip(
-                        'cancelled',
-                        'Cancelled (${state.cancelledBookings.length})',
-                        state.selectedTab,
-                        controller),
+                      'completed',
+                      'Completed (${state.completedBookings.length})',
+                      state.selectedTab,
+                      controller,
+                    ),
+                    const SizedBox(width: FluentSpacing.s),
+                    _buildTabChip(
+                      'cancelled',
+                      'Cancelled (${state.cancelledBookings.length})',
+                      state.selectedTab,
+                      controller,
+                    ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: FluentSpacing.s),
                 // Role Scope Filter (All, Attending, Hosting)
                 Row(
                   children: [
                     _buildRoleChip(
-                        'all', 'All Outings', state.selectedRoleFilter, controller),
-                    const SizedBox(width: 6),
+                      'all',
+                      'All Outings',
+                      state.selectedRoleFilter,
+                      controller,
+                    ),
+                    const SizedBox(width: FluentSpacing.sNudge),
                     _buildRoleChip(
-                        'guest', 'Attending', state.selectedRoleFilter, controller),
-                    const SizedBox(width: 6),
+                      'guest',
+                      'Attending',
+                      state.selectedRoleFilter,
+                      controller,
+                    ),
+                    const SizedBox(width: FluentSpacing.sNudge),
                     _buildRoleChip(
-                        'host', 'Hosting', state.selectedRoleFilter, controller),
+                      'host',
+                      'Hosting',
+                      state.selectedRoleFilter,
+                      controller,
+                    ),
                   ],
                 ),
               ],
@@ -82,7 +105,7 @@ class BookingsScreen extends ConsumerWidget {
                     : RefreshIndicator(
                         onRefresh: () => controller.loadBookings(),
                         child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(FluentSpacing.l),
                           itemCount: state.filteredBookings.length,
                           itemBuilder: (context, index) {
                             final booking = state.filteredBookings[index];
@@ -97,38 +120,42 @@ class BookingsScreen extends ConsumerWidget {
   }
 
   Widget _buildRoleChip(
-      String role, String label, String currentRole, BookingController controller) {
+    String role,
+    String label,
+    String currentRole,
+    BookingController controller,
+  ) {
     final isSelected = role == currentRole;
+    final Color selectedBg = role == 'host'
+        ? AppColors.goldLight
+        : (role == 'guest' ? AppColors.primaryLight : AppColors.surface);
+    final Color selectedBorder = role == 'host'
+        ? AppColors.goldBorder
+        : (role == 'guest' ? AppColors.brandStroke : AppColors.borderStrong);
+    final Color selectedText = role == 'host'
+        ? AppColors.gold
+        : (role == 'guest' ? AppColors.brandForeground : AppColors.textPrimary);
+
     return InkWell(
       onTap: () => controller.setRoleFilter(role),
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(FluentRadius.circular),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(
+          horizontal: FluentSpacing.m,
+          vertical: FluentSpacing.sNudge,
+        ),
         decoration: BoxDecoration(
-          color: isSelected
-              ? (role == 'host'
-                  ? const Color(0xFFFEF3C7)
-                  : (role == 'guest' ? const Color(0xFFFCE7F3) : AppColors.surface))
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          color: isSelected ? selectedBg : Colors.transparent,
+          borderRadius: BorderRadius.circular(FluentRadius.circular),
           border: Border.all(
-            color: isSelected
-                ? (role == 'host'
-                    ? const Color(0xFFC5A059)
-                    : (role == 'guest' ? AppColors.primary : AppColors.textPrimary))
-                : AppColors.border,
+            color: isSelected ? selectedBorder : AppColors.border,
           ),
         ),
         child: Text(
           label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-            color: isSelected
-                ? (role == 'host'
-                    ? const Color(0xFF92400E)
-                    : (role == 'guest' ? AppColors.primary : AppColors.textPrimary))
-                : AppColors.textSecondary,
+          style: FluentType.caption2.copyWith(
+            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+            color: isSelected ? selectedText : AppColors.textSecondary,
           ),
         ),
       ),
@@ -136,27 +163,30 @@ class BookingsScreen extends ConsumerWidget {
   }
 
   Widget _buildTabChip(
-      String tab, String label, String currentTab, BookingController controller) {
+    String tab,
+    String label,
+    String currentTab,
+    BookingController controller,
+  ) {
     final isSelected = tab == currentTab;
     return Expanded(
       child: InkWell(
         onTap: () => controller.setTab(tab),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(FluentRadius.large),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: FluentSpacing.s),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : AppColors.surface,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(FluentRadius.large),
             border: Border.all(
               color: isSelected ? AppColors.primary : AppColors.border,
             ),
           ),
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+            style: FluentType.numeric(FluentType.caption2).copyWith(
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
               color: isSelected ? Colors.white : AppColors.textPrimary,
             ),
           ),
@@ -168,29 +198,35 @@ class BookingsScreen extends ConsumerWidget {
   Widget _buildEmptyState(BuildContext context, String tab) {
     return Center(
       child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: FluentSpacing.xxl,
+          vertical: FluentSpacing.l,
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.event_note_outlined,
-                size: 48, color: AppColors.textMuted),
-            const SizedBox(height: 12),
+            const Icon(
+              Icons.event_note_outlined,
+              size: 48,
+              color: AppColors.textMuted,
+            ),
+            const SizedBox(height: FluentSpacing.m),
             Text(
               'No $tab outings',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
+              style: FluentType.body1Strong.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 6),
-            const Text(
+            const SizedBox(height: FluentSpacing.sNudge),
+            Text(
               'Looking to plan a new outing? Browse thoughtful companions now.',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              style: FluentType.caption1.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: FluentSpacing.l),
             FilledButton.icon(
               onPressed: () => context.go('/'),
               icon: const Icon(Icons.explore, size: 18),
@@ -235,34 +271,34 @@ class _BookingCard extends ConsumerWidget {
             : 'GT')
         : (booking.providerInitials.isNotEmpty ? booking.providerInitials : 'CP');
 
-    final counterpartRole = isHost ? 'Guest' : 'Companion Host';
+    final counterpartRole = isHost ? 'Guest' : 'Companion host';
 
     final roleBadge = Container(
-      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      padding: const EdgeInsets.symmetric(
+        horizontal: FluentSpacing.sNudge,
+        vertical: FluentSpacing.xxs,
+      ),
       decoration: BoxDecoration(
-        color: isHost ? const Color(0xFFFEF3C7) : const Color(0xFFFCE7F3),
-        borderRadius: BorderRadius.circular(6),
+        color: isHost ? AppColors.goldLight : AppColors.primaryLight,
+        borderRadius: BorderRadius.circular(FluentRadius.medium),
         border: Border.all(
-          color: isHost ? const Color(0xFFC5A059) : AppColors.primary,
-          width: 1,
+          color: isHost ? AppColors.goldBorder : AppColors.brandStroke,
         ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            isHost ? Icons.shield_outlined : Icons.event_seat_outlined,
-            size: 10,
-            color: isHost ? const Color(0xFF92400E) : AppColors.primary,
+            isHost ? Icons.verified_user_outlined : Icons.event_seat_outlined,
+            size: 11,
+            color: isHost ? AppColors.gold : AppColors.brandForeground,
           ),
-          const SizedBox(width: 3),
+          const SizedBox(width: FluentSpacing.xxs),
           Text(
             isHost ? 'HOSTING' : 'ATTENDING',
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-              color: isHost ? const Color(0xFF92400E) : AppColors.primary,
+            style: FluentType.caption2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: isHost ? AppColors.gold : AppColors.brandForeground,
             ),
           ),
         ],
@@ -270,14 +306,14 @@ class _BookingCard extends ConsumerWidget {
     );
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: FluentSpacing.m),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
         border: Border.all(color: AppColors.border),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
@@ -286,7 +322,7 @@ class _BookingCard extends ConsumerWidget {
           );
         },
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(FluentSpacing.l),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -301,39 +337,33 @@ class _BookingCard extends ConsumerWidget {
                         CircleAvatar(
                           radius: 20,
                           backgroundColor: isHost
-                              ? const Color(0xFFFEF3C7)
+                              ? AppColors.goldLight
                               : AppColors.primaryLight,
                           child: Text(
                             counterpartInitials,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
+                            style: FluentType.caption1Strong.copyWith(
                               color: isHost
-                                  ? const Color(0xFF92400E)
-                                  : AppColors.primaryDark,
+                                  ? AppColors.gold
+                                  : AppColors.brandForeground,
                             ),
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: FluentSpacing.mNudge),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 counterpartName,
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
+                                style: FluentType.body2Strong.copyWith(
                                   color: AppColors.textPrimary,
                                 ),
                                 overflow: TextOverflow.ellipsis,
                               ),
                               Text(
                                 '$counterpartRole • #${booking.orderId.substring(booking.orderId.length > 7 ? booking.orderId.length - 6 : 0)}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textMuted,
-                                ),
+                                style: FluentType.numeric(FluentType.caption2)
+                                    .copyWith(color: AppColors.textMuted),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ],
@@ -342,49 +372,51 @@ class _BookingCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: FluentSpacing.s),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       BookingStatusChip(status: booking.status),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: FluentSpacing.xs),
                       roleBadge,
                     ],
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: FluentSpacing.m),
               const Divider(height: 1, color: AppColors.border),
-              const SizedBox(height: 12),
+              const SizedBox(height: FluentSpacing.m),
 
               // Booking Time & Address Details
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      size: 14, color: AppColors.textSecondary),
-                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: FluentSpacing.sNudge),
                   Text(
                     DateFormat('EEE, MMM d, yyyy • h:mm a')
                         .format(booking.startTime),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
+                    style: FluentType.numeric(FluentType.caption1Strong)
+                        .copyWith(color: AppColors.textPrimary),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: FluentSpacing.sNudge),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined,
-                      size: 14, color: AppColors.textSecondary),
-                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.location_on_outlined,
+                    size: 14,
+                    color: AppColors.textSecondary,
+                  ),
+                  const SizedBox(width: FluentSpacing.sNudge),
                   Expanded(
                     child: Text(
                       booking.meetingAddress,
-                      style: const TextStyle(
-                        fontSize: 12,
+                      style: FluentType.caption2.copyWith(
                         color: AppColors.textSecondary,
                       ),
                       overflow: TextOverflow.ellipsis,
@@ -392,7 +424,7 @@ class _BookingCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: FluentSpacing.m),
 
               // Pricing and Actions Row
               Row(
@@ -403,19 +435,14 @@ class _BookingCard extends ConsumerWidget {
                     children: [
                       Text(
                         '₹${(isHost ? booking.providerEarnings : booking.totalAmount).toStringAsFixed(0)}',
-                        style: const TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          fontFamily: 'monospace',
-                        ),
+                        style: FluentType.numeric(FluentType.body1Strong)
+                            .copyWith(color: AppColors.brandForeground),
                       ),
                       Text(
                         isHost
                             ? 'Your payout • ${booking.durationHours.toStringAsFixed(1)} hrs'
                             : 'Total paid • ${booking.durationHours.toStringAsFixed(1)} hrs',
-                        style: const TextStyle(
-                          fontSize: 11,
+                        style: FluentType.numeric(FluentType.caption2).copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -430,12 +457,19 @@ class _BookingCard extends ConsumerWidget {
                           side: const BorderSide(color: AppColors.border),
                         ),
                         onPressed: () {
-                          context.push('/chat/${booking.orderId}',
-                              extra: booking);
+                          context.push(
+                            '/chat/${booking.orderId}',
+                            extra: booking,
+                          );
                         },
                       ),
-                      const SizedBox(width: 8),
-                      _buildQuickActionButton(context, booking, controller, isHost),
+                      const SizedBox(width: FluentSpacing.s),
+                      _buildQuickActionButton(
+                        context,
+                        booking,
+                        controller,
+                        isHost,
+                      ),
                     ],
                   ),
                 ],
@@ -448,15 +482,22 @@ class _BookingCard extends ConsumerWidget {
   }
 
   Widget _buildQuickActionButton(
-      BuildContext context, Booking b, BookingController controller, bool isHost) {
+    BuildContext context,
+    Booking b,
+    BookingController controller,
+    bool isHost,
+  ) {
     if (isHost) {
       switch (b.status) {
         case BookingStatus.confirmed:
           return FilledButton(
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(
+                horizontal: FluentSpacing.m,
+                vertical: FluentSpacing.s,
+              ),
+              minimumSize: const Size(44, 36),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () {
@@ -466,14 +507,23 @@ class _BookingCard extends ConsumerWidget {
                 ),
               );
             },
-            child: const Text('Verify PIN', style: TextStyle(fontSize: 12)),
+            child: Text(
+              'Verify PIN',
+              style: FluentType.caption2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           );
         case BookingStatus.inProgress:
           return FilledButton(
             style: FilledButton.styleFrom(
-              backgroundColor: const Color(0xFF047857),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              minimumSize: Size.zero,
+              backgroundColor: AppColors.success,
+              padding: const EdgeInsets.symmetric(
+                horizontal: FluentSpacing.m,
+                vertical: FluentSpacing.s,
+              ),
+              minimumSize: const Size(44, 36),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () {
@@ -483,13 +533,22 @@ class _BookingCard extends ConsumerWidget {
                 ),
               );
             },
-            child: const Text('In Outing', style: TextStyle(fontSize: 12)),
+            child: Text(
+              'In Outing',
+              style: FluentType.caption2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+            ),
           );
         default:
           return OutlinedButton(
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(
+                horizontal: FluentSpacing.m,
+                vertical: FluentSpacing.s,
+              ),
+              minimumSize: const Size(44, 36),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () {
@@ -499,7 +558,13 @@ class _BookingCard extends ConsumerWidget {
                 ),
               );
             },
-            child: const Text('Details', style: TextStyle(fontSize: 12)),
+            child: Text(
+              'Details',
+              style: FluentType.caption2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
           );
       }
     }
@@ -509,19 +574,31 @@ class _BookingCard extends ConsumerWidget {
       case BookingStatus.pendingPayment:
         return FilledButton(
           style: FilledButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            minimumSize: Size.zero,
+            padding: const EdgeInsets.symmetric(
+              horizontal: FluentSpacing.m,
+              vertical: FluentSpacing.s,
+            ),
+            minimumSize: const Size(44, 36),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           onPressed: () => controller.payBooking(b.orderId),
-          child: const Text('Pay Now', style: TextStyle(fontSize: 12)),
+          child: Text(
+            'Pay Now',
+            style: FluentType.caption2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         );
       case BookingStatus.confirmed:
         return FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: AppColors.primary,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            minimumSize: Size.zero,
+            padding: const EdgeInsets.symmetric(
+              horizontal: FluentSpacing.m,
+              vertical: FluentSpacing.s,
+            ),
+            minimumSize: const Size(44, 36),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           onPressed: () {
@@ -531,14 +608,23 @@ class _BookingCard extends ConsumerWidget {
               ),
             );
           },
-          child: const Text('View PIN', style: TextStyle(fontSize: 12)),
+          child: Text(
+            'View PIN',
+            style: FluentType.caption2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         );
       case BookingStatus.inProgress:
         return FilledButton(
           style: FilledButton.styleFrom(
-            backgroundColor: const Color(0xFF047857),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            minimumSize: Size.zero,
+            backgroundColor: AppColors.success,
+            padding: const EdgeInsets.symmetric(
+              horizontal: FluentSpacing.m,
+              vertical: FluentSpacing.s,
+            ),
+            minimumSize: const Size(44, 36),
             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           onPressed: () {
@@ -548,18 +634,33 @@ class _BookingCard extends ConsumerWidget {
               ),
             );
           },
-          child: const Text('Verify PIN', style: TextStyle(fontSize: 12)),
+          child: Text(
+            'Verify PIN',
+            style: FluentType.caption2.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
         );
       case BookingStatus.completed:
         if (!b.hasReview) {
           return OutlinedButton(
             style: OutlinedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              minimumSize: Size.zero,
+              padding: const EdgeInsets.symmetric(
+                horizontal: FluentSpacing.m,
+                vertical: FluentSpacing.s,
+              ),
+              minimumSize: const Size(44, 36),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             onPressed: () => _showReviewDialog(context, b, controller),
-            child: const Text('Review', style: TextStyle(fontSize: 12)),
+            child: Text(
+              'Review',
+              style: FluentType.caption2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimary,
+              ),
+            ),
           );
         }
         return const SizedBox.shrink();
@@ -570,7 +671,10 @@ class _BookingCard extends ConsumerWidget {
   }
 
   void _showReviewDialog(
-      BuildContext context, Booking b, BookingController controller) {
+    BuildContext context,
+    Booking b,
+    BookingController controller,
+  ) {
     double rating = 5.0;
     final commentCtrl = TextEditingController();
 
@@ -578,14 +682,15 @@ class _BookingCard extends ConsumerWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) => AlertDialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+          ),
           title: Text('Review ${b.providerName}'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text('How was your moment together?'),
-              const SizedBox(height: 12),
+              const SizedBox(height: FluentSpacing.m),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: List.generate(5, (index) {
@@ -595,7 +700,7 @@ class _BookingCard extends ConsumerWidget {
                       starVal <= rating
                           ? Icons.star_rounded
                           : Icons.star_outline_rounded,
-                      color: const Color(0xFFF59E0B),
+                      color: AppColors.gold,
                       size: 32,
                     ),
                     onPressed: () =>
@@ -603,7 +708,7 @@ class _BookingCard extends ConsumerWidget {
                   );
                 }),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: FluentSpacing.m),
               TextField(
                 controller: commentCtrl,
                 maxLines: 3,
@@ -621,13 +726,16 @@ class _BookingCard extends ConsumerWidget {
             FilledButton(
               onPressed: () {
                 controller.submitReview(
-                    b.orderId, rating, commentCtrl.text.trim());
+                  b.orderId,
+                  rating,
+                  commentCtrl.text.trim(),
+                );
                 Navigator.of(ctx).pop();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Thank you for your review!')),
                 );
               },
-              child: const Text('Submit Review'),
+              child: const Text('Submit review'),
             ),
           ],
         ),

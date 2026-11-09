@@ -8,13 +8,19 @@ import {
   useRejectAdminKycMutation,
 } from '../../store/adminApi';
 import {
-  ShieldCheckIcon,
-  ArrowPathIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  IdentificationIcon,
-  UserGroupIcon,
-} from '@heroicons/react/24/outline';
+  Badge,
+  Button,
+  MessageBar,
+  MessageBarBody,
+  Tab,
+  TabList,
+} from '@fluentui/react-components';
+import {
+  ShieldCheckmark16Regular,
+  ArrowSync16Regular,
+  ContactCard20Regular,
+  People20Regular,
+} from '@fluentui/react-icons';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { AdminVerificationStudio } from '../../components/admin/AdminVerificationStudio';
 import { AdminKycVerificationStudio } from '../../components/admin/AdminKycVerificationStudio';
@@ -78,7 +84,7 @@ export const AdminVerificationsPage: React.FC = () => {
     try {
       await approveAdminKyc(id).unwrap();
       refetchKyc();
-      showToast('User identity verification approved successfully (+20 Trust Score).');
+      showToast('User identity verification approved successfully (+20 trust score).');
     } catch {
       showToast('Failed to approve KYC document.', 'error');
     }
@@ -94,105 +100,84 @@ export const AdminVerificationsPage: React.FC = () => {
     }
   };
 
-  const pendingCompanionCount = verificationsData?.items?.filter((v) => v.status === 'PendingReview').length ?? verificationsData?.totalCount ?? 0;
-  const pendingKycCount = kycData?.items?.filter((k) => k.status === 'PendingReview').length ?? kycData?.totalCount ?? 0;
+  const pendingCompanionCount =
+    verificationsData?.items?.filter((v) => v.status === 'PendingReview').length ??
+    verificationsData?.totalCount ??
+    0;
+  const pendingKycCount =
+    kycData?.items?.filter((k) => k.status === 'PendingReview').length ??
+    kycData?.totalCount ??
+    0;
   const isFetching = isFetchingVerifications || isFetchingKyc;
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
-      {/* Toast Notification */}
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-xs sm:text-sm font-semibold transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${
-            toast.type === 'success'
-              ? 'bg-card border-emerald-500/40 text-foreground ring-2 ring-emerald-500/20'
-              : 'bg-card border-rose-500/40 text-foreground ring-2 ring-rose-500/20'
-          }`}
-        >
-          {toast.type === 'success' ? (
-            <CheckCircleIcon className="w-5 h-5 text-emerald-500 shrink-0" />
-          ) : (
-            <ExclamationTriangleIcon className="w-5 h-5 text-rose-500 shrink-0" />
-          )}
-          <span>{toast.message}</span>
+        <div role="status" aria-live="polite" className="mb-4">
+          <MessageBar intent={toast.type === 'success' ? 'success' : 'error'}>
+            <MessageBarBody>{toast.message}</MessageBarBody>
+          </MessageBar>
         </div>
       )}
 
-      {/* Page Header */}
       <AdminPageHeader
-        title="Trust & Verification Center"
+        title="Trust & verification center"
         description="Review companion applications, verify user government identity cards (KYC), and ensure safety standards across the platform."
         badge={
-          (pendingCompanionCount + pendingKycCount) > 0 ? (
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-400 text-xs font-bold border border-amber-500/30">
-              <ShieldCheckIcon className="w-3.5 h-3.5 text-amber-500" />
-              <span>{pendingCompanionCount + pendingKycCount} Total Pending</span>
-            </div>
+          pendingCompanionCount + pendingKycCount > 0 ? (
+            <Badge
+              appearance="tint"
+              color="warning"
+              icon={<ShieldCheckmark16Regular />}
+              className="tabular"
+            >
+              {pendingCompanionCount + pendingKycCount} total pending
+            </Badge>
           ) : undefined
         }
         actions={
-          <button
-            type="button"
+          <Button
+            appearance="outline"
+            size="medium"
+            icon={<ArrowSync16Regular className={isFetching ? 'animate-spin' : ''} />}
             onClick={() => {
               refetchVerifications();
               refetchKyc();
             }}
             disabled={isFetching}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-semibold text-foreground transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50"
           >
-            <ArrowPathIcon className={`w-3.5 h-3.5 text-muted-foreground ${isFetching ? 'animate-spin text-accent' : ''}`} />
-            <span>{isFetching ? 'Refreshing...' : 'Refresh Queues'}</span>
-          </button>
+            {isFetching ? 'Refreshing...' : 'Refresh queues'}
+          </Button>
         }
       />
 
       {/* Top Queue Switcher Tabs */}
-      <div className="flex items-center gap-3 mb-6 border-b border-border pb-3">
-        <button
-          type="button"
-          onClick={() => setActiveQueue('companions')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-            activeQueue === 'companions'
-              ? 'bg-foreground text-background shadow-xs'
-              : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
-          }`}
+      <div className="mb-5 border-b border-border pb-1">
+        <TabList
+          selectedValue={activeQueue}
+          onTabSelect={(_e, data) => setActiveQueue(data.value as 'companions' | 'kyc')}
         >
-          <UserGroupIcon className="w-4 h-4" />
-          <span>Companion Applications</span>
-          {pendingCompanionCount > 0 && (
-            <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                activeQueue === 'companions' ? 'bg-background text-foreground' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-              }`}
-            >
-              {pendingCompanionCount}
+          <Tab value="companions" icon={<People20Regular />}>
+            <span className="flex items-center gap-1.5">
+              <span>Companion applications</span>
+              {pendingCompanionCount > 0 && (
+                <Badge appearance="tint" color="warning" size="small" className="tabular">
+                  {pendingCompanionCount}
+                </Badge>
+              )}
             </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveQueue('kyc')}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all cursor-pointer ${
-            activeQueue === 'kyc'
-              ? 'bg-foreground text-background shadow-xs'
-              : 'bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          <IdentificationIcon className="w-4 h-4" />
-          <span>User Identity KYC</span>
-          {pendingKycCount > 0 && (
-            <span
-              className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                activeQueue === 'kyc' ? 'bg-background text-foreground' : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
-              }`}
-            >
-              {pendingKycCount}
+          </Tab>
+          <Tab value="kyc" icon={<ContactCard20Regular />}>
+            <span className="flex items-center gap-1.5">
+              <span>User identity KYC</span>
+              {pendingKycCount > 0 && (
+                <Badge appearance="tint" color="warning" size="small" className="tabular">
+                  {pendingKycCount}
+                </Badge>
+              )}
             </span>
-          )}
-        </button>
+          </Tab>
+        </TabList>
       </div>
 
       {/* Main Studio View */}
@@ -240,4 +225,3 @@ export const AdminVerificationsPage: React.FC = () => {
 };
 
 export default AdminVerificationsPage;
-

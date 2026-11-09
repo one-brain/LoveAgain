@@ -37,76 +37,83 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 40),
+        padding: const EdgeInsets.fromLTRB(
+          FluentSpacing.l,
+          FluentSpacing.m,
+          FluentSpacing.l,
+          40,
+        ),
         children: [
           // User Card
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(FluentSpacing.xl),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
               children: [
                 CircleAvatar(
-                  radius: 38,
+                  radius: 36,
                   backgroundColor: AppColors.primaryLight,
                   child: Text(
                     user?.initials ?? 'AR',
-                    style: const TextStyle(
-                      fontSize: 26,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.primary,
+                    style: FluentType.title1.copyWith(
+                      color: AppColors.brandForeground,
                     ),
                   ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: FluentSpacing.m),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      user?.fullName ?? 'Alex Rivera',
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
+                    Flexible(
+                      child: Text(
+                        user?.fullName ?? 'Alex Rivera',
+                        style: FluentType.title3.copyWith(
+                          color: AppColors.textPrimary,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     if (user?.isVerified ?? true) ...[
-                      const SizedBox(width: 6),
+                      const SizedBox(width: FluentSpacing.sNudge),
                       const VerifiedBadge(size: 16),
                     ],
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: FluentSpacing.xs),
                 Text(
                   user?.email ?? 'alex.rivera@example.com',
-                  style: const TextStyle(
-                    fontSize: 13,
+                  style: FluentType.caption1.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: FluentSpacing.xs),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.location_on_outlined, size: 14, color: AppColors.textMuted),
-                    const SizedBox(width: 3),
+                    const Icon(
+                      Icons.location_on_outlined,
+                      size: 14,
+                      color: AppColors.textMuted,
+                    ),
+                    const SizedBox(width: FluentSpacing.xxs),
                     Text(
                       user?.city ?? 'Bengaluru',
-                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                      style: FluentType.caption2.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
                 if (user?.bio != null) ...[
-                  const SizedBox(height: 12),
+                  const SizedBox(height: FluentSpacing.m),
                   Text(
                     user!.bio!,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      height: 1.4,
+                    style: FluentType.caption1.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -114,15 +121,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // Host Dashboard summary (Visible for registered companions / hosts)
           if (isHost) ...[
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(FluentSpacing.l),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                 border: Border.all(color: AppColors.border),
               ),
               child: Column(
@@ -131,55 +138,61 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
-                          'Host Earnings & Ledger',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
+                          'Host earnings & ledger',
+                          style: FluentType.body1Strong.copyWith(
                             color: AppColors.textPrimary,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: FluentSpacing.s),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 4),
+                          horizontal: FluentSpacing.s,
+                          vertical: FluentSpacing.xxs,
+                        ),
                         decoration: BoxDecoration(
                           color: _isDiscoverable
-                              ? const Color(0xFFD1FAE5)
-                              : const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(8),
+                              ? AppColors.successBackground
+                              : AppColors.surfaceMuted,
+                          borderRadius: BorderRadius.circular(
+                            FluentRadius.medium,
+                          ),
+                          border: Border.all(
+                            color: _isDiscoverable
+                                ? AppColors.success.withValues(alpha: 0.25)
+                                : AppColors.border,
+                          ),
                         ),
                         child: Text(
                           _isDiscoverable ? 'Discoverable' : 'Paused',
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+                          style: FluentType.caption2.copyWith(
+                            fontWeight: FontWeight.w600,
                             color: _isDiscoverable
-                                ? const Color(0xFF047857)
+                                ? AppColors.successForeground
                                 : AppColors.textSecondary,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: FluentSpacing.l),
                   Row(
                     children: [
                       Expanded(
                         child: _buildMetricTile(
-                          'Released Escrow',
+                          'Released escrow',
                           '₹32,400',
                           Icons.account_balance_wallet_outlined,
-                          AppColors.primary,
+                          AppColors.brandForeground,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: FluentSpacing.m),
                       Expanded(
                         child: _buildMetricTile(
-                          'Peer Rating',
+                          'Peer rating',
                           '4.95 ★',
                           Icons.star_outline_rounded,
                           AppColors.gold,
@@ -187,21 +200,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: FluentSpacing.m),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Expanded(
+                      Expanded(
                         child: Text(
                           'Accept new outing requests',
-                          style: TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w500),
+                          style: FluentType.caption1.copyWith(
+                            color: AppColors.textPrimary,
+                          ),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: FluentSpacing.s),
                       Switch(
                         value: _isDiscoverable,
-                        activeThumbColor: AppColors.primary,
                         onChanged: (val) {
                           setState(() => _isDiscoverable = val);
                         },
@@ -211,15 +224,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: FluentSpacing.xl),
           ],
 
           // Trust Score & Reputation Card
           Container(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(FluentSpacing.l),
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
@@ -228,18 +241,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Row(
                         children: [
-                          Icon(Icons.shield_rounded,
-                              size: 20, color: AppColors.gold),
-                          SizedBox(width: 8),
+                          const Icon(
+                            Icons.verified_user_rounded,
+                            size: 20,
+                            color: AppColors.gold,
+                          ),
+                          const SizedBox(width: FluentSpacing.s),
                           Flexible(
                             child: Text(
                               'Trust & Reputation',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
+                              style: FluentType.body1Strong.copyWith(
                                 color: AppColors.textPrimary,
                               ),
                               overflow: TextOverflow.ellipsis,
@@ -248,39 +262,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: FluentSpacing.s),
                     TrustScoreBadge(score: user?.trustScore ?? 96),
                   ],
                 ),
-                const SizedBox(height: 12),
-                const Text(
+                const SizedBox(height: FluentSpacing.m),
+                Text(
                   'Your trust score reflects verified identity, completed dual-PIN verified outings, positive peer reviews, and punctuality.',
-                  style: TextStyle(
-                    fontSize: 13,
+                  style: FluentType.caption1.copyWith(
                     color: AppColors.textSecondary,
-                    height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 14),
+                const SizedBox(height: FluentSpacing.m),
                 const Divider(height: 1, color: AppColors.border),
-                const SizedBox(height: 12),
+                const SizedBox(height: FluentSpacing.m),
                 // Recent trust events
-                const Text(
-                  'Immutable Trust Events',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                Text(
+                  'Immutable trust events',
+                  style: FluentType.caption2.copyWith(
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textSecondary,
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: FluentSpacing.s),
                 _buildTrustEventRow(
                   '+10 pts',
                   'Aadhaar / Passport and phone verification completed',
                   'Oct 18, 2026',
                   true,
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: FluentSpacing.sNudge),
                 _buildTrustEventRow(
                   '+5 pts',
                   '5-star completed NGMA museum companion outing',
@@ -290,45 +301,62 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: FluentSpacing.xl),
 
           // Menu Actions
           Container(
             decoration: BoxDecoration(
               color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(FluentRadius.xLarge),
               border: Border.all(color: AppColors.border),
             ),
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.security, color: AppColors.gold),
+                  leading: const Icon(
+                    Icons.verified_user_outlined,
+                    color: AppColors.gold,
+                  ),
                   title: const Text('Community Safety Guidelines'),
-                  trailing: const Icon(Icons.arrow_forward_ios,
-                      size: 14, color: AppColors.textMuted),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
                   onTap: () => _showSafetyGuidelines(context),
                 ),
                 const Divider(height: 1, indent: 56, color: AppColors.border),
                 ListTile(
-                  leading:
-                      const Icon(Icons.help_outline, color: AppColors.primary),
+                  leading: const Icon(
+                    Icons.help_outline,
+                    color: AppColors.brandForeground,
+                  ),
                   title: const Text('Support & Help Desk'),
-                  trailing: const Icon(Icons.arrow_forward_ios,
-                      size: 14, color: AppColors.textMuted),
+                  trailing: const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: AppColors.textMuted,
+                  ),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                          content:
-                              Text('Support ticket system ready at port 5010')),
+                        content: Text('Support ticket system ready at port 5010'),
+                      ),
                     );
                   },
                 ),
                 const Divider(height: 1, indent: 56, color: AppColors.border),
                 ListTile(
-                  leading: const Icon(Icons.logout,
-                      color: AppColors.statusCancelled),
-                  title: const Text('Sign Out',
-                      style: TextStyle(color: AppColors.statusCancelled)),
+                  leading: const Icon(
+                    Icons.logout,
+                    color: AppColors.statusCancelled,
+                  ),
+                  title: Text(
+                    'Sign Out',
+                    style: FluentType.body1.copyWith(
+                      color: AppColors.statusCancelled,
+                    ),
+                  ),
                   onTap: () async {
                     await ref.read(authControllerProvider.notifier).signOut();
                     if (context.mounted) {
@@ -345,12 +373,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildMetricTile(
-      String label, String value, IconData icon, Color color) {
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(FluentSpacing.m),
       decoration: BoxDecoration(
         color: AppColors.surfaceMuted,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(FluentRadius.xLarge),
         border: Border.all(color: AppColors.border),
       ),
       child: Column(
@@ -359,29 +391,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           Row(
             children: [
               Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
+              const SizedBox(width: FluentSpacing.sNudge),
               Expanded(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                  style: FluentType.caption2.copyWith(
                     color: AppColors.textSecondary,
                   ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: FluentSpacing.sNudge),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
+            style: FluentType.numeric(FluentType.body1Strong).copyWith(
               color: AppColors.textPrimary,
-              fontFamily: 'monospace',
             ),
           ),
         ],
@@ -390,44 +417,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Widget _buildTrustEventRow(
-      String change, String description, String date, bool isPositive) {
+    String change,
+    String description,
+    String date,
+    bool isPositive,
+  ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: FluentSpacing.xs),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(
+              horizontal: FluentSpacing.sNudge,
+              vertical: FluentSpacing.xxs,
+            ),
             decoration: BoxDecoration(
               color: isPositive
-                  ? const Color(0xFFD1FAE5)
-                  : const Color(0xFFFEE2E2),
-              borderRadius: BorderRadius.circular(6),
+                  ? AppColors.successBackground
+                  : AppColors.dangerBackground,
+              borderRadius: BorderRadius.circular(FluentRadius.medium),
             ),
             child: Text(
               change,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
+              style: FluentType.numeric(FluentType.caption2).copyWith(
+                fontWeight: FontWeight.w600,
                 color: isPositive
-                    ? const Color(0xFF047857)
+                    ? AppColors.successForeground
                     : AppColors.statusCancelled,
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: FluentSpacing.s),
           Expanded(
             child: Text(
               description,
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.textPrimary),
+              style: FluentType.caption2.copyWith(
+                color: AppColors.textPrimary,
+              ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: FluentSpacing.s),
           Text(
             date,
-            style: const TextStyle(
-                fontSize: 11, color: AppColors.textMuted),
+            style: FluentType.numeric(FluentType.caption2).copyWith(
+              color: AppColors.textMuted,
+            ),
           ),
         ],
       ),
@@ -439,45 +474,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(FluentRadius.xLarge),
+        ),
       ),
       builder: (ctx) {
         return Padding(
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(FluentSpacing.xxl),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Community Safety Principles',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+              Text(
+                'Community safety principles',
+                style: FluentType.title3.copyWith(
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: FluentSpacing.m),
               _buildGuidelineItem(
                 Icons.public,
-                'Public Spaces First',
+                'Public spaces first',
                 'All first and second outings must take place in public, well-lit spaces like galleries, cafes, museums, or events.',
               ),
               _buildGuidelineItem(
                 Icons.pin,
-                'Dual-PIN Mutual Verification',
+                'Dual-PIN mutual verification',
                 'Verify arrival and completion PINs in person to safeguard escrow deposits.',
               ),
               _buildGuidelineItem(
                 Icons.health_and_safety_outlined,
-                'Strictly Platonic Companionship',
+                'Strictly platonic companionship',
                 'Cue is dedicated to shared interests, conversation, and activities. Romantic solicitation or adult services are strictly prohibited.',
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
               SizedBox(
                 width: double.infinity,
                 child: FilledButton(
                   onPressed: () => Navigator.pop(ctx),
-                  child: const Text('I Understand & Agree'),
+                  child: const Text('I understand & agree'),
                 ),
               ),
             ],
@@ -489,31 +524,27 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   Widget _buildGuidelineItem(IconData icon, String title, String body) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: FluentSpacing.m),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 20, color: AppColors.primary),
-          const SizedBox(width: 10),
+          Icon(icon, size: 20, color: AppColors.brandForeground),
+          const SizedBox(width: FluentSpacing.mNudge),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
+                  style: FluentType.body2Strong.copyWith(
                     color: AppColors.textPrimary,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: FluentSpacing.xxs),
                 Text(
                   body,
-                  style: const TextStyle(
-                    fontSize: 12,
+                  style: FluentType.caption2.copyWith(
                     color: AppColors.textSecondary,
-                    height: 1.3,
                   ),
                 ),
               ],

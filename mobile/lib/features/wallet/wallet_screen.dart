@@ -30,15 +30,17 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(FluentRadius.xLarge),
+        ),
       ),
       builder: (ctx) {
         return Padding(
           padding: EdgeInsets.only(
-            left: 24,
-            right: 24,
-            top: 24,
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
+            left: FluentSpacing.xl,
+            right: FluentSpacing.xl,
+            top: FluentSpacing.xl,
+            bottom: MediaQuery.of(ctx).viewInsets.bottom + FluentSpacing.xxxl,
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -47,11 +49,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Top-Up Cue Wallet',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                  Text(
+                    'Top-up Cue wallet',
+                    style: FluentType.title3.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
@@ -61,39 +61,42 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
-              const Text(
+              const SizedBox(height: FluentSpacing.sNudge),
+              Text(
                 'Add funds instantly using UPI (Google Pay, PhonePe, Paytm, BHIM) or Net Banking.',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: FluentType.caption1.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: FluentSpacing.xl),
               TextField(
                 controller: _customAmountController,
                 keyboardType: TextInputType.number,
                 autofocus: true,
+                style: FluentType.numeric(FluentType.body1Strong).copyWith(
+                  color: AppColors.textPrimary,
+                ),
                 decoration: InputDecoration(
                   prefixText: '₹ ',
-                  prefixStyle: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
+                  prefixStyle: FluentType.numeric(FluentType.title3).copyWith(
                     color: AppColors.textPrimary,
-                    fontFamily: 'monospace',
                   ),
                   labelText: 'Amount (INR)',
                   hintText: 'Enter amount (e.g. 2000)',
                   border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(FluentRadius.large),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
               Wrap(
-                spacing: 8,
+                spacing: FluentSpacing.s,
                 children: [500, 1000, 2000, 5000].map((amt) {
                   return ActionChip(
                     label: Text(
                       '₹$amt',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                      style: FluentType.numeric(FluentType.caption1Strong)
+                          .copyWith(color: AppColors.textPrimary),
                     ),
                     onPressed: () {
                       _customAmountController.text = amt.toString();
@@ -101,15 +104,15 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   );
                 }).toList(),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: FluentSpacing.xxl),
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 48,
                 child: FilledButton.icon(
-                  icon: const Icon(Icons.flash_on, color: AppColors.gold),
-                  label: const Text(
-                    'Add Funds with UPI',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  icon: const Icon(Icons.flash_on, color: Colors.white),
+                  label: Text(
+                    'Add funds with UPI',
+                    style: FluentType.body2Strong.copyWith(color: Colors.white),
                   ),
                   onPressed: () async {
                     final amt = double.tryParse(_customAmountController.text);
@@ -121,15 +124,18 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       if (context.mounted && success) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            backgroundColor: const Color(0xFF047857),
+                            backgroundColor: AppColors.success,
                             content: Text(
-                                '₹${amt.toStringAsFixed(0)} credited to Cue Wallet!'),
+                              '₹${amt.toStringAsFixed(0)} credited to Cue Wallet!',
+                            ),
                           ),
                         );
                       }
                     } else {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Minimum top-up is ₹100.')),
+                        const SnackBar(
+                          content: Text('Minimum top-up is ₹100.'),
+                        ),
                       );
                     }
                   },
@@ -147,17 +153,20 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(FluentRadius.xLarge),
+        ),
       ),
       builder: (ctx) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             return Padding(
               padding: EdgeInsets.only(
-                left: 24,
-                right: 24,
-                top: 24,
-                bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
+                left: FluentSpacing.xl,
+                right: FluentSpacing.xl,
+                top: FluentSpacing.xl,
+                bottom:
+                    MediaQuery.of(ctx).viewInsets.bottom + FluentSpacing.xxxl,
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -166,11 +175,9 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        'Instant Host Withdrawal',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
+                      Text(
+                        'Instant host withdrawal',
+                        style: FluentType.title3.copyWith(
                           color: AppColors.textPrimary,
                         ),
                       ),
@@ -180,16 +187,13 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: FluentSpacing.xs),
                   Text(
                     'Available for instant payout: ₹${clearedBalance.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFF047857),
-                    ),
+                    style: FluentType.numeric(FluentType.caption1Strong)
+                        .copyWith(color: AppColors.successForeground),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: FluentSpacing.xl),
                   Row(
                     children: [
                       Expanded(
@@ -201,7 +205,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                               setModalState(() => _payoutType = 'Upi'),
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: FluentSpacing.s),
                       Expanded(
                         child: ChoiceChip(
                           label: const Text('Bank Transfer (NEFT/IMPS)'),
@@ -213,25 +217,25 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: FluentSpacing.l),
                   TextField(
                     controller: _payoutAmountController,
                     keyboardType: TextInputType.number,
+                    style: FluentType.numeric(FluentType.body1Strong).copyWith(
+                      color: AppColors.textPrimary,
+                    ),
                     decoration: InputDecoration(
                       prefixText: '₹ ',
-                      prefixStyle: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'monospace',
-                      ),
+                      prefixStyle: FluentType.numeric(FluentType.title3)
+                          .copyWith(color: AppColors.textPrimary),
                       labelText: 'Withdrawal Amount',
                       hintText: 'Min ₹100',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: FluentSpacing.m),
                   TextField(
                     controller: _destinationController,
                     decoration: InputDecoration(
@@ -239,17 +243,17 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           ? 'UPI ID / VPA (e.g. name@okhdfcbank)'
                           : 'Bank Account Number + IFSC',
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(FluentRadius.large),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: FluentSpacing.xxl),
                   SizedBox(
                     width: double.infinity,
-                    height: 52,
+                    height: 48,
                     child: FilledButton(
                       style: FilledButton.styleFrom(
-                        backgroundColor: const Color(0xFF047857),
+                        backgroundColor: AppColors.success,
                       ),
                       onPressed: () async {
                         final amt =
@@ -267,24 +271,28 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                           if (context.mounted && ok) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                backgroundColor: const Color(0xFF047857),
+                                backgroundColor: AppColors.success,
                                 content: Text(
-                                    'Withdrawal of ₹${amt.toStringAsFixed(0)} initiated to $dest!'),
+                                  'Withdrawal of ₹${amt.toStringAsFixed(0)} initiated to $dest!',
+                                ),
                               ),
                             );
                           }
                         } else {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
-                                content: Text(
-                                    'Please enter a valid amount and payout destination.')),
+                              content: Text(
+                                'Please enter a valid amount and payout destination.',
+                              ),
+                            ),
                           );
                         }
                       },
-                      child: const Text(
-                        'Confirm Instant Withdrawal',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.bold),
+                      child: Text(
+                        'Confirm instant withdrawal',
+                        style: FluentType.body2Strong.copyWith(
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
@@ -305,10 +313,7 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Cue Wallet & Escrow',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
+        title: const Text('Cue Wallet & Escrow'),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -323,132 +328,14 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
         onRefresh: () =>
             ref.read(walletControllerProvider.notifier).loadWalletData(),
         child: ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(FluentSpacing.l),
           children: [
-            // Available Balance Card (Bordeaux Gradient)
+            // Available Balance Card (Fluent 2 neutral card, no gradient)
             Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.primaryDark, AppColors.primary],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withValues(alpha: 0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'AVAILABLE BALANCE',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white70,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.shield_outlined,
-                                size: 14, color: AppColors.gold),
-                            SizedBox(width: 4),
-                            Text(
-                              '100% Escrow Secured',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    '₹${wallet.availableBalance.toStringAsFixed(0)}',
-                    style: const TextStyle(
-                      fontSize: 38,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -1,
-                      fontFamily: 'monospace',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Locked in Active Escrow',
-                            style:
-                                TextStyle(fontSize: 11, color: Colors.white70),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '₹${wallet.pendingBalance.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.gold,
-                              fontFamily: 'monospace',
-                            ),
-                          ),
-                        ],
-                      ),
-                      FilledButton.tonal(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: AppColors.primary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                        ),
-                        onPressed: () => _showTopUpDialog(context),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.add, size: 18),
-                            SizedBox(width: 4),
-                            Text('Add Money',
-                                style: TextStyle(fontWeight: FontWeight.bold)),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Host Earnings & Withdrawal Banner
-            Container(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(FluentSpacing.xl),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                 border: Border.all(color: AppColors.border),
               ),
               child: Column(
@@ -457,41 +344,136 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
+                        'AVAILABLE BALANCE',
+                        style: FluentType.caption2.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.textMuted,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: FluentSpacing.s,
+                          vertical: FluentSpacing.xxs,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.goldLight,
+                          borderRadius: BorderRadius.circular(
+                            FluentRadius.medium,
+                          ),
+                          border: Border.all(color: AppColors.goldBorder),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.verified_user_rounded,
+                              size: 13,
+                              color: AppColors.gold,
+                            ),
+                            const SizedBox(width: FluentSpacing.xs),
+                            Text(
+                              '100% Escrow Secured',
+                              style: FluentType.caption2.copyWith(
+                                color: AppColors.gold,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: FluentSpacing.m),
+                  Text(
+                    '₹${wallet.availableBalance.toStringAsFixed(0)}',
+                    style: FluentType.numeric(FluentType.largeTitle).copyWith(
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: FluentSpacing.l),
+                  const Divider(height: 1, color: AppColors.border),
+                  const SizedBox(height: FluentSpacing.m),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Locked in active escrow',
+                            style: FluentType.caption2.copyWith(
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                          const SizedBox(height: FluentSpacing.xxs),
+                          Text(
+                            '₹${wallet.pendingBalance.toStringAsFixed(0)}',
+                            style: FluentType.numeric(FluentType.body2Strong)
+                                .copyWith(color: AppColors.gold),
+                          ),
+                        ],
+                      ),
+                      FilledButton.icon(
+                        onPressed: () => _showTopUpDialog(context),
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Add Money'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: FluentSpacing.l),
+
+            // Host Earnings & Withdrawal Banner
+            Container(
+              padding: const EdgeInsets.all(FluentSpacing.l),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(FluentRadius.xLarge),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
                         'Host Earnings & Payouts',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
+                        style: FluentType.body2Strong.copyWith(
                           color: AppColors.textPrimary,
                         ),
                       ),
                       TextButton.icon(
                         icon: const Icon(Icons.arrow_outward, size: 16),
                         onPressed: () => _showWithdrawDialog(
-                            context, earnings.clearedBalance),
+                          context,
+                          earnings.clearedBalance,
+                        ),
                         label: const Text('Withdraw UPI'),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: FluentSpacing.s),
                   Row(
                     children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Cleared Balance',
-                                style: TextStyle(
-                                    fontSize: 11, color: AppColors.textMuted)),
-                            const SizedBox(height: 2),
+                            Text(
+                              'Cleared balance',
+                              style: FluentType.caption2.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                            const SizedBox(height: FluentSpacing.xxs),
                             Text(
                               '₹${earnings.clearedBalance.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF047857),
-                                fontFamily: 'monospace',
-                              ),
+                              style: FluentType.numeric(FluentType.body1Strong)
+                                  .copyWith(color: AppColors.successForeground),
                             ),
                           ],
                         ),
@@ -500,18 +482,17 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Platform Fee (10%)',
-                                style: TextStyle(
-                                    fontSize: 11, color: AppColors.textMuted)),
-                            const SizedBox(height: 2),
+                            Text(
+                              'Platform fee (10%)',
+                              style: FluentType.caption2.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                            const SizedBox(height: FluentSpacing.xxs),
                             Text(
                               '₹${earnings.platformCommission.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.textSecondary,
-                                fontFamily: 'monospace',
-                              ),
+                              style: FluentType.numeric(FluentType.body1Strong)
+                                  .copyWith(color: AppColors.textSecondary),
                             ),
                           ],
                         ),
@@ -520,18 +501,17 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('In-Flight Escrow',
-                                style: TextStyle(
-                                    fontSize: 11, color: AppColors.textMuted)),
-                            const SizedBox(height: 2),
+                            Text(
+                              'In-flight escrow',
+                              style: FluentType.caption2.copyWith(
+                                color: AppColors.textMuted,
+                              ),
+                            ),
+                            const SizedBox(height: FluentSpacing.xxs),
                             Text(
                               '₹${earnings.pendingBalance.toStringAsFixed(0)}',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.goldDark,
-                                fontFamily: 'monospace',
-                              ),
+                              style: FluentType.numeric(FluentType.body1Strong)
+                                  .copyWith(color: AppColors.gold),
                             ),
                           ],
                         ),
@@ -542,42 +522,42 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
               ),
             ),
 
-            const SizedBox(height: 24),
+            const SizedBox(height: FluentSpacing.xxl),
 
             // Recent Transactions Title
-            const Text(
+            Text(
               'Ledger & Transactions',
-              style: TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.bold,
+              style: FluentType.body1Strong.copyWith(
                 color: AppColors.textPrimary,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: FluentSpacing.m),
 
             if (state.transactions.isEmpty)
               Container(
-                padding: const EdgeInsets.all(32),
+                padding: const EdgeInsets.all(FluentSpacing.xxxl),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Text(
+                child: Text(
                   'No transactions yet.',
-                  style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+                  style: FluentType.caption1.copyWith(
+                    color: AppColors.textMuted,
+                  ),
                 ),
               )
             else
               ...state.transactions.map((txn) {
                 final isCredit = txn.isCredit;
                 return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(14),
+                  margin: const EdgeInsets.only(bottom: FluentSpacing.mNudge),
+                  padding: const EdgeInsets.all(FluentSpacing.m),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Row(
@@ -585,17 +565,17 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: isCredit
-                            ? const Color(0xFFD1FAE5)
+                            ? AppColors.successBackground
                             : AppColors.primaryLight,
                         child: Icon(
                           isCredit ? Icons.arrow_downward : Icons.arrow_upward,
                           size: 18,
                           color: isCredit
-                              ? const Color(0xFF047857)
-                              : AppColors.primary,
+                              ? AppColors.successForeground
+                              : AppColors.brandForeground,
                         ),
                       ),
-                      const SizedBox(width: 14),
+                      const SizedBox(width: FluentSpacing.m),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -604,20 +584,16 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                               txn.description.isNotEmpty
                                   ? txn.description
                                   : txn.type,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
+                              style: FluentType.caption1Strong.copyWith(
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: FluentSpacing.xxs),
                             Text(
                               DateFormat('dd MMM yyyy, hh:mm a')
                                   .format(txn.createdAt),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                color: AppColors.textMuted,
-                              ),
+                              style: FluentType.numeric(FluentType.caption2)
+                                  .copyWith(color: AppColors.textMuted),
                             ),
                           ],
                         ),
@@ -627,23 +603,18 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
                         children: [
                           Text(
                             '${isCredit ? '+' : '-'} ₹${txn.amount.toStringAsFixed(0)}',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'monospace',
+                            style: FluentType.numeric(FluentType.body2Strong)
+                                .copyWith(
                               color: isCredit
-                                  ? const Color(0xFF047857)
+                                  ? AppColors.successForeground
                                   : AppColors.textPrimary,
                             ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: FluentSpacing.xxs),
                           Text(
                             'Bal: ₹${txn.balanceAfter.toStringAsFixed(0)}',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              color: AppColors.textMuted,
-                              fontFamily: 'monospace',
-                            ),
+                            style: FluentType.numeric(FluentType.caption2)
+                                .copyWith(color: AppColors.textMuted),
                           ),
                         ],
                       ),

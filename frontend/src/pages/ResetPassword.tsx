@@ -1,17 +1,26 @@
 import React, { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { useResetPasswordMutation } from '../store/authApi';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  SparklesIcon,
-  LockClosedIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/outline';
+  Button,
+  Field,
+  Input,
+  MessageBar,
+  MessageBarBody,
+} from '@fluentui/react-components';
+import {
+  LockClosed20Regular,
+  CheckmarkCircle24Regular,
+  ErrorCircle24Regular,
+  Eye20Regular,
+  EyeOff20Regular,
+  CheckmarkCircle16Regular,
+  Circle16Regular,
+} from '@fluentui/react-icons';
+import { useResetPasswordMutation } from '../store/authApi';
+import { AuthShell } from '../components/auth/AuthShell';
 
 const ResetPassword: React.FC = () => {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
 
@@ -23,6 +32,12 @@ const ResetPassword: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   const [resetPassword, { isLoading }] = useResetPasswordMutation();
+
+  const hasMinLength = newPassword.length >= 8;
+  const passwordsMatch =
+    newPassword.length > 0 &&
+    confirmPassword.length > 0 &&
+    newPassword === confirmPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,169 +57,176 @@ const ResetPassword: React.FC = () => {
       await resetPassword({ token, newPassword }).unwrap();
       setIsSuccess(true);
     } catch (err: any) {
-      const msg = err?.data?.error || err?.data?.message || 'This reset link is invalid or has expired. Please request a new one.';
+      const msg =
+        err?.data?.error ||
+        err?.data?.message ||
+        'This reset link is invalid or has expired. Please request a new one.';
       setError(msg);
     }
   };
 
   if (!token) {
     return (
-      <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12">
-        <div className="w-full max-w-md bg-card border border-border rounded-3xl p-6 sm:p-10 shadow-xl text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 flex items-center justify-center mx-auto shadow-sm">
-            <ExclamationCircleIcon className="w-8 h-8" />
+      <AuthShell
+        title="Invalid reset link"
+        subtitle="This password reset link is missing a verification token."
+        badgeText="256-Bit Encrypted"
+        backLink={{ to: '/login', label: 'Back to sign in' }}
+      >
+        <div className="p-4 rounded-xl bg-warning-light border border-border flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-card border border-border text-warning flex items-center justify-center shrink-0">
+            <ErrorCircle24Regular />
           </div>
-          <h1 className="text-2xl font-bold font-serif text-foreground">
-            Invalid Reset Link
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-            The password reset link is missing a verification token. Please initiate a new password reset request.
-          </p>
-          <div className="pt-2">
-            <Link
-              to="/forgot-password"
-              className="w-full py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs transition-colors block shadow-xs"
-            >
-              Request Password Reset
-            </Link>
+          <div className="space-y-1">
+            <p className="text-body2 font-semibold text-foreground">
+              Verification token missing
+            </p>
+            <p className="text-caption1 text-muted-foreground leading-relaxed">
+              Please request a fresh password reset link from your email to continue.
+            </p>
           </div>
         </div>
-      </div>
+        <Button
+          appearance="primary"
+          size="large"
+          onClick={() => navigate('/forgot-password')}
+          className="w-full min-h-11"
+        >
+          Reset password
+        </Button>
+      </AuthShell>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-140px)] flex items-center justify-center px-4 sm:px-6 py-12">
-      <div className="w-full max-w-md bg-card border border-border rounded-3xl p-6 sm:p-10 shadow-xl space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold">
-              <SparklesIcon className="w-4 h-4" />
+    <AuthShell
+      title={isSuccess ? 'Password updated' : 'Set new password'}
+      subtitle={
+        isSuccess
+          ? 'Your credentials have been updated and previous active sessions were signed out.'
+          : 'Choose a strong, unique password for your Cue account.'
+      }
+      badgeText="256-Bit Encrypted"
+      backLink={isSuccess ? undefined : { to: '/login', label: 'Back to sign in' }}
+    >
+      {isSuccess ? (
+        <div className="space-y-4">
+          <div className="p-4 rounded-xl bg-success-light border border-border flex items-start gap-3">
+            <div className="w-10 h-10 rounded-xl bg-card border border-border text-success flex items-center justify-center shrink-0">
+              <CheckmarkCircle24Regular />
             </div>
-            <span className="text-lg font-bold font-serif text-foreground">Cue</span>
-          </div>
-          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-            <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-500" />
-            <span>Secure 256-bit</span>
-          </div>
-        </div>
-
-        {isSuccess ? (
-          <div className="text-center space-y-4 py-4 animate-in fade-in duration-200">
-            <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto shadow-sm">
-              <CheckCircleIcon className="w-8 h-8" />
-            </div>
-            <h1 className="text-2xl font-bold font-serif text-foreground">
-              Password reset successfully!
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-              Your password has been securely updated and all previous active sessions have been terminated.
-            </p>
-            <div className="pt-3">
-              <Link
-                to="/login"
-                className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs sm:text-sm transition-colors block shadow-xs"
-              >
-                Sign In with New Password &rarr;
-              </Link>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-serif text-foreground">
-                Set new password
-              </h1>
-              <p className="text-xs sm:text-sm text-muted-foreground mt-2 leading-relaxed">
-                Choose a strong, unique password with at least 8 characters.
+            <div className="space-y-1">
+              <p className="text-body2 font-semibold text-foreground">
+                Password reset complete
+              </p>
+              <p className="text-caption1 text-muted-foreground leading-relaxed">
+                You can now sign in with your new password across web and mobile.
               </p>
             </div>
-
-            {error && (
-              <div className="p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold">
-                {error}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="newPassword" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  New Password
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="newPassword"
-                    name="newPassword"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    autoFocus
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-4 h-4" />
-                    ) : (
-                      <EyeIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">Minimum 8 characters.</p>
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Confirm New Password
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="w-4 h-4" />
-                    ) : (
-                      <EyeIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-xs sm:text-sm shadow-xs transition-colors disabled:opacity-40 flex items-center justify-center gap-2 cursor-pointer mt-2"
-              >
-                {isLoading ? 'Resetting password...' : 'Update Password'}
-              </button>
-            </form>
           </div>
-        )}
-      </div>
-    </div>
+
+          <Button
+            appearance="primary"
+            size="large"
+            onClick={() => navigate('/login')}
+            className="w-full min-h-11"
+          >
+            Sign in
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {error && (
+            <MessageBar intent="error">
+              <MessageBarBody>{error}</MessageBarBody>
+            </MessageBar>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <Field label="New password" required>
+              <Input
+                id="newPassword"
+                name="newPassword"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                autoFocus
+                value={newPassword}
+                onChange={(_, data) => setNewPassword(data.value)}
+                placeholder="8+ characters"
+                contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  <Button
+                    type="button"
+                    appearance="transparent"
+                    size="small"
+                    icon={showPassword ? <EyeOff20Regular /> : <Eye20Regular />}
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  />
+                }
+              />
+            </Field>
+
+            <Field label="Confirm new password" required>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                value={confirmPassword}
+                onChange={(_, data) => setConfirmPassword(data.value)}
+                placeholder="Repeat new password"
+                contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  <Button
+                    type="button"
+                    appearance="transparent"
+                    size="small"
+                    icon={showConfirmPassword ? <EyeOff20Regular /> : <Eye20Regular />}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={
+                      showConfirmPassword ? 'Hide password' : 'Show password'
+                    }
+                  />
+                }
+              />
+            </Field>
+
+            <div className="flex flex-wrap items-center gap-4 px-3 py-2 rounded-xl bg-muted border border-border text-caption2">
+              <span
+                className={`inline-flex items-center gap-1 font-semibold ${
+                  hasMinLength ? 'text-success' : 'text-muted-foreground'
+                }`}
+              >
+                {hasMinLength ? <CheckmarkCircle16Regular /> : <Circle16Regular />}
+                <span>8+ characters</span>
+              </span>
+              <span
+                className={`inline-flex items-center gap-1 font-semibold ${
+                  passwordsMatch ? 'text-success' : 'text-muted-foreground'
+                }`}
+              >
+                {passwordsMatch ? <CheckmarkCircle16Regular /> : <Circle16Regular />}
+                <span>Passwords match</span>
+              </span>
+            </div>
+
+            <Button
+              type="submit"
+              appearance="primary"
+              size="large"
+              disabled={isLoading}
+              className="w-full min-h-11 mt-1"
+            >
+              {isLoading ? 'Updating...' : 'Update password'}
+            </Button>
+          </form>
+        </div>
+      )}
+    </AuthShell>
   );
 };
 
 export default ResetPassword;
-

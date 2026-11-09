@@ -1,5 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:ital,wght@0,300..700;1,300..700&display=swap');
 @import "tailwindcss";
+
+/*
+ * Cue × Fluent 2 tokens (https://fluent2.microsoft.design/)
+ *
+ * Semantic Tailwind colors (bg-card, text-muted-foreground, bg-accent …) are
+ * kept so existing markup keeps working, but every value now comes from the
+ * Fluent 2 neutral/status palettes and Cue's Bordeaux brand ramp
+ * (see src/theme/fluentTheme.ts). The radius, shadow and type scales below
+ * snap Tailwind's defaults onto Fluent's ramps. DESIGN.md is the source of truth.
+ */
 
 @theme {
   --color-primary: var(--primary);
@@ -10,8 +19,13 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent-hover: var(--accent-hover);
+  --color-accent-pressed: var(--accent-pressed);
   --color-accent-light: var(--accent-light);
   --color-accent-muted: var(--accent-muted);
+
+  /* Brand-colored text/icons/links on neutral surfaces (colorBrandForeground1) */
+  --color-brand-fg: var(--brand-fg);
+  --color-brand-stroke: var(--brand-stroke);
 
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -25,6 +39,11 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-warning-light: var(--warning-light);
 
+  /* Verified / escrow trust signal (Fluent shared "gold" palette) */
+  --color-trust: var(--trust);
+  --color-trust-light: var(--trust-light);
+  --color-trust-border: var(--trust-border);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -33,284 +52,196 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-subtle: var(--subtle);
+  --color-disabled: var(--disabled);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-light: var(--destructive-light);
   --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius: 0.75rem;
+  --color-focus: var(--focus);
 
-  --font-serif: "Instrument Serif", Georgia, serif;
-  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-display: "Instrument Serif", Georgia, serif;
-  --font-body: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  /* Fluent 2 font stack (Segoe UI on Windows, SF on Apple, Roboto on Android) */
+  --font-sans: "Segoe UI Variable", "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+  --font-body: var(--font-sans);
+  --font-serif: var(--font-sans);   /* legacy alias – Fluent has no display serif */
+  --font-display: var(--font-sans); /* legacy alias */
+  --font-mono: Consolas, "Cascadia Mono", ui-monospace, Menlo, "Courier New", monospace;
+
+  /* Fluent 2 web type ramp (size / line-height) */
+  --text-caption2: 10px;   --text-caption2--line-height: 14px;
+  --text-caption1: 12px;   --text-caption1--line-height: 16px;
+  --text-body1: 14px;      --text-body1--line-height: 20px;
+  --text-body2: 16px;      --text-body2--line-height: 22px;
+  --text-subtitle2: 16px;  --text-subtitle2--line-height: 22px;
+  --text-subtitle1: 20px;  --text-subtitle1--line-height: 28px;
+  --text-title3: 24px;     --text-title3--line-height: 32px;
+  --text-title2: 28px;     --text-title2--line-height: 36px;
+  --text-title1: 32px;     --text-title1--line-height: 40px;
+  --text-large-title: 40px; --text-large-title--line-height: 52px;
+  --text-display: 68px;    --text-display--line-height: 92px;
+
+  /* Snap Tailwind's default sizes onto the Fluent ramp */
+  --text-xs: 12px;   --text-xs--line-height: 16px;
+  --text-sm: 14px;   --text-sm--line-height: 20px;
+  --text-base: 16px; --text-base--line-height: 22px;
+  --text-lg: 18px;   --text-lg--line-height: 24px;
+  --text-xl: 20px;   --text-xl--line-height: 28px;
+  --text-2xl: 24px;  --text-2xl--line-height: 32px;
+  --text-3xl: 28px;  --text-3xl--line-height: 36px;
+  --text-4xl: 32px;  --text-4xl--line-height: 40px;
+  --text-5xl: 40px;  --text-5xl--line-height: 52px;
+  --text-6xl: 52px;  --text-6xl--line-height: 64px;
+  --text-7xl: 68px;  --text-7xl--line-height: 92px;
+
+  /* Fluent 2 corner radius: none 0 · small 2 · medium 4 · large 6 · xLarge 8 · circular */
+  --radius: 4px;
+  --radius-xs: 2px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+  --radius-3xl: 8px;
+  --radius-4xl: 8px;
+
+  /* Fluent 2 elevation: shadow2 · 4 · 8 · 16 · 28 · 64 (ambient + key) */
+  --shadow-2xs: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  --shadow-xs: 0 0 2px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.14);
+  --shadow-sm: 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14);
+  --shadow: 0 0 2px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.14);
+  --shadow-md: 0 0 2px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.14);
+  --shadow-lg: 0 0 2px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.14);
+  --shadow-xl: 0 0 8px rgba(0,0,0,0.12), 0 14px 28px rgba(0,0,0,0.14);
+  --shadow-2xl: 0 0 8px rgba(0,0,0,0.12), 0 32px 64px rgba(0,0,0,0.14);
+
+  /* Fluent 2 motion */
+  --ease-fluent: cubic-bezier(0.33, 0, 0.67, 1);           /* curveEasyEase */
+  --ease-fluent-decelerate: cubic-bezier(0, 0, 0, 1);      /* curveDecelerateMid */
+  --ease-fluent-accelerate: cubic-bezier(1, 0, 1, 1);      /* curveAccelerateMid */
+  --default-transition-duration: 200ms;                    /* durationNormal */
+  --default-transition-timing-function: cubic-bezier(0.33, 0, 0.67, 1);
 }
 
 @layer base {
   :root {
-    /* 1. Warm Earthy Editorial Theme (Default Light) - Luxury Hospitality Warmth */
-    --background: #FAF8F5;
-    --foreground: #1A1615;
-    --card: #FFFFFF;
-    --card-foreground: #1A1615;
+    /* Fluent 2 · Light (webLightTheme neutrals + Cue Bordeaux brand ramp) */
+    --background: #FAFAFA;          /* colorNeutralBackground2 */
+    --foreground: #242424;          /* colorNeutralForeground1 */
+    --card: #FFFFFF;                /* colorNeutralBackground1 */
+    --card-foreground: #242424;
     --popover: #FFFFFF;
-    --popover-foreground: #1A1615;
+    --popover-foreground: #242424;
 
-    --muted: #F1ECE6;
-    --muted-foreground: #665D57;
+    --muted: #F5F5F5;               /* colorNeutralBackground3 */
+    --muted-foreground: #616161;    /* colorNeutralForeground3 */
+    --subtle: #F0F0F0;              /* colorSubtleBackgroundHover */
+    --disabled: #BDBDBD;            /* colorNeutralForegroundDisabled */
 
-    --primary: #17212F;
+    --primary: #242424;             /* neutral inverted surface */
     --primary-foreground: #FFFFFF;
-    --primary-hover: #0E151F;
-    --primary-light: #24344B;
+    --primary-hover: #424242;
+    --primary-light: #3D3D3D;
 
-    --accent: #881337;
+    --accent: #881337;              /* colorBrandBackground  (brand 80) */
     --accent-foreground: #FFFFFF;
-    --accent-hover: #9F1239;
-    --accent-light: #FFF1F2;
-    --accent-muted: #BE123C;
+    --accent-hover: #781131;        /* colorBrandBackgroundHover (brand 70) */
+    --accent-pressed: #490A1D;      /* colorBrandBackgroundPressed (brand 40) */
+    --accent-light: #F9F3F5;        /* colorBrandBackground2 (brand 160) */
+    --accent-muted: #9D3D5B;        /* brand 90 */
+    --brand-fg: #881337;            /* colorBrandForeground1 */
+    --brand-stroke: #881337;        /* colorBrandStroke1 */
 
-    --secondary: #96867E;
+    --secondary: #616161;
     --secondary-foreground: #FFFFFF;
-    --secondary-light: #F4EFEB;
+    --secondary-light: #F5F5F5;
 
-    --success: #15803D;
+    --success: #107C10;             /* colorStatusSuccessForeground1 base */
     --success-foreground: #FFFFFF;
-    --success-light: #EBF7F0;
+    --success-light: #F1FAF1;       /* colorStatusSuccessBackground1 */
 
-    --warning: #C5A059;
-    --warning-foreground: #1A1615;
-    --warning-light: #FBF7EE;
+    --warning: #BC4B09;             /* colorStatusWarningForeground1 */
+    --warning-foreground: #FFFFFF;
+    --warning-light: #FFF9F5;       /* colorStatusWarningBackground1 */
 
-    --destructive: #DC2626;
+    --trust: #6C5700;               /* gold shade30 – text-safe */
+    --trust-light: #FBF6D9;
+    --trust-border: #E8D88A;
+
+    --destructive: #C50F1F;         /* colorStatusDangerBackground3 */
     --destructive-foreground: #FFFFFF;
-    --destructive-light: #FEE2E2;
+    --destructive-light: #FDF3F4;   /* colorStatusDangerBackground1 */
 
-    --border: #E8E2DC;
-    --input: #E8E2DC;
-    --ring: #881337;
+    --border: #E0E0E0;              /* colorNeutralStroke2 */
+    --border-strong: #D1D1D1;       /* colorNeutralStroke1 */
+    --input: #D1D1D1;               /* colorNeutralStroke1 */
+    --ring: #881337;                /* brand focus underline for inputs */
+    --focus: #000000;               /* colorStrokeFocus2 */
   }
 
   .dark {
-    /* 2. Midnight Luxe Theme (High-Contrast Obsidian & Slate) */
-    --background: #0B0F17;
-    --foreground: #F8FAFC;
-    --card: #151D2A;
-    --card-foreground: #F8FAFC;
-    --popover: #151D2A;
-    --popover-foreground: #F8FAFC;
+    /* Fluent 2 · Dark (webDarkTheme neutrals + Cue Bordeaux brand ramp) */
+    --background: #1F1F1F;          /* colorNeutralBackground2 */
+    --foreground: #FFFFFF;
+    --card: #292929;                /* colorNeutralBackground1 */
+    --card-foreground: #FFFFFF;
+    --popover: #292929;
+    --popover-foreground: #FFFFFF;
 
-    --muted: #1E293B;
-    --muted-foreground: #94A3B8;
+    --muted: #333333;
+    --muted-foreground: #ADADAD;    /* colorNeutralForeground3 */
+    --subtle: #383838;
+    --disabled: #5C5C5C;
 
-    --primary: #111827;
-    --primary-foreground: #F8FAFC;
-    --primary-hover: #1F2937;
-    --primary-light: #1E293B;
-
-    --accent: #9F1239;
-    --accent-foreground: #FFFFFF;
-    --accent-hover: #BE123C;
-    --accent-light: #2D0A14;
-    --accent-muted: #881337;
-
-    --secondary: #64748B;
-    --secondary-foreground: #F8FAFC;
-    --secondary-light: #1E293B;
-
-    --success: #10B981;
-    --success-foreground: #FFFFFF;
-    --success-light: #064E3B;
-
-    --warning: #D4AF37;
-    --warning-foreground: #0B0F17;
-    --warning-light: #451A03;
-
-    --destructive: #F87171;
-    --destructive-foreground: #FFFFFF;
-    --destructive-light: #450A0A;
-
-    --border: #2B3D55;
-    --input: #2B3D55;
-    --ring: #9F1239;
-  }
-
-  .romantic {
-    /* 3. Velvet Night Theme (Deep Rose-Noir, Bordeaux & Velvet Champagne) */
-    --background: #140810;
-    --foreground: #FFF1F5;
-    --card: #22101C;
-    --card-foreground: #FFF1F5;
-    --popover: #22101C;
-    --popover-foreground: #FFF1F5;
-
-    --muted: #341829;
-    --muted-foreground: #E2B6C7;
-
-    --primary: #260E1E;
-    --primary-foreground: #FFF1F5;
-    --primary-hover: #35142B;
-    --primary-light: #3D1831;
-
-    --accent: #9F1239;
-    --accent-foreground: #FFFFFF;
-    --accent-hover: #BE123C;
-    --accent-light: #350D1C;
-    --accent-muted: #881337;
-
-    --secondary: #A87084;
-    --secondary-foreground: #FFF1F5;
-    --secondary-light: #301625;
-
-    --success: #2DD4BF;
-    --success-foreground: #140810;
-    --success-light: #134E4A;
-
-    --warning: #D4AF37;
-    --warning-foreground: #140810;
-    --warning-light: #451A03;
-
-    --destructive: #FB7185;
-    --destructive-foreground: #FFFFFF;
-    --destructive-light: #4C0519;
-
-    --border: #4E233E;
-    --input: #4E233E;
-    --ring: #9F1239;
-  }
-
-  .emerald {
-    /* 4. Emerald Estate Theme (Heritage Forest, Deep Sage & Champagne Gold) */
-    --background: #071510;
-    --foreground: #ECFDF5;
-    --card: #0E231B;
-    --card-foreground: #ECFDF5;
-    --popover: #0E231B;
-    --popover-foreground: #ECFDF5;
-
-    --muted: #153328;
-    --muted-foreground: #86B3A2;
-
-    --primary: #06130D;
-    --primary-foreground: #ECFDF5;
-    --primary-hover: #0B2017;
-    --primary-light: #15382B;
-
-    --accent: #C5A059;
-    --accent-foreground: #071510;
-    --accent-hover: #D4AF37;
-    --accent-light: #232616;
-    --accent-muted: #A0813D;
-
-    --secondary: #6E9385;
-    --secondary-foreground: #ECFDF5;
-    --secondary-light: #163328;
-
-    --success: #34D399;
-    --success-foreground: #071510;
-    --success-light: #064E3B;
-
-    --warning: #FBBF24;
-    --warning-foreground: #071510;
-    --warning-light: #451A03;
-
-    --destructive: #F87171;
-    --destructive-foreground: #FFFFFF;
-    --destructive-light: #450A0A;
-
-    --border: #1C4032;
-    --input: #1C4032;
-    --ring: #C5A059;
-  }
-
-  .champagne {
-    /* 5. Champagne Sand Theme (Sun-Bleached Linen, Warm Sand & Terracotta Bronze) */
-    --background: #F7F2EB;
-    --foreground: #241E1A;
-    --card: #FFFFFF;
-    --card-foreground: #241E1A;
-    --popover: #FFFFFF;
-    --popover-foreground: #241E1A;
-
-    --muted: #EDE4D8;
-    --muted-foreground: #786B60;
-
-    --primary: #2B221C;
+    --primary: #3D3D3D;
     --primary-foreground: #FFFFFF;
-    --primary-hover: #1D1713;
-    --primary-light: #3D3129;
+    --primary-hover: #474747;
+    --primary-light: #525252;
 
-    --accent: #A45A2A;
+    --accent: #781131;              /* brand 70 */
     --accent-foreground: #FFFFFF;
-    --accent-hover: #B86834;
-    --accent-light: #FDF3EB;
-    --accent-muted: #88451B;
+    --accent-hover: #881337;        /* brand 80 */
+    --accent-pressed: #490A1D;
+    --accent-light: #290610;        /* brand 20 */
+    --accent-muted: #9D3D5B;
+    --brand-fg: #BC798E;            /* brand 110 */
+    --brand-stroke: #BC798E;
 
-    --secondary: #8E7E73;
-    --secondary-foreground: #FFFFFF;
-    --secondary-light: #F3ECE2;
+    --secondary: #ADADAD;
+    --secondary-foreground: #1F1F1F;
+    --secondary-light: #333333;
 
-    --success: #15803D;
-    --success-foreground: #FFFFFF;
-    --success-light: #EBF7F0;
+    --success: #54B054;
+    --success-foreground: #0A0A0A;
+    --success-light: #052505;
 
-    --warning: #C5A059;
-    --warning-foreground: #241E1A;
-    --warning-light: #FBF7EE;
+    --warning: #FAA06B;
+    --warning-foreground: #0A0A0A;
+    --warning-light: #4A1E04;
 
-    --destructive: #DC2626;
-    --destructive-foreground: #FFFFFF;
-    --destructive-light: #FEE2E2;
+    --trust: #E3C34F;
+    --trust-light: #3A2F00;
+    --trust-border: #6C5700;
 
-    --border: #DED4C5;
-    --input: #DED4C5;
-    --ring: #A45A2A;
-  }
+    --destructive: #DC626D;
+    --destructive-foreground: #0A0A0A;
+    --destructive-light: #3B0509;
 
-  .sapphire {
-    /* 6. Sapphire Royal Theme (Parisian Midnight, Deep Cobalt & Platinum) */
-    --background: #070C18;
-    --foreground: #F1F5F9;
-    --card: #0E172B;
-    --card-foreground: #F1F5F9;
-    --popover: #0E172B;
-    --popover-foreground: #F1F5F9;
+    --border: #3D3D3D;              /* colorNeutralStroke3 */
+    --border-strong: #666666;       /* colorNeutralStroke1 */
+    --input: #666666;
+    --ring: #BC798E;
+    --focus: #FFFFFF;
 
-    --muted: #17233E;
-    --muted-foreground: #8A9DBE;
-
-    --primary: #0A1122;
-    --primary-foreground: #F1F5F9;
-    --primary-hover: #111C36;
-    --primary-light: #1A284D;
-
-    --accent: #38BDF8;
-    --accent-foreground: #070C18;
-    --accent-hover: #60A5FA;
-    --accent-light: #0C2340;
-    --accent-muted: #0284C7;
-
-    --secondary: #64748B;
-    --secondary-foreground: #F1F5F9;
-    --secondary-light: #17233E;
-
-    --success: #34D399;
-    --success-foreground: #070C18;
-    --success-light: #064E3B;
-
-    --warning: #FBBF24;
-    --warning-foreground: #070C18;
-    --warning-light: #451A03;
-
-    --destructive: #F87171;
-    --destructive-foreground: #FFFFFF;
-    --destructive-light: #450A0A;
-
-    --border: #1E3156;
-    --input: #1E3156;
-    --ring: #38BDF8;
+    /* Fluent dark elevation uses stronger ambient/key opacity */
+    --shadow-xs: 0 0 2px rgba(0,0,0,0.24), 0 1px 2px rgba(0,0,0,0.28);
+    --shadow-sm: 0 0 2px rgba(0,0,0,0.24), 0 2px 4px rgba(0,0,0,0.28);
+    --shadow-md: 0 0 2px rgba(0,0,0,0.24), 0 4px 8px rgba(0,0,0,0.28);
+    --shadow-lg: 0 0 2px rgba(0,0,0,0.24), 0 8px 16px rgba(0,0,0,0.28);
+    --shadow-xl: 0 0 8px rgba(0,0,0,0.24), 0 14px 28px rgba(0,0,0,0.28);
+    --shadow-2xl: 0 0 8px rgba(0,0,0,0.24), 0 32px 64px rgba(0,0,0,0.28);
   }
 
   * {
@@ -321,32 +252,47 @@
     scroll-behavior: smooth;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-body);
-    font-size: 16px;
-    line-height: 1.6;
+    font-family: var(--font-sans);
+    font-size: 14px;                /* Fluent body1 */
+    line-height: 20px;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background-color 0.25s ease, color 0.25s ease;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sans);
-    font-weight: 700;
-    line-height: 1.25;
-    letter-spacing: -0.02em;
+    font-weight: 600;               /* Fluent semibold */
+    letter-spacing: 0;
     color: var(--foreground);
   }
 
-  /* Form inputs visibility across all themes */
+  /* Rupee amounts, slots and references use tabular figures */
+  .font-mono, .tabular, [data-numeric] {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Fluent buttons must never wrap their label onto 2 lines */
+  .fui-Button,
+  button {
+    white-space: nowrap;
+  }
+
   input, textarea {
     color: var(--foreground);
     background-color: var(--card);
   }
 
-  /* Remove default spinner arrows from number inputs across all browsers */
   input[type='number']::-webkit-outer-spin-button,
   input[type='number']::-webkit-inner-spin-button {
     -webkit-appearance: none;
@@ -356,97 +302,87 @@
     -moz-appearance: textfield;
   }
 
-  /* Enhanced select dropdown styling across all themes */
   select {
     color: var(--foreground);
     background-color: var(--card);
     appearance: none;
     -webkit-appearance: none;
     -moz-appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23665D57' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-    background-position: right 0.75rem center;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23616161' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-position: right 0.5rem center;
     background-repeat: no-repeat;
     background-size: 1.25em 1.25em;
-    padding-right: 2.5rem;
+    padding-right: 2.25rem;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .dark select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2394A3B8' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23ADADAD' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
   }
 
-  .romantic select {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23E2B6C7' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-  }
-
+  /* Fluent inputs: brand underline on focus instead of a halo */
   select:focus {
-    border-color: var(--accent);
     outline: none;
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent);
+    border-bottom-color: var(--ring);
+    box-shadow: inset 0 -1px 0 0 var(--ring);
   }
 
-  /* Options inside select dropdowns must be explicitly colored for OS compatibility */
   option {
     background-color: var(--card);
     color: var(--foreground);
-    padding: 8px 12px;
   }
 
   option:checked {
     background-color: var(--muted);
-    color: var(--accent);
+    color: var(--brand-fg);
     font-weight: 600;
   }
 
-  /* Focus rings for accessibility */
+  /* Fluent focus indicator: 2px solid high-contrast stroke */
   *:focus-visible {
-    outline: 2px solid var(--accent);
-    outline-offset: 2px;
+    outline: 2px solid var(--focus);
+    outline-offset: 1px;
   }
 
-  /* Custom scrollbar */
   * {
     scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
+    scrollbar-color: var(--border-strong) transparent;
   }
-  *::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-  *::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  *::-webkit-scrollbar-thumb {
-    background: var(--border);
-    border-radius: 9999px;
-  }
-  *::-webkit-scrollbar-thumb:hover {
-    background: var(--muted-foreground);
-  }
+  *::-webkit-scrollbar { width: 6px; height: 6px; }
+  *::-webkit-scrollbar-track { background: transparent; }
+  *::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 9999px; }
+  *::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
 }
 
 @layer utilities {
-  .glass {
+  /* Fluent "Acrylic" material for sticky headers and flyouts */
+  .glass,
+  .acrylic {
     background: color-mix(in srgb, var(--card) 85%, transparent);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
-  }
-
-  .glass-card {
-    background: color-mix(in srgb, var(--card) 92%, transparent);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(30px) saturate(125%);
+    -webkit-backdrop-filter: blur(30px) saturate(125%);
     border: 1px solid var(--border);
-    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
   }
 
+  /* Legacy alias → Fluent Card (shadow4, 1px stroke, 8px corner) */
+  .glass-card,
+  .fluent-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Fluent interactive card: elevation rises shadow4 → shadow8, no translate */
   .card-hover-effect {
-    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: box-shadow 200ms var(--ease-fluent), border-color 200ms var(--ease-fluent);
   }
   .card-hover-effect:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 30px -4px rgba(0, 0, 0, 0.15), 0 0 0 1px var(--border);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-strong);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
   }
 }

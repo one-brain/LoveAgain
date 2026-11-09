@@ -1,6 +1,12 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { Button, Card } from '@fluentui/react-components';
+import {
+  Warning24Regular,
+  ArrowClockwise20Regular,
+  Home20Regular,
+  SignOut20Regular,
+} from '@fluentui/react-icons';
 import { logger } from '../utils/logger';
-import { ExclamationTriangleIcon, ArrowPathIcon, HomeIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline';
 
 interface Props {
   children: ReactNode;
@@ -80,78 +86,82 @@ export class ErrorBoundary extends Component<Props, State> {
       }
 
       return (
-        <div className="min-h-[50vh] flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-900">
-          <div className="max-w-lg w-full bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-6 md:p-8 text-center">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-950/50 text-red-600 dark:text-red-400 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
-              <ExclamationTriangleIcon className="w-9 h-9" />
+        <div className="min-h-[50vh] flex items-center justify-center p-6 bg-background">
+          <Card className="max-w-lg w-full bg-card rounded-2xl shadow-sm border border-border p-6 md:p-8 text-center">
+            <div className="w-12 h-12 bg-destructive-light text-destructive rounded-2xl flex items-center justify-center mx-auto mb-4 border border-border">
+              <Warning24Regular />
             </div>
 
-            <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-2">
+            <h2 className="text-title3 font-semibold text-foreground mb-2">
               {this.props.fallbackTitle || 'Something went wrong'}
             </h2>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">
+            <p className="text-body1 text-muted-foreground mb-5">
               An unexpected issue occurred while rendering this section. Our system logged this event for review.
             </p>
 
             {this.state.errorId && (
-              <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-700/60 rounded-md text-xs font-mono text-slate-600 dark:text-slate-300 mb-6">
+              <div className="inline-block px-3 py-1 bg-muted rounded-md text-caption1 font-mono tabular text-muted-foreground mb-5 border border-border">
                 Ref ID: {this.state.errorId}
               </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
-              <button
-                type="button"
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-5">
+              <Button
+                appearance="primary"
+                size="large"
+                icon={<ArrowClockwise20Regular />}
                 onClick={this.handleReset}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent text-white font-medium text-sm hover:opacity-95 transition-all shadow-sm"
+                className="w-full min-h-11"
               >
-                <ArrowPathIcon className="w-4 h-4" />
-                Try Again
-              </button>
-              <button
-                type="button"
+                Try again
+              </Button>
+              <Button
+                appearance="secondary"
+                size="large"
                 onClick={this.handleReload}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-200 font-medium text-sm hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
+                className="w-full min-h-11"
               >
-                Reload Window
-              </button>
-              <button
-                type="button"
+                Reload window
+              </Button>
+              <Button
+                appearance="secondary"
+                size="large"
+                icon={<Home20Regular />}
                 onClick={this.handleHome}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-sm hover:bg-slate-50 dark:hover:bg-slate-700/40 transition-all"
+                className="w-full min-h-11"
               >
-                <HomeIcon className="w-4 h-4" />
-                Go to Home
-              </button>
-              <button
-                type="button"
+                Go to home
+              </Button>
+              <Button
+                appearance="outline"
+                size="large"
+                icon={<SignOut20Regular />}
                 onClick={this.handleClearAndLogin}
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 text-sm hover:bg-red-50 dark:hover:bg-red-950/30 transition-all"
+                className="w-full min-h-11 !text-destructive"
               >
-                <ArrowRightOnRectangleIcon className="w-4 h-4" />
-                Reset Session
-              </button>
+                Reset session
+              </Button>
             </div>
 
             {this.state.error && (
-              <div className="text-left mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <button
-                  type="button"
+              <div className="text-left mt-4 pt-4 border-t border-border">
+                <Button
+                  appearance="subtle"
+                  size="small"
                   onClick={() => this.setState((prev) => ({ showDetails: !prev.showDetails }))}
-                  className="text-xs text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 underline"
                 >
                   {this.state.showDetails ? 'Hide technical diagnostics' : 'Show technical diagnostics'}
-                </button>
+                </Button>
 
                 {this.state.showDetails && (
-                  <pre className="mt-3 p-3 bg-slate-900 text-slate-200 rounded-lg text-xs font-mono overflow-x-auto max-h-48 whitespace-pre-wrap">
+                  <pre className="mt-3 p-3 bg-muted text-foreground rounded-md text-caption1 font-mono overflow-x-auto max-h-48 whitespace-pre-wrap border border-border">
                     {this.state.error.name}: {this.state.error.message}
                     {this.state.error.stack ? `\n\n${this.state.error.stack}` : ''}
                   </pre>
                 )}
               </div>
             )}
-          </div>
+          </Card>
         </div>
       );
     }

@@ -13,15 +13,21 @@ import {
   useGetAdminBookingsQuery,
 } from '../store/adminApi';
 import {
-  ShieldCheckIcon,
-  BanknotesIcon,
-  UsersIcon,
-  CurrencyRupeeIcon,
-  ChartBarIcon,
-  UserCircleIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+  Badge,
+  Card,
+  MessageBar,
+  MessageBarBody,
+  Tab,
+  TabList,
+} from '@fluentui/react-components';
+import {
+  ShieldCheckmark20Regular,
+  Money20Regular,
+  People20Regular,
+  DataBarVertical20Regular,
+  PersonCircle20Regular,
+  Calendar20Regular,
+} from '@fluentui/react-icons';
 import { AdminHeader } from '../components/admin/AdminHeader';
 import { AdminKpiStrip } from '../components/admin/AdminKpiStrip';
 import { AdminVerificationStudio } from '../components/admin/AdminVerificationStudio';
@@ -59,7 +65,6 @@ export const AdminDashboard: React.FC = () => {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
-  // RTK Queries
   const [verificationsPage, setVerificationsPage] = useState(1);
   const [verificationsPageSize, setVerificationsPageSize] = useState(20);
 
@@ -111,13 +116,11 @@ export const AdminDashboard: React.FC = () => {
     refetch: refetchMis,
   } = useGetAdminMisQuery();
 
-  // Mutations
   const [approveVerification, { isLoading: isApproving }] = useApproveVerificationMutation();
   const [rejectVerification, { isLoading: isRejecting }] = useRejectVerificationMutation();
   const [processPayout, { isLoading: isProcessingPayout }] = useProcessAdminPayoutMutation();
   const [toggleUserSuspend, { isLoading: isTogglingSuspend }] = useToggleUserSuspendMutation();
 
-  // Handlers
   const handleApproveVerification = async (profileId: string) => {
     try {
       await approveVerification(profileId).unwrap();
@@ -183,7 +186,7 @@ export const AdminDashboard: React.FC = () => {
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
-      showToast('MIS Ledger exported successfully.');
+      showToast('MIS ledger exported successfully.');
     } catch {
       showToast('Failed to export MIS report.', 'error');
     }
@@ -207,80 +210,80 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const pendingVerificationsCount = verificationsData?.items?.filter((v) => v.status === 'PendingReview').length ?? verificationsData?.totalCount ?? 0;
-  const pendingPayoutsCount = payoutsData?.items?.filter((p) => p.status === 'Pending').length ?? payoutsData?.totalCount ?? 0;
+  const pendingVerificationsCount =
+    verificationsData?.items?.filter((v) => v.status === 'PendingReview').length ??
+    verificationsData?.totalCount ??
+    0;
+  const pendingPayoutsCount =
+    payoutsData?.items?.filter((p) => p.status === 'Pending').length ??
+    payoutsData?.totalCount ??
+    0;
 
   const tabs: {
     key: TabKey;
     label: string;
-    shortLabel: string;
     description: string;
-    icon: React.ComponentType<{ className?: string }>;
+    icon: React.ReactElement;
     shortcut: string;
     count?: number;
-    badgeTone?: 'accent' | 'amber';
+    badgeTone?: 'brand' | 'warning';
   }[] = [
-      {
-        key: 'verifications',
-        label: 'Verifications',
-        shortLabel: 'Verifications',
-        description: 'KYC identity review, government ID inspection and public profile approval',
-        icon: ShieldCheckIcon,
-        shortcut: '1',
-        count: pendingVerificationsCount > 0 ? pendingVerificationsCount : undefined,
-        badgeTone: 'amber',
-      },
-      {
-        key: 'bookings',
-        label: 'Bookings',
-        shortLabel: 'Bookings',
-        description: 'Escrow vault holds, booking lifecycle transitions and financial audit trail',
-        icon: BanknotesIcon,
-        shortcut: '2',
-        count: bookingsData?.totalCount,
-        badgeTone: 'accent',
-      },
-      {
-        key: 'users',
-        label: 'Users',
-        shortLabel: 'Users',
-        description: 'Host and guest account directory, trust score moderation and role controls',
-        icon: UsersIcon,
-        shortcut: '3',
-        count: userStats?.total ?? (usersRole === 'All' ? usersData?.totalCount : undefined),
-        badgeTone: 'accent',
-      },
-      {
-        key: 'payouts',
-        label: 'Settlements',
-        shortLabel: 'Payouts',
-        description: 'Guest banking disbursements, UPI transfers and settlement reconciliation',
-        icon: CurrencyRupeeIcon,
-        shortcut: '4',
-        count: pendingPayoutsCount > 0 ? pendingPayoutsCount : undefined,
-        badgeTone: 'amber',
-      },
-      {
-        key: 'mis',
-        label: 'Analytics',
-        shortLabel: 'Analytics',
-        description: 'Gross Merchandise Value (GMV), 15% platform take, volume trends and specialty performance',
-        icon: ChartBarIcon,
-        shortcut: '5',
-      },
-      {
-        key: 'profile',
-        label: 'Admin Identity',
-        shortLabel: 'Admin Security',
-        description: 'Administrator credentials, password rotation, contact information and audit session telemetry',
-        icon: UserCircleIcon,
-        shortcut: '6',
-      },
-    ];
+    {
+      key: 'verifications',
+      label: 'Verifications',
+      description: 'KYC identity review, government ID inspection and public profile approval',
+      icon: <ShieldCheckmark20Regular />,
+      shortcut: '1',
+      count: pendingVerificationsCount > 0 ? pendingVerificationsCount : undefined,
+      badgeTone: 'warning',
+    },
+    {
+      key: 'bookings',
+      label: 'Bookings',
+      description: 'Escrow vault holds, booking lifecycle transitions and financial audit trail',
+      icon: <Calendar20Regular />,
+      shortcut: '2',
+      count: bookingsData?.totalCount,
+      badgeTone: 'brand',
+    },
+    {
+      key: 'users',
+      label: 'Users',
+      description: 'Host and guest account directory, trust score moderation and role controls',
+      icon: <People20Regular />,
+      shortcut: '3',
+      count: userStats?.total ?? (usersRole === 'All' ? usersData?.totalCount : undefined),
+      badgeTone: 'brand',
+    },
+    {
+      key: 'payouts',
+      label: 'Settlements',
+      description: 'Guest banking disbursements, UPI transfers and settlement reconciliation',
+      icon: <Money20Regular />,
+      shortcut: '4',
+      count: pendingPayoutsCount > 0 ? pendingPayoutsCount : undefined,
+      badgeTone: 'warning',
+    },
+    {
+      key: 'mis',
+      label: 'Analytics',
+      description:
+        'Gross Merchandise Value (GMV), 15% platform take, volume trends and specialty performance',
+      icon: <DataBarVertical20Regular />,
+      shortcut: '5',
+    },
+    {
+      key: 'profile',
+      label: 'Admin identity',
+      description:
+        'Administrator credentials, password rotation, contact information and audit session telemetry',
+      icon: <PersonCircle20Regular />,
+      shortcut: '6',
+    },
+  ];
 
   const currentTabConfig = tabs.find((t) => t.key === activeTab) ?? tabs[0];
 
-  // Number key shortcuts (1-6) when not focused in an input
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
@@ -312,160 +315,67 @@ export const AdminDashboard: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  // Arrow key navigation inside tablist
-  const handleTabListKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const currentIndex = validTabs.indexOf(activeTab);
-    if (e.key === 'ArrowRight') {
-      e.preventDefault();
-      const nextIndex = (currentIndex + 1) % validTabs.length;
-      handleTabChange(validTabs[nextIndex]);
-      document.getElementById(`admin-tab-${validTabs[nextIndex]}`)?.focus();
-    } else if (e.key === 'ArrowLeft') {
-      e.preventDefault();
-      const prevIndex = (currentIndex - 1 + validTabs.length) % validTabs.length;
-      handleTabChange(validTabs[prevIndex]);
-      document.getElementById(`admin-tab-${validTabs[prevIndex]}`)?.focus();
-    } else if (e.key === 'Home') {
-      e.preventDefault();
-      handleTabChange(validTabs[0]);
-      document.getElementById(`admin-tab-${validTabs[0]}`)?.focus();
-    } else if (e.key === 'End') {
-      e.preventDefault();
-      handleTabChange(validTabs[validTabs.length - 1]);
-      document.getElementById(`admin-tab-${validTabs[validTabs.length - 1]}`)?.focus();
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
-      {/* Toast Notification */}
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-xs sm:text-sm font-semibold transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${toast.type === 'success'
-            ? 'bg-card border-emerald-500/40 text-foreground ring-2 ring-emerald-500/20'
-            : 'bg-card border-rose-500/40 text-foreground ring-2 ring-rose-500/20'
-            }`}
-        >
-          {toast.type === 'success' ? (
-            <CheckCircleIcon className="w-5 h-5 text-emerald-500 shrink-0" />
-          ) : (
-            <ExclamationTriangleIcon className="w-5 h-5 text-rose-500 shrink-0" />
-          )}
-          <span>{toast.message}</span>
+        <div role="status" aria-live="polite" className="mb-4">
+          <MessageBar intent={toast.type === 'success' ? 'success' : 'error'}>
+            <MessageBarBody>{toast.message}</MessageBarBody>
+          </MessageBar>
         </div>
       )}
 
-      {/* Header */}
       <AdminHeader
         onRefreshAll={handleRefreshAll}
         onExportCsv={handleExportCsv}
         isRefreshing={isRefreshingAll}
       />
 
-      {/* KPI Cards Strip */}
       <AdminKpiStrip misData={misData} isLoading={isLoadingMis} />
 
-      {/* Modernized Architectural Tab Command Bar */}
       <div className="mb-6 space-y-2.5">
-        <div
-          role="tablist"
-          aria-label="Admin Operations Navigation"
-          onKeyDown={handleTabListKeyDown}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 p-1.5 rounded-2xl bg-muted/40 border border-border/80 shadow-2xs backdrop-blur-sm"
-        >
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.key;
-            const Icon = tab.icon;
-
-            return (
-              <button
+        <Card className="bg-card border border-border rounded-2xl p-2 shadow-sm overflow-x-auto">
+          <TabList
+            selectedValue={activeTab}
+            onTabSelect={(_e, data) => handleTabChange(data.value as TabKey)}
+            aria-label="Admin Operations Navigation"
+          >
+            {tabs.map((tab) => (
+              <Tab
                 key={tab.key}
                 id={`admin-tab-${tab.key}`}
-                role="tab"
-                aria-selected={isActive}
-                aria-controls={`admin-panel-${tab.key}`}
-                tabIndex={isActive ? 0 : -1}
-                type="button"
-                onClick={() => handleTabChange(tab.key)}
-                className={`group relative flex items-center justify-between sm:justify-center lg:justify-between px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 cursor-pointer focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-accent ${
-                  isActive
-                    ? 'bg-card text-foreground shadow-xs ring-1 ring-border/80 font-bold'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-card/50'
-                }`}
+                value={tab.key}
+                icon={tab.icon}
               >
-                <div className="flex items-center gap-2 min-w-0">
-                  <div
-                    className={`w-6 h-6 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                      isActive
-                        ? 'bg-accent/15 text-accent'
-                        : tab.badgeTone === 'amber' && tab.count
-                        ? 'bg-accent-champagne/15 text-accent-champagne'
-                        : 'bg-muted/70 text-muted-foreground group-hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className="w-3.5 h-3.5 transition-transform duration-150 group-hover:scale-110" />
-                  </div>
-                  <span className="truncate font-sans font-medium text-xs sm:text-sm">
-                    {tab.label}
-                  </span>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0 ml-1">
-                  {/* Counter Badges */}
+                <span className="flex items-center gap-1.5">
+                  <span>{tab.label}</span>
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span
-                      className={`px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold tabular-nums transition-colors ${
-                        isActive
-                          ? 'bg-accent/15 text-accent'
-                          : tab.badgeTone === 'amber'
-                          ? 'bg-accent-champagne/20 text-accent-champagne'
-                          : 'bg-muted text-muted-foreground'
-                      }`}
+                    <Badge
+                      appearance="tint"
+                      color={tab.badgeTone === 'warning' ? 'warning' : 'brand'}
+                      size="small"
+                      className="tabular"
                     >
                       {tab.count}
-                    </span>
+                    </Badge>
                   )}
+                </span>
+              </Tab>
+            ))}
+          </TabList>
+        </Card>
 
-                  {/* Keyboard Shortcut Indicator Chip */}
-                  <kbd
-                    aria-hidden="true"
-                    className={`hidden xl:inline-flex items-center justify-center w-4 h-4 rounded text-[9px] font-mono tabular-nums border transition-opacity ${
-                      isActive
-                        ? 'bg-accent/10 border-accent/30 text-accent font-bold'
-                        : 'bg-muted/60 border-border/70 text-muted-foreground/70 opacity-60 group-hover:opacity-100'
-                    }`}
-                  >
-                    {tab.shortcut}
-                  </kbd>
-                </div>
-
-                {/* Subtle active indicator underline */}
-                {isActive && (
-                  <span className="absolute bottom-0 left-2 right-2 h-0.5 bg-accent rounded-full animate-in fade-in-0 duration-150" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Operational Context Ribbon */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2 rounded-xl bg-card/60 border border-border/60 text-xs text-muted-foreground shadow-2xs">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-4 py-2 rounded-lg bg-card border border-border text-caption1 text-muted-foreground">
           <div className="flex items-center gap-2 truncate">
-            <span className="w-2 h-2 rounded-full bg-accent shrink-0 animate-pulse" />
-            <span className="font-semibold text-foreground font-sans">{currentTabConfig.label}:</span>
-            <span className="truncate font-sans text-muted-foreground">{currentTabConfig.description}</span>
+            <span className="font-semibold text-foreground">{currentTabConfig.label}:</span>
+            <span className="truncate">{currentTabConfig.description}</span>
           </div>
-          <div className="hidden md:flex items-center gap-2.5 shrink-0 text-[11px] text-muted-foreground/80 font-mono">
-            <span>Keys <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border/70 text-[10px]">1-6</kbd></span>
-            <span>•</span>
-            <span><kbd className="px-1 py-0.5 rounded bg-muted border border-border/70 text-[10px]">←</kbd> <kbd className="px-1 py-0.5 rounded bg-muted border border-border/70 text-[10px]">→</kbd> navigate</span>
+          <div className="hidden md:flex items-center gap-2 shrink-0 text-caption2 text-muted-foreground font-mono tabular">
+            <span>Shortcuts: 1–6</span>
           </div>
         </div>
       </div>
 
-      {/* Active Studio Views */}
       <main>
         {activeTab === 'verifications' && (
           <section
@@ -473,7 +383,6 @@ export const AdminDashboard: React.FC = () => {
             id="admin-panel-verifications"
             aria-labelledby="admin-tab-verifications"
             tabIndex={0}
-            className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminVerificationStudio
               verifications={verificationsData?.items ?? []}
@@ -501,7 +410,6 @@ export const AdminDashboard: React.FC = () => {
             id="admin-panel-bookings"
             aria-labelledby="admin-tab-bookings"
             tabIndex={0}
-            className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminBookingLedger
               bookings={bookingsData?.items ?? []}
@@ -526,7 +434,6 @@ export const AdminDashboard: React.FC = () => {
             id="admin-panel-users"
             aria-labelledby="admin-tab-users"
             tabIndex={0}
-            className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminUsersDirectory
               users={usersData?.items ?? []}
@@ -563,7 +470,6 @@ export const AdminDashboard: React.FC = () => {
             id="admin-panel-payouts"
             aria-labelledby="admin-tab-payouts"
             tabIndex={0}
-            className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminPayoutHub
               payouts={payoutsData?.items ?? []}
@@ -590,7 +496,6 @@ export const AdminDashboard: React.FC = () => {
             id="admin-panel-mis"
             aria-labelledby="admin-tab-mis"
             tabIndex={0}
-            className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminMisAnalytics
               misData={misData}
@@ -606,7 +511,6 @@ export const AdminDashboard: React.FC = () => {
             id="admin-panel-profile"
             aria-labelledby="admin-tab-profile"
             tabIndex={0}
-            className="animate-in fade-in-50 duration-150 outline-hidden"
           >
             <AdminProfileView onBackToDashboard={() => handleTabChange('verifications')} />
           </section>

@@ -5,16 +5,19 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/ui/Toast';
+import { ThemeProvider } from './theme/ThemeProvider';
 import './index.css';
 
 ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
   <React.StrictMode>
-    <ErrorBoundary fallbackTitle="Application Failed to Initialize">
-      <Provider store={store}>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </Provider>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ErrorBoundary fallbackTitle="Application Failed to Initialize">
+        <Provider store={store}>
+          <ToastProvider>
+            <App />
+          </ToastProvider>
+        </Provider>
+      </ErrorBoundary>
+    </ThemeProvider>
   </React.StrictMode>
 );

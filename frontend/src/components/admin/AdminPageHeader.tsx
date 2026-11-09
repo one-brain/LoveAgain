@@ -1,5 +1,5 @@
 import React from 'react';
-import { SignalIcon } from '@heroicons/react/24/outline';
+import { Badge } from '@fluentui/react-components';
 
 interface AdminPageHeaderProps {
   category?: string;
@@ -10,37 +10,34 @@ interface AdminPageHeaderProps {
 }
 
 export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
-  category = 'Back-Office Operations',
+  category = 'Back-office operations',
   title,
   description,
   badge,
   actions,
 }) => {
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 mb-8 border-b border-border/80">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 mb-6 border-b border-border">
       <div>
-        <div className="flex flex-wrap items-center gap-2 mb-2">
-          <span className="text-xs font-mono font-bold uppercase tracking-wider text-muted-foreground">
+        <div className="flex flex-wrap items-center gap-2 mb-1.5">
+          <span className="text-caption1 font-semibold text-muted-foreground">
             {category}
           </span>
-          <span className="text-muted-foreground/60">•</span>
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold border border-emerald-500/20">
-            <SignalIcon className="w-3 h-3 text-emerald-500 animate-pulse" />
-            <span>Telemetry Live</span>
-          </div>
+          <span className="text-muted-foreground">·</span>
+          <Badge appearance="tint" color="success">
+            Telemetry live
+          </Badge>
           {badge}
         </div>
 
-        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground font-sans">
-          {title}
-        </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground mt-1 max-w-2xl leading-relaxed">
+        <h1 className="text-title2 font-semibold text-foreground">{title}</h1>
+        <p className="text-caption1 text-muted-foreground mt-1 max-w-2xl">
           {description}
         </p>
       </div>
 
       {actions && (
-        <div className="flex items-center gap-2.5 self-start md:self-center flex-wrap shrink-0">
+        <div className="flex items-center gap-2 self-start md:self-center flex-wrap shrink-0">
           {actions}
         </div>
       )}
@@ -49,4 +46,3 @@ export const AdminPageHeader: React.FC<AdminPageHeaderProps> = ({
 };
 
 export default AdminPageHeader;
-

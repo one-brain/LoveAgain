@@ -15,24 +15,25 @@ class VerifiedBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     if (showLabel) {
       return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        padding: const EdgeInsets.symmetric(
+          horizontal: FluentSpacing.s,
+          vertical: FluentSpacing.xxs,
+        ),
         decoration: BoxDecoration(
           color: AppColors.goldLight,
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+          borderRadius: BorderRadius.circular(FluentRadius.medium),
+          border: Border.all(color: AppColors.goldBorder),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.verified_rounded, size: size, color: AppColors.goldDark),
-            const SizedBox(width: 4),
-            const Text(
-              'Verified Host',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppColors.goldDark,
-                letterSpacing: 0.1,
+            Icon(Icons.verified_user_rounded, size: size, color: AppColors.gold),
+            const SizedBox(width: FluentSpacing.xs),
+            Text(
+              'Verified host',
+              style: FluentType.caption2.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.gold,
               ),
             ),
           ],
@@ -41,15 +42,19 @@ class VerifiedBadge extends StatelessWidget {
     }
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.gold,
-        shape: BoxShape.circle,
+      padding: const EdgeInsets.symmetric(
+        horizontal: FluentSpacing.xs,
+        vertical: FluentSpacing.xxs,
       ),
-      padding: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: AppColors.goldLight,
+        borderRadius: BorderRadius.circular(FluentRadius.medium),
+        border: Border.all(color: AppColors.goldBorder),
+      ),
       child: Icon(
-        Icons.check,
-        size: size - 4,
-        color: Colors.white,
+        Icons.verified_user_rounded,
+        size: size - 2,
+        color: AppColors.gold,
       ),
     );
   }

@@ -8,32 +8,26 @@ import {
 import { ProviderEarningsCard } from '../components/payment/ProviderEarningsCard';
 import { setSpecialties } from '../store/slices/profileSlice';
 import { formatINR } from '../utils/currency';
+import { Badge, Card, Spinner } from '@fluentui/react-components';
 import {
-  BriefcaseIcon,
-  SparklesIcon,
-  CalendarDaysIcon,
-  InboxArrowDownIcon,
-  ArrowRightIcon,
-  MapPinIcon,
-} from '@heroicons/react/24/outline';
+  Briefcase20Regular,
+  Sparkle20Regular,
+  Calendar20Regular,
+  MailInbox20Regular,
+  ArrowRight16Regular,
+  Location16Regular,
+} from '@fluentui/react-icons';
 
 const ACTIVE_STATUSES = ['PendingPayment', 'Confirmed', 'InProgress'];
 
-/**
- * Companion Dashboard: performance at a glance and earnings/payouts.
- * Bookings live in My Experience Bookings (/bookings) and configuration lives in
- * Companion Profile & Settings (/profile?tab=provider); this page only links to them.
- */
 const ProviderDashboard: React.FC = () => {
   const dispatch = useDispatch();
   const userId = localStorage.getItem('userId') || '';
   const { specialties } = useSelector((state: any) => state.profile || { specialties: [] });
 
   const { data: profileData, isLoading: profileLoading } = useGetMyProfileQuery();
-  const { data: providerBookingsData, isLoading: isLoadingBookings } = useGetProviderIncomingBookingsQuery(
-    userId,
-    { skip: !userId }
-  );
+  const { data: providerBookingsData, isLoading: isLoadingBookings } =
+    useGetProviderIncomingBookingsQuery(userId, { skip: !userId });
 
   useEffect(() => {
     if (profileData?.profile?.specialties) {
@@ -66,30 +60,45 @@ const ProviderDashboard: React.FC = () => {
   if (profileLoading) {
     return (
       <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-          <p className="text-sm text-muted-foreground">Loading Guest Hub...</p>
-        </div>
+        <Spinner label="Loading guest hub..." />
       </div>
     );
   }
 
   const kpis = [
-    { label: 'Awaiting payment', value: pendingCount, hint: 'Requests hosts have not paid yet', icon: InboxArrowDownIcon, tone: 'text-amber-500' },
-    { label: 'Upcoming sessions', value: upcomingCount, hint: 'Confirmed or in progress', icon: CalendarDaysIcon, tone: 'text-accent' },
-    { label: 'Completed outings', value: completedCount, hint: 'Lifetime finished outings', icon: SparklesIcon, tone: 'text-emerald-500' },
+    {
+      label: 'Awaiting payment',
+      value: pendingCount,
+      hint: 'Requests hosts have not paid yet',
+      icon: MailInbox20Regular,
+      tone: 'text-warning',
+    },
+    {
+      label: 'Upcoming sessions',
+      value: upcomingCount,
+      hint: 'Confirmed or in progress',
+      icon: Calendar20Regular,
+      tone: 'text-brand-fg',
+    },
+    {
+      label: 'Completed outings',
+      value: completedCount,
+      hint: 'Lifetime finished outings',
+      icon: Sparkle20Regular,
+      tone: 'text-success',
+    },
   ];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-bold uppercase tracking-wider text-accent mb-1 block">
-            Guest Management Hub
+          <span className="text-caption1 font-semibold text-brand-fg mb-1 block">
+            Guest management hub
           </span>
-          <h1 className="text-2xl sm:text-3xl font-bold font-sans text-foreground tracking-tight">Guest Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-title2 font-semibold text-foreground">Guest dashboard</h1>
+          <p className="text-body1 text-muted-foreground mt-1">
             Your guest performance and earnings at a glance.
           </p>
         </div>
@@ -98,29 +107,31 @@ const ProviderDashboard: React.FC = () => {
       {/* KPI strip */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {kpis.map(({ label, value, hint, icon: Icon, tone }) => (
-          <div key={label} className="p-5 rounded-2xl bg-card border border-border shadow-xs space-y-1.5">
-            <div className="flex items-center justify-between text-muted-foreground text-xs font-semibold uppercase tracking-wider">
+          <Card
+            key={label}
+            className="p-5 rounded-2xl bg-card border border-border shadow-sm space-y-1.5"
+          >
+            <div className="flex items-center justify-between text-muted-foreground text-caption1 font-semibold">
               <span>{label}</span>
-              <Icon className={`w-5 h-5 ${tone}`} />
+              <Icon className={tone} />
             </div>
-            <div className="text-3xl font-extrabold font-mono text-foreground tabular-nums">
+            <div className="text-title2 font-semibold font-mono text-foreground tabular">
               {isLoadingBookings ? '–' : value}
             </div>
-            <p className="text-xs text-muted-foreground">{hint}</p>
-          </div>
+            <p className="text-caption1 text-muted-foreground">{hint}</p>
+          </Card>
         ))}
       </div>
 
       {/* Signposts: where bookings and settings are managed */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Bookings signpost */}
-        <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
+        <Card className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between gap-5">
           <div className="space-y-2">
-            <h2 className="text-lg sm:text-xl font-bold font-sans text-foreground">Booking requests</h2>
+            <h2 className="text-subtitle1 font-semibold text-foreground">Booking requests</h2>
             {nextSession ? (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body1 text-muted-foreground">
                 Next session{' '}
-                <strong className="text-foreground">
+                <strong className="text-foreground tabular">
                   {new Date(nextSession.startTime).toLocaleString('en-IN', {
                     weekday: 'short',
                     day: 'numeric',
@@ -129,69 +140,74 @@ const ProviderDashboard: React.FC = () => {
                     minute: '2-digit',
                   })}
                 </strong>
-                {nextSession.totalAmount ? <> · <span className="font-mono tabular-nums">{formatINR(nextSession.totalAmount)}</span></> : null}
+                {nextSession.totalAmount ? (
+                  <>
+                    {' '}
+                    · <span className="font-mono tabular">{formatINR(nextSession.totalAmount)}</span>
+                  </>
+                ) : null}
               </p>
             ) : (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-body1 text-muted-foreground">
                 No upcoming sessions. New requests appear in My Experience Bookings.
               </p>
             )}
           </div>
           <Link
             to="/bookings?view=incoming"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors self-start"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-body1 transition-colors self-start min-h-11"
           >
-            <span>Manage in My Experience Bookings</span>
-            <ArrowRightIcon className="w-4 h-4" />
+            <span>My outings</span>
+            <ArrowRight16Regular />
           </Link>
-        </section>
+        </Card>
 
-        {/* Profile signpost */}
-        <section className="p-6 rounded-2xl bg-card border border-border shadow-xs flex flex-col justify-between gap-5">
+        <Card className="p-6 rounded-2xl bg-card border border-border shadow-sm flex flex-col justify-between gap-5">
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
-              <h2 className="text-lg sm:text-xl font-bold font-sans text-foreground">Public profile</h2>
-              <span
-                className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${
-                  !isApproved
-                    ? 'bg-amber-500/10 text-amber-700 dark:text-amber-400'
-                    : isVisible
-                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400'
-                    : 'bg-muted text-muted-foreground'
-                }`}
+              <h2 className="text-subtitle1 font-semibold text-foreground">Public profile</h2>
+              <Badge
+                appearance="tint"
+                color={!isApproved ? 'warning' : isVisible ? 'success' : 'informative'}
               >
-                {!isApproved ? 'Not yet approved' : isVisible ? 'Visible in Discovery' : 'Paused'}
-              </span>
+                {!isApproved ? 'Not yet approved' : isVisible ? 'Visible in discovery' : 'Paused'}
+              </Badge>
             </div>
-            <dl className="grid grid-cols-3 gap-3 text-sm">
+            <dl className="grid grid-cols-3 gap-3 text-body1">
               <div>
-                <dt className="text-xs text-muted-foreground">Hourly rate</dt>
-                <dd className="font-semibold font-mono text-foreground tabular-nums">{hourlyRate ? formatINR(hourlyRate) : '—'}</dd>
+                <dt className="text-caption1 text-muted-foreground">Hourly rate</dt>
+                <dd className="font-semibold font-mono text-foreground tabular">
+                  {hourlyRate ? formatINR(hourlyRate) : '—'}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Specialties</dt>
-                <dd className="font-semibold font-mono text-foreground tabular-nums">{specialties.length}</dd>
+                <dt className="text-caption1 text-muted-foreground">Specialties</dt>
+                <dd className="font-semibold font-mono text-foreground tabular">
+                  {specialties.length}
+                </dd>
               </div>
               <div>
-                <dt className="text-xs text-muted-foreground">Service area</dt>
+                <dt className="text-caption1 text-muted-foreground">Service area</dt>
                 <dd className="font-semibold text-foreground flex items-center gap-1">
-                  <MapPinIcon className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="font-mono tabular-nums">{hasLocation ? `${radiusKm || 25} km` : 'Not set'}</span>
+                  <Location16Regular className="text-muted-foreground" />
+                  <span className="font-mono tabular">
+                    {hasLocation ? `${radiusKm || 25} km` : 'Not set'}
+                  </span>
                 </dd>
               </div>
             </dl>
           </div>
           <Link
             to="/profile?tab=provider"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-border bg-background hover:bg-muted font-semibold text-sm text-foreground transition-colors self-start"
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-md border border-border bg-background hover:bg-muted font-semibold text-body1 text-foreground transition-colors self-start min-h-11"
           >
-            <BriefcaseIcon className="w-4 h-4 text-accent" />
-            <span>Edit in Profile & Settings</span>
+            <Briefcase20Regular className="text-brand-fg" />
+            <span>Host settings</span>
           </Link>
-        </section>
+        </Card>
       </div>
 
-      {/* Earnings & UPI payouts: unique to this page */}
+      {/* Earnings & UPI payouts */}
       <ProviderEarningsCard />
     </div>
   );

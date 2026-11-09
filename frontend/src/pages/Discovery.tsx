@@ -1,6 +1,35 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import {
+  Input,
+  Button,
+  ToggleButton,
+  Badge,
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Search20Regular,
+  Star16Filled,
+  Location16Regular,
+  Filter16Regular,
+  Dismiss16Regular,
+  ChevronLeft20Regular,
+  ChevronRight20Regular,
+  LockClosed16Regular,
+  ShieldCheckmark24Regular,
+  ShieldCheckmark16Regular,
+  People24Regular,
+  CheckmarkStarburst16Filled,
+} from '@fluentui/react-icons';
 import type { RootState } from '../store';
 import { useListProvidersQuery } from '../store/discoveryApi';
 import { useCreateBookingMutation } from '../store/bookingApi';
@@ -15,43 +44,30 @@ import {
   resolveNearestHub,
   getCurrentCoordinates,
 } from '../utils/location';
-import {
-  MagnifyingGlassIcon,
-  StarIcon,
-  MapPinIcon,
-  AdjustmentsHorizontalIcon,
-  XMarkIcon,
-  SparklesIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ArrowPathIcon,
-  LockClosedIcon,
-  ShieldCheckIcon,
-} from '@heroicons/react/24/outline';
 
 const CITY_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All India', icon: '🇮🇳', description: 'Show guests nationwide' },
-  { value: 'blr', label: 'Bengaluru', icon: '📍', description: 'Indiranagar, Koramangala, Whitefield' },
-  { value: 'mum', label: 'Mumbai', icon: '📍', description: 'Bandra, BKC, Colaba, Andheri' },
-  { value: 'del', label: 'Delhi-NCR', icon: '📍', description: 'Connaught Place, Gurgaon, Noida' },
-  { value: 'hyd', label: 'Hyderabad', icon: '📍', description: 'Hitec City, Jubilee Hills, Gachibowli' },
-  { value: 'pun', label: 'Pune', icon: '📍', description: 'Koregaon Park, Kalyani Nagar, Baner' },
-  { value: 'chn', label: 'Chennai', icon: '📍', description: 'Nungambakkam, Adyar' },
-  { value: 'kol', label: 'Kolkata', icon: '📍', description: 'Park Street, Salt Lake' },
+  { value: 'all', label: 'All India', description: 'Show guests nationwide' },
+  { value: 'blr', label: 'Bengaluru', description: 'Indiranagar, Koramangala, Whitefield' },
+  { value: 'mum', label: 'Mumbai', description: 'Bandra, BKC, Colaba, Andheri' },
+  { value: 'del', label: 'Delhi-NCR', description: 'Connaught Place, Gurgaon, Noida' },
+  { value: 'hyd', label: 'Hyderabad', description: 'Hitec City, Jubilee Hills, Gachibowli' },
+  { value: 'pun', label: 'Pune', description: 'Koregaon Park, Kalyani Nagar, Baner' },
+  { value: 'chn', label: 'Chennai', description: 'Nungambakkam, Adyar' },
+  { value: 'kol', label: 'Kolkata', description: 'Park Street, Salt Lake' },
 ];
 
 const GENDER_OPTIONS: DropdownOption[] = [
-  { value: 'all', label: 'All Genders', icon: '👥', description: 'Show all guests' },
-  { value: 'female', label: 'Women', icon: '👩', description: 'Female guests' },
-  { value: 'male', label: 'Men', icon: '👨', description: 'Male guests' },
-  { value: 'non-binary', label: 'Non-Binary', icon: '⚧', description: 'Non-binary guests' },
+  { value: 'all', label: 'All genders', description: 'Show all guests' },
+  { value: 'female', label: 'Women', description: 'Female guests' },
+  { value: 'male', label: 'Men', description: 'Male guests' },
+  { value: 'non-binary', label: 'Non-binary', description: 'Non-binary guests' },
 ];
 
 const SORT_OPTIONS: DropdownOption[] = [
-  { value: 'rating', label: 'Top Rated', icon: '⭐', description: 'Highest review average' },
-  { value: 'distance', label: 'Nearest First', icon: '📍', description: 'Closest to your coordinates' },
-  { value: 'price', label: 'Price: Low to High', icon: '🏷️', description: 'Budget friendly rates' },
-  { value: 'newest', label: 'Newest Members', icon: '✨', description: 'Recently active members' },
+  { value: 'rating', label: 'Top rated', description: 'Highest review average' },
+  { value: 'distance', label: 'Nearest first', description: 'Closest to your coordinates' },
+  { value: 'price', label: 'Price: Low to high', description: 'Budget friendly rates' },
+  { value: 'newest', label: 'Newest members', description: 'Recently active members' },
 ];
 
 const RADIUS_OPTIONS: DropdownOption[] = [
@@ -59,6 +75,20 @@ const RADIUS_OPTIONS: DropdownOption[] = [
   { value: '25', label: 'Within 25 km', description: 'Metro city radius' },
   { value: '50', label: 'Within 50 km', description: 'Greater metropolitan area' },
   { value: '100', label: 'Within 100 km', description: 'Extended regional area' },
+];
+
+const SERVICE_TAGS = [
+  { label: 'All services', query: '' },
+  { label: 'Coffee dates', query: 'Coffee' },
+  { label: 'Restaurant visits', query: 'Restaurant' },
+  { label: 'Shopping', query: 'Shopping' },
+  { label: 'Movies', query: 'Movies' },
+  { label: 'Weekend activities', query: 'Weekend' },
+  { label: 'Special events', query: 'Special Events' },
+  { label: 'Tennis & fitness', query: 'Tennis' },
+  { label: 'Homestyle cooking', query: 'Cooking' },
+  { label: 'Photography', query: 'Photography' },
+  { label: 'Senior care', query: 'Senior Companion' },
 ];
 
 const Discovery: React.FC = () => {
@@ -80,16 +110,13 @@ const Discovery: React.FC = () => {
   const [radiusKm, setRadiusKm] = useState('50');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Dynamic Location State
   const [selectedCity, setSelectedCity] = useState<string>('all');
   const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; label: string } | null>(null);
   const [isLocating, setIsLocating] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
 
-  // Track active photo index per provider card for interactive 3-photo browsing
   const [activePhotoIndexByProvider, setActivePhotoIndexByProvider] = useState<Record<string, number>>({});
 
-  // Single Canonical Booking Flow Modal States
   const [authPromptModal, setAuthPromptModal] = useState(false);
   const [selectedProviderForBooking, setSelectedProviderForBooking] = useState<any | null>(null);
   const [activeCheckoutOrderId, setActiveCheckoutOrderId] = useState<string | null>(null);
@@ -122,7 +149,6 @@ const Discovery: React.FC = () => {
 
   const currentPage = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
 
-  // Query live backend providers
   const { data: backendData, isLoading: isDiscoveryLoading } = useListProvidersQuery({
     q: q.trim() || undefined,
     minRate: minRate ? Number(minRate) : undefined,
@@ -216,7 +242,6 @@ const Discovery: React.FC = () => {
 
     let list: any[] = [...liveItems];
 
-    // Exclude logged-in user's own companion profile card
     if (user?.id) {
       const currentUserId = String(user.id).toLowerCase();
       list = list.filter((p: any) => {
@@ -226,7 +251,6 @@ const Discovery: React.FC = () => {
       });
     }
 
-    // Exclude any provider explicitly rejected by platform administration
     try {
       const rawRejected = localStorage.getItem('cue_rejected_provider_ids');
       if (rawRejected) {
@@ -235,7 +259,6 @@ const Discovery: React.FC = () => {
       }
     } catch {}
 
-    // Calculate dynamic distance & filter by radius if location is active
     if (userLocation) {
       const maxR = Number(radiusKm) || 50;
       list = list
@@ -257,7 +280,6 @@ const Discovery: React.FC = () => {
         .filter((p) => p.distanceKm == null || p.distanceKm <= maxR);
     }
 
-    // Filter by Gender
     if (genderFilter !== 'all') {
       list = list.filter((p) => {
         const g = (p.gender || '').toLowerCase();
@@ -268,7 +290,6 @@ const Discovery: React.FC = () => {
       });
     }
 
-    // Unified Search across name, specialties, bio, city, area, and services
     if (q.trim()) {
       const lower = q.trim().toLowerCase();
       list = list.filter((p) => {
@@ -298,7 +319,7 @@ const Discovery: React.FC = () => {
     }
 
     return list;
-  }, [backendData, userLocation, radiusKm, genderFilter, q, minRate, maxRate, sortBy]);
+  }, [backendData, user?.id, userLocation, radiusKm, genderFilter, q, minRate, maxRate, sortBy]);
 
   const handleSelectPhoto = (providerId: string, idx: number, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -397,37 +418,36 @@ const Discovery: React.FC = () => {
     <div className="min-h-screen bg-background text-foreground pb-20">
       {/* Administrator Context Continuity Ribbon */}
       {isAdmin && (
-        <aside aria-label="Administrator Preview Ribbon" className="bg-gradient-to-r from-accent/90 via-accent to-accent-hover text-white text-xs py-2 px-4 shadow-sm border-b border-accent/40 sticky top-16 z-30 flex items-center justify-between">
+        <aside aria-label="Administrator Preview Ribbon" className="bg-accent text-accent-foreground text-caption1 py-2 px-4 shadow-xs border-b border-border sticky top-14 z-30 flex items-center justify-between">
           <div className="max-w-7xl mx-auto w-full flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 font-medium">
-              <span className="w-2 h-2 rounded-full bg-accent-champagne animate-pulse shrink-0" />
-              <span className="font-bold text-accent-champagne font-mono uppercase tracking-wider text-[11px]">Administrator Preview</span>
-              <span className="hidden sm:inline text-white/80">• Browsing live public directory as host</span>
+            <div className="flex items-center gap-2 font-semibold">
+              <span className="w-2 h-2 rounded-full bg-accent-foreground shrink-0" />
+              <span>Administrator preview</span>
+              <span className="hidden sm:inline opacity-80 font-normal">• Browsing live public directory as host</span>
             </div>
             <Link
               to="/admin"
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all border border-white/20 shrink-0"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-card text-foreground font-semibold text-caption1 transition-colors border border-border shrink-0"
             >
-              <ShieldCheckIcon className="w-3.5 h-3.5 text-accent-champagne" />
-              <span>Return to Dashboard &rarr;</span>
+              <ShieldCheckmark16Regular className="text-brand-fg" />
+              <span>Admin</span>
             </Link>
           </div>
         </aside>
       )}
 
-      {/* Top Header & Search Bar */}
-      <section className={`bg-card border-b border-border sticky ${isAdmin ? 'top-25' : 'top-16'} z-20 backdrop-blur-md bg-card/95 transition-all shadow-2xs`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 space-y-3">
+      {/* Top Header & Fluent Filter Bar */}
+      <section className={`bg-card border-b border-border sticky ${isAdmin ? 'top-23' : 'top-14'} z-20 acrylic transition-all`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 space-y-2.5">
           {/* Main Controls Row */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
             {/* Primary Unified Search Bar */}
-            <div className="relative flex-1">
-              <MagnifyingGlassIcon className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-              <input
-                type="text"
+            <div className="flex-1 min-w-0">
+              <Input
+                size="medium"
                 value={q}
-                onChange={(e) => {
-                  const val = e.target.value;
+                onChange={(_, data) => {
+                  const val = data.value;
                   setQ(val);
                   setSearchParams((prev) => {
                     const next = new URLSearchParams(prev);
@@ -436,26 +456,28 @@ const Discovery: React.FC = () => {
                     return next;
                   });
                 }}
-                placeholder="Search by activity (e.g. Coffee Dates, Restaurant Visits, Shopping, Movies, Elena)..."
-                className="w-full pl-10 pr-9 py-2.5 rounded-2xl bg-muted/50 border border-border/80 text-xs sm:text-sm placeholder:text-muted-foreground/70 focus:outline-hidden focus:ring-2 focus:ring-accent/40 focus:border-accent transition-all shadow-2xs"
+                placeholder="Search by activity, companion name, or neighborhood (e.g. Coffee dates, Indiranagar)..."
+                contentBefore={<Search20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  q ? (
+                    <Button
+                      appearance="subtle"
+                      size="small"
+                      aria-label="Clear search"
+                      icon={<Dismiss16Regular />}
+                      onClick={() => {
+                        setQ('');
+                        setSearchParams((prev) => {
+                          const next = new URLSearchParams(prev);
+                          next.delete('q');
+                          return next;
+                        });
+                      }}
+                    />
+                  ) : undefined
+                }
+                className="w-full h-9"
               />
-              {q && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setQ('');
-                    setSearchParams((prev) => {
-                      const next = new URLSearchParams(prev);
-                      next.delete('q');
-                      return next;
-                    });
-                  }}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-                  aria-label="Clear search"
-                >
-                  <XMarkIcon className="w-3.5 h-3.5" />
-                </button>
-              )}
             </div>
 
             {/* Quick Filter Strip: City, GPS, Gender, and Filters Drawer Toggle */}
@@ -466,30 +488,25 @@ const Discovery: React.FC = () => {
                   options={CITY_OPTIONS}
                   value={selectedCity === 'gps' ? 'all' : selectedCity}
                   onChange={(val) => handleCityChange(val)}
-                  className="w-full text-xs font-medium"
-                  triggerClassName="w-full bg-muted/60 hover:bg-muted border border-border/80 px-2.5 py-2 rounded-xl text-xs"
+                  size="md"
+                  className="w-full"
+                  triggerClassName="h-9"
                 />
               </div>
 
               {/* GPS Near Me Button */}
-              <button
-                type="button"
+              <ToggleButton
+                size="medium"
+                checked={selectedCity === 'gps'}
+                appearance={selectedCity === 'gps' ? 'primary' : 'outline'}
                 onClick={handleNearMeGps}
                 disabled={isLocating}
+                icon={isLocating ? <Spinner size="tiny" /> : <Location16Regular />}
                 title="Use Current Device Location (GPS)"
-                className={`px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition-colors whitespace-nowrap cursor-pointer shrink-0 ${
-                  selectedCity === 'gps'
-                    ? 'bg-accent text-accent-foreground border-accent shadow-xs'
-                    : 'bg-card border-border/80 hover:border-accent text-foreground'
-                }`}
+                className="h-9 shrink-0"
               >
-                {isLocating ? (
-                  <ArrowPathIcon className="w-3.5 h-3.5 animate-spin text-accent" />
-                ) : (
-                  <MapPinIcon className="w-3.5 h-3.5 text-accent" />
-                )}
-                <span>Near Me</span>
-              </button>
+                Near me
+              </ToggleButton>
 
               {/* Gender Dropdown */}
               <div className="w-32 sm:w-36 shrink-0">
@@ -505,52 +522,39 @@ const Discovery: React.FC = () => {
                       return next;
                     });
                   }}
-                  className="w-full text-xs font-medium"
-                  triggerClassName="w-full bg-muted/60 hover:bg-muted border border-border/80 px-2.5 py-2 rounded-xl text-xs"
+                  size="md"
+                  className="w-full"
+                  triggerClassName="h-9"
                 />
               </div>
 
               {/* Advanced Filters Button */}
-              <button
-                type="button"
+              <ToggleButton
+                size="medium"
+                checked={showFilters || activeFilterCount > 0}
+                appearance={showFilters || activeFilterCount > 0 ? 'primary' : 'outline'}
                 onClick={() => setShowFilters(!showFilters)}
-                className={`px-3 py-2 rounded-xl border transition-colors flex items-center gap-1.5 text-xs font-semibold shrink-0 cursor-pointer ${
-                  showFilters || activeFilterCount > 0
-                    ? 'bg-accent text-accent-foreground border-accent shadow-xs'
-                    : 'bg-card border-border/80 hover:border-accent text-foreground'
-                }`}
+                icon={<Filter16Regular />}
                 title="More Filters"
+                className="h-9 shrink-0"
               >
-                <AdjustmentsHorizontalIcon className="w-3.5 h-3.5" />
                 <span>Filters</span>
                 {activeFilterCount > 0 && (
-                  <span className="w-4 h-4 rounded-full bg-accent-foreground text-accent text-[10px] font-bold flex items-center justify-center font-mono ml-0.5">
+                  <Badge appearance="filled" color="brand" size="small" className="ml-1 tabular">
                     {activeFilterCount}
-                  </span>
+                  </Badge>
                 )}
-              </button>
+              </ToggleButton>
             </div>
           </div>
 
           {/* Quick Curated Services Strip */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1 text-xs">
-            <span className="text-[11px] text-muted-foreground font-semibold uppercase tracking-wider font-mono shrink-0 mr-1">
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 text-caption1">
+            <span className="text-caption1 text-muted-foreground font-semibold shrink-0 mr-1">
               Services:
             </span>
-            {[
-              { label: 'All Services', query: '' },
-              { label: '☕ Coffee Dates', query: 'Coffee' },
-              { label: '🍽️ Restaurant Visits', query: 'Restaurant' },
-              { label: '🛍️ Shopping', query: 'Shopping' },
-              { label: '🎬 Movies', query: 'Movies' },
-              { label: '🌄 Weekend Activities', query: 'Weekend' },
-              { label: '🎟️ Special Events', query: 'Special Events' },
-              { label: '🎾 Tennis & Fitness', query: 'Tennis' },
-              { label: '🍛 Homestyle Cooking', query: 'Cooking' },
-              { label: '📸 Photography', query: 'Photography' },
-              { label: '👵 Senior Care', query: 'Senior Companion' },
-            ].map((tag) => {
-              const isSelected = (!tag.query && !q.trim()) || (tag.query && q.toLowerCase().includes(tag.query.toLowerCase()));
+            {SERVICE_TAGS.map((tag) => {
+              const isSelected = (!tag.query && !q.trim()) || Boolean(tag.query && q.toLowerCase().includes(tag.query.toLowerCase()));
               return (
                 <button
                   key={tag.label}
@@ -564,13 +568,13 @@ const Discovery: React.FC = () => {
                       return next;
                     });
                   }}
-                  className={`px-3 py-1.5 rounded-xl border text-xs font-medium transition-all shrink-0 cursor-pointer min-h-[36px] flex items-center gap-1 ${
+                  className={`px-3 py-1 rounded-full text-caption1 font-semibold transition-colors shrink-0 cursor-pointer border ${
                     isSelected
-                      ? 'bg-accent text-accent-foreground border-accent shadow-2xs font-semibold'
-                      : 'bg-muted/40 hover:bg-muted text-foreground/85 border-border/80 hover:border-accent/40'
+                      ? 'bg-accent text-accent-foreground border-accent'
+                      : 'bg-muted/70 hover:bg-subtle text-foreground border-border'
                   }`}
                 >
-                  <span>{tag.label}</span>
+                  {tag.label}
                 </button>
               );
             })}
@@ -578,41 +582,41 @@ const Discovery: React.FC = () => {
 
           {/* Active Location Indicator Pill */}
           {userLocation && (
-            <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-accent/10 border border-accent/20 text-xs">
-              <div className="flex items-center gap-1.5 text-accent font-medium">
-                <MapPinIcon className="w-3.5 h-3.5" />
+            <div className="flex items-center justify-between px-3 py-1.5 rounded-lg bg-accent-light border border-border text-caption1">
+              <div className="flex items-center gap-1.5 text-brand-fg font-semibold tabular">
+                <Location16Regular />
                 <span>
                   Filtering guests within <strong>{radiusKm} km</strong> of <strong>{userLocation.label}</strong>
                 </span>
               </div>
-              <button
-                type="button"
+              <Button
+                appearance="subtle"
+                size="small"
                 onClick={() => {
                   setUserLocation(null);
                   setSelectedCity('all');
                 }}
-                className="text-[11px] font-semibold text-muted-foreground hover:text-foreground underline ml-2 cursor-pointer"
               >
-                Clear Location
-              </button>
+                Clear location
+              </Button>
             </div>
           )}
 
           {locationError && (
-            <div className="text-xs text-rose-500 font-medium">
-              ⚠️ {locationError}
-            </div>
+            <MessageBar intent="error">
+              <MessageBarBody>{locationError}</MessageBarBody>
+            </MessageBar>
           )}
         </div>
       </section>
 
       {/* Filter Drawer */}
       {showFilters && (
-        <section className="bg-card border-b border-border py-4 animate-in fade-in slide-in-from-top-2 duration-150">
+        <section className="bg-card border-b border-border py-4">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Sort Results</label>
+                <label className="block text-caption1 font-semibold text-muted-foreground mb-1.5">Sort results</label>
                 <SelectDropdown
                   options={SORT_OPTIONS}
                   value={sortBy}
@@ -627,61 +631,58 @@ const Discovery: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Search Distance</label>
+                <label className="block text-caption1 font-semibold text-muted-foreground mb-1.5">Search distance</label>
                 <SelectDropdown options={RADIUS_OPTIONS} value={radiusKm} onChange={(val) => setRadiusKm(val)} />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
-                  <span>Hourly Rate Range (₹ INR)</span>
+                <label className="block text-caption1 font-semibold text-muted-foreground mb-1.5 flex items-center justify-between">
+                  <span>Hourly rate range (₹ INR)</span>
                   {!isAuthenticated && (
-                    <span className="text-[10px] text-accent flex items-center gap-1 font-semibold">
-                      <LockClosedIcon className="w-3 h-3" /> Login Required
+                    <span className="text-caption2 text-brand-fg flex items-center gap-1 font-semibold">
+                      <LockClosed16Regular /> Login required
                     </span>
                   )}
                 </label>
                 {isAuthenticated ? (
                   <div className="flex items-center gap-2">
-                    <input
+                    <Input
                       type="number"
                       placeholder="Min ₹"
                       value={minRate}
-                      onChange={(e) => setMinRate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-accent"
+                      onChange={(_, data) => setMinRate(data.value)}
+                      className="w-full font-mono tabular"
                     />
-                    <span className="text-muted-foreground text-xs">-</span>
-                    <input
+                    <span className="text-muted-foreground text-caption1">–</span>
+                    <Input
                       type="number"
                       placeholder="Max ₹"
                       value={maxRate}
-                      onChange={(e) => setMaxRate(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-muted/60 border border-border text-xs placeholder:text-muted-foreground focus:outline-hidden focus:ring-1 focus:ring-accent"
+                      onChange={(_, data) => setMaxRate(data.value)}
+                      className="w-full font-mono tabular"
                     />
                   </div>
                 ) : (
-                  <button
-                    type="button"
+                  <Button
+                    appearance="outline"
+                    icon={<LockClosed16Regular className="text-brand-fg" />}
                     onClick={() => setAuthPromptModal(true)}
-                    className="w-full px-3 py-2 rounded-xl bg-muted/40 border border-border/80 hover:border-accent/60 text-xs text-muted-foreground flex items-center justify-between transition-colors cursor-pointer"
+                    className="w-full min-h-11 justify-between"
                   >
-                    <span className="flex items-center gap-1.5 font-medium">
-                      <LockClosedIcon className="w-3.5 h-3.5 text-accent" />
-                      Sign in to filter by rate
-                    </span>
-                    <span className="text-[10px] text-accent font-semibold underline">Unlock</span>
-                  </button>
+                    <span>Unlock rates</span>
+                  </Button>
                 )}
               </div>
 
               <div className="flex justify-end pb-1">
-                <button
-                  type="button"
+                <Button
+                  appearance="outline"
+                  icon={<Dismiss16Regular />}
                   onClick={handleClearFilters}
-                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-accent hover:bg-accent/10 border border-accent/30 flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="min-h-11"
                 >
-                  <XMarkIcon className="w-3.5 h-3.5" />
-                  <span>Reset All Filters</span>
-                </button>
+                  Reset
+                </Button>
               </div>
             </div>
           </div>
@@ -691,7 +692,7 @@ const Discovery: React.FC = () => {
       {/* Main Results Grid */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
         <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body1 text-muted-foreground tabular">
             Showing <span className="font-semibold text-foreground">{displayProviders.length}</span>
             {totalCount > displayProviders.length && (
               <>
@@ -702,19 +703,19 @@ const Discovery: React.FC = () => {
             {q && (
               <>
                 {' '}
-                for <span className="font-medium text-accent">"{q}"</span>
+                for <span className="font-semibold text-brand-fg">&ldquo;{q}&rdquo;</span>
               </>
             )}
             {genderFilter !== 'all' && (
               <>
                 {' '}
-                • <span className="font-medium text-foreground">{GENDER_OPTIONS.find((g) => g.value === genderFilter)?.label || genderFilter}</span>
+                • <span className="font-semibold text-foreground">{GENDER_OPTIONS.find((g) => g.value === genderFilter)?.label || genderFilter}</span>
               </>
             )}
             {isAuthenticated && totalPages > 1 && (
               <>
                 {' '}
-                • <span className="font-medium text-muted-foreground">Page {currentPage} of {totalPages}</span>
+                • <span className="font-semibold text-muted-foreground">Page {currentPage} of {totalPages}</span>
               </>
             )}
           </p>
@@ -727,18 +728,20 @@ const Discovery: React.FC = () => {
             ))}
           </div>
         ) : displayProviders.length === 0 ? (
-          <div className="text-center py-20 bg-card rounded-3xl border border-border max-w-xl mx-auto p-8">
-            <SparklesIcon className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">No matching profiles found</h3>
-            <p className="text-sm text-muted-foreground mb-6">
+          <div className="text-center py-20 bg-card rounded-2xl border border-border max-w-xl mx-auto p-8 shadow-sm">
+            <People24Regular className="text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-subtitle1 font-semibold text-foreground mb-2">No matching profiles found</h3>
+            <p className="text-body1 text-muted-foreground mb-6">
               Try adjusting your search terms, gender filter, or resetting active filters.
             </p>
-            <button
+            <Button
+              appearance="primary"
+              size="large"
               onClick={handleClearFilters}
-              className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-xs"
+              className="min-h-11"
             >
-              Reset Filters
-            </button>
+              Reset filters
+            </Button>
           </div>
         ) : (
           <div id="discovery-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -751,80 +754,67 @@ const Discovery: React.FC = () => {
               const currentPhoto = images[activeIdx] || images[0] || '';
 
               return (
-                <div
+                <article
                   key={provider.providerId}
                   role="button"
                   tabIndex={0}
                   aria-label={`View profile for ${provider.displayName}`}
                   onClick={() => navigate(`/provider/${provider.providerId}`)}
-                  onKeyDown={(e) => {
+                  onKeyDown={(e: React.KeyboardEvent) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
                       navigate(`/provider/${provider.providerId}`);
                     }
                   }}
-                  className="rounded-3xl border border-border/80 bg-card overflow-hidden shadow-xs hover:shadow-xl hover:border-accent/30 transition-all duration-200 cursor-pointer flex flex-col group focus:outline-hidden focus:ring-2 focus:ring-accent/50"
+                  className="group fluent-card card-hover-effect overflow-hidden cursor-pointer flex flex-col justify-between"
                 >
-                  {/* Luxury Portrait Frame with Touch-Friendly Carousel */}
-                  <div className="relative h-72 overflow-hidden bg-muted">
+                  {/* 4:3 Companion Portrait Preview with Hover Carousel */}
+                  <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted border-b border-border">
                     <img
                       src={currentPhoto}
                       alt={`${provider.displayName} photo ${activeIdx + 1}`}
                       loading="lazy"
                       decoding="async"
-                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-all duration-300"
+                      className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/15 to-black/25 pointer-events-none" />
 
-                    {/* Top Right Rate Badge */}
-                    <div className="absolute top-3.5 right-3.5 z-10">
-                      <RateBadge
-                        variant="card-badge"
-                        rate={provider.hourlyRate}
-                        isAuthenticated={isAuthenticated}
-                        onAuthPrompt={() => setAuthPromptModal(true)}
-                      />
+                    {/* Top Left Verified Trust Pill */}
+                    <div className="absolute top-3 left-3 z-10">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-trust-light text-trust border border-trust-border text-caption1 font-semibold shadow-xs">
+                        <CheckmarkStarburst16Filled className="shrink-0" />
+                        <span>Verified</span>
+                      </span>
                     </div>
 
-                    {/* Top Left Verified Trust & Rating Badge */}
-                    <div className="absolute top-3.5 left-3.5 z-10 flex items-center gap-1.5">
-                      <div className="bg-black/65 backdrop-blur-md px-2.5 py-1 rounded-full text-xs font-semibold text-[#C5A059] border border-[#C5A059]/30 flex items-center gap-1 shadow-sm font-mono">
-                        <StarIcon className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-                        <span>{Number(provider.averageRating || 4.9).toFixed(1)}</span>
-                        <span className="text-white/40">•</span>
-                        <span className="text-white text-[11px] font-sans font-medium">Verified Guest</span>
-                      </div>
-                    </div>
-
-                    {/* Touch & Click Friendly Prev / Next Controls */}
+                    {/* Subtle Prev / Next Controls on Hover */}
                     {images.length > 1 && (
                       <>
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, -1, e)}
-                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all focus:outline-hidden backdrop-blur-xs"
+                          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/90 hover:bg-card text-foreground border border-border shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
                           aria-label={`Previous photo of ${provider.displayName}`}
                         >
-                          <ChevronLeftIcon className="w-5 h-5" />
+                          <ChevronLeft20Regular />
                         </button>
                         <button
                           type="button"
                           onClick={(e) => handleStepPhoto(provider.providerId, images.length, 1, e)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-black/50 hover:bg-black/80 text-white flex items-center justify-center transition-all focus:outline-hidden backdrop-blur-xs"
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card/90 hover:bg-card text-foreground border border-border shadow-xs flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity cursor-pointer"
                           aria-label={`Next photo of ${provider.displayName}`}
                         >
-                          <ChevronRightIcon className="w-5 h-5" />
+                          <ChevronRight20Regular />
                         </button>
 
                         {/* Centered Photo Indicator Dots */}
-                        <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
+                        <div className="absolute bottom-2.5 left-0 right-0 flex items-center justify-center gap-1.5 z-10">
                           {images.map((_: any, idx: number) => (
                             <button
                               key={idx}
                               type="button"
                               onClick={(e) => handleSelectPhoto(provider.providerId, idx, e)}
                               className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                activeIdx === idx ? 'w-5 bg-white shadow-xs' : 'w-1.5 bg-white/50 hover:bg-white/80'
+                                activeIdx === idx ? 'w-5 bg-card shadow-xs' : 'w-1.5 bg-card/65 hover:bg-card'
                               }`}
                               aria-label={`Go to photo ${idx + 1}`}
                             />
@@ -834,19 +824,35 @@ const Discovery: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Profile Details & 1-Click Action */}
-                  <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
+                  {/* Card Body */}
+                  <div className="p-4 flex-1 flex flex-col justify-between gap-3">
                     <div className="space-y-2">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <h3 className="font-display text-2xl font-normal text-foreground group-hover:text-accent transition-colors truncate">
+                      {/* Title & Rating Row */}
+                      <div className="flex items-center justify-between gap-2">
+                        <h3 className="text-subtitle2 font-semibold text-foreground group-hover:text-brand-fg transition-colors truncate">
                           {provider.displayName}
                         </h3>
-                        <span className="text-xs font-mono text-muted-foreground whitespace-nowrap tabular-nums">
-                          {provider.distanceKm != null ? `${provider.distanceKm} km` : (provider.city || 'Central Hub')}
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-muted text-foreground text-caption1 font-semibold tabular shrink-0">
+                          <Star16Filled className="text-trust" />
+                          <span>{Number(provider.averageRating || 4.9).toFixed(1)}</span>
                         </span>
                       </div>
 
-                      <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
+                      {/* Single Clean Location Subtitle */}
+                      <div className="flex items-center gap-1 text-caption1 text-muted-foreground truncate">
+                        <Location16Regular className="shrink-0" />
+                        <span className="truncate">
+                          {provider.area ? `${provider.area}, ` : ''}{provider.city || 'Metro'}
+                        </span>
+                        {provider.distanceKm != null && (
+                          <span className="tabular font-semibold text-foreground shrink-0">
+                            • {provider.distanceKm} km
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Bio */}
+                      <p className="text-body1 text-muted-foreground line-clamp-2 pt-0.5">
                         {provider.bio}
                       </p>
 
@@ -855,7 +861,7 @@ const Discovery: React.FC = () => {
                         {(provider.specialties || []).slice(0, 3).map((spec: string) => (
                           <span
                             key={spec}
-                            className="px-2.5 py-1 rounded-xl bg-muted/60 text-[11px] font-medium text-foreground/80 border border-border/60"
+                            className="px-2.5 py-0.5 rounded-md bg-muted text-foreground border border-border text-caption1 truncate max-w-full"
                           >
                             {spec}
                           </span>
@@ -863,29 +869,45 @@ const Discovery: React.FC = () => {
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-border/70 flex items-center justify-between gap-2">
-                      <div className="text-xs text-muted-foreground truncate">
-                        <span>{provider.area ? `${provider.area}, ` : ''}{provider.city || 'Metro'}</span>
-                      </div>
+                    {/* Card Footer */}
+                    <div className="pt-3 mt-1 border-t border-border flex items-center justify-between gap-2">
+                      <RateBadge
+                        variant="row-item"
+                        rate={provider.hourlyRate}
+                        isAuthenticated={isAuthenticated}
+                        onAuthPrompt={() => setAuthPromptModal(true)}
+                      />
 
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (!isAuthenticated) {
-                            setAuthPromptModal(true);
-                            return;
-                          }
-                          setSelectedProviderForBooking(provider);
-                        }}
-                        className="px-4 py-2.5 min-h-[44px] rounded-xl font-bold text-xs sm:text-sm bg-accent hover:bg-accent-hover text-accent-foreground shadow-xs hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5 shrink-0"
-                      >
-                        <ShieldCheckIcon className="w-4 h-4" />
-                        <span>Book Outing &rarr;</span>
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <Button
+                          appearance="outline"
+                          size="medium"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/provider/${provider.providerId}`);
+                          }}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          appearance="primary"
+                          size="medium"
+                          icon={<ShieldCheckmark16Regular />}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!isAuthenticated) {
+                              setAuthPromptModal(true);
+                              return;
+                            }
+                            setSelectedProviderForBooking(provider);
+                          }}
+                        >
+                          Reserve
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
@@ -893,80 +915,79 @@ const Discovery: React.FC = () => {
 
         {/* Public Discovery 24-Profile Limit Banner (Unauthenticated) */}
         {!isAuthenticated && (isPublicLimited || displayProviders.length > 0) && (
-          <div className="mt-12 p-8 rounded-3xl bg-gradient-to-br from-card via-card/90 to-accent/5 border border-border/80 shadow-xl text-center max-w-3xl mx-auto backdrop-blur-sm">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-accent/10 text-accent text-xs font-semibold uppercase tracking-wider mb-4 border border-accent/20">
-              <SparklesIcon className="w-4 h-4" />
-              Public Preview Limit (24 Profiles)
-            </div>
-            <h3 className="text-2xl font-bold font-serif text-foreground tracking-tight">
+          <div className="mt-12 p-8 rounded-2xl bg-card border border-border shadow-md text-center max-w-3xl mx-auto space-y-4">
+            <Badge appearance="tint" color="brand" className="tabular">
+              Public preview limit (24 profiles)
+            </Badge>
+            <h3 className="text-title3 font-semibold text-foreground">
               Looking for more verified guests?
             </h3>
-            <p className="text-muted-foreground text-sm mt-2 max-w-xl mx-auto leading-relaxed">
+            <p className="text-muted-foreground text-body1 max-w-xl mx-auto">
               You are currently viewing a curated preview of 24 guests. Sign in or create a free account to unlock our entire community of verified guests, full photo galleries, and instant booking with escrow protection.
             </p>
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-4">
-              <Link
-                to="/register?redirect=/discovery"
-                className="px-6 py-2.5 rounded-xl bg-accent text-accent-foreground font-semibold text-sm hover:opacity-90 transition-all shadow-md shadow-accent/20"
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+              <Button
+                appearance="primary"
+                size="large"
+                onClick={() => navigate('/register?redirect=/discovery')}
+                className="min-h-11"
               >
-                Create Free Account & Explore All
-              </Link>
-              <Link
-                to="/login?redirect=/discovery"
-                className="px-6 py-2.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground font-semibold text-sm border border-border transition-all"
+                Join Cue
+              </Button>
+              <Button
+                appearance="secondary"
+                size="large"
+                onClick={() => navigate('/login?redirect=/discovery')}
+                className="min-h-11"
               >
-                Sign In
-              </Link>
+                Sign in
+              </Button>
             </div>
           </div>
         )}
 
         {/* Numbered Pagination Bar (Authenticated) */}
         {isAuthenticated && totalPages > 1 && (
-          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border/60">
-            <p className="text-xs text-muted-foreground order-2 sm:order-1">
+          <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-border">
+            <p className="text-caption1 text-muted-foreground order-2 sm:order-1 tabular">
               Showing page <strong className="text-foreground">{currentPage}</strong> of{' '}
               <strong className="text-foreground">{totalPages}</strong> ({totalCount} verified guests)
             </p>
             <div className="flex items-center gap-1.5 order-1 sm:order-2">
-              <button
-                type="button"
+              <Button
+                appearance="outline"
                 disabled={currentPage <= 1}
                 onClick={() => handlePageChange(currentPage - 1)}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                &larr; Previous
-              </button>
+                ← Previous
+              </Button>
 
               {getPageNumbers().map((p, idx) =>
                 p === '...' ? (
-                  <span key={`ellipsis-${idx}`} className="px-2 py-1 text-xs text-muted-foreground">
-                    &hellip;
+                  <span key={`ellipsis-${idx}`} className="px-2 py-1 text-caption1 text-muted-foreground">
+                    …
                   </span>
                 ) : (
-                  <button
+                  <ToggleButton
                     key={p}
-                    type="button"
+                    size="small"
+                    checked={currentPage === p}
+                    appearance={currentPage === p ? 'primary' : 'outline'}
                     onClick={() => handlePageChange(Number(p))}
-                    className={`w-9 h-9 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                      currentPage === p
-                        ? 'bg-accent text-accent-foreground shadow-sm'
-                        : 'border border-border bg-card text-foreground hover:bg-muted'
-                    }`}
+                    className="tabular"
                   >
                     {p}
-                  </button>
+                  </ToggleButton>
                 )
               )}
 
-              <button
-                type="button"
+              <Button
+                appearance="outline"
                 disabled={currentPage >= totalPages}
                 onClick={() => handlePageChange(currentPage + 1)}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold border border-border bg-card text-foreground hover:bg-muted disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
               >
-                Next &rarr;
-              </button>
+                Next →
+              </Button>
             </div>
           </div>
         )}
@@ -1034,42 +1055,50 @@ const Discovery: React.FC = () => {
         )}
 
         {/* Auth Prompt Modal for Guest Visitors */}
-        {authPromptModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-3xl bg-card border border-border p-6 sm:p-8 text-center space-y-4 shadow-2xl">
-              <div className="w-16 h-16 rounded-full bg-accent/15 text-accent flex items-center justify-center mx-auto">
-                <SparklesIcon className="w-9 h-9" />
-              </div>
-              <h3 className="text-2xl font-bold font-serif text-foreground">
-                Sign In to Unlock Pricing & Reserve
-              </h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                To guarantee guest privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
-              </p>
-              <div className="pt-2 flex flex-col gap-2">
-                <Link
-                  to="/register"
-                  className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-semibold text-sm shadow-xs hover:bg-accent-hover transition-colors block"
+        <Dialog open={authPromptModal} onOpenChange={(_, data) => !data.open && setAuthPromptModal(false)}>
+          <DialogSurface className="max-w-md w-full rounded-2xl bg-card border border-border p-6 text-center">
+            <DialogBody>
+              <DialogTitle>
+                <div className="w-14 h-14 rounded-full bg-accent-light text-brand-fg flex items-center justify-center mx-auto mb-2">
+                  <ShieldCheckmark24Regular />
+                </div>
+                <span className="text-subtitle1 font-semibold text-foreground block text-center">
+                  Sign in to unlock pricing & reserve
+                </span>
+              </DialogTitle>
+              <DialogContent className="pt-2 text-center">
+                <p className="text-body1 text-muted-foreground">
+                  To guarantee guest privacy and escrow protection, an authenticated account is required to inspect hourly rates and book meetups.
+                </p>
+              </DialogContent>
+              <DialogActions className="pt-4 flex flex-col gap-2">
+                <Button
+                  appearance="primary"
+                  size="large"
+                  onClick={() => navigate('/register')}
+                  className="w-full min-h-11"
                 >
-                  Create Account (Quick & Free)
-                </Link>
-                <Link
-                  to="/login"
-                  className="w-full py-2.5 rounded-xl border border-border text-foreground hover:bg-muted font-medium text-xs transition-colors block"
+                  Join Cue
+                </Button>
+                <Button
+                  appearance="secondary"
+                  size="large"
+                  onClick={() => navigate('/login')}
+                  className="w-full min-h-11"
                 >
-                  Existing User Log In
-                </Link>
-                <button
-                  type="button"
+                  Sign in
+                </Button>
+                <Button
+                  appearance="subtle"
                   onClick={() => setAuthPromptModal(false)}
-                  className="text-xs text-muted-foreground hover:underline pt-2 cursor-pointer"
+                  className="w-full min-h-11"
                 >
                   Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+                </Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
       </main>
     </div>
   );

@@ -18,23 +18,20 @@ class RatingStars extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(Icons.star_rounded, size: size, color: const Color(0xFFF59E0B)),
-        const SizedBox(width: 3),
+        Icon(Icons.star_rounded, size: size, color: AppColors.gold),
+        const SizedBox(width: FluentSpacing.xs),
         Text(
           rating.toStringAsFixed(1),
-          style: TextStyle(
-            fontSize: size - 1,
-            fontWeight: FontWeight.w700,
+          style: FluentType.numeric(FluentType.caption1Strong).copyWith(
             color: AppColors.textPrimary,
           ),
         ),
         if (reviewCount != null) ...[
-          const SizedBox(width: 3),
+          const SizedBox(width: FluentSpacing.xxs),
           Text(
             '($reviewCount)',
-            style: TextStyle(
-              fontSize: size - 2,
-              color: AppColors.textSecondary,
+            style: FluentType.numeric(FluentType.caption2).copyWith(
+              color: AppColors.textMuted,
             ),
           ),
         ],

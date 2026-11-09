@@ -1,12 +1,25 @@
 import React, { useState } from 'react';
 import {
-  ShieldCheckIcon,
-  XMarkIcon,
-  MapPinIcon,
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-  SparklesIcon,
-} from '@heroicons/react/24/outline';
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Input,
+  Field,
+  MessageBar,
+  MessageBarBody,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  ShieldCheckmark24Regular,
+  CheckmarkCircle20Regular,
+  Dismiss20Regular,
+  Location16Regular,
+  ShieldCheckmark16Regular,
+} from '@fluentui/react-icons';
 import { useCompleteBookingMutation } from '../../store/bookingApi';
 import { useReleaseEscrowMutation } from '../../store/paymentApi';
 
@@ -62,109 +75,102 @@ export const CompleteOutingModal: React.FC<CompleteOutingModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs">
-      <div
-        className="w-full max-w-md bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200"
-        role="dialog"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <ShieldCheckIcon className="w-7 h-7" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold font-serif text-foreground">Complete Outing & Settle</h2>
-              <p className="text-xs text-muted-foreground">Verify safe conclusion with {displayName}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Venue Reminder */}
-        {meetingAddress && (
-          <div className="p-3.5 rounded-2xl bg-muted/60 border border-border/80 flex items-center gap-2.5 text-xs text-foreground/80">
-            <MapPinIcon className="w-4 h-4 text-accent shrink-0" />
-            <span className="truncate">{meetingAddress}</span>
-          </div>
-        )}
-
-        {/* Instructions */}
-        <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 space-y-1.5">
-          <div className="flex items-center gap-2 text-xs font-bold text-accent">
-            <SparklesIcon className="w-4 h-4" />
-            <span>Mutual Verification Handshake</span>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            Ask {displayName} for their <strong>6-digit Outing Completion PIN</strong>. Entering this PIN verifies that your meetup concluded safely and initiates the release of escrow funds.
-          </p>
-        </div>
-
-        {/* PIN Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 text-center">
-              Enter Guest's Completion PIN
-            </label>
-            <input
-              type="text"
-              inputMode="numeric"
-              maxLength={6}
-              value={pin}
-              onChange={(e) => {
-                const val = e.target.value.replace(/\D/g, '');
-                setPin(val);
-                if (errorMsg) setErrorMsg(null);
-              }}
-              placeholder="••••••"
-              autoFocus
-              className="w-full text-center tracking-[0.5em] text-3xl font-mono font-black py-4 px-3 rounded-2xl bg-muted/50 border border-border focus:border-accent focus:ring-2 focus:ring-accent/20 outline-hidden transition-all text-foreground tabular-nums"
-            />
-          </div>
-
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-xs text-destructive font-medium flex items-center gap-2">
-              <ExclamationCircleIcon className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          <div className="pt-2 flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="flex-1 py-3 min-h-[44px] rounded-xl border border-border text-foreground text-xs font-bold hover:bg-muted transition-colors cursor-pointer disabled:opacity-50"
+    <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && onClose()}>
+      <DialogSurface className="max-w-md w-full bg-card border border-border rounded-2xl p-6">
+        <form onSubmit={handleSubmit}>
+          <DialogBody>
+            <DialogTitle
+              action={
+                <Button
+                  appearance="subtle"
+                  aria-label="Close complete outing dialog"
+                  icon={<Dismiss20Regular />}
+                  onClick={onClose}
+                />
+              }
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading || pin.trim().length !== 6}
-              className="flex-1 py-3 min-h-[44px] rounded-xl bg-accent text-accent-foreground text-xs font-bold hover:bg-accent-hover transition-colors shadow-xs cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {isLoading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-accent-foreground/30 border-t-accent-foreground rounded-full animate-spin" />
-                  <span>Settling...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircleIcon className="w-4 h-4" />
-                  <span>Verify & Release</span>
-                </>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-success-light text-success flex items-center justify-center shrink-0">
+                  <ShieldCheckmark24Regular />
+                </div>
+                <div>
+                  <span className="text-subtitle1 font-semibold text-foreground block">
+                    Complete outing & settle
+                  </span>
+                  <span className="text-caption1 font-normal text-muted-foreground block">
+                    Verify safe conclusion with {displayName}
+                  </span>
+                </div>
+              </div>
+            </DialogTitle>
+
+            <DialogContent className="space-y-4 pt-4">
+              {meetingAddress && (
+                <div className="p-3 rounded-lg bg-muted border border-border flex items-center gap-2 text-caption1 text-foreground">
+                  <Location16Regular className="text-brand-fg shrink-0" />
+                  <span className="truncate">{meetingAddress}</span>
+                </div>
               )}
-            </button>
-          </div>
+
+              <div className="p-3.5 rounded-lg bg-accent-light border border-border space-y-1">
+                <div className="flex items-center gap-1.5 text-caption1 font-semibold text-brand-fg">
+                  <ShieldCheckmark16Regular />
+                  <span>Mutual verification handshake</span>
+                </div>
+                <p className="text-caption1 text-muted-foreground">
+                  Ask {displayName} for their <strong>6-digit Outing Completion PIN</strong>. Entering this PIN verifies that your meetup concluded safely and initiates the release of escrow funds.
+                </p>
+              </div>
+
+              <Field label="Enter guest's completion PIN" required>
+                <Input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={pin}
+                  onChange={(_, data) => {
+                    const val = data.value.replace(/\D/g, '');
+                    setPin(val);
+                    if (errorMsg) setErrorMsg(null);
+                  }}
+                  placeholder="••••••"
+                  autoFocus
+                  size="large"
+                  className="w-full text-center font-mono tabular text-title3 font-semibold"
+                />
+              </Field>
+
+              {errorMsg && (
+                <MessageBar intent="error">
+                  <MessageBarBody>{errorMsg}</MessageBarBody>
+                </MessageBar>
+              )}
+            </DialogContent>
+
+            <DialogActions className="pt-4">
+              <Button
+                appearance="secondary"
+                size="large"
+                className="min-h-11"
+                disabled={isLoading}
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                className="min-h-11"
+                disabled={isLoading || pin.trim().length !== 6}
+                icon={isLoading ? <Spinner size="tiny" /> : <CheckmarkCircle20Regular />}
+              >
+                {isLoading ? 'Settling...' : 'Release escrow'}
+              </Button>
+            </DialogActions>
+          </DialogBody>
         </form>
-      </div>
-    </div>
+      </DialogSurface>
+    </Dialog>
   );
 };
-

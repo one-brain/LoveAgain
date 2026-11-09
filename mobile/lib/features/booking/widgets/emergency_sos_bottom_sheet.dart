@@ -25,56 +25,54 @@ class EmergencySosBottomSheet extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.phone_in_talk, color: AppColors.emergencyRed, size: 24),
-            SizedBox(width: 8),
-            Text('Call Emergency 112'),
+            const Icon(Icons.phone_in_talk, color: AppColors.emergencyRed, size: 22),
+            const SizedBox(width: FluentSpacing.s),
+            Text(
+              'Call Emergency 112',
+              style: FluentType.title3.copyWith(color: AppColors.textPrimary),
+            ),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'You are connecting to India’s National Emergency Helpline (112).',
-              style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+              style: FluentType.body2.copyWith(color: AppColors.textPrimary),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: FluentSpacing.m),
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(FluentSpacing.m),
               decoration: BoxDecoration(
                 color: AppColors.surfaceMuted,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(FluentRadius.large),
                 border: Border.all(color: AppColors.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Your Current Outing Location:',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
+                  Text(
+                    'Your current outing location:',
+                    style: FluentType.caption2.copyWith(
+                      fontWeight: FontWeight.w600,
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: FluentSpacing.xs),
                   Text(
                     booking.meetingAddress,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    style: FluentType.caption1Strong.copyWith(
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: FluentSpacing.sNudge),
                   Text(
                     'Outing #${booking.orderId}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontFamily: 'monospace',
-                      color: AppColors.primary,
+                    style: FluentType.numeric(FluentType.caption2).copyWith(
+                      color: AppColors.brandForeground,
                     ),
                   ),
                 ],
@@ -151,25 +149,28 @@ class EmergencySosBottomSheet extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'This will immediately end the session and place escrow funds into dispute investigation. No automatic payout will be released to the host.',
-                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                style: FluentType.caption1.copyWith(
+                  color: AppColors.textSecondary,
+                ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              const SizedBox(height: FluentSpacing.l),
+              Text(
                 'Select primary reason:',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                style: FluentType.caption1Strong.copyWith(
                   color: AppColors.textPrimary,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: FluentSpacing.s),
               ...reasons.map((r) => InkWell(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(FluentRadius.large),
                     onTap: () => setDialogState(() => selectedReason = r),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                      padding: const EdgeInsets.symmetric(
+                        vertical: FluentSpacing.sNudge,
+                        horizontal: FluentSpacing.xs,
+                      ),
                       child: Row(
                         children: [
                           Icon(
@@ -181,17 +182,14 @@ class EmergencySosBottomSheet extends ConsumerWidget {
                                 : AppColors.textMuted,
                             size: 20,
                           ),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: FluentSpacing.mNudge),
                           Expanded(
                             child: Text(
                               r,
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: selectedReason == r
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                                color: AppColors.textPrimary,
-                              ),
+                              style: (selectedReason == r
+                                      ? FluentType.caption1Strong
+                                      : FluentType.caption1)
+                                  .copyWith(color: AppColors.textPrimary),
                             ),
                           ),
                         ],
@@ -245,11 +243,18 @@ class EmergencySosBottomSheet extends ConsumerWidget {
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(FluentRadius.xLarge),
+        ),
       ),
       child: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+          padding: const EdgeInsets.fromLTRB(
+            FluentSpacing.l,
+            FluentSpacing.m,
+            FluentSpacing.l,
+            FluentSpacing.xxl,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,15 +262,15 @@ class EmergencySosBottomSheet extends ConsumerWidget {
               // Drag Handle
               Center(
                 child: Container(
-                  width: 40,
+                  width: 36,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.border,
-                    borderRadius: BorderRadius.circular(2),
+                    color: AppColors.borderStrong,
+                    borderRadius: BorderRadius.circular(FluentRadius.small),
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
 
               // Header Row
               Row(
@@ -275,34 +280,33 @@ class EmergencySosBottomSheet extends ConsumerWidget {
                     height: 44,
                     decoration: BoxDecoration(
                       color: AppColors.emergencyRedLight,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(FluentRadius.large),
+                      border: Border.all(
+                        color: AppColors.emergencyRed.withValues(alpha: 0.25),
+                      ),
                     ),
                     child: const Icon(
                       Icons.shield_outlined,
                       color: AppColors.emergencyRed,
-                      size: 24,
+                      size: 22,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: FluentSpacing.m),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Emergency Safety Hub',
-                          style: TextStyle(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
+                          style: FluentType.title3.copyWith(
                             color: AppColors.textPrimary,
-                            letterSpacing: -0.3,
                           ),
                         ),
                         Text(
                           'Outing #$shortOrderId • ${booking.meetingAddress}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: FluentType.numeric(FluentType.caption2).copyWith(
                             color: AppColors.textSecondary,
                           ),
                         ),
@@ -319,199 +323,221 @@ class EmergencySosBottomSheet extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
 
               // Trust & Safety Notice
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(FluentSpacing.m),
                 decoration: BoxDecoration(
                   color: AppColors.surfaceMuted,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Row(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.verified_user_outlined,
                       size: 18,
-                      color: AppColors.goldDark,
+                      color: AppColors.gold,
                     ),
-                    SizedBox(width: 10),
+                    const SizedBox(width: FluentSpacing.mNudge),
                     Expanded(
                       child: Text(
                         'Cue strictly mandates verified public venues and platonic companionship. If you ever feel unsafe or require intervention, choose an option below.',
-                        style: TextStyle(
-                          fontSize: 12,
+                        style: FluentType.caption2.copyWith(
                           color: AppColors.textSecondary,
-                          height: 1.35,
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
 
               // ACTION 1: 112 National Emergency Call
               SizedBox(
                 width: double.infinity,
                 child: Material(
                   color: AppColors.emergencyRed,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                     onTap: () => _call112(context, ref),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: FluentSpacing.l,
+                        vertical: FluentSpacing.m,
+                      ),
                       child: Row(
                         children: [
-                          Icon(Icons.phone_in_talk, color: Colors.white, size: 26),
-                          SizedBox(width: 14),
+                          const Icon(
+                            Icons.phone_in_talk,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                          const SizedBox(width: FluentSpacing.m),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Call 112 (National Emergency)',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w800,
+                                  style: FluentType.body2Strong.copyWith(
                                     color: Colors.white,
                                   ),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: FluentSpacing.xxs),
                                 Text(
                                   'Direct line to Police, Ambulance & Fire across India',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white70,
+                                  style: FluentType.caption2.copyWith(
+                                    color: Colors.white.withValues(alpha: 0.85),
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          Icon(Icons.arrow_forward_ios,
-                              size: 14, color: Colors.white70),
+                          Icon(
+                            Icons.arrow_forward_ios,
+                            size: 14,
+                            color: Colors.white.withValues(alpha: 0.85),
+                          ),
                         ],
                       ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: FluentSpacing.m),
 
               // ACTION 2: Send Live Location Alert to Contact
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FluentSpacing.l,
+                      vertical: FluentSpacing.m,
+                    ),
                     side: const BorderSide(color: AppColors.border),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                     ),
                   ),
                   onPressed: () => _shareLocationAlert(context, ref),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.share_location, color: AppColors.primary, size: 22),
-                      SizedBox(width: 14),
+                      const Icon(
+                        Icons.share_location,
+                        color: AppColors.brandForeground,
+                        size: 22,
+                      ),
+                      const SizedBox(width: FluentSpacing.m),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'Alert Emergency Contact',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                              style: FluentType.body2Strong.copyWith(
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: FluentSpacing.xxs),
                             Text(
                               'Dispatches your live meeting venue & outing ID via SMS',
-                              style: TextStyle(
-                                fontSize: 12,
+                              style: FluentType.caption2.copyWith(
                                 color: AppColors.textSecondary,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Icon(Icons.arrow_forward_ios,
-                          size: 14, color: AppColors.textMuted),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.textMuted,
+                      ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: FluentSpacing.m),
 
               // ACTION 3: End Outing Early & Halt Escrow
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    side: BorderSide(color: AppColors.emergencyRed.withValues(alpha: 0.3)),
-                    backgroundColor: AppColors.emergencyRedLight.withValues(alpha: 0.4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: FluentSpacing.l,
+                      vertical: FluentSpacing.m,
+                    ),
+                    side: BorderSide(
+                      color: AppColors.emergencyRed.withValues(alpha: 0.35),
+                    ),
+                    backgroundColor: AppColors.emergencyRedLight,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(FluentRadius.xLarge),
                     ),
                   ),
                   onPressed: () => _confirmEndOutingEarly(context, ref),
-                  child: const Row(
+                  child: Row(
                     children: [
-                      Icon(Icons.front_hand_outlined,
-                          color: AppColors.emergencyRed, size: 22),
-                      SizedBox(width: 14),
+                      const Icon(
+                        Icons.front_hand_outlined,
+                        color: AppColors.emergencyRed,
+                        size: 22,
+                      ),
+                      const SizedBox(width: FluentSpacing.m),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'End Outing & Freeze Escrow',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
+                              style: FluentType.body2Strong.copyWith(
                                 color: AppColors.emergencyRed,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: FluentSpacing.xxs),
                             Text(
                               'Concludes outing now, halts funds for safety audit',
-                              style: TextStyle(
-                                fontSize: 12,
+                              style: FluentType.caption2.copyWith(
                                 color: AppColors.textSecondary,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      Icon(Icons.arrow_forward_ios,
-                          size: 14, color: AppColors.emergencyRed),
+                      const Icon(
+                        Icons.arrow_forward_ios,
+                        size: 14,
+                        color: AppColors.emergencyRed,
+                      ),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: FluentSpacing.l),
 
               // Footer Guarantee
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.lock_clock_outlined,
-                      size: 14, color: AppColors.goldDark),
-                  const SizedBox(width: 6),
+                  const Icon(
+                    Icons.lock_clock_outlined,
+                    size: 14,
+                    color: AppColors.gold,
+                  ),
+                  const SizedBox(width: FluentSpacing.sNudge),
                   Flexible(
                     child: Text(
                       '2-Step Escrow Guarantee: Funds held in trust until verified safe.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 11,
+                      style: FluentType.caption2.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: AppColors.goldDark.withValues(alpha: 0.9),
+                        color: AppColors.gold,
                       ),
                     ),
                   ),

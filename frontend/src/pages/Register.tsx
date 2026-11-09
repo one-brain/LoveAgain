@@ -2,6 +2,29 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import {
+  Badge,
+  Button,
+  Field,
+  Input,
+  MessageBar,
+  MessageBarBody,
+  Select,
+} from '@fluentui/react-components';
+import {
+  Sparkle16Regular,
+  LockClosed20Regular,
+  Mail20Regular,
+  Person20Regular,
+  Phone20Regular,
+  Eye20Regular,
+  EyeOff20Regular,
+  Calendar20Regular,
+  CheckmarkCircle16Regular,
+  Circle16Regular,
+  Edit16Regular,
+  ArrowRight16Regular,
+} from '@fluentui/react-icons';
+import {
   useRegisterMutation,
   useSendMobileOtpMutation,
   useVerifyMobileOtpMutation,
@@ -9,18 +32,8 @@ import {
 import { loginSuccess } from '../store/slices/authSlice';
 import { resetAllApiCaches } from '../utils/sessionManager';
 import { isLegalAge, getMaxLegalBirthdate } from '../utils/dateUtils';
-import {
-  SparklesIcon,
-  ShieldCheckIcon,
-  LockClosedIcon,
-  EnvelopeIcon,
-  UserIcon,
-  PhoneIcon,
-  EyeIcon,
-  EyeSlashIcon,
-  CheckCircleIcon,
-  CalendarIcon,
-} from '@heroicons/react/24/outline';
+import { AuthShell } from '../components/auth/AuthShell';
+import { OtpCodeInput } from '../components/auth/OtpCodeInput';
 
 const Register: React.FC = () => {
   const [authMethod, setAuthMethod] = useState<'mobile' | 'email'>('mobile');
@@ -56,7 +69,8 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const rawRedirect = searchParams.get('redirect');
-  const redirectTarget = rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
+  const redirectTarget =
+    rawRedirect && !rawRedirect.startsWith('/admin') ? rawRedirect : '/discovery';
   const dispatch = useDispatch();
 
   const [register, { isLoading: isEmailLoading }] = useRegisterMutation();
@@ -71,8 +85,7 @@ const Register: React.FC = () => {
     return () => clearInterval(timer);
   }, [countdown]);
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const handleEmailChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
 
     if (errors[name]) {
@@ -84,7 +97,8 @@ const Register: React.FC = () => {
     }
   };
 
-  const handleSendMobileOtp = async () => {
+  const handleSendMobileOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setErrors({});
     setInfoMessage(null);
 
@@ -97,22 +111,30 @@ const Register: React.FC = () => {
       return;
     }
     if (!isLegalAge(mobileDateOfBirth)) {
-      setErrors({ mobileDateOfBirth: `You must be at least 18 years old to join LoveAgain (born on or before ${maxLegalDate})` });
+      setErrors({
+        mobileDateOfBirth: `You must be at least 18 years old to join Cue (born on or before ${maxLegalDate})`,
+      });
       return;
     }
     if (!phoneNumber.trim() || phoneNumber.trim().length < 8) {
-      setErrors({ phoneNumber: 'Please enter a valid mobile number' });
+      setErrors({ phoneNumber: 'Please enter a valid 10-digit mobile number' });
       return;
     }
 
     try {
-      const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber.trim()}`;
+      const fullPhone = phoneNumber.startsWith('+')
+        ? phoneNumber
+        : `${countryCode}${phoneNumber.trim()}`;
       const res = await sendMobileOtp({ phone: fullPhone, purpose: 'register' }).unwrap();
       setOtpSent(true);
       setCountdown(30);
       setInfoMessage(res.message);
     } catch (err: any) {
-      setErrors({ form: err?.data?.error || 'Failed to send verification code. Please check your number.' });
+      setErrors({
+        form:
+          err?.data?.error ||
+          'Failed to send verification code. Please check your number.',
+      });
     }
   };
 
@@ -120,10 +142,17 @@ const Register: React.FC = () => {
     e.preventDefault();
     setErrors({});
 
-    const fullPhone = phoneNumber.startsWith('+') ? phoneNumber : `${countryCode}${phoneNumber.trim()}`;
+    if (!otpSent) {
+      await handleSendMobileOtp();
+      return;
+    }
+
+    const fullPhone = phoneNumber.startsWith('+')
+      ? phoneNumber
+      : `${countryCode}${phoneNumber.trim()}`;
     const cleanOtp = otp.trim();
 
-    if (!cleanOtp) {
+    if (cleanOtp.length < 6) {
       setErrors({ otp: 'Please enter the 6-digit verification code' });
       return;
     }
@@ -169,7 +198,12 @@ const Register: React.FC = () => {
         setErrors(fieldErrors);
         return;
       }
-      setErrors({ form: err?.data?.error || err?.data?.title || 'Invalid OTP code. Please try again.' });
+      setErrors({
+        form:
+          err?.data?.error ||
+          err?.data?.title ||
+          'Invalid OTP code. Please try again.',
+      });
     }
   };
 
@@ -183,7 +217,7 @@ const Register: React.FC = () => {
     if (!formData.dateOfBirth) {
       validationErrors.dateOfBirth = 'Date of birth is required to verify legal age';
     } else if (!isLegalAge(formData.dateOfBirth)) {
-      validationErrors.dateOfBirth = `You must be at least 18 years old to join LoveAgain (born on or before ${maxLegalDate})`;
+      validationErrors.dateOfBirth = `You must be at least 18 years old to join Cue (born on or before ${maxLegalDate})`;
     }
     if (!formData.email.trim()) {
       validationErrors.email = 'Email is required';
@@ -243,466 +277,499 @@ const Register: React.FC = () => {
         setErrors(fieldErrors);
         return;
       }
-      const msg = err?.data?.message || err?.data?.detail || err?.data?.error || err?.data?.title || 'Registration failed. Please check your credentials or try a different email.';
+      const msg =
+        err?.data?.message ||
+        err?.data?.detail ||
+        err?.data?.error ||
+        err?.data?.title ||
+        'Registration failed. Please check your credentials or try a different email.';
       setErrors({ form: msg });
     }
   };
 
+  const hasMinLength = formData.password.length >= 8;
+  const passwordsMatch =
+    formData.password.length > 0 &&
+    formData.confirmPassword.length > 0 &&
+    formData.password === formData.confirmPassword;
+
   return (
-    <div className="min-h-[calc(100vh-140px)] flex flex-col lg:flex-row">
-      {/* Left side: Editorial quote & Brand Moment */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary via-primary-light to-primary text-primary-foreground flex-col justify-between p-16 relative overflow-hidden border-r border-border">
-        <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-accent flex items-center justify-center text-accent-foreground font-bold">
-            <SparklesIcon className="w-5 h-5" />
-          </div>
-          <span className="text-xl font-bold font-serif text-primary-foreground">Cue</span>
+    <AuthShell
+      title="Create your account"
+      subtitle={
+        <>
+          Already have an account?{' '}
+          <Link
+            to={
+              rawRedirect
+                ? `/login?redirect=${encodeURIComponent(rawRedirect)}`
+                : '/login'
+            }
+            className="font-semibold text-brand-fg hover:underline"
+          >
+            Sign in
+          </Link>
+        </>
+      }
+      badgeText="Identity Verified"
+      editorialTitle="Verified companionship for life's best moments."
+      editorialSubtitle="Every Cue member is age-verified (18+) and protected by RBI-compliant escrow from reservation through arrival."
+      footer={
+        <p className="text-caption2 text-muted-foreground text-center leading-relaxed">
+          By joining Cue, you agree to our{' '}
+          <Link to="/terms" className="text-brand-fg hover:underline font-semibold">
+            Terms
+          </Link>
+          ,{' '}
+          <Link to="/privacy" className="text-brand-fg hover:underline font-semibold">
+            Privacy Policy
+          </Link>
+          ,{' '}
+          <Link
+            to="/community-guidelines"
+            className="text-brand-fg hover:underline font-semibold"
+          >
+            Community Guidelines
+          </Link>
+          , and{' '}
+          <Link
+            to="/cancellation-policy"
+            className="text-brand-fg hover:underline font-semibold"
+          >
+            Escrow Policy
+          </Link>
+          .
+        </p>
+      }
+    >
+      {rawRedirect?.includes('apply-companion') && (
+        <div>
+          <Badge appearance="tint" color="brand" size="medium" icon={<Sparkle16Regular />}>
+            Companion Application • Step 1 of 2
+          </Badge>
         </div>
+      )}
 
-        <div className="space-y-6 max-w-lg">
-          <h2 className="text-3xl sm:text-4xl font-bold font-serif leading-tight text-primary-foreground">
-            {rawRedirect?.includes('apply-companion')
-              ? 'Monetize your passions with guaranteed escrow earnings.'
-              : 'Share experiences. Learn new skills. Connect genuinely.'}
-          </h2>
-          <p className="text-sm sm:text-base text-primary-foreground/85 leading-relaxed">
-            {rawRedirect?.includes('apply-companion')
-              ? 'Set your own schedule, connect with clients for social outings, dining, city tours, or sports, and get paid securely with zero escrow payment defaults.'
-              : 'Join thousands finding companions for activities, from tennis rallies to cooking workshops to museum strolls, with verified community trust.'}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2 text-xs text-primary-foreground/80">
-          <ShieldCheckIcon className="w-4 h-4 text-emerald-400" />
-          <span>Identity-verified safety checks & escrow guarantees.</span>
-        </div>
+      {/* Segmented Auth Method Switcher */}
+      <div
+        role="tablist"
+        aria-label="Registration method"
+        className="grid grid-cols-2 gap-1 p-1 rounded-xl bg-muted border border-border"
+      >
+        <button
+          type="button"
+          role="tab"
+          aria-selected={authMethod === 'mobile'}
+          onClick={() => {
+            setAuthMethod('mobile');
+            setErrors({});
+          }}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-caption1 font-semibold transition-colors cursor-pointer ${
+            authMethod === 'mobile'
+              ? 'bg-card text-brand-fg border border-border shadow-xs'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
+        >
+          <Phone20Regular className="shrink-0" />
+          <span>Mobile & OTP</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={authMethod === 'email'}
+          onClick={() => {
+            setAuthMethod('email');
+            setErrors({});
+          }}
+          className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg text-caption1 font-semibold transition-colors cursor-pointer ${
+            authMethod === 'email'
+              ? 'bg-card text-brand-fg border border-border shadow-xs'
+              : 'text-muted-foreground hover:text-foreground border border-transparent'
+          }`}
+        >
+          <Mail20Regular className="shrink-0" />
+          <span>Email & Password</span>
+        </button>
       </div>
 
-      {/* Right side: Registration Form */}
-      <div className="flex-1 flex items-center justify-center px-4 sm:px-8 py-12">
-        <div className="w-full max-w-md space-y-6">
-          <div>
-            {rawRedirect?.includes('apply-companion') && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-accent/15 text-accent text-xs font-semibold mb-3 border border-accent/25">
-                <SparklesIcon className="w-3.5 h-3.5" />
-                <span>Companion Application &bull; Step 1 of 2</span>
-              </div>
-            )}
-            <h1 className="text-3xl sm:text-4xl font-bold font-serif text-foreground">
-              Create your account
-            </h1>
-            <p className="text-sm text-muted-foreground mt-2">
-              Already have an account?{' '}
-              <Link
-                to={rawRedirect ? `/login?redirect=${encodeURIComponent(rawRedirect)}` : '/login'}
-                className="font-semibold text-accent hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
-          </div>
+      {errors.form && (
+        <MessageBar intent="error">
+          <MessageBarBody>{errors.form}</MessageBarBody>
+        </MessageBar>
+      )}
 
-          {/* Segmented Auth Method Switcher */}
-          <div className="grid grid-cols-2 p-1 rounded-2xl bg-muted/60 border border-border/80">
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod('mobile');
-                setErrors({});
-              }}
-              className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authMethod === 'mobile'
-                  ? 'bg-card text-foreground shadow-xs border border-border/60'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <PhoneIcon className="w-3.5 h-3.5 text-accent" />
-              <span>Mobile & OTP</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setAuthMethod('email');
-                setErrors({});
-              }}
-              className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all flex items-center justify-center gap-1.5 cursor-pointer ${
-                authMethod === 'email'
-                  ? 'bg-card text-foreground shadow-xs border border-border/60'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <EnvelopeIcon className="w-3.5 h-3.5 text-accent" />
-              <span>Email & Password</span>
-            </button>
-          </div>
+      {infoMessage && (
+        <MessageBar intent="info">
+          <MessageBarBody>{infoMessage}</MessageBarBody>
+        </MessageBar>
+      )}
 
-          {errors.form && (
-            <div className="p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-semibold animate-in fade-in duration-150">
-              {errors.form}
-            </div>
-          )}
-
-          {infoMessage && (
-            <div className="p-3.5 rounded-2xl bg-accent/10 border border-accent/20 text-accent text-xs font-medium flex items-center gap-2 animate-in fade-in duration-150">
-              <CheckCircleIcon className="w-4 h-4 shrink-0 text-accent" />
-              <span>{infoMessage}</span>
-            </div>
-          )}
-
-          {/* MOBILE & OTP REGISTRATION */}
-          {authMethod === 'mobile' ? (
-            <form onSubmit={handleMobileSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="mobileFirstName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    First name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="mobileFirstName"
-                      type="text"
-                      required
-                      value={mobileFirstName}
-                      onChange={(e) => setMobileFirstName(e.target.value)}
-                      placeholder="Alex"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  {errors.mobileFirstName && (
-                    <p className="mt-1 text-[11px] text-destructive">{errors.mobileFirstName}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="mobileLastName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    Last name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="mobileLastName"
-                      type="text"
-                      value={mobileLastName}
-                      onChange={(e) => setMobileLastName(e.target.value)}
-                      placeholder="Rivera"
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="mobileDateOfBirth" className="block text-xs font-semibold text-muted-foreground">
-                    Date of birth <span className="text-muted-foreground/70 font-normal">(must be 18+)</span>
-                  </label>
-                  <span className="text-[10px] text-muted-foreground/80 font-medium">Born on or before {maxLegalDate}</span>
-                </div>
-                <div className="relative">
-                  <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <input
-                    id="mobileDateOfBirth"
-                    type="date"
+      {/* 1. MOBILE & OTP REGISTRATION */}
+      {authMethod === 'mobile' ? (
+        <form
+          onSubmit={otpSent ? handleMobileSubmit : (e) => handleSendMobileOtp(e)}
+          className="space-y-4"
+        >
+          {!otpSent ? (
+            /* Step 1: Enter Details & Mobile Number */
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field
+                  label="First name"
+                  required
+                  validationMessage={errors.mobileFirstName}
+                  validationState={errors.mobileFirstName ? 'error' : 'none'}
+                >
+                  <Input
+                    id="mobileFirstName"
+                    type="text"
                     required
-                    max={maxLegalDate}
-                    value={mobileDateOfBirth}
-                    onChange={(e) => {
-                      setMobileDateOfBirth(e.target.value);
-                      if (errors.mobileDateOfBirth) {
-                        setErrors((prev) => {
-                          const next = { ...prev };
-                          delete next.mobileDateOfBirth;
-                          return next;
-                        });
-                      }
-                    }}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    value={mobileFirstName}
+                    onChange={(_, data) => setMobileFirstName(data.value)}
+                    placeholder="Alex"
+                    contentBefore={<Person20Regular className="text-muted-foreground" />}
                   />
-                </div>
-                {errors.mobileDateOfBirth && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.mobileDateOfBirth}</p>
-                )}
+                </Field>
+
+                <Field label="Last name">
+                  <Input
+                    id="mobileLastName"
+                    type="text"
+                    value={mobileLastName}
+                    onChange={(_, data) => setMobileLastName(data.value)}
+                    placeholder="Rivera"
+                    contentBefore={<Person20Regular className="text-muted-foreground" />}
+                  />
+                </Field>
               </div>
 
-              <div>
-                <label htmlFor="phoneNumber" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Mobile Number
-                </label>
+              <Field
+                label="Date of birth (18+)"
+                required
+                hint={`Born on or before ${maxLegalDate}`}
+                validationMessage={errors.mobileDateOfBirth}
+                validationState={errors.mobileDateOfBirth ? 'error' : 'none'}
+              >
+                <Input
+                  id="mobileDateOfBirth"
+                  type="date"
+                  required
+                  max={maxLegalDate}
+                  value={mobileDateOfBirth}
+                  onChange={(_, data) => {
+                    setMobileDateOfBirth(data.value);
+                    if (errors.mobileDateOfBirth) {
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.mobileDateOfBirth;
+                        return next;
+                      });
+                    }
+                  }}
+                  contentBefore={<Calendar20Regular className="text-muted-foreground" />}
+                  className="tabular"
+                />
+              </Field>
+
+              <Field
+                label="Mobile number"
+                required
+                validationMessage={errors.phoneNumber}
+                validationState={errors.phoneNumber ? 'error' : 'none'}
+              >
                 <div className="flex gap-2">
-                  <select
+                  <Select
                     value={countryCode}
-                    onChange={(e) => setCountryCode(e.target.value)}
-                    className="w-24 px-2 py-2.5 rounded-xl border border-border bg-card text-foreground text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-accent"
+                    onChange={(_, data) => setCountryCode(data.value)}
+                    aria-label="Country code"
+                    className="w-28 shrink-0 tabular"
                   >
-                    <option value="+91">🇮🇳 +91</option>
-                    <option value="+1">🇺🇸 +1</option>
-                    <option value="+44">🇬🇧 +44</option>
-                    <option value="+971">🇦🇪 +971</option>
-                    <option value="+65">🇸🇬 +65</option>
-                  </select>
-                  <div className="relative flex-1">
-                    <PhoneIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="phoneNumber"
-                      type="tel"
-                      required
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                      placeholder="98765 43210"
-                      maxLength={12}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleSendMobileOtp}
-                    disabled={isSendingOtp || (otpSent && countdown > 0)}
-                    className="px-3.5 py-2.5 rounded-xl bg-muted/80 hover:bg-muted text-foreground font-semibold text-xs border border-border/80 transition-colors disabled:opacity-40 shrink-0 cursor-pointer"
-                  >
-                    {isSendingOtp ? (
-                      'Sending...'
-                    ) : otpSent && countdown > 0 ? (
-                      `Resend (${countdown}s)`
-                    ) : (
-                      otpSent ? 'Resend' : 'Get OTP'
-                    )}
-                  </button>
-                </div>
-                {errors.phoneNumber && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.phoneNumber}</p>
-                )}
-              </div>
-
-              {otpSent && (
-                <div className="space-y-4 animate-in fade-in duration-200">
-                  <div>
-                    <label htmlFor="otp" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                      6-Digit Verification Code
-                    </label>
-                    <div className="relative">
-                      <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <input
-                        id="otp"
-                        type="text"
-                        required
-                        autoFocus
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                        placeholder="123456"
-                        maxLength={6}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm tracking-widest font-mono focus:outline-none focus:ring-1 focus:ring-accent"
-                      />
-                    </div>
-                    {errors.otp && (
-                      <p className="mt-1 text-[11px] text-destructive">{errors.otp}</p>
-                    )}
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isVerifyingOtp}
-                    className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 cursor-pointer"
-                  >
-                    {isVerifyingOtp ? 'Completing signup...' : 'Verify OTP & Create Account'}
-                  </button>
-                </div>
-              )}
-            </form>
-          ) : (
-            /* EMAIL & PASSWORD REGISTRATION */
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="firstName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    First name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="firstName"
-                      name="firstName"
-                      type="text"
-                      required
-                      value={formData.firstName}
-                      onChange={handleEmailChange}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  {errors.firstName && (
-                    <p className="mt-1 text-[11px] text-destructive">{errors.firstName}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label htmlFor="lastName" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                    Last name
-                  </label>
-                  <div className="relative">
-                    <UserIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <input
-                      id="lastName"
-                      name="lastName"
-                      type="text"
-                      required
-                      value={formData.lastName}
-                      onChange={handleEmailChange}
-                      className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                    />
-                  </div>
-                  {errors.lastName && (
-                    <p className="mt-1 text-[11px] text-destructive">{errors.lastName}</p>
-                  )}
-                </div>
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label htmlFor="dateOfBirth" className="block text-xs font-semibold text-muted-foreground">
-                    Date of birth <span className="text-muted-foreground/70 font-normal">(must be 18+)</span>
-                  </label>
-                  <span className="text-[10px] text-muted-foreground/80 font-medium">Born on or before {maxLegalDate}</span>
-                </div>
-                <div className="relative">
-                  <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                  <input
-                    id="dateOfBirth"
-                    name="dateOfBirth"
-                    type="date"
+                    <option value="+91">IN +91</option>
+                    <option value="+1">US +1</option>
+                    <option value="+44">UK +44</option>
+                    <option value="+971">AE +971</option>
+                    <option value="+65">SG +65</option>
+                  </Select>
+                  <Input
+                    id="phoneNumber"
+                    type="tel"
+                    inputMode="numeric"
                     required
-                    max={maxLegalDate}
-                    value={formData.dateOfBirth}
-                    onChange={handleEmailChange}
-                    className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
+                    value={phoneNumber}
+                    onChange={(_, data) =>
+                      setPhoneNumber(data.value.replace(/\D/g, ''))
+                    }
+                    placeholder="98765 43210"
+                    maxLength={12}
+                    contentBefore={<Phone20Regular className="text-muted-foreground" />}
+                    className="flex-1 tabular"
                   />
                 </div>
-                {errors.dateOfBirth && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.dateOfBirth}</p>
-                )}
-              </div>
+              </Field>
 
-              <div>
-                <label htmlFor="email" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Email address
-                </label>
-                <div className="relative">
-                  <EnvelopeIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={handleEmailChange}
-                    placeholder="you@example.com"
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.email}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="password" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Password (min 8 chars)
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={formData.password}
-                    onChange={handleEmailChange}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? (
-                      <EyeSlashIcon className="w-4 h-4" />
-                    ) : (
-                      <EyeIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.password}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="confirmPassword" className="block text-xs font-semibold text-muted-foreground mb-1.5">
-                  Confirm Password
-                </label>
-                <div className="relative">
-                  <LockClosedIcon className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    required
-                    value={formData.confirmPassword}
-                    onChange={handleEmailChange}
-                    placeholder="••••••••"
-                    className="w-full pl-10 pr-10 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-1 focus:ring-accent"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showConfirmPassword ? (
-                      <EyeSlashIcon className="w-4 h-4" />
-                    ) : (
-                      <EyeIcon className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.confirmPassword && (
-                  <p className="mt-1 text-[11px] text-destructive">{errors.confirmPassword}</p>
-                )}
-              </div>
-
-              <button
+              <Button
                 type="submit"
-                disabled={isEmailLoading}
-                className="w-full py-3 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-semibold text-sm shadow-xs transition-colors disabled:opacity-40 mt-2 cursor-pointer"
+                appearance="primary"
+                size="large"
+                disabled={isSendingOtp}
+                icon={<ArrowRight16Regular />}
+                iconPosition="after"
+                className="w-full min-h-11"
               >
-                {isEmailLoading ? 'Creating account...' : 'Create Cue Account'}
-              </button>
-            </form>
-          )}
+                {isSendingOtp ? 'Sending code...' : 'Get OTP'}
+              </Button>
+            </>
+          ) : (
+            /* Step 2: Verify 6-Digit OTP */
+            <>
+              <div className="flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-muted border border-border">
+                <div className="flex items-center gap-2 min-w-0">
+                  <CheckmarkCircle16Regular className="text-success shrink-0" />
+                  <span className="text-caption1 text-muted-foreground truncate">
+                    {mobileFirstName} ·
+                  </span>
+                  <span className="text-body2 font-semibold text-foreground tabular truncate">
+                    {countryCode} {phoneNumber}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpSent(false);
+                    setOtp('');
+                    setErrors({});
+                    setInfoMessage(null);
+                  }}
+                  className="inline-flex items-center gap-1 text-caption1 font-semibold text-brand-fg hover:underline shrink-0 cursor-pointer"
+                >
+                  <Edit16Regular />
+                  <span>Edit</span>
+                </button>
+              </div>
 
-          <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-            By signing up, you agree to our{' '}
-            <Link to="/terms" className="text-accent underline font-medium hover:text-accent-hover">
-              Terms of Service
-            </Link>
-            ,{' '}
-            <Link to="/privacy" className="text-accent underline font-medium hover:text-accent-hover">
-              Privacy Policy
-            </Link>
-            ,{' '}
-            <Link to="/community-guidelines" className="text-accent underline font-medium hover:text-accent-hover">
-              Community Guidelines
-            </Link>
-            , and{' '}
-            <Link to="/cancellation-policy" className="text-accent underline font-medium hover:text-accent-hover">
-              Escrow Cancellation Policy
-            </Link>
-            .
-          </p>
-        </div>
-      </div>
-    </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="otp" className="text-body1 font-semibold text-foreground">
+                    6-digit verification code
+                  </label>
+                  <button
+                    type="button"
+                    disabled={isSendingOtp || countdown > 0}
+                    onClick={() => handleSendMobileOtp()}
+                    className="text-caption1 font-semibold text-brand-fg hover:underline disabled:text-muted-foreground disabled:no-underline tabular cursor-pointer disabled:cursor-default"
+                  >
+                    {isSendingOtp
+                      ? 'Sending...'
+                      : countdown > 0
+                        ? `Resend in ${countdown}s`
+                        : 'Resend code'}
+                  </button>
+                </div>
+
+                <OtpCodeInput
+                  id="otp"
+                  value={otp}
+                  onChange={setOtp}
+                  disabled={isVerifyingOtp}
+                  hasError={Boolean(errors.otp)}
+                />
+                {errors.otp && (
+                  <p className="text-caption1 text-destructive">{errors.otp}</p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                disabled={isVerifyingOtp}
+                className="w-full min-h-11"
+              >
+                {isVerifyingOtp ? 'Joining...' : 'Verify & join'}
+              </Button>
+            </>
+          )}
+        </form>
+      ) : (
+        /* 2. EMAIL & PASSWORD REGISTRATION */
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field
+              label="First name"
+              required
+              validationMessage={errors.firstName}
+              validationState={errors.firstName ? 'error' : 'none'}
+            >
+              <Input
+                id="firstName"
+                name="firstName"
+                type="text"
+                required
+                placeholder="Alex"
+                value={formData.firstName}
+                onChange={(_, data) => handleEmailChange('firstName', data.value)}
+                contentBefore={<Person20Regular className="text-muted-foreground" />}
+              />
+            </Field>
+
+            <Field
+              label="Last name"
+              required
+              validationMessage={errors.lastName}
+              validationState={errors.lastName ? 'error' : 'none'}
+            >
+              <Input
+                id="lastName"
+                name="lastName"
+                type="text"
+                required
+                placeholder="Rivera"
+                value={formData.lastName}
+                onChange={(_, data) => handleEmailChange('lastName', data.value)}
+                contentBefore={<Person20Regular className="text-muted-foreground" />}
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field
+              label="Date of birth (18+)"
+              required
+              validationMessage={errors.dateOfBirth}
+              validationState={errors.dateOfBirth ? 'error' : 'none'}
+            >
+              <Input
+                id="dateOfBirth"
+                name="dateOfBirth"
+                type="date"
+                required
+                max={maxLegalDate}
+                value={formData.dateOfBirth}
+                onChange={(_, data) => handleEmailChange('dateOfBirth', data.value)}
+                contentBefore={<Calendar20Regular className="text-muted-foreground" />}
+                className="tabular"
+              />
+            </Field>
+
+            <Field
+              label="Email address"
+              required
+              validationMessage={errors.email}
+              validationState={errors.email ? 'error' : 'none'}
+            >
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={formData.email}
+                onChange={(_, data) => handleEmailChange('email', data.value)}
+                placeholder="you@example.com"
+                contentBefore={<Mail20Regular className="text-muted-foreground" />}
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field
+              label="Password"
+              required
+              validationMessage={errors.password}
+              validationState={errors.password ? 'error' : 'none'}
+            >
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                value={formData.password}
+                onChange={(_, data) => handleEmailChange('password', data.value)}
+                placeholder="8+ characters"
+                contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  <Button
+                    type="button"
+                    appearance="transparent"
+                    size="small"
+                    icon={showPassword ? <EyeOff20Regular /> : <Eye20Regular />}
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  />
+                }
+              />
+            </Field>
+
+            <Field
+              label="Confirm password"
+              required
+              validationMessage={errors.confirmPassword}
+              validationState={errors.confirmPassword ? 'error' : 'none'}
+            >
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                required
+                value={formData.confirmPassword}
+                onChange={(_, data) =>
+                  handleEmailChange('confirmPassword', data.value)
+                }
+                placeholder="Repeat password"
+                contentBefore={<LockClosed20Regular className="text-muted-foreground" />}
+                contentAfter={
+                  <Button
+                    type="button"
+                    appearance="transparent"
+                    size="small"
+                    icon={showConfirmPassword ? <EyeOff20Regular /> : <Eye20Regular />}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    aria-label={
+                      showConfirmPassword ? 'Hide password' : 'Show password'
+                    }
+                  />
+                }
+              />
+            </Field>
+          </div>
+
+          {/* Live Password & Age Checklist */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 py-2 rounded-xl bg-muted border border-border text-caption2">
+            <span
+              className={`inline-flex items-center gap-1 font-semibold ${
+                hasMinLength ? 'text-success' : 'text-muted-foreground'
+              }`}
+            >
+              {hasMinLength ? <CheckmarkCircle16Regular /> : <Circle16Regular />}
+              <span>8+ characters</span>
+            </span>
+            <span
+              className={`inline-flex items-center gap-1 font-semibold ${
+                passwordsMatch ? 'text-success' : 'text-muted-foreground'
+              }`}
+            >
+              {passwordsMatch ? <CheckmarkCircle16Regular /> : <Circle16Regular />}
+              <span>Passwords match</span>
+            </span>
+            <span className="text-muted-foreground ml-auto tabular">
+              18+ (on/before {maxLegalDate})
+            </span>
+          </div>
+
+          <Button
+            type="submit"
+            appearance="primary"
+            size="large"
+            disabled={isEmailLoading}
+            className="w-full min-h-11 mt-1"
+          >
+            {isEmailLoading ? 'Creating...' : 'Create account'}
+          </Button>
+        </form>
+      )}
+    </AuthShell>
   );
 };
 

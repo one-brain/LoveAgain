@@ -1,19 +1,36 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../../store';
 import {
-  XMarkIcon,
-  ShieldCheckIcon,
-  InformationCircleIcon,
-  CalendarDaysIcon,
-  ClockIcon,
-  MapPinIcon,
-  SparklesIcon,
-  CheckBadgeIcon,
-  ChevronDownIcon,
-  ChevronUpIcon,
-} from '@heroicons/react/24/outline';
+  Dialog,
+  DialogSurface,
+  DialogBody,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Input,
+  Field,
+  ToggleButton,
+  MessageBar,
+  MessageBarBody,
+  Badge,
+  Spinner,
+} from '@fluentui/react-components';
+import {
+  Dismiss20Regular,
+  ShieldCheckmark24Regular,
+  ShieldCheckmark20Regular,
+  ShieldCheckmark16Regular,
+  Calendar16Regular,
+  Clock16Regular,
+  Location16Regular,
+  CheckmarkStarburst16Filled,
+  ChevronDown16Regular,
+  ChevronUp16Regular,
+  Options16Regular,
+} from '@fluentui/react-icons';
+import type { RootState } from '../../store';
 import { formatINR, formatRate } from '../../utils/currency';
 import { toProviderGuid, generateDemoSlots } from '../../utils/providerData';
 import { useGetCompanionAvailabilityQuery, type CompanionAvailabilitySlot } from '../../store/bookingApi';
@@ -58,15 +75,15 @@ interface BookingRequestModalProps {
 }
 
 const ACTIVITY_VENUE_MAP: Record<string, string[]> = {
-  'Coffee': ['Blue Tokai Coffee, Indiranagar', 'Third Wave Coffee, Koramangala', 'Araku Coffee, 12th Main', 'Starbucks Reserve'],
-  'Restaurant': ['Olive Beach, Richmond Town', 'The Smoke House Deli, Lavelle Rd', 'The Fatty Bao, Indiranagar', 'Toit Brewpub'],
-  'Dining': ['Olive Beach, Richmond Town', 'The Smoke House Deli, Lavelle Rd', 'The Fatty Bao, Indiranagar', 'Toit Brewpub'],
-  'Shopping': ['UB City Luxury Mall', 'Phoenix Marketcity, Whitefield', '100ft Road Boutiques, Indiranagar', 'Commercial Street'],
-  'Movies': ['PVR Director\'s Cut, Forum Rex', 'INOX Megaplex, Mall of Asia', 'PVR Gold Class, Phoenix', 'Cinepolis VIP'],
-  'Weekend': ['Cubbon Park (Bamboo Grove)', 'Nandi Hills Sunrise Point', 'Lalbagh Botanical Gardens', 'Sankey Tank Promenade'],
+  Coffee: ['Blue Tokai Coffee, Indiranagar', 'Third Wave Coffee, Koramangala', 'Araku Coffee, 12th Main', 'Starbucks Reserve'],
+  Restaurant: ['Olive Beach, Richmond Town', 'The Smoke House Deli, Lavelle Rd', 'The Fatty Bao, Indiranagar', 'Toit Brewpub'],
+  Dining: ['Olive Beach, Richmond Town', 'The Smoke House Deli, Lavelle Rd', 'The Fatty Bao, Indiranagar', 'Toit Brewpub'],
+  Shopping: ['UB City Luxury Mall', 'Phoenix Marketcity, Whitefield', '100ft Road Boutiques, Indiranagar', 'Commercial Street'],
+  Movies: ["PVR Director's Cut, Forum Rex", 'INOX Megaplex, Mall of Asia', 'PVR Gold Class, Phoenix', 'Cinepolis VIP'],
+  Weekend: ['Cubbon Park (Bamboo Grove)', 'Nandi Hills Sunrise Point', 'Lalbagh Botanical Gardens', 'Sankey Tank Promenade'],
   'Special Events': ['National Gallery of Modern Art (NGMA)', 'Bangalore Club Lawn', 'Chowdiah Memorial Hall', 'Ranga Shankara'],
-  'Tennis': ['KSLTA Tennis Stadium, Cubbon Park', 'Bowring Institute Courts', 'Topspin Tennis Academy'],
-  'Cooking': ['Kitchen Studio, Indiranagar', 'Culinary Lab, Koramangala', 'Slurp Cooking Studio'],
+  Tennis: ['KSLTA Tennis Stadium, Cubbon Park', 'Bowring Institute Courts', 'Topspin Tennis Academy'],
+  Cooking: ['Kitchen Studio, Indiranagar', 'Culinary Lab, Koramangala', 'Slurp Cooking Studio'],
 };
 
 function getSuggestedVenues(currentActivity: string): string[] {
@@ -115,7 +132,6 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user);
 
-  // Core booking state with high-quality smart defaults
   const initialAct = initialActivity || provider.specialties[0] || 'Coffee Dates';
   const defaultVenues = getSuggestedVenues(initialAct);
 
@@ -136,7 +152,6 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     return toProviderGuid(rawId);
   }, [provider]);
 
-  // Fetch companion's future available slots
   const { data: rawSlots = [] } = useGetCompanionAvailabilityQuery(
     targetProviderGuid,
     { skip: !isOpen || !targetProviderGuid }
@@ -151,7 +166,6 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     return generateDemoSlots(targetProviderGuid);
   }, [rawSlots, targetProviderGuid]);
 
-  // Group slots by local date (YYYY-MM-DD)
   const slotsByDate = useMemo(() => {
     const map = new Map<string, CompanionAvailabilitySlot[]>();
     for (const slot of availableSlots) {
@@ -162,18 +176,16 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
       }
       map.get(dateKey)!.push(slot);
     }
-    for (const [_, slots] of map.entries()) {
+    for (const [, slots] of map.entries()) {
       slots.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
     }
     return map;
   }, [availableSlots]);
 
-  // Slots specifically for currently selected date
   const slotsForSelectedDate = useMemo(() => {
     return slotsByDate.get(startDate) || [];
   }, [slotsByDate, startDate]);
 
-  // Quick Date suggestions (next 4 days starting tomorrow)
   const quickDateOptions = useMemo(() => {
     const list: { key: string; label: string; weekday: string; openSlots: number }[] = [];
     for (let i = 1; i <= 5; i++) {
@@ -188,7 +200,6 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     return list;
   }, [slotsByDate]);
 
-  // Select first available start time on current date when slots or duration change
   useEffect(() => {
     if (slotsForSelectedDate.length > 0) {
       const requiredMinutes = durationHours * 60;
@@ -215,61 +226,55 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
     }
   }, [startDate, durationHours, slotsForSelectedDate]);
 
-  // Handle escape key
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
-
   if (!isOpen) return null;
 
   // Identity / KYC Guard
   if (!user || !user.isVerified) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
-        <div className="bg-card border border-border rounded-3xl max-w-md w-full p-6 sm:p-8 shadow-2xl space-y-6 text-center animate-in zoom-in-95 duration-150">
-          <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mx-auto shadow-inner">
-            <ShieldCheckIcon className="w-9 h-9" />
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-xl font-bold font-sans text-foreground">
-              Identity Verification Required
-            </h3>
-            <p className="text-xs text-muted-foreground leading-relaxed">
-              Identity verification required to host outings with verified guests. Complete KYC now.
-            </p>
-            <p className="text-[11px] text-muted-foreground/80 leading-relaxed pt-1">
-              For community trust and member safety, government identity card submission is mandatory before inviting verified guests.
-            </p>
-          </div>
-
-          <div className="space-y-2.5 pt-2">
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                navigate('/profile?tab=kyc');
-              }}
-              className="w-full min-h-[44px] py-3 px-4 rounded-xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-xs sm:text-sm shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
-            >
-              <ShieldCheckIcon className="w-4 h-4" />
-              <span>Complete KYC Now &rarr;</span>
-            </button>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full min-h-[44px] py-2.5 px-4 rounded-xl bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground text-xs font-semibold transition-all cursor-pointer"
-            >
-              Back to Guest Profile
-            </button>
-          </div>
-        </div>
-      </div>
+      <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && onClose()}>
+        <DialogSurface className="max-w-md w-full bg-card border border-border rounded-2xl p-6 text-center">
+          <DialogBody>
+            <DialogTitle>
+              <div className="w-14 h-14 rounded-2xl bg-trust-light border border-trust-border text-trust flex items-center justify-center mx-auto mb-2">
+                <ShieldCheckmark24Regular />
+              </div>
+              <span className="text-subtitle1 font-semibold text-foreground block text-center">
+                Identity verification required
+              </span>
+            </DialogTitle>
+            <DialogContent className="space-y-2 pt-2 text-center">
+              <p className="text-body1 text-muted-foreground">
+                Identity verification required to host outings with verified guests. Complete KYC now.
+              </p>
+              <p className="text-caption1 text-muted-foreground">
+                For community trust and member safety, government identity card submission is mandatory before inviting verified guests.
+              </p>
+            </DialogContent>
+            <DialogActions className="pt-4 flex flex-col gap-2">
+              <Button
+                appearance="primary"
+                size="large"
+                className="w-full min-h-11"
+                icon={<ShieldCheckmark20Regular />}
+                onClick={() => {
+                  onClose();
+                  navigate('/profile?tab=kyc');
+                }}
+              >
+                Verify ID
+              </Button>
+              <Button
+                appearance="secondary"
+                size="large"
+                className="w-full min-h-11"
+                onClick={onClose}
+              >
+                Back
+              </Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
     );
   }
 
@@ -311,352 +316,342 @@ export const BookingRequestModal: React.FC<BookingRequestModalProps> = ({
   };
 
   return (
-    <div
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="booking-sheet-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4"
-    >
-      <div className="bg-card border border-border w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[94vh]">
-        {/* Header with companion summary */}
-        <div className="p-4 sm:p-5 border-b border-border flex items-center justify-between bg-muted/30">
-          <div className="flex items-center gap-3 min-w-0">
-            <img
-              src={
-                provider.photoUrl ??
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+    <Dialog open={isOpen} onOpenChange={(_, data) => !data.open && onClose()}>
+      <DialogSurface className="max-w-2xl w-full bg-card border border-border rounded-2xl p-6 max-h-[92vh] overflow-y-auto">
+        <form onSubmit={handleSubmit}>
+          <DialogBody>
+            <DialogTitle
+              action={
+                <Button
+                  appearance="subtle"
+                  aria-label="Close booking dialog"
+                  icon={<Dismiss20Regular />}
+                  onClick={onClose}
+                />
               }
-              alt={provider.displayName}
-              className="w-12 h-12 rounded-2xl object-cover border border-border shadow-xs shrink-0"
-            />
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <h2
-                  id="booking-sheet-title"
-                  className="text-base sm:text-lg font-bold text-foreground font-sans truncate"
-                >
-                  Host an Outing: {provider.displayName}
-                </h2>
-                <CheckBadgeIcon className="w-4 h-4 text-amber-500 shrink-0" title="Verified Guest" />
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <img
+                  src={
+                    provider.photoUrl ??
+                    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80'
+                  }
+                  alt={provider.displayName}
+                  className="w-12 h-12 rounded-lg object-cover border border-border shrink-0"
+                />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span id="booking-sheet-title" className="text-subtitle1 font-semibold text-foreground truncate">
+                      Host an outing: {provider.displayName}
+                    </span>
+                    <CheckmarkStarburst16Filled className="text-trust shrink-0" title="Verified Guest" />
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5 text-caption1 font-normal">
+                    <span className="font-mono tabular font-semibold text-brand-fg">
+                      {formatRate(provider.hourlyRate)}
+                    </span>
+                    <span className="text-border">•</span>
+                    <span className="text-muted-foreground truncate">
+                      {provider.area || provider.city || 'Central City Hub'}
+                    </span>
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className="font-mono text-xs font-bold text-accent tabular-nums">
-                  {formatRate(provider.hourlyRate)}
-                </span>
-                <span className="text-border">•</span>
-                <span className="text-xs text-muted-foreground truncate">
-                  {provider.area || provider.city || 'Central City Hub'}
-                </span>
+            </DialogTitle>
+
+            <DialogContent className="space-y-5 pt-4">
+              {/* 2-Step Hospitality Journey Progress */}
+              <div className="px-4 py-2.5 rounded-lg bg-accent-light border border-border flex items-center justify-between text-caption1">
+                <div className="flex items-center gap-2">
+                  <Badge appearance="filled" color="brand" className="tabular">
+                    1
+                  </Badge>
+                  <span className="font-semibold text-foreground">Step 1: Outing details & venue</span>
+                </div>
+                <div className="flex items-center gap-1.5 text-muted-foreground">
+                  <span>Step 2:</span>
+                  <span className="inline-flex items-center gap-1 text-trust font-semibold">
+                    <ShieldCheckmark16Regular />
+                    <span>100% escrow hold</span>
+                  </span>
+                </div>
               </div>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            aria-label="Close booking dialog"
-            className="min-h-[44px] min-w-[44px] p-2.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer flex items-center justify-center"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
-        </div>
 
-        {/* 2-Step Hospitality Journey Progress */}
-        <div className="px-5 py-2.5 bg-accent/5 border-b border-border/70 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2">
-            <span className="w-5 h-5 rounded-full bg-accent text-accent-foreground font-bold text-[10px] flex items-center justify-center font-mono">1</span>
-            <span className="font-semibold text-foreground">Step 1: Outing Details & Venue</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-muted-foreground text-[11px]">
-            <span>Step 2:</span>
-            <span className="inline-flex items-center gap-1 text-accent font-bold">
-              <ShieldCheckIcon className="w-3.5 h-3.5" />
-              <span>100% Escrow Hold</span>
-            </span>
-          </div>
-        </div>
+              {errorMsg && (
+                <MessageBar intent="error">
+                  <MessageBarBody>{errorMsg}</MessageBarBody>
+                </MessageBar>
+              )}
 
-        {/* Unified Single Sheet Body */}
-        <form onSubmit={handleSubmit} className="p-5 sm:p-6 overflow-y-auto space-y-5 flex-1 text-xs sm:text-sm">
-          {errorMsg && (
-            <div className="p-3.5 rounded-xl bg-destructive/15 border border-destructive/30 text-destructive text-xs font-medium flex items-center gap-2">
-              <InformationCircleIcon className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
-
-          {/* Section 1: Activity Selection */}
-          <div className="space-y-2">
-            <label className="block text-xs font-bold text-muted-foreground uppercase tracking-wider">
-              1. Choose Activity / Experience
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {provider.specialties.slice(0, 5).map((spec) => {
-                const isSelected = activity === spec;
-                return (
-                  <button
-                    key={spec}
-                    type="button"
-                    onClick={() => setActivity(spec)}
-                    className={`min-h-[44px] px-3.5 py-2 rounded-xl border text-xs font-medium transition-all flex items-center gap-1.5 cursor-pointer ${
-                      isSelected
-                        ? 'border-accent bg-accent/10 text-accent font-bold shadow-2xs'
-                        : 'border-border bg-muted/40 text-foreground hover:bg-muted'
-                    }`}
-                  >
-                    <span>{isSelected ? '✓' : '•'}</span>
-                    <span>{spec}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Section 2: Date & Duration Selector */}
-          <div className="space-y-4 pt-1 border-t border-border/60">
-            {/* Date Quick Selector */}
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <CalendarDaysIcon className="w-4 h-4 text-accent" />
-                  <span>2. Outing Date</span>
+              {/* Section 1: Activity Selection */}
+              <div className="space-y-2">
+                <label className="block text-caption1 font-semibold text-muted-foreground">
+                  1. Choose activity / experience
                 </label>
-                <input
-                  type="date"
-                  value={startDate}
-                  min={defaultDateStr}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="px-2.5 py-1 rounded-lg border border-border bg-muted/60 text-foreground text-xs font-mono tabular-nums focus:ring-1 focus:ring-accent cursor-pointer"
-                  title="Choose custom date"
+                <div className="flex flex-wrap gap-2">
+                  {provider.specialties.slice(0, 5).map((spec) => {
+                    const isSelected = activity === spec;
+                    return (
+                      <ToggleButton
+                        key={spec}
+                        size="medium"
+                        checked={isSelected}
+                        appearance={isSelected ? 'primary' : 'outline'}
+                        onClick={() => setActivity(spec)}
+                        className="min-h-11"
+                      >
+                        {spec}
+                      </ToggleButton>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Section 2: Date & Duration Selector */}
+              <div className="space-y-4 pt-3 border-t border-border">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-caption1 font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Calendar16Regular className="text-brand-fg" />
+                      <span>2. Outing date</span>
+                    </label>
+                    <input
+                      type="date"
+                      value={startDate}
+                      min={defaultDateStr}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="px-2.5 py-1 rounded-md border border-border bg-card text-foreground text-caption1 font-mono tabular cursor-pointer"
+                      title="Choose custom date"
+                    />
+                  </div>
+
+                  {/* Quick Date Pills */}
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {quickDateOptions.map((opt) => {
+                      const isSelected = startDate === opt.key;
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          onClick={() => setStartDate(opt.key)}
+                          className={`min-h-12 p-2 rounded-lg border text-center transition-colors cursor-pointer flex flex-col items-center justify-center ${
+                            isSelected
+                              ? 'border-accent bg-accent text-accent-foreground shadow-sm'
+                              : 'border-border bg-card hover:bg-muted text-foreground'
+                          }`}
+                        >
+                          <span className={`text-caption2 font-semibold ${isSelected ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
+                            {opt.weekday}
+                          </span>
+                          <span className="text-caption1 font-semibold font-mono tabular">
+                            {opt.label}
+                          </span>
+                          {opt.openSlots > 0 ? (
+                            <span className={`text-caption2 font-mono tabular ${isSelected ? 'text-accent-foreground/90' : 'text-success'}`}>
+                              {opt.openSlots} open
+                            </span>
+                          ) : (
+                            <span className={`text-caption2 ${isSelected ? 'text-accent-foreground/70' : 'text-muted-foreground'}`}>
+                              No slots
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Duration Selector */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-caption1 font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Clock16Regular className="text-brand-fg" />
+                      <span>3. Outing duration</span>
+                    </label>
+                    <span className="font-mono text-caption1 font-semibold text-brand-fg tabular">
+                      {formatINR(provider.hourlyRate)} × {durationHours}h = {formatINR(subtotal)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {DURATION_PRESETS.map((hrs) => {
+                      const isSelected = durationHours === hrs;
+                      return (
+                        <ToggleButton
+                          key={hrs}
+                          size="medium"
+                          checked={isSelected}
+                          appearance={isSelected ? 'primary' : 'outline'}
+                          onClick={() => setDurationHours(hrs)}
+                          className="flex-1 min-h-11 font-mono tabular"
+                        >
+                          {hrs} {hrs === 1 ? 'hour' : 'hours'}
+                        </ToggleButton>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Section 3: Visual Day Availability Timeline */}
+              <div>
+                <DayAvailabilityTimeline
+                  availableSlots={slotsForSelectedDate}
+                  durationHours={durationHours}
+                  selectedStartTime={startTime}
+                  onSelectStartTime={(newTime) => setStartTime(newTime)}
+                  selectedDateKey={startDate}
                 />
               </div>
 
-              {/* Quick Date Pills */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {quickDateOptions.map((opt) => {
-                  const isSelected = startDate === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() => setStartDate(opt.key)}
-                      className={`min-h-[52px] p-2 rounded-2xl border text-center transition-all cursor-pointer flex flex-col items-center justify-center ${
-                        isSelected
-                          ? 'border-accent bg-accent text-accent-foreground shadow-xs'
-                          : 'border-border bg-card hover:bg-muted/60 text-foreground'
-                      }`}
-                    >
-                      <span className={`text-[10px] font-semibold uppercase tracking-wider ${isSelected ? 'text-accent-foreground/80' : 'text-muted-foreground'}`}>
-                        {opt.weekday}
-                      </span>
-                      <span className="text-xs font-bold font-mono tabular-nums">
-                        {opt.label}
-                      </span>
-                      {opt.openSlots > 0 ? (
-                        <span className={`text-[9px] font-mono font-medium ${isSelected ? 'text-accent-foreground/90' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                          {opt.openSlots} open
-                        </span>
-                      ) : (
-                        <span className={`text-[9px] ${isSelected ? 'text-accent-foreground/70' : 'text-muted-foreground/60'}`}>
-                          No slots
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Duration Selector */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                  <ClockIcon className="w-4 h-4 text-accent" />
-                  <span>3. Outing Duration</span>
-                </label>
-                <span className="font-mono text-xs font-bold text-accent tabular-nums">
-                  {formatINR(provider.hourlyRate)} × {durationHours}h = {formatINR(subtotal)}
-                </span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {DURATION_PRESETS.map((hrs) => {
-                  const isSelected = durationHours === hrs;
-                  return (
-                    <button
-                      key={hrs}
-                      type="button"
-                      onClick={() => setDurationHours(hrs)}
-                      className={`flex-1 min-h-[44px] py-2 px-3 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer flex items-center justify-center font-mono tabular-nums ${
-                        isSelected
-                          ? 'border-accent bg-accent text-accent-foreground shadow-xs'
-                          : 'border-border bg-muted/40 hover:bg-muted text-foreground'
-                      }`}
-                    >
-                      <span>{hrs} {hrs === 1 ? 'hour' : 'hours'}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          {/* Section 3: Visual Day Availability Timeline */}
-          <div className="pt-1">
-            <DayAvailabilityTimeline
-              availableSlots={slotsForSelectedDate}
-              durationHours={durationHours}
-              selectedStartTime={startTime}
-              onSelectStartTime={(newTime) => setStartTime(newTime)}
-              selectedDateKey={startDate}
-            />
-          </div>
-
-          {/* Section 4: Public Meeting Venue */}
-          <div className="space-y-2 pt-2 border-t border-border/60">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
-                <MapPinIcon className="w-4 h-4 text-accent" />
-                <span>4. Public Meeting Venue <span className="text-destructive">*</span></span>
-              </label>
-              <span className="text-[11px] text-muted-foreground">Tap any popular spot below:</span>
-            </div>
-            <input
-              type="text"
-              value={meetingVenue}
-              onChange={(e) => setMeetingVenue(e.target.value)}
-              placeholder="e.g. Blue Tokai Coffee, Indiranagar / Cubbon Park Gate 2"
-              className="w-full px-3.5 py-2.5 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs sm:text-sm focus:ring-1 focus:ring-accent"
-              required
-            />
-            {/* Contextual 1-Click Venue Chips */}
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              {getSuggestedVenues(activity).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setMeetingVenue(v)}
-                  className={`px-3 py-1.5 min-h-[36px] rounded-xl text-xs font-medium transition-all cursor-pointer flex items-center gap-1 border ${
-                    meetingVenue === v
-                      ? 'bg-accent/15 border-accent text-accent font-semibold shadow-2xs'
-                      : 'bg-muted/60 hover:bg-muted text-foreground border-border/70 hover:border-accent/40'
-                  }`}
+              {/* Section 4: Public Meeting Venue */}
+              <div className="space-y-2 pt-3 border-t border-border">
+                <Field
+                  label="4. Public meeting venue"
+                  required
+                  hint="Tap any popular spot below or enter a custom public venue"
                 >
-                  <span>📍</span>
-                  <span>{v}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Optional Preferences Accordion */}
-          <div className="rounded-2xl border border-border/70 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setShowPreferences(!showPreferences)}
-              className="w-full p-3.5 bg-muted/30 hover:bg-muted/50 transition-colors flex items-center justify-between text-xs font-semibold text-foreground cursor-pointer"
-            >
-              <div className="flex items-center gap-2">
-                <SparklesIcon className="w-4 h-4 text-accent" />
-                <span>Optional Dress Code & Notes</span>
-              </div>
-              {showPreferences ? (
-                <ChevronUpIcon className="w-4 h-4 text-muted-foreground" />
-              ) : (
-                <ChevronDownIcon className="w-4 h-4 text-muted-foreground" />
-              )}
-            </button>
-
-            {showPreferences && (
-              <div className="p-4 space-y-3 bg-card border-t border-border/60 text-xs animate-in fade-in duration-150">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
-                      Attire / Dress Code
-                    </label>
-                    <select
-                      value={dressCode}
-                      onChange={(e) => setDressCode(e.target.value)}
-                      className="w-full px-3 py-2 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                    >
-                      {DRESS_CODES.map((dc) => (
-                        <option key={dc} value={dc}>{dc}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
-                      Travel / Logistics
-                    </label>
-                    <select
-                      value={transportMode}
-                      onChange={(e) => setTransportMode(e.target.value)}
-                      className="w-full px-3 py-2 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
-                    >
-                      {TRANSPORT_MODES.map((tm) => (
-                        <option key={tm} value={tm}>{tm}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-[11px] font-semibold text-muted-foreground mb-1">
-                    Special Activity Notes
-                  </label>
-                  <input
-                    type="text"
-                    value={specialNotes}
-                    onChange={(e) => setSpecialNotes(e.target.value)}
-                    placeholder="e.g. Please bring comfortable walking shoes / beginner tennis player"
-                    className="w-full px-3 py-2 min-h-[44px] rounded-xl border border-border bg-muted/50 text-foreground text-xs focus:ring-1 focus:ring-accent"
+                  <Input
+                    value={meetingVenue}
+                    onChange={(_, data) => setMeetingVenue(data.value)}
+                    placeholder="e.g. Blue Tokai Coffee, Indiranagar / Cubbon Park Gate 2"
+                    contentBefore={<Location16Regular className="text-brand-fg" />}
+                    required
                   />
+                </Field>
+
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {getSuggestedVenues(activity).map((v) => (
+                    <ToggleButton
+                      key={v}
+                      size="small"
+                      checked={meetingVenue === v}
+                      appearance={meetingVenue === v ? 'primary' : 'subtle'}
+                      icon={<Location16Regular />}
+                      onClick={() => setMeetingVenue(v)}
+                    >
+                      {v}
+                    </ToggleButton>
+                  ))}
                 </div>
               </div>
-            )}
-          </div>
 
-          {/* Section 5: Trust Reassurance & Escrow Vault Total */}
-          <div className="space-y-3 pt-2">
-            {/* Escrow Ledger Card */}
-            <div className="p-4 rounded-2xl bg-accent/5 border border-accent/20 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center text-accent shrink-0">
-                  <ShieldCheckIcon className="w-6 h-6" />
-                </div>
-                <div>
-                  <span className="text-xs font-bold text-foreground block">
-                    100% Escrow Protection
-                  </span>
-                  <span className="text-[11px] text-muted-foreground block">
-                    {durationHours} hrs × {formatRate(provider.hourlyRate)} • Held until mutual PIN check-in
-                  </span>
-                </div>
+              {/* Optional Preferences Accordion */}
+              <div className="rounded-lg border border-border overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowPreferences(!showPreferences)}
+                  className="w-full p-3.5 bg-muted hover:bg-subtle transition-colors flex items-center justify-between text-caption1 font-semibold text-foreground cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Options16Regular className="text-brand-fg" />
+                    <span>Optional dress code & notes</span>
+                  </div>
+                  {showPreferences ? (
+                    <ChevronUp16Regular className="text-muted-foreground" />
+                  ) : (
+                    <ChevronDown16Regular className="text-muted-foreground" />
+                  )}
+                </button>
+
+                {showPreferences && (
+                  <div className="p-4 space-y-3 bg-card border-t border-border text-caption1">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-caption1 font-semibold text-muted-foreground mb-1">
+                          Attire / dress code
+                        </label>
+                        <select
+                          value={dressCode}
+                          onChange={(e) => setDressCode(e.target.value)}
+                          className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1"
+                        >
+                          {DRESS_CODES.map((dc) => (
+                            <option key={dc} value={dc}>{dc}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-caption1 font-semibold text-muted-foreground mb-1">
+                          Travel / logistics
+                        </label>
+                        <select
+                          value={transportMode}
+                          onChange={(e) => setTransportMode(e.target.value)}
+                          className="w-full px-3 py-2 min-h-11 rounded-md border border-border bg-card text-foreground text-caption1"
+                        >
+                          {TRANSPORT_MODES.map((tm) => (
+                            <option key={tm} value={tm}>{tm}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <Field label="Special activity notes">
+                      <Input
+                        value={specialNotes}
+                        onChange={(_, data) => setSpecialNotes(data.value)}
+                        placeholder="e.g. Please bring comfortable walking shoes / beginner tennis player"
+                      />
+                    </Field>
+                  </div>
+                )}
               </div>
-              <div className="text-right">
-                <span className="text-[10px] uppercase font-bold tracking-wider text-muted-foreground block font-mono">Total Deposit</span>
-                <span className="font-mono text-xl sm:text-2xl font-bold text-foreground tabular-nums">
-                  {formatINR(totalAmount)}
-                </span>
+
+              {/* Section 5: Trust Reassurance & Escrow Vault Total */}
+              <div className="space-y-3 pt-2">
+                <div className="p-4 rounded-lg bg-trust-light border border-trust-border flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-card border border-trust-border flex items-center justify-center text-trust shrink-0">
+                      <ShieldCheckmark24Regular />
+                    </div>
+                    <div>
+                      <span className="text-body1 font-semibold text-foreground block">
+                        100% escrow protection
+                      </span>
+                      <span className="text-caption1 text-muted-foreground block tabular">
+                        {durationHours} hrs × {formatRate(provider.hourlyRate)} • Held until mutual PIN check-in
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-caption1 font-semibold text-trust block">Total deposit</span>
+                    <span className="font-mono text-subtitle1 font-semibold text-foreground tabular">
+                      {formatINR(totalAmount)}
+                    </span>
+                  </div>
+                </div>
+
+                <p className="text-caption1 text-muted-foreground text-center px-2">
+                  By confirming, you agree to Cue&apos;s <strong>Platonic Outing Policy</strong> and public venue safety rules. Funds are released only after mutual session completion.
+                </p>
               </div>
-            </div>
+            </DialogContent>
 
-            {/* Seamless Legal Agreement Notice */}
-            <p className="text-[11px] text-muted-foreground leading-relaxed text-center px-2">
-              By confirming, you agree to Cue&apos;s <strong>Platonic Outing Policy</strong> and public venue safety rules. Funds are released only after mutual session completion.
-            </p>
-
-            {/* Primary Action Button */}
-            <button
-              type="submit"
-              disabled={isSubmitting || slotsForSelectedDate.length === 0}
-              className="w-full min-h-[50px] py-3.5 px-6 rounded-2xl bg-accent hover:bg-accent-hover text-accent-foreground font-bold text-sm sm:text-base shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ShieldCheckIcon className="w-5 h-5" />
-              <span>{isSubmitting ? 'Initiating Escrow Hold...' : `Lock Outing & Deposit Escrow (${formatINR(totalAmount)}) \u2192`}</span>
-            </button>
-          </div>
+            <DialogActions className="pt-4">
+              <Button
+                appearance="secondary"
+                size="large"
+                className="min-h-11"
+                onClick={onClose}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                appearance="primary"
+                size="large"
+                className="min-h-11 tabular"
+                disabled={isSubmitting || slotsForSelectedDate.length === 0}
+                icon={isSubmitting ? <Spinner size="tiny" /> : <ShieldCheckmark20Regular />}
+              >
+                {isSubmitting ? 'Holding...' : `Hold in escrow • ${formatINR(totalAmount)}`}
+              </Button>
+            </DialogActions>
+          </DialogBody>
         </form>
-      </div>
-    </div>
+      </DialogSurface>
+    </Dialog>
   );
 };

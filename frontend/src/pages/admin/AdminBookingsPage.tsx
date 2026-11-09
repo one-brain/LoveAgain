@@ -1,12 +1,18 @@
 import React, { useState, useCallback } from 'react';
 import { useGetAdminBookingsQuery } from '../../store/adminApi';
 import {
-  BanknotesIcon,
-  ArrowPathIcon,
-  ArrowDownTrayIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-} from '@heroicons/react/24/outline';
+  Badge,
+  Button,
+  MessageBar,
+  MessageBarActions,
+  MessageBarBody,
+} from '@fluentui/react-components';
+import {
+  Money16Regular,
+  ArrowSync16Regular,
+  ArrowDownload16Regular,
+  Warning16Regular,
+} from '@fluentui/react-icons';
 import { AdminPageHeader } from '../../components/admin/AdminPageHeader';
 import { AdminBookingLedger } from '../../components/admin/AdminBookingLedger';
 
@@ -57,94 +63,69 @@ export const AdminBookingsPage: React.FC = () => {
   };
 
   const totalBookings = bookingsData?.totalCount ?? 0;
-  const disputedCount = bookingsData?.items?.filter((b) => (b.status || '').toLowerCase() === 'disputed').length ?? 0;
+  const disputedCount =
+    bookingsData?.items?.filter((b) => (b.status || '').toLowerCase() === 'disputed').length ?? 0;
 
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 animate-in fade-in-50 duration-150">
-      {/* Toast Notification */}
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
       {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className={`fixed bottom-6 right-6 z-50 px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border text-xs sm:text-sm font-semibold transition-all animate-in fade-in slide-in-from-bottom-3 duration-200 ${
-            toast.type === 'success'
-              ? 'bg-card border-emerald-500/40 text-foreground ring-2 ring-emerald-500/20'
-              : 'bg-card border-rose-500/40 text-foreground ring-2 ring-rose-500/20'
-          }`}
-        >
-          {toast.type === 'success' ? (
-            <CheckCircleIcon className="w-5 h-5 text-emerald-500 shrink-0" />
-          ) : (
-            <ExclamationTriangleIcon className="w-5 h-5 text-rose-500 shrink-0" />
-          )}
-          <span>{toast.message}</span>
+        <div role="status" aria-live="polite" className="mb-4">
+          <MessageBar intent={toast.type === 'success' ? 'success' : 'error'}>
+            <MessageBarBody>{toast.message}</MessageBarBody>
+          </MessageBar>
         </div>
       )}
 
-      {/* Page Header */}
       <AdminPageHeader
-        title="Platform Bookings & Payments"
+        title="Platform bookings & payments"
         description="Monitor all platform bookings, protected payments, meeting statuses, and 85/15 fee splits."
         badge={
           disputedCount > 0 ? (
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/30">
-              <ExclamationTriangleIcon className="w-3.5 h-3.5 text-rose-500" />
-              <span>{disputedCount} Disputed</span>
-            </div>
+            <Badge appearance="tint" color="danger" icon={<Warning16Regular />} className="tabular">
+              {disputedCount} disputed
+            </Badge>
           ) : totalBookings > 0 ? (
-            <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-accent/15 text-accent text-xs font-bold border border-accent/30 font-mono">
-              <BanknotesIcon className="w-3.5 h-3.5" />
-              <span>{totalBookings} Orders Logged</span>
-            </div>
+            <Badge appearance="tint" color="brand" icon={<Money16Regular />} className="tabular">
+              {totalBookings} orders logged
+            </Badge>
           ) : undefined
         }
         actions={
           <>
-            <button
-              type="button"
+            <Button
+              appearance="outline"
+              size="medium"
+              icon={<ArrowSync16Regular className={isFetching ? 'animate-spin' : ''} />}
               onClick={() => refetchBookings()}
               disabled={isFetching}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-card border border-border/80 hover:bg-muted text-xs font-semibold text-foreground transition-all shadow-2xs hover:shadow-xs active:scale-95 disabled:opacity-50"
             >
-              <ArrowPathIcon className={`w-3.5 h-3.5 text-muted-foreground ${isFetching ? 'animate-spin text-accent' : ''}`} />
-              <span>{isFetching ? 'Refreshing...' : 'Sync Ledger'}</span>
-            </button>
-            <button
-              type="button"
+              {isFetching ? 'Refreshing...' : 'Sync ledger'}
+            </Button>
+            <Button
+              appearance="primary"
+              size="medium"
+              icon={<ArrowDownload16Regular />}
               onClick={handleExportCsv}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 text-xs font-bold transition-all shadow-xs hover:shadow-md active:scale-95"
             >
-              <ArrowDownTrayIcon className="w-3.5 h-3.5" />
-              <span>Export CSV</span>
-            </button>
+              Export CSV
+            </Button>
           </>
         }
       />
 
-      {/* Error state if API call failed */}
       {isBookingsError && !isLoadingBookings && (
-        <div className="mb-6 p-5 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/20 text-rose-500 flex items-center justify-center shrink-0">
-              <ExclamationTriangleIcon className="w-6 h-6" />
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-foreground">Unable to load booking transactions</h4>
-              <p className="text-xs text-muted-foreground mt-0.5">There was a problem communicating with the ledger service. Please verify your connection or privileges.</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => refetchBookings()}
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-bold shadow-xs hover:bg-rose-600 active:scale-95 transition-all shrink-0 cursor-pointer"
-          >
-            <ArrowPathIcon className="w-3.5 h-3.5" />
-            Retry Connection
-          </button>
-        </div>
+        <MessageBar intent="error" className="mb-6">
+          <MessageBarBody>
+            Unable to load booking transactions. There was a problem communicating with the ledger service.
+          </MessageBarBody>
+          <MessageBarActions>
+            <Button appearance="outline" size="small" onClick={() => refetchBookings()}>
+              Retry connection
+            </Button>
+          </MessageBarActions>
+        </MessageBar>
       )}
 
-      {/* Full-Bleed Ledger View */}
       <main>
         <AdminBookingLedger
           bookings={bookingsData?.items ?? []}
@@ -166,4 +147,3 @@ export const AdminBookingsPage: React.FC = () => {
 };
 
 export default AdminBookingsPage;
-

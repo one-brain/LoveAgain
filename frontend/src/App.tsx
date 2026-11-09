@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { Spinner } from '@fluentui/react-components';
 import MainLayout from './layout/MainLayout';
 import Home from './pages/Home';
 import type { RootState } from './store';
@@ -34,10 +35,7 @@ const AdminIndexRedirect = lazy(() => import('./pages/admin/AdminIndexRedirect')
 
 const RouteLoader: React.FC = () => (
   <div className="min-h-[60vh] flex items-center justify-center">
-    <div className="flex flex-col items-center gap-3">
-      <div className="w-10 h-10 border-4 border-accent border-t-transparent rounded-full animate-spin" />
-      <span className="text-xs font-medium text-muted-foreground">Loading experience...</span>
-    </div>
+    <Spinner size="medium" label="Loading experience..." labelPosition="below" />
   </div>
 );
 
