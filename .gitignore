@@ -79,6 +79,7 @@
 **/.env
 **/.env.local
 **/.env.*.local
+**/.env.lowcost
 
 # OS files
 **/.DS_Store

@@ -2,7 +2,6 @@
 # Total footprint: Fits within 4GB - 8GB VPS (e.g. €14/mo Hetzner CPX31 or $24/mo DigitalOcean)
 # Run: docker compose -f docker-compose.lowcost.yml --env-file .env.lowcost up -d --build
 
-version: '3.8'
 
 networks:
   cue-net:
@@ -119,7 +118,6 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-localsecret}
-      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "0.4"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     healthcheck:
