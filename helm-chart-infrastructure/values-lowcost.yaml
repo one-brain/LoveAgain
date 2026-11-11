@@ -1,0 +1,79 @@
+# Low-cost deployment values for cue-infrastructure
+# Optimized for single-node K3s / small cloud nodes (4GB - 8GB RAM, e.g. Hetzner CPX31/41 or DigitalOcean Droplet)
+
+global:
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+
+# PostgreSQL with PostGIS - slimmed memory allocation
+postgres:
+  imageTag: 15-3.4
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 384Mi
+      cpu: 300m
+    requests:
+      memory: 128Mi
+      cpu: 50m
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 10Gi
+
+# RabbitMQ - lightweight queue configuration
+rabbitmq:
+  imageTag: "3-alpine"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 96Mi
+      cpu: 40m
+  vhost: "/"
+  management:
+    enabled: false # Disabled in low-cost mode to conserve memory; enable only during debugging
+  persistence:
+    enabled: true
+    accessMode: ReadWriteOnce
+    size: 5Gi
+
+# Redis - ultra-low footprint in-memory cache
+redis:
+  imageTag: "7-alpine"
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 96Mi
+      cpu: 100m
+    requests:
+      memory: 32Mi
+      cpu: 20m
+
+# pgAdmin - disabled in production/low-cost mode (saves ~300Mi RAM).
+# Access PostgreSQL via port-forwarding or local psql/DBeaver instead.
+pgAdmin:
+  replicaCount: 0
+  imageTag: "latest"
+  resources:
+    limits:
+      memory: 256Mi
+      cpu: 250m
+    requests:
+      memory: 128Mi
+      cpu: 100m
+  defaultEmail: "admin@admin.com"
+  defaultPassword: "admin"
+
+secret:
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: localsecret
+  POSTGRES_DB: cue_db
+  RABBITMQ_USER: admin
+  RABBITMQ_PASSWORD: localsecret
+  REDIS_PASSWORD: localsecret
+
+service:
+  type: ClusterIP

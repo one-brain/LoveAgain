@@ -1,0 +1,94 @@
+# Low-cost deployment values for cue-services
+# Designed to run all 12 .NET 10 microservices within ~600MB-1GB aggregate RAM
+
+infrastructure:
+  enabled: false
+
+global:
+  imageRegistry: ""
+  imagePullPolicy: IfNotPresent
+
+# Backend microservices configuration with workstation GC & low-memory cgroup quotas
+backend:
+  replicaCount: 1
+  imageTag: latest
+  resources:
+    limits:
+      memory: 128Mi
+      cpu: 250m
+    requests:
+      memory: 48Mi
+      cpu: 20m
+  env:
+    ASPNETCORE_ENVIRONMENT: "Production"
+    DOTNET_gcServer: "0"
+    DOTNET_gcConcurrent: "1"
+    DOTNET_GCDynamicAdaptationMode: "1"
+    DOTNET_EnableDiagnostics: "0"
+
+# 12 Backend microservices
+backendServices:
+  - name: auth-service
+    port: 8080
+  - name: user-service
+    port: 8080
+  - name: profile-service
+    port: 8080
+  - name: discovery-service
+    port: 8080
+  - name: booking-service
+    port: 8080
+  - name: payment-service
+    port: 8080
+  - name: chat-service
+    port: 8080
+  - name: notification-service
+    port: 8080
+  - name: review-service
+    port: 8080
+  - name: support-service
+    port: 8080
+  - name: analytics-service
+    port: 8080
+  - name: api-gateway
+    port: 8080
+
+# Lightweight Nginx static SPA frontend
+frontend:
+  imageTag: latest
+  replicaCount: 1
+  resources:
+    limits:
+      memory: 48Mi
+      cpu: 100m
+    requests:
+      memory: 16Mi
+      cpu: 10m
+
+# Jaeger tracing pod disabled in low-cost mode to save ~500Mi-1Gi RAM.
+# Use structured console logs or external free-tier OTLP endpoint (e.g. Axiom/Honeycomb free tier).
+jaeger:
+  replicaCount: 0
+  imageTag: "1.47"
+  resources:
+    limits:
+      memory: 128Mi
+      cpu: 100m
+    requests:
+      memory: 64Mi
+      cpu: 50m
+
+secret:
+  STRIPE_SECRET_KEY: sk_test_placeholder
+  JWT_SIGNING_KEY: production-signing-key-minimum-32-characters-long!
+  JWT_ACCESS_TOKEN_MINUTES: "15"
+  JWT_REFRESH_TOKEN_DAYS: "7"
+
+  AUTH_DB_CONNECTION: Host=cue-infra-cue-infrastructure-postgres.cue.svc.cluster.local;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+  USER_DB_CONNECTION: Host=cue-infra-cue-infrastructure-postgres.cue.svc.cluster.local;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+  BOOKING_DB_CONNECTION: Host=cue-infra-cue-infrastructure-postgres.cue.svc.cluster.local;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+  PAYMENT_DB_CONNECTION: Host=cue-infra-cue-infrastructure-postgres.cue.svc.cluster.local;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+  ConnectionStrings__CueDatabase: Host=cue-infra-cue-infrastructure-postgres.cue.svc.cluster.local;Port=5432;Database=cue_db;Username=admin;Password=localsecret
+
+  EMAIL_API_KEY: placeholder
+  EMAIL_FROM_ADDRESS: cue@yourdomain.com

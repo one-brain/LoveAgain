@@ -1,0 +1,297 @@
+# Cue Low-Cost Production Stack (Single-Node VPS)
+# Total footprint: Fits within 4GB - 8GB VPS (e.g. €14/mo Hetzner CPX31 or $24/mo DigitalOcean)
+# Run: docker compose -f docker-compose.lowcost.yml --env-file .env.lowcost up -d --build
+
+version: '3.8'
+
+networks:
+  cue-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  redis_data:
+
+x-dotnet-base: &dotnet-base
+  restart: unless-stopped
+  networks:
+    - cue-net
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
+  environment:
+    ASPNETCORE_ENVIRONMENT: ${ENVIRONMENT:-Production}
+    DOTNET_gcServer: "0"
+    DOTNET_gcConcurrent: "1"
+    DOTNET_GCDynamicAdaptationMode: "1"
+    DOTNET_EnableDiagnostics: "0"
+    RabbitMq__Host: "rabbitmq"
+    RabbitMq__Port: "5672"
+    RabbitMq__Username: ${RABBITMQ_USER:-admin}
+    RabbitMq__Password: ${RABBITMQ_PASSWORD:-localsecret}
+    REDIS__ConnectionString: "redis:6379,password=${REDIS_PASSWORD:-localsecret}"
+    ConnectionStrings__CueDatabase: "Host=postgres;Port=5432;Database=cue_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-localsecret}"
+    AUTH_DB_CONNECTION: "Host=postgres;Port=5432;Database=cue_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-localsecret}"
+    USER_DB_CONNECTION: "Host=postgres;Port=5432;Database=cue_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-localsecret}"
+    BOOKING_DB_CONNECTION: "Host=postgres;Port=5432;Database=cue_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-localsecret}"
+    PAYMENT_DB_CONNECTION: "Host=postgres;Port=5432;Database=cue_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-localsecret}"
+    JWT_SIGNING_KEY: ${JWT_SIGNING_KEY:-development-only-change-this-signing-key-32-bytes}
+    JWT_ACCESS_TOKEN_MINUTES: "15"
+    JWT_REFRESH_TOKEN_DAYS: "7"
+    Razorpay__AllowMockBypass: "true"
+    Razorpay__EnableSandboxSimulator: "true"
+  deploy:
+    resources:
+      limits:
+        memory: 128M
+      reservations:
+        memory: 48M
+
+services:
+  # ==========================================
+  # Core Infrastructure Services
+  # ==========================================
+
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: cue-postgres
+    restart: unless-stopped
+    networks:
+      - cue-net
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-localsecret}
+      POSTGRES_DB: ${POSTGRES_DB:-cue_db}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-cue_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+        reservations:
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  redis:
+    image: redis:7-alpine
+    container_name: cue-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:-localsecret}", "--maxmemory", "96mb", "--maxmemory-policy", "allkeys-lru"]
+    networks:
+      - cue-net
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-localsecret}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 96M
+        reservations:
+          memory: 32M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  rabbitmq:
+    image: rabbitmq:3-alpine
+    container_name: cue-rabbitmq
+    restart: unless-stopped
+    networks:
+      - cue-net
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-admin}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-localsecret}
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: "0.4"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 96M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ==========================================
+  # Backend Microservices (.NET 10)
+  # ==========================================
+
+  auth-service:
+    <<: *dotnet-base
+    container_name: auth-service
+    build:
+      context: .
+      dockerfile: backend/Services/AuthService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  user-service:
+    <<: *dotnet-base
+    container_name: user-service
+    build:
+      context: .
+      dockerfile: backend/Services/UserService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  profile-service:
+    <<: *dotnet-base
+    container_name: profile-service
+    build:
+      context: .
+      dockerfile: backend/Services/ProfileService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  discovery-service:
+    <<: *dotnet-base
+    container_name: discovery-service
+    build:
+      context: .
+      dockerfile: backend/Services/DiscoveryService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  booking-service:
+    <<: *dotnet-base
+    container_name: booking-service
+    build:
+      context: .
+      dockerfile: backend/Services/BookingService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  payment-service:
+    <<: *dotnet-base
+    container_name: payment-service
+    build:
+      context: .
+      dockerfile: backend/Services/PaymentService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  chat-service:
+    <<: *dotnet-base
+    container_name: chat-service
+    build:
+      context: .
+      dockerfile: backend/Services/ChatService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  notification-service:
+    <<: *dotnet-base
+    container_name: notification-service
+    build:
+      context: .
+      dockerfile: backend/Services/NotificationService/Dockerfile
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  review-service:
+    <<: *dotnet-base
+    container_name: review-service
+    build:
+      context: .
+      dockerfile: backend/Services/ReviewService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  support-service:
+    <<: *dotnet-base
+    container_name: support-service
+    build:
+      context: .
+      dockerfile: backend/Services/SupportService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  analytics-service:
+    <<: *dotnet-base
+    container_name: analytics-service
+    build:
+      context: .
+      dockerfile: backend/Services/AnalyticsService/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api-gateway:
+    <<: *dotnet-base
+    container_name: api-gateway
+    build:
+      context: .
+      dockerfile: backend/Services/APIGateway/Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      - auth-service
+      - user-service
+      - booking-service
+      - chat-service
+
+  # ==========================================
+  # Frontend SPA (Nginx Serving React Static Files)
+  # ==========================================
+
+  frontend:
+    container_name: cue-frontend
+    restart: unless-stopped
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    networks:
+      - cue-net
+    ports:
+      - "80:3000"
+    depends_on:
+      - api-gateway
+      - chat-service
+    deploy:
+      resources:
+        limits:
+          memory: 48M
+        reservations:
+          memory: 16M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
